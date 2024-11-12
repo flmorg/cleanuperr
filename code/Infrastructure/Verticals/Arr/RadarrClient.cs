@@ -40,7 +40,7 @@ public sealed class RadarrClient : ArrClient
         }
         catch
         {
-            _logger.LogError("series search failed | movie ids: {ids}", string.Join(",", itemIds));
+            _logger.LogError("movie search failed | movie ids: {ids}", string.Join(",", itemIds));
             throw;
         }
     }
