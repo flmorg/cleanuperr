@@ -1,5 +1,6 @@
 ﻿using Common.Configuration;
 using Executable.Jobs;
+using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.BlockedTorrent;
 
 namespace Executable;
@@ -19,10 +20,13 @@ public static class DependencyInjection
         services
             .Configure<QuartzConfig>(configuration.GetSection(nameof(QuartzConfig)))
             .Configure<QBitConfig>(configuration.GetSection(nameof(QBitConfig)))
-            .Configure<SonarrConfig>(configuration.GetSection(nameof(SonarrConfig)));
+            .Configure<SonarrConfig>(configuration.GetSection(nameof(SonarrConfig)))
+            .Configure<RadarrConfig>(configuration.GetSection(nameof(RadarrConfig)));
 
     private static IServiceCollection AddServices(this IServiceCollection services) =>
         services
+            .AddTransient<SonarrClient>()
+            .AddTransient<RadarrClient>()
             .AddTransient<BlockedTorrentJob>()
             .AddTransient<BlockedTorrentHandler>();
 

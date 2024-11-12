@@ -1,6 +1,6 @@
 ﻿namespace Common.Configuration;
 
-public sealed class SonarrInstance
+public sealed class ArrInstance
 {
     public required Uri Url { get; set; }
     

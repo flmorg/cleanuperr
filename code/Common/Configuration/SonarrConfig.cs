@@ -1,6 +1,5 @@
 ﻿namespace Common.Configuration;
 
-public sealed class SonarrConfig
+public sealed record SonarrConfig : ArrConfig
 {
-    public required List<SonarrInstance> Instances { get; set; }
 }
