@@ -115,6 +115,6 @@ public sealed class BlockedTorrentHandler
         {
             InstanceType.Sonarr => _sonarrClient,
             InstanceType.Radarr => _radarrClient,
-            _ => throw new NotImplementedException($"instance type {type} is not supported")
+            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
 }

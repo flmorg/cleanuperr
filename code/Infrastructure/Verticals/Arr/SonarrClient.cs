@@ -24,15 +24,15 @@ public sealed class SonarrClient : ArrClient
                 SeriesId = itemId
             };
             
-            using HttpRequestMessage sonarrRequest = new(HttpMethod.Post, uri);
-            sonarrRequest.Content = new StringContent(
+            using HttpRequestMessage request = new(HttpMethod.Post, uri);
+            request.Content = new StringContent(
                 JsonConvert.SerializeObject(command),
                 Encoding.UTF8,
                 "application/json"
             );
-            sonarrRequest.Headers.Add("x-api-key", arrInstance.ApiKey);
+            SetApiKey(request, arrInstance.ApiKey);
 
-            using HttpResponseMessage response = await _httpClient.SendAsync(sonarrRequest);
+            using HttpResponseMessage response = await _httpClient.SendAsync(request);
 
             try
             {
