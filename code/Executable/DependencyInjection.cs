@@ -18,9 +18,9 @@ public static class DependencyInjection
 
     private static IServiceCollection AddConfiguration(this IServiceCollection services, IConfiguration configuration) =>
         services
-            .Configure<QBitConfig>(configuration.GetSection(nameof(QBitConfig.SectionName)))
-            .Configure<SonarrConfig>(configuration.GetSection(nameof(SonarrConfig.SectionName)))
-            .Configure<RadarrConfig>(configuration.GetSection(nameof(RadarrConfig.SectionName)));
+            .Configure<QBitConfig>(configuration.GetSection(QBitConfig.SectionName))
+            .Configure<SonarrConfig>(configuration.GetSection(SonarrConfig.SectionName))
+            .Configure<RadarrConfig>(configuration.GetSection(RadarrConfig.SectionName));
 
     private static IServiceCollection AddServices(this IServiceCollection services) =>
         services
