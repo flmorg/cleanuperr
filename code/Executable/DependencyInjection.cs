@@ -1,7 +1,7 @@
 ﻿using Common.Configuration;
 using Executable.Jobs;
 using Infrastructure.Verticals.Arr;
-using Infrastructure.Verticals.BlockedTorrent;
+using Infrastructure.Verticals.QueueCleaner;
 
 namespace Executable;
 using Quartz;
@@ -45,14 +45,14 @@ public static class DependencyInjection
                     ? config.QueueCleanerTrigger
                     : config.BlockedTorrentTrigger;
                 
-                q.AddBlockedTorrentJob(trigger);
+                q.AddQueueCleanerJob(trigger);
             })
             .AddQuartzHostedService(opt =>
             {
                 opt.WaitForJobsToComplete = true;
             });
 
-    private static void AddBlockedTorrentJob(this IServiceCollectionQuartzConfigurator q, string trigger)
+    private static void AddQueueCleanerJob(this IServiceCollectionQuartzConfigurator q, string trigger)
     {
         q.AddJob<QueueCleanerJob>(opts =>
         {

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QBittorrent.Client;
 
-namespace Infrastructure.Verticals.BlockedTorrent;
+namespace Infrastructure.Verticals.QueueCleaner;
 
 public sealed class QueueCleanerHandler
 {

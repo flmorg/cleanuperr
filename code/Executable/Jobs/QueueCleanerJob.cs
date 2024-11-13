@@ -1,4 +1,4 @@
-﻿using Infrastructure.Verticals.BlockedTorrent;
+﻿using Infrastructure.Verticals.QueueCleaner;
 using Quartz;
 
 namespace Executable.Jobs;
