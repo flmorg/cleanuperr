@@ -36,7 +36,6 @@ public sealed class QueueCleanerHandler
     public async Task HandleAsync()
     {
         QBittorrentClient qBitClient = new(_qBitConfig.Url);
-        
         await qBitClient.LoginAsync(_qBitConfig.Username, _qBitConfig.Password);
 
         await ProcessArrConfigAsync(qBitClient, _sonarrConfig, InstanceType.Sonarr);
@@ -52,7 +51,14 @@ public sealed class QueueCleanerHandler
 
         foreach (ArrInstance arrInstance in config.Instances)
         {
-            await ProcessInstanceAsync(qBitClient, arrInstance, instanceType);
+            try
+            {
+                await ProcessInstanceAsync(qBitClient, arrInstance, instanceType);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "failed to clean {type} instance | {url}", instanceType, arrInstance.Url);
+            }
         }
     }
 
