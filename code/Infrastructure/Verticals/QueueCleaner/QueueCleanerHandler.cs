@@ -8,17 +8,17 @@ using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.BlockedTorrent;
 
-public sealed class BlockedTorrentHandler
+public sealed class QueueCleanerHandler
 {
-    private readonly ILogger<BlockedTorrentHandler> _logger;
+    private readonly ILogger<QueueCleanerHandler> _logger;
     private readonly QBitConfig _qBitConfig;
     private readonly SonarrConfig _sonarrConfig;
     private readonly RadarrConfig _radarrConfig;
     private readonly SonarrClient _sonarrClient;
     private readonly RadarrClient _radarrClient;
     
-    public BlockedTorrentHandler(
-        ILogger<BlockedTorrentHandler> logger,
+    public QueueCleanerHandler(
+        ILogger<QueueCleanerHandler> logger,
         IOptions<QBitConfig> qBitConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
@@ -39,14 +39,20 @@ public sealed class BlockedTorrentHandler
         
         await qBitClient.LoginAsync(_qBitConfig.Username, _qBitConfig.Password);
 
-        foreach (ArrInstance arrInstance in _sonarrConfig.Instances)
+        await ProcessArrConfigAsync(qBitClient, _sonarrConfig, InstanceType.Sonarr);
+        await ProcessArrConfigAsync(qBitClient, _radarrConfig, InstanceType.Radarr);
+    }
+
+    private async Task ProcessArrConfigAsync(QBittorrentClient qBitClient, ArrConfig config, InstanceType instanceType)
+    {
+        if (!config.Enabled)
         {
-            await ProcessInstanceAsync(qBitClient, arrInstance, InstanceType.Sonarr);
+            return;
         }
 
-        foreach (ArrInstance arrInstance in _radarrConfig.Instances)
+        foreach (ArrInstance arrInstance in config.Instances)
         {
-            await ProcessInstanceAsync(qBitClient, arrInstance, InstanceType.Radarr);
+            await ProcessInstanceAsync(qBitClient, arrInstance, instanceType);
         }
     }
 

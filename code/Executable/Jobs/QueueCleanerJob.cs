@@ -4,12 +4,12 @@ using Quartz;
 namespace Executable.Jobs;
 
 [DisallowConcurrentExecution]
-public sealed class BlockedTorrentJob : IJob
+public sealed class QueueCleanerJob : IJob
 {
-    private ILogger<BlockedTorrentJob> _logger;
-    private BlockedTorrentHandler _handler;
+    private ILogger<QueueCleanerJob> _logger;
+    private QueueCleanerHandler _handler;
 
-    public BlockedTorrentJob(ILogger<BlockedTorrentJob> logger, BlockedTorrentHandler handler)
+    public QueueCleanerJob(ILogger<QueueCleanerJob> logger, QueueCleanerHandler handler)
     {
         _logger = logger;
         _handler = handler;
@@ -23,7 +23,7 @@ public sealed class BlockedTorrentJob : IJob
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"{nameof(BlockedTorrentJob)} failed");
+            _logger.LogError(ex, $"{nameof(QueueCleanerJob)} failed");
         }
     }
 }

@@ -27,8 +27,8 @@ public static class DependencyInjection
         services
             .AddTransient<SonarrClient>()
             .AddTransient<RadarrClient>()
-            .AddTransient<BlockedTorrentJob>()
-            .AddTransient<BlockedTorrentHandler>();
+            .AddTransient<QueueCleanerJob>()
+            .AddTransient<QueueCleanerHandler>();
 
     private static IServiceCollection AddQuartzServices(this IServiceCollection services, IConfiguration configuration) =>
         services
@@ -41,7 +41,11 @@ public static class DependencyInjection
                     throw new NullReferenceException("Quartz configuration is null");
                 }
 
-                q.AddBlockedTorrentJob(config.BlockedTorrentTrigger);
+                string trigger = string.IsNullOrEmpty(config.BlockedTorrentTrigger)
+                    ? config.QueueCleanerTrigger
+                    : config.BlockedTorrentTrigger;
+                
+                q.AddBlockedTorrentJob(trigger);
             })
             .AddQuartzHostedService(opt =>
             {
@@ -50,15 +54,15 @@ public static class DependencyInjection
 
     private static void AddBlockedTorrentJob(this IServiceCollectionQuartzConfigurator q, string trigger)
     {
-        q.AddJob<BlockedTorrentJob>(opts =>
+        q.AddJob<QueueCleanerJob>(opts =>
         {
-            opts.WithIdentity(nameof(BlockedTorrentJob));
+            opts.WithIdentity(nameof(QueueCleanerJob));
         });
 
         q.AddTrigger(opts =>
         {
-            opts.ForJob(nameof(BlockedTorrentJob))
-                .WithIdentity($"{nameof(BlockedTorrentJob)}-trigger")
+            opts.ForJob(nameof(QueueCleanerJob))
+                .WithIdentity($"{nameof(QueueCleanerJob)}-trigger")
                 .WithCronSchedule(trigger);
         });
     }
