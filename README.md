@@ -12,37 +12,49 @@
 
 ### Docker
 ```
-docker run \
-    -e QuartzConfig__BlockedTorrentTrigger="0 0/10 * * * ?" \
-    -e QBitConfig__Url="http://localhost:8080" \
-    -e QBitConfig__Username="user" \
-    -e QBitConfig__Password="pass" \
-    -e SonarrConfig__Instances__0__Url="http://localhost:8989" \
-    -e SonarrConfig__Instances__0__ApiKey="secret1" \
-    -e SonarrConfig__Instances__1__Url="http://localhost:8990" \
-    -e SonarrConfig__Instances__1__ApiKey="secret2" \
+docker run -d \
+    -e TRIGGERS__QUEUECLEANER="0 0/5 * * * ?" \
+    -e QBITTORRENT__URL="http://localhost:8080" \
+    -e QBITTORRENT__USERNAME="user" \
+    -e QBITTORRENT__PASSWORD="pass" \
+    -e SONARR__ENABLED="true" \
+    -e SONARR__INSTANCES__0__URL="http://localhost:8989" \
+    -e SONARR__INSTANCES__0__APIKEY="secret1" \
+    -e SONARR__INSTANCES__1__URL="http://localhost:8990" \
+    -e SONARR__INSTANCES__1__APIKEY="secret2" \
+    -e RADARR__ENABLED="true" \
+    -e RADARR__INSTANCES__0__URL="http://localhost:7878" \
+    -e RADARR__INSTANCES__0__APIKEY="secret3" \
+    -e RADARR__INSTANCES__1__URL="http://localhost:7879" \
+    -e RADARR__INSTANCES__1__APIKEY="secret4" \
     ...
-    flaminel/cleanuperr:latest
+    flaminel/cleanuperr:1.1.0
 ```
 
 ### Environment variables
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| QuartzConfig__BlockedTorrentTrigger | No | Quartz cron trigger | 0 0/5 * * * ? |
-| QBitConfig__Url | Yes | qBittorrent instance url | http://localhost:8080 |
-| QBitConfig__Username | Yes | qBittorrent user | empty |
-| QBitConfig__Password | Yes | qBittorrent password | empty |
-| SonarrConfig__Instances__0__Url | Yes | First Sonarr instance url | http://localhost:8989 |
-| SonarrConfig__Instances__0__ApiKey | Yes | First Sonarr instance API key | empty |
+| TRIGGERS__QUEUECLEANER | No | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
+| QBITTORRENT__URL | Yes | qBittorrent instance url | http://localhost:8080 |
+| QBITTORRENT__USERNAME | Yes | qBittorrent user | empty |
+| QBITTORRENT__PASSWORD | Yes | qBittorrent password | empty |
+|
+| SONARR__ENABLED | No | Whether Sonarr cleanup is enabled or not  | true |
+| SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |
+| SONARR__INSTANCES__0__APIKEY | Yes | First Sonarr instance API key | empty |
+|
+| RADARR__ENABLED | No | Whether Radarr cleanup is enabled or not  | false |
+| RADARR__INSTANCES__0__URL | Yes | First Radarr instance url | http://localhost:8989 |
+| RADARR__INSTANCES__0__APIKEY | Yes | First Radarr instance API key | empty |
 
 #
 
-Multiple Sonarr instances can be specified using this format:
+Multiple Sonarr/Radarr instances can be specified using this format:
 
 ```
-SonarrConfig__Instances__<NUMBER>__Url
-SonarrConfig__Instances__<NUMBER>__ApiKey
+SONARR__INSTANCES__<NUMBER>__URL
+SONARR__INSTANCES__<NUMBER>__APIKEY
 ```
 
 where `<NUMBER>` starts from 0.

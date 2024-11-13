@@ -18,10 +18,9 @@ public static class DependencyInjection
 
     private static IServiceCollection AddConfiguration(this IServiceCollection services, IConfiguration configuration) =>
         services
-            .Configure<QuartzConfig>(configuration.GetSection(nameof(QuartzConfig)))
-            .Configure<QBitConfig>(configuration.GetSection(nameof(QBitConfig)))
-            .Configure<SonarrConfig>(configuration.GetSection(nameof(SonarrConfig)))
-            .Configure<RadarrConfig>(configuration.GetSection(nameof(RadarrConfig)));
+            .Configure<QBitConfig>(configuration.GetSection(nameof(QBitConfig.SectionName)))
+            .Configure<SonarrConfig>(configuration.GetSection(nameof(SonarrConfig.SectionName)))
+            .Configure<RadarrConfig>(configuration.GetSection(nameof(RadarrConfig.SectionName)));
 
     private static IServiceCollection AddServices(this IServiceCollection services) =>
         services
@@ -34,18 +33,14 @@ public static class DependencyInjection
         services
             .AddQuartz(q =>
             {
-                QuartzConfig? config = configuration.GetRequiredSection(nameof(QuartzConfig)).Get<QuartzConfig>();
+                TriggersConfig? config = configuration.GetRequiredSection(TriggersConfig.SectionName).Get<TriggersConfig>();
 
                 if (config is null)
                 {
                     throw new NullReferenceException("Quartz configuration is null");
                 }
 
-                string trigger = string.IsNullOrEmpty(config.BlockedTorrentTrigger)
-                    ? config.QueueCleanerTrigger
-                    : config.BlockedTorrentTrigger;
-                
-                q.AddQueueCleanerJob(trigger);
+                q.AddQueueCleanerJob(config.QueueCleaner);
             })
             .AddQuartzHostedService(opt =>
             {
