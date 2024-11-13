@@ -87,7 +87,7 @@ public sealed class BlockedTorrentHandler
                     return;
                 }
 
-                itemsToBeRefreshed.Add(record.SeriesId);
+                itemsToBeRefreshed.Add(GetRecordId(instanceType, record));
 
                 await arrClient.DeleteQueueItemAsync(instance, record);
             }
@@ -115,6 +115,14 @@ public sealed class BlockedTorrentHandler
         {
             InstanceType.Sonarr => _sonarrClient,
             InstanceType.Radarr => _radarrClient,
+            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
+        };
+    
+    private int GetRecordId(InstanceType type, QueueRecord record) =>
+        type switch
+        {
+            InstanceType.Sonarr => record.SeriesId,
+            InstanceType.Radarr => record.MovieId,
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
 }
