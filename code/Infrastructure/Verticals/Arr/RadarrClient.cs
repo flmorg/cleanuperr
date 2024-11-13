@@ -15,6 +15,11 @@ public sealed class RadarrClient : ArrClient
 
     public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<int> itemIds)
     {
+        if (itemIds.Count is 0)
+        {
+            return;
+        }
+        
         Uri uri = new(arrInstance.Url, "/api/v3/command");
         RadarrCommand command = new()
         {
