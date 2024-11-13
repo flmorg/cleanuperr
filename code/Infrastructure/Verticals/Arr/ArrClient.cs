@@ -40,7 +40,7 @@ public abstract class ArrClient
 
         if (queueResponse is null)
         {
-            throw new Exception($"unrecognized queue list response | {responseBody}");
+            throw new Exception($"unrecognized queue list response | {uri} | {responseBody}");
         }
 
         return queueResponse;
@@ -59,11 +59,11 @@ public abstract class ArrClient
         {
             response.EnsureSuccessStatusCode();
             
-            _logger.LogInformation("queue item deleted | {record}", queueRecord.Title);
+            _logger.LogInformation("queue item deleted | {url} | {title}", arrInstance.Url, queueRecord.Title);
         }
         catch
         {
-            _logger.LogError("queue delete failed | {uri}", uri);
+            _logger.LogError("queue delete failed | {uri} | {title}", uri, queueRecord.Title);
             throw;
         }
     }

@@ -41,11 +41,11 @@ public sealed class RadarrClient : ArrClient
         {
             response.EnsureSuccessStatusCode();
             
-            _logger.LogInformation("movie search triggered | movie ids: {ids}", string.Join(",", itemIds));
+            _logger.LogInformation("movie search triggered | {url} | movie ids: {ids}", arrInstance.Url, string.Join(",", itemIds));
         }
         catch
         {
-            _logger.LogError("movie search failed | movie ids: {ids}", string.Join(",", itemIds));
+            _logger.LogError("movie search failed | {url} | movie ids: {ids}", arrInstance.Url, string.Join(",", itemIds));
             throw;
         }
     }

@@ -38,11 +38,11 @@ public sealed class SonarrClient : ArrClient
             {
                 response.EnsureSuccessStatusCode();
             
-                _logger.LogInformation("series search triggered | series id: {id}", itemId);
+                _logger.LogInformation("series search triggered | {url} | series id: {id}", arrInstance.Url, itemId);
             }
             catch
             {
-                _logger.LogError("series search failed | series id: {id}", itemId);
+                _logger.LogError("series search failed | {url} | series id: {id}", arrInstance.Url, itemId);
                 throw;
             }
         }
