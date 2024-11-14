@@ -6,20 +6,23 @@ namespace Executable.Jobs;
 [DisallowConcurrentExecution]
 public sealed class QueueCleanerJob : IJob
 {
-    private ILogger<QueueCleanerJob> _logger;
-    private QueueCleanerHandler _handler;
+    private readonly ILogger<QueueCleanerJob> _logger;
+    private readonly QueueCleaner _queueCleaner;
 
-    public QueueCleanerJob(ILogger<QueueCleanerJob> logger, QueueCleanerHandler handler)
+    public QueueCleanerJob(
+        ILogger<QueueCleanerJob> logger,
+        QueueCleaner queueCleaner
+    )
     {
         _logger = logger;
-        _handler = handler;
+        _queueCleaner = queueCleaner;
     }
     
     public async Task Execute(IJobExecutionContext context)
     {
         try
         {
-            await _handler.HandleAsync();
+            await _queueCleaner.ExecuteAsync();
         }
         catch (Exception ex)
         {

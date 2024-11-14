@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Common.Configuration;
-using Domain.Radarr;
+using Domain.Models.Radarr;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 

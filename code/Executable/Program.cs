@@ -1,4 +1,4 @@
-using Executable;
+using Executable.DependencyInjection;
 
 var builder = Host.CreateApplicationBuilder(args);
 

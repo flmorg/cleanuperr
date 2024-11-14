@@ -48,6 +48,44 @@ services:
       - 6882:6881/udp
     restart: unless-stopped
 
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./data/deluge/config:/config
+      - ./data/deluge/downloads:/downloads
+    ports:
+      - 8112:8112
+      - 6883:6881
+      - 6883:6881/udp
+      - 58846:58846
+    restart: unless-stopped
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - TRANSMISSION_RPC_AUTHENTICATION_REQUIRED=true
+      - TRANSMISSION_RPC_USERNAME=test
+      - TRANSMISSION_RPC_PASSWORD=testing
+      - TRANSMISSION_RPC_PORT=9091
+      - TRANSMISSION_WEB_HOME=/usr/share/transmission/public_html
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    volumes:
+      - ./data/transmission/config:/config
+      - ./data/transmission/downloads:/downloads
+    restart: unless-stopped
+
   tracker:
     image: wiltonsr/opentracker:open
     container_name: opentracker
@@ -75,7 +113,9 @@ services:
     volumes:
       - ./data/sonarr/config:/config
       - ./data/sonarr/tv:/tv
-      - ./data/qbittorrent/downloads:/downloads
+      # - ./data/qbittorrent/downloads:/downloads
+      # - ./data/deluge/downloads:/downloads
+      - ./data/transmission/downloads:/downloads
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -90,7 +130,9 @@ services:
     volumes:
       - ./data/radarr/config:/config
       - ./data/radarr/movies:/movies
-      - ./data/qbittorrent/downloads:/downloads
+      # - ./data/qbittorrent/downloads:/downloads
+      # - ./data/deluge/downloads:/downloads
+      - ./data/transmission/downloads:/downloads
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -126,22 +168,34 @@ services:
     restart: unless-stopped
 
   cleanuperr:
-    image: flaminel/cleanuperr:1.1.0
+    image: flaminel/cleanuperr:latest
     container_name: cleanuperr
     environment:
       - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
+      - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
+
+      - QUEUECLEANER__ENABLED=true
+
+      - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__BLACKLIST__ENABLED=true
+      - CONTENTBLOCKER__BLACKLIST__PATH=https://github.com/flmorg/cleanuperr/blob/add_blacklist_support/blacklist
+
       - QBITTORRENT__URL=http://qbittorrent:8080
       - QBITTORRENT__USERNAME=test
       - QBITTORRENT__PASSWORD=testing
+
       - SONARR__ENABLED=true
       - SONARR__INSTANCES__0__URL=http://sonarr:8989
       - SONARR__INSTANCES__0__APIKEY=96736c3eb3144936b8f1d62d27be8cee
+
       - RADARR__ENABLED=true
       - RADARR__INSTANCES__0__URL=http://radarr:7878
       - RADARR__INSTANCES__0__APIKEY=705b553732ab4167ab23909305d60600
     restart: unless-stopped
     depends_on:
       - qbittorrent
+      - deluge
+      - transmission
       - sonarr
       - radarr
       - lidarr

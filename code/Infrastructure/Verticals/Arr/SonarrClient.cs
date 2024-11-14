@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using Common.Configuration;
-using Domain.Sonarr;
+using Domain.Models.Sonarr;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 

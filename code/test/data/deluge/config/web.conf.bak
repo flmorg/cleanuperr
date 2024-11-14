@@ -1,0 +1,480 @@
+{
+    "file": 2,
+    "format": 1
+}{
+    "base": "/",
+    "cert": "ssl/daemon.cert",
+    "default_daemon": "",
+    "enabled_plugins": [],
+    "first_login": false,
+    "https": false,
+    "interface": "0.0.0.0",
+    "language": "",
+    "pkey": "ssl/daemon.pkey",
+    "port": 8112,
+    "pwd_salt": "2bc0ed67acc6876dda1a1632594090478fdeab60",
+    "pwd_sha1": "3ac8756d294abe4f6c9dfa084b7fc2c84ce32f68",
+    "session_timeout": 3600,
+    "sessions": {
+        "0379df23e58eb57a0ec781168c5acb1527be9ce1dc48a6dec201905358dbedd8": {
+            "expires": 1731665164.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "03d38494090a758cbe3ecc1e8a004986528297c7200e58b36649e197276c95e3": {
+            "expires": 1731718770.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "03fe5879beed5c299cd18472b64d31c4c610cd413059d7582312b002bb0eef03": {
+            "expires": 1731689401.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "05c8e71ff1e411beb45e278e786fbde8c893854e2906f3111dd48f943082eba5": {
+            "expires": 1731593711.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "0cce3c4e10dcdebd921e19905c9ce3c162cefafadbf35b3c64a1932860af0e7d": {
+            "expires": 1731721234.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "0d5bce647f6368877290f7be8a0f63f070039dd76027158278143b2ea6078a42": {
+            "expires": 1731665495.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "0f95357a4b9994584b429a5facaad735bc1e0adb0f994b7fad82318f589de991": {
+            "expires": 1731718993.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "15c8cf06252ea0039bc2569d4121378baa3287594f9148d4fb26e999966e5538": {
+            "expires": 1731714201.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "15d5edb14093bb821dbef9080853e00f969860add39bd21e301172ae911713b1": {
+            "expires": 1731665102.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "17f7a731a26bdde434e8f4edb6043c4699efa29b982ad1f5df26676747b400a7": {
+            "expires": 1731658344.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "1970022246cbb41f07d1242920163980e93e4e96f11864ffcf047c8cb5cf9908": {
+            "expires": 1731706575.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "19daad7642cf7f056083ff2868c9565ff8b2f6750eae91d5b235989089239bdc": {
+            "expires": 1731689407.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "1b525ddd164c645ec47f1b2b58044cdf32f90800bc1973afb7b56a5814b813da": {
+            "expires": 1731711800.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "1da54bf8d0c73023d11e1cb91586b088898ef5a37d146c108bfe2a9633499b63": {
+            "expires": 1731693609.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2095c759cb9b9ce96ab3bf3f07301e8dd71de75aeed2d4db957d2227adbc56f5": {
+            "expires": 1731664924.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2185646cfe4fa4f9892ea3df734b02b31ab7dfeb0f0868a6c730f04328b1a87a": {
+            "expires": 1731716848.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2270be625fa3bf61e919e8c495bc6c7868e907709e6b06c533727d0469df61c9": {
+            "expires": 1731714357.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2438a71a5850697dfb99ba24afa21f82a99ca32bf59a05f5dbd8c0f8bf645e4f": {
+            "expires": 1731691862.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "24930581ae0aa9a0e0a520f3cccfb71f50308be43b15cb5b0fb3404a7d9a8a2f": {
+            "expires": 1731617366.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "28920404a5f4638ebcdb4eb4addad4db19ee0bdd8505457cce7b6f81ba06b363": {
+            "expires": 1731712508.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "29f26fc40c0be11ba12209d142e8a662ad3c5f58f4c9e2a4dcb9bf81a9eac0ef": {
+            "expires": 1731692292.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2b4e3dc65d727790957c28d570f474ef0ffacc98bf1372b11ef4c2eacfde585c": {
+            "expires": 1731711706.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2c1d2ff923df8718a46c89e575a2ebbcede10f9c585e5fe2ddb3a4a43ddabafa": {
+            "expires": 1731719810.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2c9235163d9dc1af694609caf5624465e872a9a9efaae9c5dd7de97190911970": {
+            "expires": 1731592559.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "2ee0d1c4f504c080441ae4a8e61546077405ef9dce3ec291923d761b69f69586": {
+            "expires": 1731659695.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "317679509ed59022afd20bd8a891cc759fadd7ca9c85c88ac0b05cf9b9ea1791": {
+            "expires": 1731716722.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "31b14f8de2ba1de58011ecf8dfe7f8681ae4af543928f3903a9c080374a7fb08": {
+            "expires": 1731692998.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "337641d938548a3261f67b1b1e295e8d09b248d2c7358a84a2914c803e2c9827": {
+            "expires": 1731719800.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "33b864b8ab214816273040e0456297da90a7f2e5bf352368f906e64cc363ccdf": {
+            "expires": 1731659084.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "3b14137d9b57080d81e0a4532ad703dc91e2542be56415f58feca56231851eb0": {
+            "expires": 1731714081.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "3d7bf91cb3e15eb82297ab54bae4cc6e06a42b54679e5f963a580fdf0d4bcf57": {
+            "expires": 1731719791.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "3e7234797204e1672caf4b5b5ef450898f931ee48dcffae0b3b89e138434c036": {
+            "expires": 1731723178.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "3e79e3bd1e01d10a6017e61b152151150deeb5185781a6325cd0aa4b9bfec47d": {
+            "expires": 1731719395.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "3e9020e47c34087dc02ff6a5b396b7f338cc3249c9812e320490c33d9e7ce245": {
+            "expires": 1731719545.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "470c34122403b8dec692f9079e892ca92d8bf13cdd6c2814b6d829996e5f8b67": {
+            "expires": 1731664624.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "4a47ca4a624fff02d9970d7e8a341ec08b8076cade949348795e45002c18556d": {
+            "expires": 1731718983.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "51ce01dfe69d8ae6afb019a05046154f4b51ef64569e3424e78a80957a11ba8c": {
+            "expires": 1731693589.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "566fe0345702f6e2f30effef42ef664c46ac0e7f21aa3d2b414a1f290230fba6": {
+            "expires": 1731664385.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "587362acb21285d814a9861a93b3f0e017ee9efb1bfe63343c13c09e7ea80f91": {
+            "expires": 1731716759.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "5cb4123b4b425f1d8a6accf4c02386feea7f20bf6171291f715c2cd99bfb02c0": {
+            "expires": 1731665482.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "5d9819c229e5f79b767a88db9c78b24998b424a66e8a7ba0039553b7c54051ec": {
+            "expires": 1731617370.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "5e6cb57d0f9d97aa3ed75fefd40c8060a085c04727886511f0e7db126b203d43": {
+            "expires": 1731721196.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "5e74fdaca0c6c7e7afec714793677646ff89d00ae35908a7125d6cf50ea0702c": {
+            "expires": 1731603184.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "644aae458bd0a092fe342d1f020d4b7eccff9cf6cfc0677fe0d9531754edaff0": {
+            "expires": 1731692249.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "653493a22274078fc44d52acb337b56bcd4084de2f0a1b6b79be186550a30cb3": {
+            "expires": 1731591365.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "66618b25addefa9f12946c5afb65e8d690c5a871fff3d03fb796751a9eee0d41": {
+            "expires": 1731591683.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "684613e83cfde35d79917108a4091de4c585e1ff627eee0d904920759dc3ea53": {
+            "expires": 1731712313.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "68ecec112a27957857622d4c0ba02824f5e03981db6f51fa01c0be8ac893c6f1": {
+            "expires": 1731591683.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "69d6aa5b5eae433a357dc92fe12bbfb7fd29629425f0edbe55e0ac4e8df112aa": {
+            "expires": 1731718574.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "6c19cb32acd64f6c1543bf07dba3aee5ca5d3ba71f754e1e95acc3da5dc6aa27": {
+            "expires": 1731718629.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "71c8d2cf33b22285f43c5855bdabd9ea25a18b177cfe28056c8bed41776d0ced": {
+            "expires": 1731664874.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "745592d9be94482df01bc76010f58844175050e2bb7c0974de4e1f852a589554": {
+            "expires": 1731689116.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "82ee9a0b4fde768d0580e85633012235fdf4683c0115ec121ba17282075483e7": {
+            "expires": 1731708818.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "8346f9faa70bd614131a9115bcb33168ae9af221be0270e967c01e9c1c58129e": {
+            "expires": 1731693061.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "861dbf07e0df2c29fedc8fcd5a346b4dcb1a0ece0f741befc3c72d3fadc82268": {
+            "expires": 1731722565.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "88be8381b68afe4c56b949c2588dec6b57f2dbe5ae20faacb06c37b7cbdc8a8b": {
+            "expires": 1731718780.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "8a010b80566da20d356b77df700e2444292eea50a928eb7613bc874462436f36": {
+            "expires": 1731602951.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "8be44833b5b32f8ed1eb2e6dba5ec7aa49fc4307dbd18d03859c96d227a9058b": {
+            "expires": 1731658179.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "8e2e998fabc8429ef4ba385a4d4ed401fbe2508192b65dc72280cdfc086948e0": {
+            "expires": 1731692291.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "8e8ed10c9cb8ced98d7736a81b68990fff019ca2b32dd9093209b132906b68c3": {
+            "expires": 1731692267.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "8fbfaad4b9fc517f848b6f052be51b3a2cd494247078bf053460f8b80e53065a": {
+            "expires": 1731595963.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "9364816c6b2e739b647c43ad27b2d52593c2d59a5181aefcda12d04ea31d9fc6": {
+            "expires": 1731718765.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "9a29ef6e50f415e5ccd36140eeab85a4409ae271470c1d51a32e0791c75ea588": {
+            "expires": 1731658513.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "9b266dafeef7c956bb4d9e987791975b64e7333de860a0d9173e211524cc8540": {
+            "expires": 1731591553.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "9c03a8e39a5ff42c889c73ad9d4d5d84e76747322dfdf714ccb74a0d37923682": {
+            "expires": 1731719394.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "a7ba418572d761f89d13fd7a11d682a3c821406ccd29f3e6d683966d0fb3d3ab": {
+            "expires": 1731720041.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "a7cc53afae41ab5e800893c7271acf272f34b604f7e1ace8c3f0232606d01e2b": {
+            "expires": 1731719810.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "aa301c95f4890c38baa814503e940f28143304ad55dbfaea2db8aaec90169031": {
+            "expires": 1731599734.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "ac98337f159cdc03b4865b80c78d53ab39502291fa19cc0b60233209e1d92bb7": {
+            "expires": 1731689363.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "adf9d353a020d93e54b32b14c28525a7e6f33fd735144d7b778a4e517192b7c5": {
+            "expires": 1731691941.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "ae48fe0ecea0704704bc6327b6bf3258de377b08fa4d76b4f69b8470852960c6": {
+            "expires": 1731591544.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "ae967211fa06ac26d96e3207e67c136efc6367acc92d608e52e1f204b5bd3da4": {
+            "expires": 1731664535.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "b0f55c6cad8bc2230754fd1bbeebfedd31ba244eac96e8d02be6d6a33b542b4f": {
+            "expires": 1731592529.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "b689520f2e3ccf2164da5dba4bac111d4cbc6d3bdcf44361127baa0068623cd0": {
+            "expires": 1731717015.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "bb92c09264296d8c12fac5d2abed2224b25a85d5a46d87f4a4351da76d00566e": {
+            "expires": 1731720040.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "bbba0f20f9c1639ebfcaedb54a87d4b968bc953f72b06105f6d995f5eee9bff7": {
+            "expires": 1731591455.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "c1a50b58a364f294755666d0e748ba2a06fbe55de758453180920774525214c8": {
+            "expires": 1731719336.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "c6af2f6a6627cbbf18696f1b8b904346726800d05b137d251ee28b699fbd858c": {
+            "expires": 1731665294.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "c86527a0aae330a71fc324a233ad876d420a54d387794374d126e7d6a0f19f92": {
+            "expires": 1731692356.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "cd65741faf869e193c4e2a51e9454cf88598f58987b2ce559ef3d6bfa98e7605": {
+            "expires": 1731591572.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "cdb4f2d14ab7de91b8be1261be40bf59f2bfa0e5e6327166ffa08cfa74eb357a": {
+            "expires": 1731692237.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "d0f2c477a500bffcdcfbc56907df1b322200d9f7a801285bbe5440e5bca5e8c4": {
+            "expires": 1731711859.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "d3a9186f1c2c81d8085d86c09ddd4fc5e205f61f25f3cabbc1ee379e52304c77": {
+            "expires": 1731718780.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "d74ba4649e1a5a098d42c2f62472c94d4484f43b0979cbbd48b464ac5f20e49b": {
+            "expires": 1731716625.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "d769dedd53059553cb54961641c0cbdf818533db06764fbcd5557a7200247c28": {
+            "expires": 1731718992.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "d95d211a839a71c0bb00d2504f18deb81af2d0ab7183478543a5d28654a37197": {
+            "expires": 1731658629.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "df84bacd66f8dbf2d1f150d839029e11b3ce56c0536183fd33656685bd446c44": {
+            "expires": 1731719340.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "e8be12b35aa13a67bc7d3332d373b4117493319625c1ed87e3335ab8d09b9054": {
+            "expires": 1731686353.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "f04dce449eb7dc69f7973906564c4aa224ff20595a3f2a3bfedbcd23ffaa9117": {
+            "expires": 1731658418.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "f4472d087a796ef1f431c44d4f6e9d46ecfe88acce21368a7d85fc31e1efc1e9": {
+            "expires": 1731711611.0,
+            "level": 10,
+            "login": "admin"
+        },
+        "f62a451ea2933e56ff9dae2299e374477adb54d8c8285ea59d2ab15b9a80bd13": {
+            "expires": 1731712500.0,
+            "level": 10,
+            "login": "admin"
+        }
+    },
+    "show_session_speed": false,
+    "show_sidebar": true,
+    "sidebar_multiple_filters": true,
+    "sidebar_show_zero": false,
+    "theme": "gray"
+}
