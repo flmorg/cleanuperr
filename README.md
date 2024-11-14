@@ -31,6 +31,30 @@ docker run -d \
     flaminel/cleanuperr:latest
 ```
 
+### Docker compose yaml
+```
+version: "3.3"
+services:
+  cleanuperr:
+    environment:
+      - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
+      - QBITTORRENT__URL=http://localhost:8080
+      - QBITTORRENT__USERNAME=user
+      - QBITTORRENT__PASSWORD=pass
+      - SONARR__ENABLED=true
+      - SONARR__INSTANCES__0__URL=http://localhost:8989
+      - SONARR__INSTANCES__0__APIKEY=secret1
+      - SONARR__INSTANCES__1__URL=http://localhost:8990
+      - SONARR__INSTANCES__1__APIKEY=secret2
+      - RADARR__ENABLED=true
+      - RADARR__INSTANCES__0__URL=http://localhost:7878
+      - RADARR__INSTANCES__0__APIKEY=secret3
+      - RADARR__INSTANCES__1__URL=http://localhost:7879
+      - RADARR__INSTANCES__1__APIKEY=secret4
+    image: flaminel/cleanuperr:latest
+    restart: unless-stopped
+```
+
 ### Environment variables
 
 | Variable | Required | Description | Default value |
