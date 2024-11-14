@@ -48,6 +48,23 @@ services:
       - 6882:6881/udp
     restart: unless-stopped
 
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./data/deluge/config:/config
+      - ./data/deluge/downloads:/downloads
+    ports:
+      - 8112:8112
+      - 6883:6881
+      - 6883:6881/udp
+      - 58846:58846
+    restart: unless-stopped
+
   tracker:
     image: wiltonsr/opentracker:open
     container_name: opentracker
@@ -125,24 +142,24 @@ services:
       - 8787:8787
     restart: unless-stopped
 
-  cleanuperr:
-    image: flaminel/cleanuperr:1.1.0
-    container_name: cleanuperr
-    environment:
-      - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
-      - QBITTORRENT__URL=http://qbittorrent:8080
-      - QBITTORRENT__USERNAME=test
-      - QBITTORRENT__PASSWORD=testing
-      - SONARR__ENABLED=true
-      - SONARR__INSTANCES__0__URL=http://sonarr:8989
-      - SONARR__INSTANCES__0__APIKEY=96736c3eb3144936b8f1d62d27be8cee
-      - RADARR__ENABLED=true
-      - RADARR__INSTANCES__0__URL=http://radarr:7878
-      - RADARR__INSTANCES__0__APIKEY=705b553732ab4167ab23909305d60600
-    restart: unless-stopped
-    depends_on:
-      - qbittorrent
-      - sonarr
-      - radarr
-      - lidarr
-      - readarr
+  # cleanuperr:
+  #   image: flaminel/cleanuperr:1.1.0
+  #   container_name: cleanuperr
+  #   environment:
+  #     - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
+  #     - QBITTORRENT__URL=http://qbittorrent:8080
+  #     - QBITTORRENT__USERNAME=test
+  #     - QBITTORRENT__PASSWORD=testing
+  #     - SONARR__ENABLED=true
+  #     - SONARR__INSTANCES__0__URL=http://sonarr:8989
+  #     - SONARR__INSTANCES__0__APIKEY=96736c3eb3144936b8f1d62d27be8cee
+  #     - RADARR__ENABLED=true
+  #     - RADARR__INSTANCES__0__URL=http://radarr:7878
+  #     - RADARR__INSTANCES__0__APIKEY=705b553732ab4167ab23909305d60600
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - qbittorrent
+  #     - sonarr
+  #     - radarr
+  #     - lidarr
+  #     - readarr
