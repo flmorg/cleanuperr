@@ -1,0 +1,148 @@
+
+# user: test
+# pass: testing
+
+# use this to create torrent files
+# docker run --rm -it -v $(pwd)/data/qbittorrent-bad/downloads:/downloads --name debian debian:bookworm-slim
+# apt update && apt install ctorrent
+# ctorrent -t -u "http://tracker:6969/announce" -s example.torrent file_name
+
+# api keys
+# sonarr:   96736c3eb3144936b8f1d62d27be8cee
+# radarr:   705b553732ab4167ab23909305d60600
+# lidarr:   4bd467b8702a4ecf94f737922dac6481
+# readarr:  51c053efbea34bad90120d5c2237aa85
+
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:4.6.7-libtorrentv1
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - WEBUI_PORT=8080
+    volumes:
+      - ./data/qbittorrent/config:/config
+      - ./data/qbittorrent/downloads:/downloads
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: unless-stopped
+
+  qbittorrent-bad:
+    image: lscr.io/linuxserver/qbittorrent:4.6.7-libtorrentv1
+    container_name: qbittorrent-bad
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - WEBUI_PORT=8081
+    volumes:
+      - ./data/qbittorrent-bad/config:/config
+      - ./data/qbittorrent-bad/downloads:/downloads
+    ports:
+      - 8081:8081
+      - 6882:6881
+      - 6882:6881/udp
+    restart: unless-stopped
+
+  tracker:
+    image: wiltonsr/opentracker:open
+    container_name: opentracker
+    ports:
+      - 6969:6969/tcp
+      - 6969:6969/udp
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./data/nginx:/usr/share/nginx/html/custom
+    ports:
+      - 8082:80
+    restart: unless-stopped
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./data/sonarr/config:/config
+      - ./data/sonarr/tv:/tv
+      - ./data/qbittorrent/downloads:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./data/radarr/config:/config
+      - ./data/radarr/movies:/movies
+      - ./data/qbittorrent/downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./data/lidarr/config:/config
+      - ./data/lidarr/music:/music
+      - ./data/qbittorrent/downloads:/downloads
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./data/readarr/config:/config
+      - ./data/readarr/books:/books
+      - ./data/qbittorrent/downloads:/downloads
+    ports:
+      - 8787:8787
+    restart: unless-stopped
+
+  cleanuperr:
+    image: flaminel/cleanuperr:1.1.0
+    container_name: cleanuperr
+    environment:
+      - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
+      - QBITTORRENT__URL=http://qbittorrent:8080
+      - QBITTORRENT__USERNAME=test
+      - QBITTORRENT__PASSWORD=testing
+      - SONARR__ENABLED=true
+      - SONARR__INSTANCES__0__URL=http://sonarr:8989
+      - SONARR__INSTANCES__0__APIKEY=96736c3eb3144936b8f1d62d27be8cee
+      - RADARR__ENABLED=true
+      - RADARR__INSTANCES__0__URL=http://radarr:7878
+      - RADARR__INSTANCES__0__APIKEY=705b553732ab4167ab23909305d60600
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+      - sonarr
+      - radarr
+      - lidarr
+      - readarr

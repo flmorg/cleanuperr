@@ -1,0 +1,25 @@
+<rss version="2.0">
+  <channel>
+    <title>Test feed</title>
+    <link>http://nginx/custom/radarr_bad.xml</link>
+    <description>
+      Test
+    </description>
+    <language>en-CA</language>
+    <copyright> Test </copyright>
+    <pubDate>Tue, 5 Nov 2024 22:02:13 -0400</pubDate>
+    <lastBuildDate>Tue, 5 Nov 2024 22:02:13 -0400</lastBuildDate>
+    <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+    <ttl>30</ttl>
+    <item>
+      <title>Speak.No.Evil.2024.2160p.MA.WEB-DL.DDP5.1.Atmos.H.265-HHWEB</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>http://nginx/custom/radarr_bad.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f9057ac3f81efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+  </channel>
+</rss>

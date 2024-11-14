@@ -165,3 +165,6 @@ src/.idea/
 
 # Ignore Jetbrains IntelliJ Workspace Directories
 .idea/
+
+**/logs/
+**/MediaCover/
