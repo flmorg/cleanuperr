@@ -91,6 +91,8 @@ public sealed class BlocklistProvider
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startTime);
         
+        _logger.LogDebug("loaded {count} patterns", Patterns.Count);
+        _logger.LogDebug("loaded {count} regexes", Regexes.Count);
         _logger.LogDebug("blocklist loaded in {elapsed} ms", elapsed.TotalMilliseconds);
     }
     

@@ -24,7 +24,6 @@ public sealed class FilenameEvaluator
     {
         if (_blocklistProvider.Patterns.Count is 0)
         {
-            _logger.LogDebug("no pattern found in {type}", _blocklistProvider.BlocklistType);
             return true;
         }
 
@@ -40,7 +39,6 @@ public sealed class FilenameEvaluator
     {
         if (_blocklistProvider.Regexes.Count is 0)
         {
-            _logger.LogDebug("no regex found in {type}", _blocklistProvider.BlocklistType);
             return true;
         }
         
