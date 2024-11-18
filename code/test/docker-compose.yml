@@ -185,6 +185,7 @@ services:
       # - CONTENTBLOCKER__WHITELIST__ENABLED=true
       # - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist
 
+      - QBITTORRENT__ENABLED=true
       - QBITTORRENT__URL=http://qbittorrent:8080
       - QBITTORRENT__USERNAME=test
       - QBITTORRENT__PASSWORD=testing

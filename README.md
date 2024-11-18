@@ -1,21 +1,43 @@
 # cleanuperr
 
-# This tool is actively developed and not yet stable. Join the discord server if you want to get in touch with me as soon as possible (or if you just want to be informed of new releases), so we can squash those pesky bugs together: https://discord.gg/cJYPs9Bt
+### This tool is actively developed and not yet stable. Join the discord server if you want to get in touch with me as soon as possible (or if you just want to be informed of new releases), so we can squash those pesky bugs together: https://discord.gg/cJYPs9Bt
 
-## How it works
+## Important note
 
-1. Add excluded file names to prevent malicious files from being downloaded by qBittorrent.
-2. cleanuperr goes through all items in Sonarr's queue at every 5th minute.
-3. For each queue item, a call is made to qBittorrent to get the stats of the torrent.
-4. If a torrent is found to be marked as completed, but with 0 downloaded bytes, cleanuperr calls Sonarr to add that torrent to the blocklist.
-5. If any malicious torrents have been found, cleanuperr calls Sonarr to automatically search again.
+Only the <b>latest versions</b> of qBittorrent, Deluge, Sonarr etc. are supported, or earlier versions that have the same API as the latest version.
+
+# Setup
+
+## Using qBittorrent's built-in feature (works only with qBittorrent)
+
+1. Go to qBittorrent -> Options -> Downloads -> make sure `Excluded file names` is checked -> Set the exclusion list found [here](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) or create your own.
+2. Start cleanuperr with `QUEUECLEANER__ENABLED` set to `true`.
+3. cleanuperr will execute a queue cleaner cron job at every 5 minutes that will:
+   1. go through all items from Sonarr/Radarr's queue.
+   2. each a queue item is checked: 
+      - if it has been <b>marked as completed and 0 bytes have been downloaded</b> (because qBittorrent blocked the files).
+      - if all its files are skipped.
+   3. if the item <b>IS NOT</b> as described, it is skipped.
+   4. if the item <b>IS</b> as described, it is removed from Sonarr/Radarr's queue, removed from qBittorrent and a search is triggered for the show/movie.
+
+## Using cleanuperr's blocklist (works with all supported download clients)
+
+1. Start cleanuperr with both `QUEUECLEANER_ENABLED` and `CONTENTBLOCKER_ENABLED` set to `true`.
+2. Be sure to set and enable a blacklist or a whitelist as described in the [Environment variables](#Environment-variables) section.
+3. cleanuperr with execute the following jobs:
+   - the same queue cleaner as described [here](#Using-qBittorrents-built-in-feature)
+   - a content blocker cron job at every 5 minutes that will mark files as unwanted/skipped if:
+      - they are in the blacklist.
+      - they are not in the whitelist.
 
 ## Usage
 
 ### Docker
+
 ```
 docker run -d \
     -e TRIGGERS__QUEUECLEANER="0 0/5 * * * ?" \
+    -e QBITTORRENT__ENABLED=true \
     -e QBITTORRENT__URL="http://localhost:8080" \
     -e QBITTORRENT__USERNAME="user" \
     -e QBITTORRENT__PASSWORD="pass" \
@@ -34,20 +56,46 @@ docker run -d \
 ```
 
 ### Docker compose yaml
+
 ```
 version: "3.3"
 services:
   cleanuperr:
     environment:
+      - LOGGING_LOGLEVEL_DEFAULT=Information
+
       - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
+      - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
+
+      - QUEUECLEANER__ENABLED=true
+
+      - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__BLACKLIST__ENABLED=true
+      - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
+      # OR
+      # - CONTENTBLOCKER__WHITELIST__ENABLED=true
+      # - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist
+
+      - QBITTORRENT__ENABLED=true
       - QBITTORRENT__URL=http://localhost:8080
       - QBITTORRENT__USERNAME=user
       - QBITTORRENT__PASSWORD=pass
+      # OR
+      # - DELUGE__ENABLED=true
+      # - DELUGE__URL=http://localhost:8112
+      # - DELUGE__PASSWORD=testing
+      # OR
+      # - TRANSMISSION__ENABLED=true
+      # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__USERNAME=test
+      # - TRANSMISSION__PASSWORD=testing
+
       - SONARR__ENABLED=true
       - SONARR__INSTANCES__0__URL=http://localhost:8989
       - SONARR__INSTANCES__0__APIKEY=secret1
       - SONARR__INSTANCES__1__URL=http://localhost:8990
       - SONARR__INSTANCES__1__APIKEY=secret2
+
       - RADARR__ENABLED=true
       - RADARR__INSTANCES__0__URL=http://localhost:7878
       - RADARR__INSTANCES__0__APIKEY=secret3
@@ -61,10 +109,32 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| TRIGGERS__QUEUECLEANER | No | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
-| QBITTORRENT__URL | Yes | qBittorrent instance url | http://localhost:8080 |
-| QBITTORRENT__USERNAME | Yes | qBittorrent user | empty |
-| QBITTORRENT__PASSWORD | Yes | qBittorrent password | empty |
+| LOGGING_LOGLEVEL_DEFAULT | No | Can be `Debug`, `Information`, `Warning` or `Error` | Information |
+|||||
+| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
+| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
+|||||
+| QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
+|||||
+| CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
+| CONTENTBLOCKER__BLACKLIST__ENABLED | Yes if content blocker is enabled and whitelist is not enabled | Enable or disable the blacklist | false |
+| CONTENTBLOCKER__BLACKLIST__PATH | Yes if blacklist is enabled | Path to the blacklist (local file or url) | empty |
+| CONTENTBLOCKER__WHITELIST__ENABLED | Yes if content blocker is enabled and blacklist is not enabled | Enable or disable the whitelist | false |
+| CONTENTBLOCKER__BLACKLIST__PATH | Yes if whitelist is enabled | Path to the whitelist (local file or url) | empty |
+|||||
+| QBITTORRENT__ENABLED | No | Enable or disable qBittorrent | true |
+| QBITTORRENT__URL | Yes if qBittorrent is enabled | qBittorrent instance url | http://localhost:8112 |
+| QBITTORRENT__USERNAME | Yes if qBittorrent is enabled | qBittorrent user | empty |
+| QBITTORRENT__PASSWORD | Yes if qBittorrent is enabled | qBittorrent password | empty |
+|||||
+| DELUGE__ENABLED | No | Enable or disable Deluge | false |
+| DELUGE__URL | Yes if Deluge is enabled | Deluge instance url | http://localhost:8080 |
+| DELUGE__PASSWORD | Yes if Deluge is enabled | Deluge password | empty |
+|||||
+| TRANSMISSION__ENABLED | No | Enable or disable Transmission | true |
+| TRANSMISSION__URL | Yes if Transmission is enabled | Transmission instance url | http://localhost:9091 |
+| TRANSMISSION__USERNAME | Yes if Transmission is enabled | Transmission user | empty |
+| TRANSMISSION__PASSWORD | Yes if Transmission is enabled | Transmission password | empty |
 |||||
 | SONARR__ENABLED | No | Whether Sonarr cleanup is enabled or not  | true |
 | SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |
@@ -75,15 +145,23 @@ services:
 | RADARR__INSTANCES__0__APIKEY | Yes | First Radarr instance API key | empty |
 
 #
+### To be noted
 
-Multiple Sonarr/Radarr instances can be specified using this format:
-
+1. The blacklist and the whitelist can not be both enabled at the same time.
+2. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
+3. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
+```
+*example      // file name ends with "example"
+example*      // file name starts with "example"
+*example*     // file name has "example" in the name
+example       // file name is exactly the word "example"
+<ANY_REGEX>   // regex
+```
+4. Multiple Sonarr/Radarr instances can be specified using this format, where `<NUMBER>` starts from 0:
 ```
 SONARR__INSTANCES__<NUMBER>__URL
 SONARR__INSTANCES__<NUMBER>__APIKEY
 ```
-
-where `<NUMBER>` starts from 0.
 
 #
 
@@ -96,528 +174,3 @@ where `<NUMBER>` starts from 0.
 ### Run as a Windows Service
 
 Check out this stackoverflow answer on how to do it: https://stackoverflow.com/a/15719678
-
-## Extensions to block in qBittorrent
-<details> 
-    <summary>Extensions</summary>
-    <pre><code>*(sample).*
-*.0xe
-*.73k
-*.73p
-*.7z
-*.89k
-*.89z
-*.8ck
-*.a7r
-*.ac
-*.acc
-*.ace
-*.acr
-*.actc
-*.action
-*.actm
-*.ade
-*.adp
-*.afmacro
-*.afmacros
-*.ahk
-*.ai
-*.aif
-*.air
-*.alz
-*.api
-*.apk
-*.app
-*.appimage
-*.applescript
-*.application
-*.appx
-*.arc
-*.arj
-*.arscript
-*.asb
-*.asp
-*.aspx
-*.aspx-exe
-*.atmx
-*.azw2
-*.ba_
-*.bak
-*.bas
-*.bash
-*.bat
-*.bdjo
-*.bdmv
-*.beam
-*.bin
-*.bmp
-*.bms
-*.bns
-*.bsa
-*.btm
-*.bz2
-*.c
-*.cab
-*.caction
-*.cci
-*.cda
-*.cdb
-*.cel
-*.celx
-*.cfs
-*.cgi
-*.cheat
-*.chm
-*.ckpt
-*.cla
-*.class
-*.clpi
-*.cmd
-*.cof
-*.coffee
-*.com
-*.command
-*.conf
-*.config
-*.cpl
-*.crt
-*.cs
-*.csh
-*.csharp
-*.csproj
-*.css
-*.csv
-*.cue
-*.cur
-*.cyw
-*.daemon
-*.dat
-*.data-00000-of-00001
-*.db
-*.deamon
-*.deb
-*.dek
-*.diz
-*.dld
-*.dll
-*.dmc
-*.dmg
-*.doc
-*.docb
-*.docm
-*.docx
-*.dot
-*.dotb
-*.dotm
-*.drv
-*.ds
-*.dw
-*.dword
-*.dxl
-*.e_e
-*.ear
-*.ebacmd
-*.ebm
-*.ebs
-*.ebs2
-*.ecf
-*.eham
-*.elf
-*.elf-so
-*.email
-*.emu
-*.epk
-*.es
-*.esh
-*.etc
-*.ex4
-*.ex5
-*.ex_
-*.exe
-*.exe-only
-*.exe-service
-*.exe-small
-*.exe1
-*.exopc
-*.exz
-*.ezs
-*.ezt
-*.fas
-*.fba
-*.fky
-*.flac
-*.flatpak
-*.flv
-*.fpi
-*.frs
-*.fxp
-*.gadget
-*.gat
-*.gif
-*.gifv
-*.gm9
-*.gpe
-*.gpu
-*.gs
-*.gz
-*.h5
-*.ham
-*.hex
-*.hlp
-*.hms
-*.hpf
-*.hta
-*.hta-psh
-*.htaccess
-*.htm
-*.html
-*.icd
-*.icns
-*.ico
-*.idx
-*.iim
-*.img
-*.index
-*.inf
-*.ini
-*.ink
-*.ins
-*.ipa
-*.ipf
-*.ipk
-*.ipsw
-*.iqylink
-*.iso
-*.isp
-*.isu
-*.ita
-*.izh
-*.izma ace
-*.jar
-*.java
-*.jpeg
-*.jpg
-*.js
-*.js_be
-*.js_le
-*.jse
-*.jsf
-*.json
-*.jsp
-*.jsx
-*.kix
-*.ksh
-*.kx
-*.lck
-*.ldb
-*.lib
-*.link
-*.lnk
-*.lo
-*.lock
-*.log
-*.loop-vbs
-*.ls
-*.m3u
-*.m4a
-*.mac
-*.macho
-*.mamc
-*.manifest
-*.mcr
-*.md
-*.mda
-*.mdb
-*.mde
-*.mdf
-*.mdn
-*.mdt
-*.mel
-*.mem
-*.meta
-*.mgm
-*.mhm
-*.mht
-*.mhtml
-*.mid
-*.mio
-*.mlappinstall
-*.mlx
-*.mm
-*.mobileconfig
-*.model
-*.moo
-*.mp3
-*.mpa
-*.mpk
-*.mpls
-*.mrc
-*.mrp
-*.ms
-*.msc
-*.msh
-*.msh1
-*.msh1xml
-*.msh2
-*.msh2xml
-*.mshxml
-*.msi
-*.msi-nouac
-*.msix
-*.msl
-*.msp
-*.mst
-*.msu
-*.mxe
-*.n
-*.ncl
-*.net
-*.nexe
-*.nfo
-*.nrg
-*.num
-*.nzb.bz2
-*.nzb.gz
-*.nzbs
-*.ocx
-*.odt
-*.ore
-*.ost
-*.osx
-*.osx-app
-*.otm
-*.out
-*.ova
-*.p
-*.paf
-*.pak
-*.pb
-*.pcd
-*.pdb
-*.pdf
-*.pea
-*.perl
-*.pex
-*.phar
-*.php
-*.php5
-*.pif
-*.pkg
-*.pl
-*.plsc
-*.plx
-*.png
-*.pol
-*.pot
-*.potm
-*.powershell
-*.ppam
-*.ppkg
-*.pps
-*.ppsm
-*.ppt
-*.pptm
-*.pptx
-*.prc
-*.prg
-*.ps
-*.ps1
-*.ps1xml
-*.ps2
-*.ps2xml
-*.psc1
-*.psc2
-*.psd
-*.psd1
-*.psh
-*.psh-cmd
-*.psh-net
-*.psh-reflection
-*.psm1
-*.pst
-*.pt
-*.pvd
-*.pwc
-*.pxo
-*.py
-*.pyc
-*.pyd
-*.pyo
-*.python
-*.pyz
-*.qit
-*.qpx
-*.ram
-*.rar
-*.raw
-*.rb
-*.rbf
-*.rbx
-*.readme
-*.reg
-*.resources
-*.resx
-*.rfs
-*.rfu
-*.rgs
-*.rm
-*.rox
-*.rpg
-*.rpj
-*.rpm
-*.ruby
-*.run
-*.rxe
-*.s2a
-*.sample
-*.sapk
-*.savedmodel
-*.sbs
-*.sca
-*.scar
-*.scb
-*.scf
-*.scpt
-*.scptd
-*.scr
-*.script
-*.sct
-*.seed
-*.server
-*.service
-*.sfv
-*.sh
-*.shb
-*.shell
-*.shortcut
-*.shs
-*.shtml
-*.sit
-*.sitx
-*.sk
-*.sldm
-*.sln
-*.smm
-*.snap
-*.snd
-*.spr
-*.sql
-*.sqx
-*.srec
-*.srt
-*.ssm
-*.sts
-*.sub
-*.svg
-*.swf
-*.sys
-*.tar
-*.tar.gz
-*.tbl
-*.tbz
-*.tcp
-*.text
-*.tf
-*.tgz
-*.thm
-*.thmx
-*.thumb
-*.tiapp
-*.tif
-*.tiff
-*.tipa
-*.tmp
-*.tms
-*.toast
-*.torrent
-*.tpk
-*.txt
-*.u3p
-*.udf
-*.upk
-*.upx
-*.url
-*.uvm
-*.uw8
-*.vb
-*.vba
-*.vba-exe
-*.vba-psh
-*.vbapplication
-*.vbe
-*.vbs
-*.vbscript
-*.vbscript 
-*.vcd
-*.vdo
-*.vexe
-*.vhd
-*.vhdx
-*.vlx
-*.vm
-*.vmdk
-*.vob
-*.vocab
-*.vpm
-*.vxp
-*.war
-*.wav
-*.wbk
-*.wcm
-*.webm
-*.widget
-*.wim
-*.wiz
-*.wma
-*.workflow
-*.wpk
-*.wpl
-*.wpm
-*.wps
-*.ws
-*.wsc
-*.wsf
-*.wsh
-*.x86
-*.x86_64
-*.xaml
-*.xap
-*.xbap
-*.xbe
-*.xex
-*.xig
-*.xla
-*.xlam
-*.xll
-*.xlm
-*.xls
-*.xlsb
-*.xlsm
-*.xlsx
-*.xlt
-*.xltb
-*.xltm
-*.xlw
-*.xml
-*.xqt
-*.xrt
-*.xys
-*.xz
-*.ygh
-*.z
-*.zip
-*.zipx
-*.zl9
-*.zoo
-*sample.avchd
-*sample.avi
-*sample.mkv
-*sample.mov
-*sample.mp4
-*sample.webm
-*sample.wmv
-Trailer.*
-VOSTFR
-api
-</code></pre>
-</details>
