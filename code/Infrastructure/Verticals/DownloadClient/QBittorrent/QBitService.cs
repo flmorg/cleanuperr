@@ -83,7 +83,7 @@ public sealed class QBitService : IDownloadService
                 continue;
             }
             
-            _logger.LogDebug("unwanted file found | {file}", file.Name);
+            _logger.LogInformation("unwanted file found | {file}", file.Name);
             await _client.SetFilePriorityAsync(hash, file.Index.Value, TorrentContentPriority.Skip);
         }
     }

@@ -88,7 +88,7 @@ public sealed class TransmissionService : IDownloadService
                 continue;
             }
             
-            _logger.LogDebug("unwanted file found | {file}", torrent.Files[i].Name);
+            _logger.LogInformation("unwanted file found | {file}", torrent.Files[i].Name);
             unwantedFiles.Add(i);
         }
 

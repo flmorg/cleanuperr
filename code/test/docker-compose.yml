@@ -113,9 +113,9 @@ services:
     volumes:
       - ./data/sonarr/config:/config
       - ./data/sonarr/tv:/tv
-      # - ./data/qbittorrent/downloads:/downloads
+      - ./data/qbittorrent/downloads:/downloads
       # - ./data/deluge/downloads:/downloads
-      - ./data/transmission/downloads:/downloads
+      # - ./data/transmission/downloads:/downloads
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -130,9 +130,9 @@ services:
     volumes:
       - ./data/radarr/config:/config
       - ./data/radarr/movies:/movies
-      # - ./data/qbittorrent/downloads:/downloads
+      - ./data/qbittorrent/downloads:/downloads
       # - ./data/deluge/downloads:/downloads
-      - ./data/transmission/downloads:/downloads
+      # - ./data/transmission/downloads:/downloads
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -171,6 +171,8 @@ services:
     image: flaminel/cleanuperr:latest
     container_name: cleanuperr
     environment:
+      - LOGGING_LOGLEVEL_DEFAULT=Debug
+
       - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
       - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
 
@@ -178,11 +180,23 @@ services:
 
       - CONTENTBLOCKER__ENABLED=true
       - CONTENTBLOCKER__BLACKLIST__ENABLED=true
-      - CONTENTBLOCKER__BLACKLIST__PATH=https://github.com/flmorg/cleanuperr/blob/add_blacklist_support/blacklist
+      - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
+      # OR
+      # - CONTENTBLOCKER__WHITELIST__ENABLED=true
+      # - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist
 
       - QBITTORRENT__URL=http://qbittorrent:8080
       - QBITTORRENT__USERNAME=test
       - QBITTORRENT__PASSWORD=testing
+      # OR
+      # - DELUGE__ENABLED=true
+      # - DELUGE__URL=http://localhost:8112
+      # - DELUGE__PASSWORD=testing
+      # OR
+      # - TRANSMISSION__ENABLED=true
+      # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__USERNAME=test
+      # - TRANSMISSION__PASSWORD=testing
 
       - SONARR__ENABLED=true
       - SONARR__INSTANCES__0__URL=http://sonarr:8989

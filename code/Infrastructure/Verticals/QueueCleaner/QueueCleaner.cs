@@ -81,6 +81,12 @@ public sealed class QueueCleaner : IDisposable
                     continue;
                 }
 
+                if (string.IsNullOrEmpty(record.DownloadId))
+                {
+                    _logger.LogDebug("skip | download id is null for {title}", record.Title);
+                    continue;
+                }
+
                 if (!await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId))
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
