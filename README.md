@@ -62,7 +62,7 @@ version: "3.3"
 services:
   cleanuperr:
     environment:
-      - LOGGING_LOGLEVEL_DEFAULT=Information
+      - LOGGING__LOGLEVEL__DEFAULT=Information
 
       - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
       - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
@@ -109,7 +109,7 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| LOGGING_LOGLEVEL_DEFAULT | No | Can be `Debug`, `Information`, `Warning` or `Error` | Information |
+| LOGGING__LOGLEVEL__DEFAULT | No | Can be `Debug`, `Information`, `Warning` or `Error` | Information |
 |||||
 | TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
 | TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
