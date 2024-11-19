@@ -77,6 +77,11 @@ public sealed class ContentBlocker : IDisposable
         {
             foreach (QueueRecord record in items)
             {
+                if (record.Protocol is not "torrent")
+                {
+                    continue;
+                }
+                
                 if (string.IsNullOrEmpty(record.DownloadId))
                 {
                     _logger.LogDebug("skip | download id is null for {title}", record.Title);
