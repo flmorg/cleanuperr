@@ -41,7 +41,8 @@ public sealed class TransmissionService : IDownloadService
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
-        if (torrent is null)
+        // if no files found, torrent might be stuck in Downloading metadata
+        if (torrent?.FileStats?.Length is null or 0)
         {
             return false;
         }

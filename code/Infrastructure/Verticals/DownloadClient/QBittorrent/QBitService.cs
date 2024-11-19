@@ -53,18 +53,14 @@ public sealed class QBitService : IDownloadService
 
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
-        if (files is null)
+        // if no files found, torrent might be stuck in Downloading metadata
+        if (files?.Count is null or 0)
         {
             return false;
         }
-        
-        // if all files are marked as skip
-        if (files.All(x => x.Priority is TorrentContentPriority.Skip))
-        {
-            return true;
-        }
 
-        return false;
+        // if all files are marked as skip
+        return files.All(x => x.Priority is TorrentContentPriority.Skip);
     }
 
     public async Task BlockUnwantedFilesAsync(string hash)

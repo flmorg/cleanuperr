@@ -49,7 +49,8 @@ public sealed class DelugeService : IDownloadService
             _logger.LogDebug(exception, "failed to find torrent {hash} in the download client", hash);
         }
 
-        if (contents is null)
+        // if no files found, torrent might be stuck in Downloading metadata
+        if (contents?.Contents?.Count is null or 0)
         {
             return false;
         }
