@@ -23,10 +23,5 @@ public sealed record DelugeConfig : IConfig
         {
             throw new ArgumentNullException(nameof(Url));
         }
-
-        if (string.IsNullOrEmpty(Password))
-        {
-            throw new ArgumentNullException(nameof(Password));
-        }
     }
 }

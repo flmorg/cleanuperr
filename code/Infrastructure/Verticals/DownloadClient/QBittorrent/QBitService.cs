@@ -27,6 +27,11 @@ public sealed class QBitService : IDownloadService
 
     public async Task LoginAsync()
     {
+        if (string.IsNullOrEmpty(_config.Username) && string.IsNullOrEmpty(_config.Password))
+        {
+            return;
+        }
+        
         await _client.LoginAsync(_config.Username, _config.Password);
     }
 
