@@ -144,8 +144,8 @@ services:
 |||||
 | TRANSMISSION__ENABLED | No | Enable or disable Transmission | true |
 | TRANSMISSION__URL | Yes if Transmission is enabled | Transmission instance url | http://localhost:9091 |
-| TRANSMISSION__USERNAME | Yes if Transmission is enabled | Transmission user | empty |
-| TRANSMISSION__PASSWORD | Yes if Transmission is enabled | Transmission password | empty |
+| TRANSMISSION__USERNAME | No | Transmission user | empty |
+| TRANSMISSION__PASSWORD | No | Transmission password | empty |
 |||||
 | SONARR__ENABLED | No | Whether Sonarr cleanup is enabled or not  | true |
 | SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |

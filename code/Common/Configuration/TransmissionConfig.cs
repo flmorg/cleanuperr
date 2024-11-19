@@ -23,15 +23,5 @@ public record TransmissionConfig
         {
             throw new ArgumentNullException(nameof(Url));
         }
-
-        if (string.IsNullOrEmpty(Username))
-        {
-            throw new ArgumentNullException(nameof(Username));
-        }
-
-        if (string.IsNullOrEmpty(Password))
-        {
-            throw new ArgumentNullException(nameof(Password));
-        }
     }
 }
