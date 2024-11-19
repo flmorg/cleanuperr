@@ -134,16 +134,16 @@ services:
 | CONTENTBLOCKER__BLACKLIST__PATH | Yes if whitelist is enabled | Path to the whitelist (local file or url); Needs to be json compatible | empty |
 |||||
 | QBITTORRENT__ENABLED | No | Enable or disable qBittorrent | true |
-| QBITTORRENT__URL | Yes if qBittorrent is enabled | qBittorrent instance url | http://localhost:8112 |
-| QBITTORRENT__USERNAME | Yes if qBittorrent is enabled | qBittorrent user | empty |
-| QBITTORRENT__PASSWORD | Yes if qBittorrent is enabled | qBittorrent password | empty |
+| QBITTORRENT__URL | No | qBittorrent instance url | http://localhost:8112 |
+| QBITTORRENT__USERNAME | No | qBittorrent user | empty |
+| QBITTORRENT__PASSWORD | No | qBittorrent password | empty |
 |||||
 | DELUGE__ENABLED | No | Enable or disable Deluge | false |
-| DELUGE__URL | Yes if Deluge is enabled | Deluge instance url | http://localhost:8080 |
-| DELUGE__PASSWORD | Yes if Deluge is enabled | Deluge password | empty |
+| DELUGE__URL | No | Deluge instance url | http://localhost:8080 |
+| DELUGE__PASSWORD | No | Deluge password | empty |
 |||||
 | TRANSMISSION__ENABLED | No | Enable or disable Transmission | true |
-| TRANSMISSION__URL | Yes if Transmission is enabled | Transmission instance url | http://localhost:9091 |
+| TRANSMISSION__URL | No | Transmission instance url | http://localhost:9091 |
 | TRANSMISSION__USERNAME | No | Transmission user | empty |
 | TRANSMISSION__PASSWORD | No | Transmission password | empty |
 |||||
