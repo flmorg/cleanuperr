@@ -77,6 +77,12 @@ public sealed class ContentBlocker : IDisposable
         {
             foreach (QueueRecord record in items)
             {
+                if (string.IsNullOrEmpty(record.DownloadId))
+                {
+                    _logger.LogDebug("skip | download id is null for {title}", record.Title);
+                    continue;
+                }
+                
                 _logger.LogDebug("searching unwanted files for {title}", record.Title);
                 await _downloadService.BlockUnwantedFilesAsync(record.DownloadId);
             }
