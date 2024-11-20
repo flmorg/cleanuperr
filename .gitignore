@@ -169,3 +169,6 @@ src/.idea/
 **/logs/
 **/MediaCover/
 **/archive/
+**/Backups/
+*.fastresume
+*.bak
