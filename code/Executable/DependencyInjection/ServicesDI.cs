@@ -15,8 +15,6 @@ public static class ServicesDI
         services
             .AddTransient<SonarrClient>()
             .AddTransient<RadarrClient>()
-            .AddTransient<QueueCleanerJob>()
-            .AddTransient<ContentBlockerJob>()
             .AddTransient<QueueCleaner>()
             .AddTransient<ContentBlocker>()
             .AddTransient<FilenameEvaluator>()

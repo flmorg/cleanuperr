@@ -51,15 +51,15 @@ public static class QuartzDI
             return;
         }
         
-        q.AddJob<QueueCleanerJob>(opts =>
+        q.AddJob<GenericJob<QueueCleaner>>(opts =>
         {
-            opts.WithIdentity(nameof(QueueCleanerJob));
+            opts.WithIdentity(nameof(QueueCleaner));
         });
 
         q.AddTrigger(opts =>
         {
-            opts.ForJob(nameof(QueueCleanerJob))
-                .WithIdentity($"{nameof(QueueCleanerJob)}-trigger")
+            opts.ForJob(nameof(QueueCleaner))
+                .WithIdentity($"{nameof(QueueCleaner)}-trigger")
                 .WithCronSchedule(trigger, x =>x.WithMisfireHandlingInstructionDoNothing());
         });
     }
@@ -84,15 +84,15 @@ public static class QuartzDI
             return;
         }
 
-        q.AddJob<ContentBlockerJob>(opts =>
+        q.AddJob<GenericJob<ContentBlocker>>(opts =>
         {
-            opts.WithIdentity(nameof(ContentBlockerJob));
+            opts.WithIdentity(nameof(ContentBlocker));
         });
 
         q.AddTrigger(opts =>
         {
-            opts.ForJob(nameof(ContentBlockerJob))
-                .WithIdentity($"{nameof(ContentBlockerJob)}-trigger")
+            opts.ForJob(nameof(ContentBlocker))
+                .WithIdentity($"{nameof(ContentBlocker)}-trigger")
                 .WithCronSchedule(trigger, x =>x.WithMisfireHandlingInstructionDoNothing());
         });
     }

@@ -3,21 +3,14 @@ using Domain.Arr.Queue;
 using Domain.Enums;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.Jobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.QueueCleaner;
 
-public sealed class QueueCleaner : IDisposable
+public sealed class QueueCleaner : GenericHandler
 {
-    private readonly ILogger<QueueCleaner> _logger;
-    private readonly SonarrConfig _sonarrConfig;
-    private readonly RadarrConfig _radarrConfig;
-    private readonly SonarrClient _sonarrClient;
-    private readonly RadarrClient _radarrClient;
-    private readonly ArrQueueIterator _arrArrQueueIterator;
-    private readonly IDownloadService _downloadService;
-    
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
         IOptions<SonarrConfig> sonarrConfig,
@@ -26,48 +19,11 @@ public sealed class QueueCleaner : IDisposable
         RadarrClient radarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory
-    )
+    ) : base(logger, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
     {
-        _logger = logger;
-        _sonarrConfig = sonarrConfig.Value;
-        _radarrConfig = radarrConfig.Value;
-        _sonarrClient = sonarrClient;
-        _radarrClient = radarrClient;
-        _arrArrQueueIterator = arrArrQueueIterator;
-        _downloadService = downloadServiceFactory.CreateDownloadClient();
     }
     
-    public async Task ExecuteAsync()
-    {
-        await _downloadService.LoginAsync();
-
-        await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr);
-        await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr);
-        
-        // await _downloadClient.LogoutAsync();
-    }
-
-    private async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType)
-    {
-        if (!config.Enabled)
-        {
-            return;
-        }
-
-        foreach (ArrInstance arrInstance in config.Instances)
-        {
-            try
-            {
-                await ProcessInstanceAsync(arrInstance, instanceType);
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "failed to clean {type} instance | {url}", instanceType, arrInstance.Url);
-            }
-        }
-    }
-
-    private async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
         HashSet<int> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
@@ -100,27 +56,5 @@ public sealed class QueueCleaner : IDisposable
         });
         
         await arrClient.RefreshItemsAsync(instance, itemsToBeRefreshed);
-    }
-
-    private ArrClient GetClient(InstanceType type) =>
-        type switch
-        {
-            InstanceType.Sonarr => _sonarrClient,
-            InstanceType.Radarr => _radarrClient,
-            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
-        };
-    
-    private int GetRecordId(InstanceType type, QueueRecord record) =>
-        type switch
-        {
-            // TODO add episode id
-            InstanceType.Sonarr => record.SeriesId,
-            InstanceType.Radarr => record.MovieId,
-            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
-        };
-
-    public void Dispose()
-    {
-        _downloadService.Dispose();
     }
 }
