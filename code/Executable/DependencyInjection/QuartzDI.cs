@@ -3,6 +3,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.QueueCleaner;
 using Executable.Jobs;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.QueueCleaner;
 using Quartz;
 
@@ -23,60 +24,50 @@ public static class QuartzDI
                     throw new NullReferenceException("triggers configuration is null");
                 }
 
-                q.AddQueueCleanerJob(configuration, config.QueueCleaner);
-                q.AddContentBlockerJob(configuration, config.ContentBlocker);
+                q.AddJobs(configuration, config);
             })
             .AddQuartzHostedService(opt =>
             {
                 opt.WaitForJobsToComplete = true;
             });
 
-    private static void AddQueueCleanerJob(
+    private static void AddJobs(
         this IServiceCollectionQuartzConfigurator q,
         IConfiguration configuration,
-        string trigger
+        TriggersConfig triggersConfig
     )
     {
-        QueueCleanerConfig? config = configuration
-            .GetRequiredSection(QueueCleanerConfig.SectionName)
-            .Get<QueueCleanerConfig>();
-
-        if (config is null)
-        {
-            throw new NullReferenceException($"{nameof(QueueCleaner)} configuration is null");
-        }
-
-        if (!config.Enabled)
-        {
-            return;
-        }
+        q.AddJob<QueueCleaner, QueueCleanerConfig>(
+            configuration,
+            QueueCleanerConfig.SectionName,
+            triggersConfig.QueueCleaner
+        );
         
-        q.AddJob<GenericJob<QueueCleaner>>(opts =>
-        {
-            opts.WithIdentity(nameof(QueueCleaner));
-        });
-
-        q.AddTrigger(opts =>
-        {
-            opts.ForJob(nameof(QueueCleaner))
-                .WithIdentity($"{nameof(QueueCleaner)}-trigger")
-                .WithCronSchedule(trigger, x =>x.WithMisfireHandlingInstructionDoNothing());
-        });
+        q.AddJob<ContentBlocker, ContentBlockerConfig>(
+            configuration,
+            ContentBlockerConfig.SectionName,
+            triggersConfig.ContentBlocker
+        );
     }
-
-    private static void AddContentBlockerJob(
+    
+    private static void AddJob<T, TConfig>(
         this IServiceCollectionQuartzConfigurator q,
         IConfiguration configuration,
+        string configSectionName,
         string trigger
     )
+        where T: GenericHandler
+        where TConfig : IJobConfig
     {
-        ContentBlockerConfig? config = configuration
-            .GetRequiredSection(ContentBlockerConfig.SectionName)
-            .Get<ContentBlockerConfig>();
-
+        IJobConfig? config = configuration
+            .GetRequiredSection(configSectionName)
+            .Get<TConfig>();
+        
+        string typeName = typeof(T).Name;
+        
         if (config is null)
         {
-            throw new NullReferenceException($"{nameof(ContentBlocker)} configuration is null");
+            throw new NullReferenceException($"{typeName} configuration is null");
         }
 
         if (!config.Enabled)
@@ -84,16 +75,25 @@ public static class QuartzDI
             return;
         }
 
-        q.AddJob<GenericJob<ContentBlocker>>(opts =>
+        q.AddJob<GenericJob<T>>(opts =>
         {
-            opts.WithIdentity(nameof(ContentBlocker));
+            opts.WithIdentity(typeName);
         });
 
         q.AddTrigger(opts =>
         {
-            opts.ForJob(nameof(ContentBlocker))
-                .WithIdentity($"{nameof(ContentBlocker)}-trigger")
-                .WithCronSchedule(trigger, x =>x.WithMisfireHandlingInstructionDoNothing());
+            opts.ForJob(typeName)
+                .WithIdentity($"{typeName}-trigger")
+                .WithCronSchedule(trigger, x =>x.WithMisfireHandlingInstructionDoNothing())
+                .StartNow();
+        });
+        
+        // Startup trigger
+        q.AddTrigger(opts =>
+        {
+            opts.ForJob(typeName)
+                .WithIdentity($"{typeName}-startup-trigger")
+                .StartNow();
         });
     }
 }
