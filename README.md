@@ -79,6 +79,7 @@ services:
       - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
 
       - QUEUECLEANER__ENABLED=true
+      - QUEUECLEANER__RUNSEQUENTIALLY=true
 
       - CONTENTBLOCKER__ENABLED=true
       - CONTENTBLOCKER__BLACKLIST__ENABLED=true
@@ -126,6 +127,7 @@ services:
 | TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
 |||||
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
+| QUEUECLEANER__RUNSEQUENTIALLY | No | If true, queue cleaner will run after content blocker to streamline the cleaning process | true |
 |||||
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
 | CONTENTBLOCKER__BLACKLIST__ENABLED | Yes if content blocker is enabled and whitelist is not enabled | Enable or disable the blacklist | false |

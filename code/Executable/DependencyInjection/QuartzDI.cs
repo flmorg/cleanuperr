@@ -37,32 +37,33 @@ public static class QuartzDI
         TriggersConfig triggersConfig
     )
     {
-        q.AddJob<QueueCleaner, QueueCleanerConfig>(
-            configuration,
-            QueueCleanerConfig.SectionName,
-            triggersConfig.QueueCleaner
-        );
+        ContentBlockerConfig? contentBlockerConfig = configuration
+            .GetRequiredSection(ContentBlockerConfig.SectionName)
+            .Get<ContentBlockerConfig>();
         
-        q.AddJob<ContentBlocker, ContentBlockerConfig>(
-            configuration,
-            ContentBlockerConfig.SectionName,
-            triggersConfig.ContentBlocker
-        );
+        q.AddJob<ContentBlocker>(contentBlockerConfig, triggersConfig.ContentBlocker);
+        
+        QueueCleanerConfig? queueCleanerConfig = configuration
+            .GetRequiredSection(QueueCleanerConfig.SectionName)
+            .Get<QueueCleanerConfig>();
+
+        if (contentBlockerConfig?.Enabled is true && queueCleanerConfig is { Enabled: true, RunSequentially: true })
+        {
+            q.AddJob<QueueCleaner>(queueCleanerConfig, string.Empty);
+            q.AddJobListener(new JobChainingListener(nameof(QueueCleaner)));
+        }
+        else
+        {
+            q.AddJob<QueueCleaner>(queueCleanerConfig, triggersConfig.QueueCleaner);
+        }
     }
     
-    private static void AddJob<T, TConfig>(
+    private static void AddJob<T>(
         this IServiceCollectionQuartzConfigurator q,
-        IConfiguration configuration,
-        string configSectionName,
+        IJobConfig? config,
         string trigger
-    )
-        where T: GenericHandler
-        where TConfig : IJobConfig
+    ) where T: GenericHandler
     {
-        IJobConfig? config = configuration
-            .GetRequiredSection(configSectionName)
-            .Get<TConfig>();
-        
         string typeName = typeof(T).Name;
         
         if (config is null)
@@ -75,10 +76,24 @@ public static class QuartzDI
             return;
         }
 
+        bool hasTrigger = trigger.Length > 0;
+
         q.AddJob<GenericJob<T>>(opts =>
         {
             opts.WithIdentity(typeName);
+
+            if (!hasTrigger)
+            {
+                // jobs with no triggers need to be stored durably
+                opts.StoreDurably();
+            }
         });
+
+        // skip empty triggers
+        if (!hasTrigger)
+        {
+            return;
+        }
 
         q.AddTrigger(opts =>
         {

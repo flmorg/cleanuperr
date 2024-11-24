@@ -16,6 +16,7 @@
       <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.1" />
       <PackageReference Include="QBittorrent.Client" Version="1.9.24285.1" />
+      <PackageReference Include="Quartz" Version="3.13.1" />
     </ItemGroup>
 
 </Project>
