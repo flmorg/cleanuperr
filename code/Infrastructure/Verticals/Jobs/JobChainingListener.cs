@@ -19,7 +19,7 @@ public class JobChainingListener : IJobListener
 
     public async Task JobWasExecuted(IJobExecutionContext context, JobExecutionException? jobException, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(_nextJobName))
+        if (string.IsNullOrEmpty(_nextJobName) || context.JobDetail.Key.Name == _nextJobName)
         {
             return;
         }
