@@ -10,36 +10,52 @@ Refer to the [Environment variables](#Environment-variables) section for detaile
 
 ## Important note
 
-Only the <b>latest versions</b> of qBittorrent, Deluge, Sonarr etc. are supported, or earlier versions that have the same API as the latest version.
+Only the **latest versions** of qBittorrent, Deluge, Sonarr etc. are supported, or earlier versions that have the same API as the latest version.
 
-This tool is actively developed and still a work in progress. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together: https://discord.gg/cJYPs9Bt
+This tool is actively developed and still a work in progress. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
+
+> https://discord.gg/cJYPs9Bt
+
+# How it works
+
+1. **Content blocker** will:
+   - Run every 5 minutes (or configured cron).
+   - Process all items in the *arr queue.
+   - Find the corresponding item from the download client for each queue item.
+   - Mark the files that were found in the queue as **unwanted/skipped** if:
+     - They **are listed in the blacklist**, or
+     - They **are not included in the whitelist**.
+2. **Queue cleaner** will:
+   - Run every 5 minutes (or configured cron).
+   - Process all items in the *arr queue.
+   - Check each queue item if it meets one of the following condition in the download client:
+     - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
+     - All associated files of are marked as **unwanted/skipped**.
+   - If the item **DOES NOT** match the above criteria, it will be skipped.
+   - If the item **DOES** match the criteria:
+     - It will be removed from the *arr's queue.
+     - It will be deleted from the download client.
+     - A new search will be triggered for the *arr item.
 
 # Setup
 
 ## Using qBittorrent's built-in feature (works only with qBittorrent)
 
-1. Go to qBittorrent -> Options -> Downloads -> make sure `Excluded file names` is checked -> Set an exclusion list.
-   - [blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist)
-   - [permissive blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist_permissive)
+1. Go to qBittorrent -> Options -> Downloads -> make sure `Excluded file names` is checked -> Paste an exclusion list that you have copied.
+   - [blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist), or
+   - [permissive blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist_permissive), or
    - create your own
-2. Start cleanuperr with `QUEUECLEANER__ENABLED` set to `true`.
-3. cleanuperr will execute a queue cleaner cron job at every 5 minutes that will:
-   1. go through all items from Sonarr/Radarr's queue.
-   2. each a queue item is checked: 
-      - if it has been <b>marked as completed and 0 bytes have been downloaded</b> (because qBittorrent blocked the files).
-      - if all its files are skipped.
-   3. if the item <b>IS NOT</b> as described, it is skipped.
-   4. if the item <b>IS</b> as described, it is removed from Sonarr/Radarr's queue, removed from qBittorrent and a search is triggered for the show/movie.
+2. qBittorrent will block files from being downloaded. In the case of malicious content, **nothing is downloaded and the torrent is marked as complete**.
+3. Start **cleanuperr** with `QUEUECLEANER__ENABLED` set to `true`.
+4. The **queue cleaner** will perform a cleanup process as described in the [How it works](#how-it-works) section.
 
 ## Using cleanuperr's blocklist (works with all supported download clients)
 
-1. Start cleanuperr with both `QUEUECLEANER_ENABLED` and `CONTENTBLOCKER_ENABLED` set to `true`.
-2. Be sure to set and enable a blacklist or a whitelist as described in the [Environment variables](#Environment-variables) section.
-3. cleanuperr with execute the following jobs:
-   - the same queue cleaner as described [here](#Using-qBittorrents-built-in-feature)
-   - a content blocker cron job at every 5 minutes that will mark files as unwanted/skipped if:
-      - they are in the blacklist.
-      - they are not in the whitelist.
+1. Set both `QUEUECLEANER_ENABLED` and `CONTENTBLOCKER_ENABLED` to `true` in your environment variables.
+2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Environment variables](#Environment-variables) section.
+3. Once configured, cleanuperr will perform the following tasks:
+   - Execute the **content blocker** job, as explained in the [How it works](#how-it-works) section.
+   - Execute the **queue cleaner** job, as explained in the [How it works](#how-it-works) section.
 
 ## Usage
 
@@ -127,7 +143,7 @@ services:
 | TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
 |||||
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
-| QUEUECLEANER__RUNSEQUENTIALLY | No | If true, queue cleaner will run after content blocker to streamline the cleaning process | true |
+| QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |
 |||||
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
 | CONTENTBLOCKER__BLACKLIST__ENABLED | Yes if content blocker is enabled and whitelist is not enabled | Enable or disable the blacklist | false |
@@ -183,7 +199,7 @@ SONARR__INSTANCES__<NUMBER>__APIKEY
 
 1. Download the binaries from [releases](https://github.com/flmorg/cleanuperr/releases).
 2. Extract them from the zip file.
-3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [above](/README.md#environment-variables).
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [above](#environment-variables).
 
 ### Run as a Windows Service
 
