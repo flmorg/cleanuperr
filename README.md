@@ -185,7 +185,7 @@ services:
 example*      // file name starts with "example"
 *example*     // file name has "example" in the name
 example       // file name is exactly the word "example"
-<ANY_REGEX>   // regex
+regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line with "regex:"
 ```
 5. Multiple Sonarr/Radarr instances can be specified using this format, where `<NUMBER>` starts from 0:
 ```

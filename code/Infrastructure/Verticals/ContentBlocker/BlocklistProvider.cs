@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Domain.Enums;
@@ -15,9 +16,9 @@ public sealed class BlocklistProvider
     
     public BlocklistType BlocklistType { get; }
 
-    public List<string> Patterns { get; } = [];
+    public ConcurrentBag<string> Patterns { get; } = [];
 
-    public List<Regex> Regexes { get; } = [];
+    public ConcurrentBag<Regex> Regexes { get; } = [];
 
     public BlocklistProvider(
         ILogger<BlocklistProvider> logger,
@@ -75,9 +76,18 @@ public sealed class BlocklistProvider
         
         long startTime = Stopwatch.GetTimestamp();
         ParallelOptions options = new() { MaxDegreeOfParallelism = 5 };
+        const string regexId = "regex:";
         
         Parallel.ForEach(patterns, options, pattern =>
         {
+            if (!pattern.StartsWith(regexId))
+            {
+                Patterns.Add(pattern);
+                return;
+            }
+            
+            pattern = pattern[regexId.Length..];
+            
             try
             {
                 Regex regex = new(pattern, RegexOptions.Compiled);
@@ -85,7 +95,7 @@ public sealed class BlocklistProvider
             }
             catch (ArgumentException)
             {
-                Patterns.Add(pattern);
+                _logger.LogWarning("invalid regex | {pattern}", pattern);
             }
         });
 
