@@ -171,7 +171,9 @@ services:
     image: flaminel/cleanuperr:latest
     container_name: cleanuperr
     environment:
-      - LOGGING__LOGLEVEL__DEFAULT=Debug
+      - LOGGING__LOGLEVEL=Debug
+      - LOGGING__FILE__ENABLED=false
+      - LOGGING__FILE__PATH=/var/logs
 
       - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
       - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
@@ -207,6 +209,8 @@ services:
       - RADARR__ENABLED=true
       - RADARR__INSTANCES__0__URL=http://radarr:7878
       - RADARR__INSTANCES__0__APIKEY=705b553732ab4167ab23909305d60600
+    volumes:
+      - ./data/cleanuperr/logs:/var/logs
     restart: unless-stopped
     depends_on:
       - qbittorrent

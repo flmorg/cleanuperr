@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Verticals.Jobs;
 using Quartz;
+using Serilog.Context;
 
 namespace Executable.Jobs;
 
@@ -19,6 +20,8 @@ public sealed class GenericJob<T> : IJob
     
     public async Task Execute(IJobExecutionContext context)
     {
+        using var _ = LogContext.PushProperty("JobName", typeof(T).Name);
+        
         try
         {
             await _handler.ExecuteAsync();

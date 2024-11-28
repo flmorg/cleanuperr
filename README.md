@@ -88,8 +88,12 @@ docker run -d \
 version: "3.3"
 services:
   cleanuperr:
+    volumes:
+      - ./cleanuperr/logs:/var/logs
     environment:
-      - LOGGING__LOGLEVEL__DEFAULT=Information
+      - LOGGING__LOGLEVEL=Information
+      - LOGGING__FILE__ENABLED=false
+      - LOGGING__FILE__PATH=/var/logs/
 
       - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
       - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
@@ -137,7 +141,9 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| LOGGING__LOGLEVEL__DEFAULT | No | Can be `Debug`, `Information`, `Warning` or `Error` | Information |
+| LOGGING__LOGLEVEL | No | Can be `Verbose`, `Debug`, `Information`, `Warning`, `Error` or `Fatal` | `Information` |
+| LOGGING__FILE__ENABLED | No | Enable or disable logging to file | false |
+| LOGGING__FILE__PATH | No | Directory where to save the log files | empty |
 |||||
 | TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
 | TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
@@ -165,11 +171,11 @@ services:
 | TRANSMISSION__USERNAME | No | Transmission user | empty |
 | TRANSMISSION__PASSWORD | No | Transmission password | empty |
 |||||
-| SONARR__ENABLED | No | Whether Sonarr cleanup is enabled or not  | true |
+| SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
 | SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |
 | SONARR__INSTANCES__0__APIKEY | Yes | First Sonarr instance API key | empty |
 |||||
-| RADARR__ENABLED | No | Whether Radarr cleanup is enabled or not  | false |
+| RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
 | RADARR__INSTANCES__0__URL | Yes | First Radarr instance url | http://localhost:8989 |
 | RADARR__INSTANCES__0__APIKEY | Yes | First Radarr instance API key | empty |
 
