@@ -70,7 +70,7 @@ public abstract class ArrClient
         }
     }
 
-    public abstract Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, List<SearchItem> items);
+    public abstract Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items);
 
     protected virtual void SetApiKey(HttpRequestMessage request, string apiKey)
     {

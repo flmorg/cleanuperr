@@ -14,7 +14,7 @@ public sealed class RadarrClient : ArrClient
     {
     }
 
-    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, List<SearchItem>? items)
+    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items)
     {
         if (items?.Count is null or 0)
         {

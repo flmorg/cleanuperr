@@ -15,7 +15,7 @@ public sealed class SonarrClient : ArrClient
     {
     }
 
-    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, List<SearchItem>? items)
+    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items)
     {
         if (items?.Count is null or 0)
         {
@@ -66,7 +66,7 @@ public sealed class SonarrClient : ArrClient
         };
     }
 
-    private List<SonarrCommand> GetSearchCommands(SonarrSearchType searchType, List<SearchItem> items)
+    private List<SonarrCommand> GetSearchCommands(SonarrSearchType searchType, HashSet<SearchItem> items)
     {
         const string episodeSearch = "EpisodeSearch";
         const string seasonSearch = "SeasonSearch";

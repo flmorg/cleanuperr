@@ -27,7 +27,7 @@ public sealed class QueueCleaner : GenericHandler
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
-        List<SearchItem> itemsToBeRefreshed = [];
+        HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>

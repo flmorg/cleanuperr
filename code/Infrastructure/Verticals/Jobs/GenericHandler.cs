@@ -91,9 +91,9 @@ public abstract class GenericHandler : IDisposable
     protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record) =>
         type switch
         {
-            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode => new SearchItem { Id = record.EpisodeId },
+            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode => new SonarrSearchItem { Id = record.EpisodeId },
             InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Season => new SonarrSearchItem { Id = record.SeasonNumber, SeriesId = record.SeriesId },
-            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Series => new SearchItem { Id = record.SeriesId },
+            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Series => new SonarrSearchItem { Id = record.SeriesId },
             InstanceType.Radarr => new SearchItem { Id = record.MovieId },
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
