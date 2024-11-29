@@ -1,4 +1,4 @@
-﻿namespace Common.Configuration;
+﻿namespace Common.Configuration.Arr;
 
 public sealed class ArrInstance
 {

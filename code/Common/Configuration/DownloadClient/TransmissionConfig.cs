@@ -1,14 +1,14 @@
-﻿using System.Security;
+﻿namespace Common.Configuration.DownloadClient;
 
-namespace Common.Configuration;
-
-public sealed record DelugeConfig : IConfig
+public record TransmissionConfig
 {
-    public const string SectionName = "Deluge";
+    public const string SectionName = "Transmission";
     
     public required bool Enabled { get; init; }
     
     public Uri? Url { get; init; }
+    
+    public string? Username { get; init; }
     
     public string? Password { get; init; }
     

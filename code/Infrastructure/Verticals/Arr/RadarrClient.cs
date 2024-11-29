@@ -1,5 +1,6 @@
 ﻿using System.Text;
-using Common.Configuration;
+using Common.Configuration.Arr;
+using Domain.Models.Arr;
 using Domain.Models.Radarr;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -13,18 +14,20 @@ public sealed class RadarrClient : ArrClient
     {
     }
 
-    public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<int> itemIds)
+    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, List<SearchItem>? items)
     {
-        if (itemIds.Count is 0)
+        if (items?.Count is null or 0)
         {
             return;
         }
+
+        List<long> ids = items.Select(item => item.Id).ToList();
         
         Uri uri = new(arrInstance.Url, "/api/v3/command");
         RadarrCommand command = new()
         {
             Name = "MoviesSearch",
-            MovieIds = itemIds
+            MovieIds = ids,
         };
         
         using HttpRequestMessage request = new(HttpMethod.Post, uri);
@@ -41,11 +44,11 @@ public sealed class RadarrClient : ArrClient
         {
             response.EnsureSuccessStatusCode();
             
-            _logger.LogInformation("movie search triggered | {url} | movie ids: {ids}", arrInstance.Url, string.Join(",", itemIds));
+            _logger.LogInformation("movie search triggered | {url} | movie ids: {ids}", arrInstance.Url, string.Join(',', ids));
         }
         catch
         {
-            _logger.LogError("movie search failed | {url} | movie ids: {ids}", arrInstance.Url, string.Join(",", itemIds));
+            _logger.LogError("movie search failed | {url} | movie ids: {ids}", arrInstance.Url, string.Join(',', ids));
             throw;
         }
     }

@@ -1,8 +1,8 @@
-﻿namespace Common.Configuration;
+﻿namespace Common.Configuration.DownloadClient;
 
-public record TransmissionConfig
+public sealed class QBitConfig : IConfig
 {
-    public const string SectionName = "Transmission";
+    public const string SectionName = "qBittorrent";
     
     public required bool Enabled { get; init; }
     

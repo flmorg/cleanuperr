@@ -1,4 +1,5 @@
 ﻿using Common.Configuration;
+using Common.Configuration.DownloadClient;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
 using Microsoft.Extensions.Logging;

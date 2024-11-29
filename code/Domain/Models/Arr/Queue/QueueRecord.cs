@@ -4,6 +4,7 @@ public record QueueRecord
 {
     public int SeriesId { get; init; }
     public int EpisodeId { get; init; }
+    public int SeasonNumber { get; init; }
     public int MovieId { get; init; }
     public required string Title { get; init; }
     public string Status { get; init; }

@@ -1,4 +1,5 @@
 ﻿using Common.Configuration;
+using Common.Configuration.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.DownloadClient.Transmission;

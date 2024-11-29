@@ -1,16 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace Common.Configuration.DownloadClient;
 
-namespace Common.Configuration;
-
-public sealed class QBitConfig : IConfig
+public sealed record DelugeConfig : IConfig
 {
-    public const string SectionName = "qBittorrent";
+    public const string SectionName = "Deluge";
     
     public required bool Enabled { get; init; }
     
     public Uri? Url { get; init; }
-    
-    public string? Username { get; init; }
     
     public string? Password { get; init; }
     

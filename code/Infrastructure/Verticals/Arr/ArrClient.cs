@@ -1,5 +1,7 @@
 ﻿using Common.Configuration;
+using Common.Configuration.Arr;
 using Domain.Arr.Queue;
+using Domain.Models.Arr;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -68,7 +70,7 @@ public abstract class ArrClient
         }
     }
 
-    public abstract Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<int> itemIds);
+    public abstract Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, List<SearchItem> items);
 
     protected virtual void SetApiKey(HttpRequestMessage request, string apiKey)
     {

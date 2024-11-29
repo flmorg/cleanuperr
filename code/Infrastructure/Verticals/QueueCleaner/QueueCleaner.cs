@@ -1,6 +1,8 @@
 ﻿using Common.Configuration;
+using Common.Configuration.Arr;
 using Domain.Arr.Queue;
 using Domain.Enums;
+using Domain.Models.Arr;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
@@ -25,7 +27,7 @@ public sealed class QueueCleaner : GenericHandler
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
-        HashSet<int> itemsToBeRefreshed = [];
+        List<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
@@ -49,12 +51,12 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
 
-                itemsToBeRefreshed.Add(GetRecordId(instanceType, record));
+                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record));
 
                 await arrClient.DeleteQueueItemAsync(instance, record);
             }
         });
         
-        await arrClient.RefreshItemsAsync(instance, itemsToBeRefreshed);
+        await arrClient.RefreshItemsAsync(instance, GetConfig(instanceType), itemsToBeRefreshed);
     }
 }

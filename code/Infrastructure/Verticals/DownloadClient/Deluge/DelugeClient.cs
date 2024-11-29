@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Common.Configuration;
+using Common.Configuration.DownloadClient;
 using Domain.Models.Deluge.Exceptions;
 using Domain.Models.Deluge.Request;
 using Domain.Models.Deluge.Response;

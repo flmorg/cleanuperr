@@ -59,27 +59,6 @@ This tool is actively developed and still a work in progress. Join the Discord s
 
 ## Usage
 
-### Docker
-
-```
-docker run -d \
-    -e TRIGGERS__QUEUECLEANER="0 0/5 * * * ?" \
-    -e QBITTORRENT__ENABLED=true \
-    -e QBITTORRENT__URL="http://localhost:8080" \
-    -e QBITTORRENT__USERNAME="user" \
-    -e QBITTORRENT__PASSWORD="pass" \
-    -e SONARR__ENABLED=true \
-    -e SONARR__INSTANCES__0__URL="http://localhost:8989" \
-    -e SONARR__INSTANCES__0__APIKEY="secret1" \
-    -e SONARR__INSTANCES__1__URL="http://localhost:8990" \
-    -e SONARR__INSTANCES__1__APIKEY="secret2" \
-    -e RADARR__ENABLED=true \
-    -e RADARR__INSTANCES__0__URL="http://localhost:7878" \
-    -e RADARR__INSTANCES__0__APIKEY="secret3" \
-    -e RADARR__INSTANCES__1__URL="http://localhost:7879" \
-    -e RADARR__INSTANCES__1__APIKEY="secret4" \
-    ...
-    flaminel/cleanuperr:latest
 ```
 
 ### Docker compose yaml
@@ -123,6 +102,7 @@ services:
       # - TRANSMISSION__PASSWORD=testing
 
       - SONARR__ENABLED=true
+      - SONARR__SEARCHTYPE=Episode
       - SONARR__INSTANCES__0__URL=http://localhost:8989
       - SONARR__INSTANCES__0__APIKEY=secret1
       - SONARR__INSTANCES__1__URL=http://localhost:8990
@@ -172,6 +152,7 @@ services:
 | TRANSMISSION__PASSWORD | No | Transmission password | empty |
 |||||
 | SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
+| SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
 | SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |
 | SONARR__INSTANCES__0__APIKEY | Yes | First Sonarr instance API key | empty |
 |||||

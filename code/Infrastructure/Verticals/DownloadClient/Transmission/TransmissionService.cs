@@ -1,4 +1,5 @@
 ﻿using Common.Configuration;
+using Common.Configuration.DownloadClient;
 using Infrastructure.Verticals.ContentBlocker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

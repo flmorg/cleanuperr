@@ -2,7 +2,11 @@
 
 public sealed record SonarrCommand
 {
-    public required string Name { get; init; }
+    public string Name { get; set; }
 
-    public required int SeriesId { get; set; }
+    public long? SeriesId { get; set; }
+    
+    public long? SeasonNumber { get; set; }
+    
+    public List<long>? EpisodeIds { get; set; }
 }

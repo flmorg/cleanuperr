@@ -1,6 +1,7 @@
-﻿using Common.Configuration;
+﻿using Common.Configuration.Arr;
 using Domain.Arr.Queue;
 using Domain.Enums;
+using Domain.Models.Arr;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.Extensions.Logging;
@@ -51,7 +52,7 @@ public abstract class GenericHandler : IDisposable
 
     protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType);
     
-    protected async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType)
+    private async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType)
     {
         if (!config.Enabled)
         {
@@ -78,13 +79,22 @@ public abstract class GenericHandler : IDisposable
             InstanceType.Radarr => _radarrClient,
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
-    
-    protected int GetRecordId(InstanceType type, QueueRecord record) =>
+
+    protected ArrConfig GetConfig(InstanceType type) =>
         type switch
         {
-            // TODO add episode id
-            InstanceType.Sonarr => record.SeriesId,
-            InstanceType.Radarr => record.MovieId,
+            InstanceType.Sonarr => _sonarrConfig,
+            InstanceType.Radarr => _radarrConfig,
+            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
+        };
+    
+    protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record) =>
+        type switch
+        {
+            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode => new SearchItem { Id = record.EpisodeId },
+            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Season => new SonarrSearchItem { Id = record.SeasonNumber, SeriesId = record.SeriesId },
+            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Series => new SearchItem { Id = record.SeriesId },
+            InstanceType.Radarr => new SearchItem { Id = record.MovieId },
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
 }

@@ -1,4 +1,5 @@
 ﻿using Common.Configuration;
+using Common.Configuration.Arr;
 using Domain.Arr.Queue;
 using Microsoft.Extensions.Logging;
 

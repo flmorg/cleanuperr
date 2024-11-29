@@ -4,5 +4,5 @@ public sealed record RadarrCommand
 {
     public required string Name { get; init; }
     
-    public required HashSet<int> MovieIds { get; init; }
+    public required List<long> MovieIds { get; init; }
 }
