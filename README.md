@@ -112,7 +112,7 @@ services:
       - RADARR__INSTANCES__0__APIKEY=secret3
       - RADARR__INSTANCES__1__URL=http://localhost:7879
       - RADARR__INSTANCES__1__APIKEY=secret4
-    image: flaminel/cleanuperr:latest
+    image: ghcr.io/flmorg/cleanuperr:latest
     restart: unless-stopped
 ```
 
