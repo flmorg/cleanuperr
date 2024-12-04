@@ -1,16 +1,21 @@
 ﻿using System.Text;
 using Common.Configuration.Arr;
+using Common.Configuration.Logging;
 using Domain.Models.Arr;
 using Domain.Models.Radarr;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
 
 public sealed class RadarrClient : ArrClient
 {
-    public RadarrClient(ILogger<ArrClient> logger, IHttpClientFactory httpClientFactory)
-        : base(logger, httpClientFactory)
+    public RadarrClient(
+        ILogger<ArrClient> logger,
+        IHttpClientFactory httpClientFactory,
+        IOptions<LoggingConfig> loggingConfig
+    ) : base(logger, httpClientFactory, loggingConfig)
     {
     }
 
@@ -39,17 +44,72 @@ public sealed class RadarrClient : ArrClient
         SetApiKey(request, arrInstance.ApiKey);
 
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
+        string? logContext = await ComputeCommandLogContextAsync(arrInstance, command);
 
         try
         {
             response.EnsureSuccessStatusCode();
             
-            _logger.LogInformation("movie search triggered | {url} | movie ids: {ids}", arrInstance.Url, string.Join(',', ids));
+            _logger.LogInformation("{log}", GetSearchLog(arrInstance.Url, command, true, logContext));
         }
         catch
         {
-            _logger.LogError("movie search failed | {url} | movie ids: {ids}", arrInstance.Url, string.Join(',', ids));
+            _logger.LogError("{log}", GetSearchLog(arrInstance.Url, command, false, logContext));
             throw;
         }
+    }
+
+    private static string GetSearchLog(Uri instanceUrl, RadarrCommand command, bool success, string? logContext)
+    {
+        string status = success ? "triggered" : "failed";
+        string message = logContext ?? $"movie ids: {string.Join(',', command.MovieIds)}";
+
+        return $"movie search {status} | {instanceUrl} | {message}";
+    }
+
+    private async Task<string?> ComputeCommandLogContextAsync(ArrInstance arrInstance, RadarrCommand command)
+    {
+        try
+        {
+            if (!_loggingConfig.Enhanced)
+            {
+                return null;
+            }
+
+            StringBuilder log = new();
+
+            foreach (long movieId in command.MovieIds)
+            {
+                Movie? movie = await GetMovie(arrInstance, movieId);
+
+                if (movie is null)
+                {
+                    return null;
+                }
+
+                log.Append($"[{movie.Title}]");
+            }
+
+            return log.ToString();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogDebug(exception, "failed to compute log context");
+        }
+
+        return null;
+    }
+
+    private async Task<Movie?> GetMovie(ArrInstance arrInstance, long movieId)
+    {
+        Uri uri = new(arrInstance.Url, $"api/v3/movie/{movieId}");
+        using HttpRequestMessage request = new(HttpMethod.Get, uri);
+        SetApiKey(request, arrInstance.ApiKey);
+
+        using HttpResponseMessage response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+                
+        string responseBody = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<Movie>(responseBody);
     }
 }

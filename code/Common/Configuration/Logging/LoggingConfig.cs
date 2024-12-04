@@ -8,6 +8,8 @@ public class LoggingConfig : IConfig
     
     public LogEventLevel LogLevel { get; set; }
     
+    public bool Enhanced { get; set; }
+    
     public FileLogConfig? File { get; set; }
     
     public void Validate()

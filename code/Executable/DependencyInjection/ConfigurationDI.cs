@@ -2,6 +2,7 @@
 using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.Logging;
 
 namespace Executable.DependencyInjection;
 
@@ -14,5 +15,6 @@ public static class ConfigurationDI
             .Configure<DelugeConfig>(configuration.GetSection(DelugeConfig.SectionName))
             .Configure<TransmissionConfig>(configuration.GetSection(TransmissionConfig.SectionName))
             .Configure<SonarrConfig>(configuration.GetSection(SonarrConfig.SectionName))
-            .Configure<RadarrConfig>(configuration.GetSection(RadarrConfig.SectionName));
+            .Configure<RadarrConfig>(configuration.GetSection(RadarrConfig.SectionName))
+            .Configure<LoggingConfig>(configuration.GetSection(LoggingConfig.SectionName));
 }

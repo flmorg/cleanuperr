@@ -59,8 +59,6 @@ This tool is actively developed and still a work in progress. Join the Discord s
 
 ## Usage
 
-```
-
 ### Docker compose yaml
 
 ```
@@ -73,6 +71,7 @@ services:
       - LOGGING__LOGLEVEL=Information
       - LOGGING__FILE__ENABLED=false
       - LOGGING__FILE__PATH=/var/logs/
+      - LOGGING__ENHANCED=true
 
       - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
       - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
@@ -124,6 +123,7 @@ services:
 | LOGGING__LOGLEVEL | No | Can be `Verbose`, `Debug`, `Information`, `Warning`, `Error` or `Fatal` | `Information` |
 | LOGGING__FILE__ENABLED | No | Enable or disable logging to file | false |
 | LOGGING__FILE__PATH | No | Directory where to save the log files | empty |
+| LOGGING__ENHANCED | No | Enhance logs whenever possible<br>A more detailed description is provided [here](variables.md#LOGGING__ENHANCED) | true |
 |||||
 | TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
 | TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |

@@ -1,21 +1,25 @@
 ﻿using Common.Configuration;
 using Common.Configuration.Arr;
+using Common.Configuration.Logging;
 using Domain.Arr.Queue;
 using Domain.Models.Arr;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
 
 public abstract class ArrClient
 {
-    private protected ILogger<ArrClient> _logger;
-    private protected HttpClient _httpClient;
+    protected readonly ILogger<ArrClient> _logger;
+    protected readonly HttpClient _httpClient;
+    protected readonly LoggingConfig _loggingConfig;
     
-    protected ArrClient(ILogger<ArrClient> logger, IHttpClientFactory httpClientFactory)
+    protected ArrClient(ILogger<ArrClient> logger, IHttpClientFactory httpClientFactory, IOptions<LoggingConfig> loggingConfig)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
+        _loggingConfig = loggingConfig.Value;
     }
 
     public virtual async Task<QueueListResponse> GetQueueItemsAsync(ArrInstance arrInstance, int page)
