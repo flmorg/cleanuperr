@@ -10,7 +10,12 @@ Refer to the [Environment variables](#Environment-variables) section for detaile
 
 ## Important note
 
-Only the **latest versions** of qBittorrent, Deluge, Sonarr etc. are supported, or earlier versions that have the same API as the latest version.
+Only the **latest versions** of the following apps are supported, or earlier versions that have the same API as the latest version:
+- qBittorrent
+- Deluge
+- Transmission
+- Sonarr
+- Radarr
 
 This tool is actively developed and still a work in progress. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
 
