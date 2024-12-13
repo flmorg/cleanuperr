@@ -1,4 +1,4 @@
-﻿using Common.Configuration.Arr;
+using Common.Configuration.Arr;
 using Domain.Arr.Queue;
 using Domain.Enums;
 using Domain.Models.Arr;
@@ -42,6 +42,12 @@ public sealed class QueueCleaner : GenericHandler
                 if (string.IsNullOrEmpty(record.DownloadId))
                 {
                     _logger.LogDebug("skip | download id is null for {title}", record.Title);
+                    continue;
+                }
+
+                if (record.DownloadId.Equals(record.Title, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _logger.LogDebug("skip | item was added a few seconds ago");
                     continue;
                 }
 
