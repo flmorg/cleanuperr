@@ -91,11 +91,6 @@ public abstract class GenericHandler : IDisposable
     
     protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record, bool isPack = false)
     {
-        if (InstanceType.Sonarr == type && record.EpisodeId == 0)
-        {
-            _logger.LogDebug(JsonConvert.SerializeObject(record));
-        }
-        
         return type switch
         {
             InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode && !isPack => new SonarrSearchItem
