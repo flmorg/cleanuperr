@@ -58,12 +58,4 @@ public sealed class ContentBlocker : GenericHandler
             }
         });
     }
-    
-    private ArrClient GetClient(InstanceType type) =>
-        type switch
-        {
-            InstanceType.Sonarr => _sonarrClient,
-            InstanceType.Radarr => _radarrClient,
-            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
-        };
 }
