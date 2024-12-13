@@ -1,6 +1,5 @@
 ﻿using Common.Configuration.Arr;
 using Common.Configuration.Logging;
-using Common.Utils;
 using Domain.Arr.Queue;
 using Domain.Models.Arr;
 using Microsoft.Extensions.Caching.Memory;
