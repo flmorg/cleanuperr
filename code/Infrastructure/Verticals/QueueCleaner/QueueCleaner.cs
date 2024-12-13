@@ -32,22 +32,26 @@ public sealed class QueueCleaner : GenericHandler
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
-            foreach (QueueRecord record in items)
+            var groups = items
+                .GroupBy(x => x.DownloadId)
+                .ToList();
+            
+            foreach (var group in groups)
             {
+                if (group.Any(x => !arrClient.IsRecordValid(x)))
+                {
+                    continue;
+                }
+                
+                QueueRecord record = group.First();
+                
                 if (record.Protocol is not "torrent")
                 {
                     continue;
                 }
 
-                if (string.IsNullOrEmpty(record.DownloadId))
+                if (!arrClient.IsRecordValid(record))
                 {
-                    _logger.LogDebug("skip | download id is null for {title}", record.Title);
-                    continue;
-                }
-
-                if (record.DownloadId.Equals(record.Title, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    _logger.LogDebug("skip | item was added recently | {title}", record.Title);
                     continue;
                 }
 
@@ -56,8 +60,8 @@ public sealed class QueueCleaner : GenericHandler
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;
                 }
-
-                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record));
+                
+                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
 
                 await arrClient.DeleteQueueItemAsync(instance, record);
             }

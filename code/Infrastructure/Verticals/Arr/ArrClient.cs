@@ -88,6 +88,23 @@ public abstract class ArrClient
 
     public abstract Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items);
 
+    public virtual bool IsRecordValid(QueueRecord record)
+    {
+        if (string.IsNullOrEmpty(record.DownloadId))
+        {
+            _logger.LogDebug("skip | download id is null for {title}", record.Title);
+            return false;
+        }
+
+        if (record.DownloadId.Equals(record.Title, StringComparison.InvariantCultureIgnoreCase))
+        {
+            _logger.LogDebug("skip | item is not ready yet | {title}", record.Title);
+            return false;
+        }
+
+        return true;
+    }
+    
     protected virtual void SetApiKey(HttpRequestMessage request, string apiKey)
     {
         request.Headers.Add("x-api-key", apiKey);

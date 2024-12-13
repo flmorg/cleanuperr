@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Common.Configuration.Arr;
 using Common.Configuration.Logging;
+using Domain.Arr.Queue;
 using Domain.Models.Arr;
 using Domain.Models.Radarr;
 using Microsoft.Extensions.Caching.Memory;
@@ -64,6 +65,17 @@ public sealed class RadarrClient : ArrClient
             _logger.LogError("{log}", GetSearchLog(arrInstance.Url, command, false, logContext));
             throw;
         }
+    }
+
+    public override bool IsRecordValid(QueueRecord record)
+    {
+        if (record.MovieId is 0)
+        {
+            _logger.LogDebug("skip | item information missing | {title}", record.Title);
+            return false;
+        }
+        
+        return base.IsRecordValid(record);
     }
 
     private static string GetSearchLog(Uri instanceUrl, RadarrCommand command, bool success, string? logContext)

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Common.Configuration.Arr;
 using Common.Configuration.Logging;
+using Domain.Arr.Queue;
 using Domain.Models.Arr;
 using Domain.Models.Sonarr;
 using Microsoft.Extensions.Caching.Memory;
@@ -33,11 +34,9 @@ public sealed class SonarrClient : ArrClient
             return;
         }
 
-        SonarrConfig sonarrConfig = (SonarrConfig)config;
-        
         Uri uri = new(arrInstance.Url, "/api/v3/command");
         
-        foreach (SonarrCommand command in GetSearchCommands(sonarrConfig.SearchType, items))
+        foreach (SonarrCommand command in GetSearchCommands(items.Cast<SonarrSearchItem>().ToHashSet()))
         {
             using HttpRequestMessage request = new(HttpMethod.Post, uri);
             request.Content = new StringContent(
@@ -48,20 +47,31 @@ public sealed class SonarrClient : ArrClient
             SetApiKey(request, arrInstance.ApiKey);
 
             using HttpResponseMessage response = await _httpClient.SendAsync(request);
-            string? logContext = await ComputeCommandLogContextAsync(arrInstance, command, sonarrConfig.SearchType);
+            string? logContext = await ComputeCommandLogContextAsync(arrInstance, command, command.SearchType);
 
             try
             {
                 response.EnsureSuccessStatusCode();
             
-                _logger.LogInformation("{log}", GetSearchLog(sonarrConfig.SearchType, arrInstance.Url, command, true, logContext));
+                _logger.LogInformation("{log}", GetSearchLog(command.SearchType, arrInstance.Url, command, true, logContext));
             }
             catch
             {
-                _logger.LogError("{log}", GetSearchLog(sonarrConfig.SearchType, arrInstance.Url, command, false, logContext));
+                _logger.LogError("{log}", GetSearchLog(command.SearchType, arrInstance.Url, command, false, logContext));
                 throw;
             }
         }
+    }
+
+    public override bool IsRecordValid(QueueRecord record)
+    {
+        if (record.EpisodeId is 0 || record.SeriesId is 0)
+        {
+            _logger.LogDebug("skip | item information missing | {title}", record.Title);
+            return false;
+        }
+
+        return base.IsRecordValid(record);
     }
 
     private static string GetSearchLog(
@@ -198,7 +208,7 @@ public sealed class SonarrClient : ArrClient
         return JsonConvert.DeserializeObject<Series>(responseBody);
     }
 
-    private List<SonarrCommand> GetSearchCommands(SonarrSearchType searchType, HashSet<SearchItem> items)
+    private List<SonarrCommand> GetSearchCommands(HashSet<SonarrSearchItem> items)
     {
         const string episodeSearch = "EpisodeSearch";
         const string seasonSearch = "SeasonSearch";
@@ -206,13 +216,13 @@ public sealed class SonarrClient : ArrClient
         
         List<SonarrCommand> commands = new();
 
-        foreach (SearchItem item in items)
+        foreach (SonarrSearchItem item in items)
         {
-            SonarrCommand command = searchType is SonarrSearchType.Episode
+            SonarrCommand command = item.SearchType is SonarrSearchType.Episode
                 ? commands.FirstOrDefault() ?? new() { Name = episodeSearch, EpisodeIds = new() }
                 : new();
             
-            switch (searchType)
+            switch (item.SearchType)
             {
                 case SonarrSearchType.Episode when command.EpisodeIds is null:
                     command.EpisodeIds = [item.Id];
@@ -234,15 +244,16 @@ public sealed class SonarrClient : ArrClient
                     break;
                 
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(searchType), searchType, null);
+                    throw new ArgumentOutOfRangeException(nameof(item.SearchType), item.SearchType, null);
             }
 
-            if (searchType is SonarrSearchType.Episode && commands.Count > 0)
+            if (item.SearchType is SonarrSearchType.Episode && commands.Count > 0)
             {
                 // only one command will be generated for episodes search
                 continue;
             }
             
+            command.SearchType = item.SearchType;
             commands.Add(command);
         }
         

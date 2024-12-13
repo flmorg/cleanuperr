@@ -1,8 +1,12 @@
-﻿namespace Domain.Models.Arr;
+﻿using Common.Configuration.Arr;
+
+namespace Domain.Models.Arr;
 
 public sealed class SonarrSearchItem : SearchItem
 {
     public long SeriesId { get; set; }
+    
+    public SonarrSearchType SearchType { get; set; }
     
     public override bool Equals(object? obj)
     {

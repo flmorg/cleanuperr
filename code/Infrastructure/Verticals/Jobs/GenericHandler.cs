@@ -89,7 +89,7 @@ public abstract class GenericHandler : IDisposable
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
     
-    protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record)
+    protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record, bool isPack = false)
     {
         if (InstanceType.Sonarr == type && record.EpisodeId == 0)
         {
@@ -98,15 +98,23 @@ public abstract class GenericHandler : IDisposable
         
         return type switch
         {
-            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode => new SonarrSearchItem
+            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode && !isPack => new SonarrSearchItem
             {
                 Id = record.EpisodeId,
-                SeriesId = record.SeriesId
+                SeriesId = record.SeriesId,
+                SearchType = SonarrSearchType.Episode
+            },
+            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode && isPack => new SonarrSearchItem
+            {
+                Id = record.SeasonNumber,
+                SeriesId = record.SeriesId,
+                SearchType = SonarrSearchType.Season
             },
             InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Season => new SonarrSearchItem
             {
                 Id = record.SeasonNumber,
-                SeriesId = record.SeriesId
+                SeriesId = record.SeriesId,
+                SearchType = SonarrSearchType.Series
             },
             InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Series => new SonarrSearchItem
             {
