@@ -11,7 +11,6 @@ public sealed class GenericJob<T> : IJob
     private readonly ILogger<GenericJob<T>> _logger;
     private readonly T _handler;
 
-
     public GenericJob(ILogger<GenericJob<T>> logger, T handler)
     {
         _logger = logger;

@@ -1,8 +1,9 @@
-﻿using Common.Configuration;
-using Common.Configuration.Arr;
+﻿using Common.Configuration.Arr;
 using Common.Configuration.Logging;
+using Common.Utils;
 using Domain.Arr.Queue;
 using Domain.Models.Arr;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -14,17 +15,29 @@ public abstract class ArrClient
     protected readonly ILogger<ArrClient> _logger;
     protected readonly HttpClient _httpClient;
     protected readonly LoggingConfig _loggingConfig;
+    protected readonly IMemoryCache _cache;
+    protected readonly MemoryCacheEntryOptions _cacheOptions;
+
     
-    protected ArrClient(ILogger<ArrClient> logger, IHttpClientFactory httpClientFactory, IOptions<LoggingConfig> loggingConfig)
+    protected ArrClient(
+        ILogger<ArrClient> logger,
+        IHttpClientFactory httpClientFactory,
+        IOptions<LoggingConfig> loggingConfig,
+        IMemoryCache cache)
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
         _loggingConfig = loggingConfig.Value;
+        _cache = cache;
+        _cacheOptions = new MemoryCacheEntryOptions()
+            .SetSlidingExpiration(TimeSpan.FromHours(2));
     }
+
+    protected abstract string GetQueueUrlPath(int page);
 
     public virtual async Task<QueueListResponse> GetQueueItemsAsync(ArrInstance arrInstance, int page)
     {
-        Uri uri = new(arrInstance.Url, $"/api/v3/queue?page={page}&pageSize=200&sortKey=timeleft");
+        Uri uri = new(arrInstance.Url, GetQueueUrlPath(page));
 
         using HttpRequestMessage request = new(HttpMethod.Get, uri);
         SetApiKey(request, arrInstance.ApiKey);

@@ -6,6 +6,7 @@ using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.QueueCleaner;
 using Quartz;
+using Quartz.Spi;
 
 namespace Executable.DependencyInjection;
 
@@ -94,7 +95,20 @@ public static class QuartzDI
         {
             return;
         }
+        
+        var triggerObj = (IOperableTrigger)TriggerBuilder.Create()
+            .WithIdentity("ExampleTrigger")
+            .StartNow()
+            .WithCronSchedule(trigger)
+            .Build();
 
+        var nextFireTimes = TriggerUtils.ComputeFireTimes(triggerObj, null, 2);
+        
+        if (nextFireTimes[1] - nextFireTimes[0] > TimeSpan.FromHours(1))
+        {
+            throw new Exception($"{trigger} should have a fire time of maximum 1 hour");
+        }
+        
         q.AddTrigger(opts =>
         {
             opts.ForJob(typeName)

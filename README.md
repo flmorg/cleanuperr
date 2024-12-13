@@ -33,12 +33,14 @@ This tool is actively developed and still a work in progress. Join the Discord s
 2. **Queue cleaner** will:
    - Run every 5 minutes (or configured cron).
    - Process all items in the *arr queue.
+   - Check each queue item if it is stalled or stuck in matadata downloading
+     - If it is, the item receives a **strike**.
    - Check each queue item if it meets one of the following condition in the download client:
      - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
      - All associated files of are marked as **unwanted/skipped**.
    - If the item **DOES NOT** match the above criteria, it will be skipped.
-   - If the item **DOES** match the criteria:
-     - It will be removed from the *arr's queue.
+   - If the item **DOES** match the criteria or has received the **maximum number of strikes**:
+     - It will be removed from the *arr's queue and blocked.
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
 
@@ -105,12 +107,14 @@ services:
 
       - SONARR__ENABLED=true
       - SONARR__SEARCHTYPE=Episode
+      - SONARR__STALLED_MAX_STRIKES=5
       - SONARR__INSTANCES__0__URL=http://localhost:8989
       - SONARR__INSTANCES__0__APIKEY=secret1
       - SONARR__INSTANCES__1__URL=http://localhost:8990
       - SONARR__INSTANCES__1__APIKEY=secret2
 
       - RADARR__ENABLED=true
+      - RADARR__STALLED_MAX_STRIKES=5
       - RADARR__INSTANCES__0__URL=http://localhost:7878
       - RADARR__INSTANCES__0__APIKEY=secret3
       - RADARR__INSTANCES__1__URL=http://localhost:7879
@@ -128,8 +132,8 @@ services:
 | LOGGING__FILE__PATH | No | Directory where to save the log files | empty |
 | LOGGING__ENHANCED | No | Enhance logs whenever possible<br>A more detailed description is provided [here](variables.md#LOGGING__ENHANCED) | true |
 |||||
-| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
-| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
+| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 1h interval | 0 0/5 * * * ? |
+| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 1h interval | 0 0/5 * * * ? |
 |||||
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
 | QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |
@@ -154,10 +158,12 @@ services:
 |||||
 | SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
 | SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
+| SONARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed | 0 |
 | SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |
 | SONARR__INSTANCES__0__APIKEY | Yes | First Sonarr instance API key | empty |
 |||||
 | RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
+| RADARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed | 0 |
 | RADARR__INSTANCES__0__URL | Yes | First Radarr instance url | http://localhost:8989 |
 | RADARR__INSTANCES__0__APIKEY | Yes | First Radarr instance API key | empty |
 
@@ -192,3 +198,8 @@ SONARR__INSTANCES__<NUMBER>__APIKEY
 ### Run as a Windows Service
 
 Check out this stackoverflow answer on how to do it: https://stackoverflow.com/a/15719678
+
+## Special Thanks
+Special thanks for inspiration go to:
+- [ThijmenGThN/swaparr](https://github.com/ThijmenGThN/swaparr)
+- [PaeyMoopy/sonarr-radarr-queue-cleaner](https://github.com/PaeyMoopy/sonarr-radarr-queue-cleaner)

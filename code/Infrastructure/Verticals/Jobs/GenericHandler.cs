@@ -4,6 +4,7 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Jobs;

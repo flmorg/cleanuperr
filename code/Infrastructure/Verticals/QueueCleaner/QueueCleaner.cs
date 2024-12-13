@@ -1,5 +1,4 @@
-﻿using Common.Configuration;
-using Common.Configuration.Arr;
+﻿using Common.Configuration.Arr;
 using Domain.Arr.Queue;
 using Domain.Enums;
 using Domain.Models.Arr;
@@ -29,6 +28,7 @@ public sealed class QueueCleaner : GenericHandler
     {
         HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
+        ArrConfig arrConfig = GetConfig(instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
@@ -45,7 +45,7 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
 
-                if (!await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId))
+                if (!await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, arrConfig.StalledMaxStrikes))
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;
@@ -57,6 +57,6 @@ public sealed class QueueCleaner : GenericHandler
             }
         });
         
-        await arrClient.RefreshItemsAsync(instance, GetConfig(instanceType), itemsToBeRefreshed);
+        await arrClient.RefreshItemsAsync(instance, arrConfig, itemsToBeRefreshed);
     }
 }

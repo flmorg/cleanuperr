@@ -3,6 +3,7 @@ using Common.Configuration.Arr;
 using Common.Configuration.Logging;
 using Domain.Models.Arr;
 using Domain.Models.Sonarr;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -14,9 +15,15 @@ public sealed class SonarrClient : ArrClient
     public SonarrClient(
         ILogger<SonarrClient> logger,
         IHttpClientFactory httpClientFactory,
-        IOptions<LoggingConfig> loggingConfig
-    ) : base(logger, httpClientFactory, loggingConfig)
+        IOptions<LoggingConfig> loggingConfig,
+        IMemoryCache cache
+    ) : base(logger, httpClientFactory, loggingConfig, cache)
     {
+    }
+    
+    protected override string GetQueueUrlPath(int page)
+    {
+        return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownSeriesItems=true&includeSeries=true";
     }
 
     public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items)

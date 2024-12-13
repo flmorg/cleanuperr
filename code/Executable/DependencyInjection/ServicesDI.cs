@@ -1,5 +1,4 @@
-﻿using Executable.Jobs;
-using Infrastructure.Verticals.Arr;
+﻿using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Deluge;

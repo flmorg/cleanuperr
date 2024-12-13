@@ -19,6 +19,7 @@ public static class MainDI
             .AddLogging(builder => builder.ClearProviders().AddConsole())
             .AddHttpClients()
             .AddConfiguration(configuration)
+            .AddMemoryCache()
             .AddServices()
             .AddQuartzServices(configuration);
     
