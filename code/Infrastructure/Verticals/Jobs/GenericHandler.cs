@@ -4,8 +4,8 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Jobs;
 
@@ -89,8 +89,14 @@ public abstract class GenericHandler : IDisposable
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
     
-    protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record) =>
-        type switch
+    protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record)
+    {
+        if (InstanceType.Sonarr == type && record.EpisodeId == 0)
+        {
+            _logger.LogDebug(JsonConvert.SerializeObject(record));
+        }
+        
+        return type switch
         {
             InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode => new SonarrSearchItem
             {
@@ -112,4 +118,5 @@ public abstract class GenericHandler : IDisposable
             },
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
+    }
 }

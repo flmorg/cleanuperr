@@ -47,7 +47,7 @@ public sealed class QueueCleaner : GenericHandler
 
                 if (record.DownloadId.Equals(record.Title, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    _logger.LogDebug("skip | item was added a few seconds ago");
+                    _logger.LogDebug("skip | item was added recently | {title}", record.Title);
                     continue;
                 }
 
