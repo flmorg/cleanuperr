@@ -8,6 +8,11 @@ The tool supports both qBittorrent's built-in exclusion features and its own blo
 
 Refer to the [Environment variables](#Environment-variables) section for detailed configuration instructions and the [Setup](#Setup) section for an in-depth explanation of the cleanup process.
 
+## Key features
+- Marks unwanted files as skip/unwanted in the download client.
+- Automatically strikes stalled or stuck downloads. 
+- Removes and blocks downloads that reached the maximum number of strikes or are marked as unwanted by the download client or by cleanuperr and triggers a search for removed downloads.
+
 ## Important note
 
 Only the **latest versions** of the following apps are supported, or earlier versions that have the same API as the latest version:
@@ -33,8 +38,8 @@ This tool is actively developed and still a work in progress. Join the Discord s
 2. **Queue cleaner** will:
    - Run every 5 minutes (or configured cron).
    - Process all items in the *arr queue.
-   - Check each queue item if it is stalled or stuck in matadata downloading
-     - If it is, the item receives a **strike**.
+   - Check each queue item if it is **stalled (download speed is 0)** or **stuck in matadata downloading**.
+     - If it is, the item receives a **strike**, and will continue to accumulate 
    - Check each queue item if it meets one of the following condition in the download client:
      - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
      - All associated files of are marked as **unwanted/skipped**.
@@ -158,14 +163,14 @@ services:
 |||||
 | SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
 | SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
-| SONARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed | 0 |
-| SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |
-| SONARR__INSTANCES__0__APIKEY | Yes | First Sonarr instance API key | empty |
+| SONARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
+| SONARR__INSTANCES__0__URL | No | First Sonarr instance url | http://localhost:8989 |
+| SONARR__INSTANCES__0__APIKEY | No | First Sonarr instance API key | empty |
 |||||
 | RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
-| RADARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed | 0 |
-| RADARR__INSTANCES__0__URL | Yes | First Radarr instance url | http://localhost:8989 |
-| RADARR__INSTANCES__0__APIKEY | Yes | First Radarr instance API key | empty |
+| RADARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
+| RADARR__INSTANCES__0__URL | No | First Radarr instance url | http://localhost:8989 |
+| RADARR__INSTANCES__0__APIKEY | No | First Radarr instance API key | empty |
 
 #
 ### To be noted
