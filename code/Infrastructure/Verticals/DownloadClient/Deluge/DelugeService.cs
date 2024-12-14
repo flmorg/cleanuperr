@@ -131,7 +131,6 @@ public sealed class DelugeService : DownloadServiceBase
             return false;
         }
 
-        // TODO check if Eta is a number type or something else
         if (status.Eta > 0)
         {
             return false;
