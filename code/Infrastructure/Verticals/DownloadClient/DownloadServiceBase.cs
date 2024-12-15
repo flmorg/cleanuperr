@@ -1,65 +1,41 @@
-﻿using Infrastructure.Verticals.ContentBlocker;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Common.Configuration.QueueCleaner;
+using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
 public abstract class DownloadServiceBase : IDownloadService
 {
     protected readonly ILogger<DownloadServiceBase> _logger;
+    protected readonly QueueCleanerConfig _queueCleanerConfig;
     protected readonly FilenameEvaluator _filenameEvaluator;
-    protected readonly IMemoryCache _cache;
-    protected readonly MemoryCacheEntryOptions _cacheOptions;
+    protected readonly Striker _striker;
     
     protected DownloadServiceBase(
         ILogger<DownloadServiceBase> logger,
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
         FilenameEvaluator filenameEvaluator,
-        IMemoryCache cache
+        Striker striker
     )
     {
         _logger = logger;
+        _queueCleanerConfig = queueCleanerConfig.Value;
         _filenameEvaluator = filenameEvaluator;
-        _cache = cache;
-        _cacheOptions = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromHours(2));
+        _striker = striker;
     }
 
     public abstract void Dispose();
 
     public abstract Task LoginAsync();
 
-    public abstract Task<bool> ShouldRemoveFromArrQueueAsync(string hash, ushort maxStrikes);
+    public abstract Task<bool> ShouldRemoveFromArrQueueAsync(string hash);
 
     public abstract Task BlockUnwantedFilesAsync(string hash);
 
-    protected bool StrikeAndCheckLimit(string hash, string name, ushort maxStrikes)
+    protected bool StrikeAndCheckLimit(string hash, string itemName)
     {
-        if (maxStrikes is 0)
-        {
-            return false;
-        }
-        
-        if (!_cache.TryGetValue(hash, out int? strikeCount))
-        {
-            strikeCount = 1;
-        }
-        else
-        {
-            ++strikeCount;
-        }
-        
-        _logger.LogDebug("item on strike number {strike} | {name}", strikeCount, name);
-        
-        if (strikeCount < maxStrikes)
-        {
-            _cache.Set(hash, strikeCount, _cacheOptions);
-            return false;
-        }
-
-        _cache.Remove(hash);
-
-        _logger.LogInformation("removing stalled item | {name}", name);
-
-        return true;
+        return _striker.StrikeAndCheckLimit($"stalled_{hash}", itemName, _queueCleanerConfig.StalledMaxStrikes);
     }
 }

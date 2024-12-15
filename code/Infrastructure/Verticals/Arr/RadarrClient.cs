@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using Common.Configuration.Arr;
 using Common.Configuration.Logging;
-using Domain.Arr.Queue;
+using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
+using Domain.Models.Arr.Queue;
 using Domain.Models.Radarr;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,8 +19,9 @@ public sealed class RadarrClient : ArrClient
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
-        IMemoryCache cache
-    ) : base(logger, httpClientFactory, loggingConfig, cache)
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        Striker striker
+    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
     {
     }
 

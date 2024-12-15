@@ -1,7 +1,8 @@
 using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
-using Microsoft.Extensions.Caching.Memory;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -15,9 +16,10 @@ public sealed class DelugeService : DownloadServiceBase
         ILogger<DelugeService> logger,
         IOptions<DelugeConfig> config,
         IHttpClientFactory httpClientFactory,
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
         FilenameEvaluator filenameEvaluator,
-        IMemoryCache cache
-    ) : base(logger, filenameEvaluator, cache)
+        Striker striker
+    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
     {
         config.Value.Validate();
         _client = new (config, httpClientFactory);
@@ -28,7 +30,7 @@ public sealed class DelugeService : DownloadServiceBase
         await _client.LoginAsync();
     }
 
-    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash, ushort maxStrikes)
+    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         hash = hash.ToLowerInvariant();
         
@@ -61,7 +63,7 @@ public sealed class DelugeService : DownloadServiceBase
             }
         });
 
-        return shouldRemove || IsItemStuckAndShouldRemove(status, maxStrikes);
+        return shouldRemove || IsItemStuckAndShouldRemove(status);
     }
 
     public override async Task BlockUnwantedFilesAsync(string hash)
@@ -124,9 +126,9 @@ public sealed class DelugeService : DownloadServiceBase
         await _client.ChangeFilesPriority(hash, sortedPriorities);
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentStatus status, ushort maxStrikes)
+    private bool IsItemStuckAndShouldRemove(TorrentStatus status)
     {
-        if (status.State is not "Downloading")
+        if (status.State is null || !status.State.Equals("Downloading", StringComparison.InvariantCultureIgnoreCase))
         {
             return false;
         }
@@ -136,7 +138,7 @@ public sealed class DelugeService : DownloadServiceBase
             return false;
         }
 
-        return StrikeAndCheckLimit(status.Hash!, status.Name!, maxStrikes);
+        return StrikeAndCheckLimit(status.Hash!, status.Name!);
     }
 
     private async Task<TorrentStatus?> GetTorrentStatus(string hash)

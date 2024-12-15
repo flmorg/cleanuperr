@@ -1,4 +1,4 @@
-﻿namespace Domain.Arr.Queue;
+﻿namespace Domain.Models.Arr.Queue;
 
 public record QueueRecord
 {

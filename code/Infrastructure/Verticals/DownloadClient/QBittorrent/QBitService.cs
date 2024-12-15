@@ -1,6 +1,7 @@
 ﻿using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
-using Microsoft.Extensions.Caching.Memory;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QBittorrent.Client;
@@ -15,9 +16,10 @@ public sealed class QBitService : DownloadServiceBase
     public QBitService(
         ILogger<QBitService> logger,
         IOptions<QBitConfig> config,
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
         FilenameEvaluator filenameEvaluator,
-        IMemoryCache cache
-    ) : base(logger, filenameEvaluator, cache)
+        Striker striker
+    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -34,7 +36,7 @@ public sealed class QBitService : DownloadServiceBase
         await _client.LoginAsync(_config.Username, _config.Password);
     }
 
-    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash, ushort maxStrikes)
+    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         TorrentInfo? torrent = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();
@@ -59,7 +61,7 @@ public sealed class QBitService : DownloadServiceBase
             return true;
         }
 
-        return IsItemStuckAndShouldRemove(torrent, maxStrikes);
+        return IsItemStuckAndShouldRemove(torrent);
     }
 
     public override async Task BlockUnwantedFilesAsync(string hash)
@@ -93,7 +95,7 @@ public sealed class QBitService : DownloadServiceBase
         _client.Dispose();
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent, ushort maxStrikes)
+    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
     {
         if (torrent.State is not TorrentState.StalledDownload and not TorrentState.FetchingMetadata
             and not TorrentState.ForcedFetchingMetadata)
@@ -102,6 +104,6 @@ public sealed class QBitService : DownloadServiceBase
             return false;
         }
 
-        return StrikeAndCheckLimit(torrent.Hash, torrent.Name, maxStrikes);
+        return StrikeAndCheckLimit(torrent.Hash, torrent.Name);
     }
 }

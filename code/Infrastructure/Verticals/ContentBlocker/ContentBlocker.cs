@@ -1,7 +1,7 @@
 ﻿using Common.Configuration;
 using Common.Configuration.Arr;
-using Domain.Arr.Queue;
 using Domain.Enums;
+using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;

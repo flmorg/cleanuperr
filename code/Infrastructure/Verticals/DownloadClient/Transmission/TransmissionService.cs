@@ -1,6 +1,7 @@
 ﻿using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
-using Microsoft.Extensions.Caching.Memory;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Transmission.API.RPC;
@@ -18,9 +19,10 @@ public sealed class TransmissionService : DownloadServiceBase
     public TransmissionService(
         ILogger<TransmissionService> logger,
         IOptions<TransmissionConfig> config,
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
         FilenameEvaluator filenameEvaluator,
-        IMemoryCache cache
-    ) : base(logger, filenameEvaluator, cache)
+        Striker striker
+    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -36,7 +38,7 @@ public sealed class TransmissionService : DownloadServiceBase
         await _client.GetSessionInformationAsync();
     }
 
-    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash, ushort maxStrikes)
+    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
@@ -64,7 +66,7 @@ public sealed class TransmissionService : DownloadServiceBase
         }
 
         // remove if all files are unwanted
-        return shouldRemove || IsItemStuckAndShouldRemove(torrent, maxStrikes);
+        return shouldRemove || IsItemStuckAndShouldRemove(torrent);
     }
 
     public override async Task BlockUnwantedFilesAsync(string hash)
@@ -112,7 +114,7 @@ public sealed class TransmissionService : DownloadServiceBase
     {
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent, ushort maxStrikes)
+    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
     {
         if (torrent.Status is not 4)
         {
@@ -125,7 +127,7 @@ public sealed class TransmissionService : DownloadServiceBase
             return false;
         }
 
-        return StrikeAndCheckLimit(torrent.HashString, torrent.Name, maxStrikes);
+        return StrikeAndCheckLimit(torrent.HashString!, torrent.Name!);
     }
 
     private async Task<TorrentInfo?> GetTorrentAsync(string hash)

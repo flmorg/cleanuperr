@@ -38,8 +38,8 @@ This tool is actively developed and still a work in progress. Join the Discord s
 2. **Queue cleaner** will:
    - Run every 5 minutes (or configured cron).
    - Process all items in the *arr queue.
-   - Check each queue item if it is **stalled (download speed is 0)** or **stuck in matadata downloading**.
-     - If it is, the item receives a **strike**, and will continue to accumulate 
+   - Check each queue item if it is **stalled (download speed is 0)**, **stuck in matadata downloading** or **failed to be imported**.
+     - If it is, the item receives a **strike** and will continue to accumulate strikes every time it meets any of these conditions.
    - Check each queue item if it meets one of the following condition in the download client:
      - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
      - All associated files of are marked as **unwanted/skipped**.
@@ -90,6 +90,8 @@ services:
 
       - QUEUECLEANER__ENABLED=true
       - QUEUECLEANER__RUNSEQUENTIALLY=true
+      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
+      - QUEUECLEANER__STALLED_MAX_STRIKES=5
 
       - CONTENTBLOCKER__ENABLED=true
       - CONTENTBLOCKER__BLACKLIST__ENABLED=true
@@ -103,9 +105,11 @@ services:
       - QBITTORRENT__USERNAME=user
       - QBITTORRENT__PASSWORD=pass
       # OR
+      # - DOWNLOAD_CLIENT=deluge
       # - DELUGE__URL=http://localhost:8112
       # - DELUGE__PASSWORD=testing
       # OR
+      # - DOWNLOAD_CLIENT=transmission
       # - TRANSMISSION__URL=http://localhost:9091
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
@@ -142,6 +146,8 @@ services:
 |||||
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
 | QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |
+| QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES | No | After how many strikes should a failed import be removed<br>0 means never | 0 |
+| QUEUECLEANER__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
 |||||
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
 | CONTENTBLOCKER__BLACKLIST__ENABLED | Yes if content blocker is enabled and whitelist is not enabled | Enable or disable the blacklist | false |
@@ -163,12 +169,10 @@ services:
 |||||
 | SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
 | SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
-| SONARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
 | SONARR__INSTANCES__0__URL | No | First Sonarr instance url | http://localhost:8989 |
 | SONARR__INSTANCES__0__APIKEY | No | First Sonarr instance API key | empty |
 |||||
 | RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
-| RADARR__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
 | RADARR__INSTANCES__0__URL | No | First Radarr instance url | http://localhost:8989 |
 | RADARR__INSTANCES__0__APIKEY | No | First Radarr instance API key | empty |
 
@@ -204,7 +208,8 @@ SONARR__INSTANCES__<NUMBER>__APIKEY
 
 Check out this stackoverflow answer on how to do it: https://stackoverflow.com/a/15719678
 
-## Special Thanks
+## Credits
 Special thanks for inspiration go to:
 - [ThijmenGThN/swaparr](https://github.com/ThijmenGThN/swaparr)
+- [ManiMatter/decluttarr](https://github.com/ManiMatter/decluttarr)
 - [PaeyMoopy/sonarr-radarr-queue-cleaner](https://github.com/PaeyMoopy/sonarr-radarr-queue-cleaner)

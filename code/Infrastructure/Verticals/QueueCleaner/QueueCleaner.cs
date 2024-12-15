@@ -1,7 +1,8 @@
 using Common.Configuration.Arr;
-using Domain.Arr.Queue;
+using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
+using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
@@ -55,7 +56,7 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
 
-                if (!await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, arrConfig.StalledMaxStrikes))
+                if (!arrClient.ShouldRemoveFromQueue(record) && !await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId))
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;

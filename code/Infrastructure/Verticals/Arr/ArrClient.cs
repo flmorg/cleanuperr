@@ -1,8 +1,9 @@
 ﻿using Common.Configuration.Arr;
 using Common.Configuration.Logging;
-using Domain.Arr.Queue;
+using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
-using Microsoft.Extensions.Caching.Memory;
+using Domain.Models.Arr.Queue;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -14,25 +15,24 @@ public abstract class ArrClient
     protected readonly ILogger<ArrClient> _logger;
     protected readonly HttpClient _httpClient;
     protected readonly LoggingConfig _loggingConfig;
-    protected readonly IMemoryCache _cache;
-    protected readonly MemoryCacheEntryOptions _cacheOptions;
-
+    protected readonly QueueCleanerConfig _queueCleanerConfig;
+    protected readonly Striker _striker;
     
     protected ArrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
-        IMemoryCache cache)
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        Striker striker
+    )
     {
         _logger = logger;
+        _striker = striker;
         _httpClient = httpClientFactory.CreateClient();
         _loggingConfig = loggingConfig.Value;
-        _cache = cache;
-        _cacheOptions = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromHours(2));
+        _queueCleanerConfig = queueCleanerConfig.Value;
+        _striker = striker;
     }
-
-    protected abstract string GetQueueUrlPath(int page);
 
     public virtual async Task<QueueListResponse> GetQueueItemsAsync(ArrInstance arrInstance, int page)
     {
@@ -64,6 +64,27 @@ public abstract class ArrClient
         return queueResponse;
     }
 
+    public virtual bool ShouldRemoveFromQueue(QueueRecord record)
+    {
+        bool hasWarn() => record.TrackedDownloadStatus
+            .Equals("warning", StringComparison.InvariantCultureIgnoreCase);
+        bool isImportBlocked() => record.TrackedDownloadState
+            .Equals("importBlocked", StringComparison.InvariantCultureIgnoreCase);
+        bool isImportPending() => record.TrackedDownloadState
+            .Equals("importPending", StringComparison.InvariantCultureIgnoreCase);
+
+        if (hasWarn() && (isImportBlocked() || isImportPending()))
+        {
+            return _striker.StrikeAndCheckLimit(
+                $"import_{record.DownloadId}",
+                record.Title,
+                _queueCleanerConfig.ImportFailedMaxStrikes
+            );
+        }
+
+        return false;
+    }
+    
     public virtual async Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord queueRecord)
     {
         Uri uri = new(arrInstance.Url, $"/api/v3/queue/{queueRecord.Id}?removeFromClient=true&blocklist=true&skipRedownload=true&changeCategory=false");
@@ -104,6 +125,8 @@ public abstract class ArrClient
 
         return true;
     }
+    
+    protected abstract string GetQueueUrlPath(int page);
     
     protected virtual void SetApiKey(HttpRequestMessage request, string apiKey)
     {
