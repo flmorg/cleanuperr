@@ -25,6 +25,7 @@ public sealed class TransmissionService : IDownloadService
     {
         _logger = logger;
         _config = config.Value;
+        _config.Validate();
         _client = new(
             new Uri(_config.Url, "/transmission/rpc").ToString(),
             login: _config.Username,
