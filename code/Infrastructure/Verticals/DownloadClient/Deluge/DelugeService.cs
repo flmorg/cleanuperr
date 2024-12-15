@@ -21,6 +21,7 @@ public sealed class DelugeService : IDownloadService
     )
     {
         _logger = logger;
+        config.Value.Validate();
         _client = new (config, httpClientFactory);
         _filenameEvaluator = filenameEvaluator;
     }

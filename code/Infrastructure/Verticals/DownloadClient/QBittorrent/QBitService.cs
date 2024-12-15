@@ -22,6 +22,7 @@ public sealed class QBitService : IDownloadService
     {
         _logger = logger;
         _config = config.Value;
+        _config.Validate();
         _client = new(_config.Url);
         _filenameEvaluator = filenameEvaluator;
     }

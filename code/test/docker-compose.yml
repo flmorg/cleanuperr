@@ -189,16 +189,14 @@ services:
       # - CONTENTBLOCKER__WHITELIST__ENABLED=true
       # - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist
 
-      - QBITTORRENT__ENABLED=true
+      - DOWNLOAD_CLIENT=qbittorrent
       - QBITTORRENT__URL=http://qbittorrent:8080
       - QBITTORRENT__USERNAME=test
       - QBITTORRENT__PASSWORD=testing
       # OR
-      # - DELUGE__ENABLED=true
       # - DELUGE__URL=http://localhost:8112
       # - DELUGE__PASSWORD=testing
       # OR
-      # - TRANSMISSION__ENABLED=true
       # - TRANSMISSION__URL=http://localhost:9091
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
