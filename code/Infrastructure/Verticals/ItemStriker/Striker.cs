@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Domain.Enums;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.ItemStriker;
@@ -17,12 +18,14 @@ public class Striker
             .SetSlidingExpiration(TimeSpan.FromHours(2));
     }
     
-    public bool StrikeAndCheckLimit(string key, string itemName, ushort maxStrikes)
+    public bool StrikeAndCheckLimit(string hash, string itemName, ushort maxStrikes, StrikeType strikeType)
     {
         if (maxStrikes is 0)
         {
             return false;
         }
+        
+        string key = $"{strikeType.ToString()}_{hash}";
         
         if (!_cache.TryGetValue(key, out int? strikeCount))
         {
@@ -33,7 +36,7 @@ public class Striker
             ++strikeCount;
         }
         
-        _logger.LogDebug("item on strike number {strike} | {name}", strikeCount, itemName);
+        _logger.LogDebug("item on strike number {strike} | reason {reason} | {name}", strikeCount, strikeType.ToString(), itemName);
         _cache.Set(key, strikeCount, _cacheOptions);
         
         if (strikeCount < maxStrikes)
@@ -47,7 +50,7 @@ public class Striker
             _logger.LogWarning("be sure to enable \"Reject Blocklisted Torrent Hashes While Grabbing\" on your indexers to reject blocked items");
         }
 
-        _logger.LogInformation("removing item with max strikes | {name}", itemName);
+        _logger.LogInformation("removing item with max strikes | reason {reason} | {name}", strikeType.ToString(), itemName);
 
         return true;
     }

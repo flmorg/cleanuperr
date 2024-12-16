@@ -1,4 +1,5 @@
 ﻿using Common.Configuration.QueueCleaner;
+using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
@@ -36,6 +37,6 @@ public abstract class DownloadServiceBase : IDownloadService
 
     protected bool StrikeAndCheckLimit(string hash, string itemName)
     {
-        return _striker.StrikeAndCheckLimit($"stalled_{hash}", itemName, _queueCleanerConfig.StalledMaxStrikes);
+        return _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Common.Configuration.Arr;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
+using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.ItemStriker;
@@ -76,9 +77,10 @@ public abstract class ArrClient
         if (hasWarn() && (isImportBlocked() || isImportPending()))
         {
             return _striker.StrikeAndCheckLimit(
-                $"import_{record.DownloadId}",
+                record.DownloadId,
                 record.Title,
-                _queueCleanerConfig.ImportFailedMaxStrikes
+                _queueCleanerConfig.ImportFailedMaxStrikes,
+                StrikeType.ImportFailed
             );
         }
 
