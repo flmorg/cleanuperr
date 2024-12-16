@@ -1,4 +1,6 @@
-﻿namespace Domain.Models.Sonarr;
+﻿using Common.Configuration.Arr;
+
+namespace Domain.Models.Sonarr;
 
 public sealed record SonarrCommand
 {
@@ -9,4 +11,6 @@ public sealed record SonarrCommand
     public long? SeasonNumber { get; set; }
     
     public List<long>? EpisodeIds { get; set; }
+    
+    public SonarrSearchType SearchType { get; set; }
 }

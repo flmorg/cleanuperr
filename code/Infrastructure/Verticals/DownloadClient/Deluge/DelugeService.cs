@@ -1,44 +1,46 @@
-﻿using Common.Configuration;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
-public sealed class DelugeService : IDownloadService
+public sealed class DelugeService : DownloadServiceBase
 {
-    private readonly ILogger<DelugeService> _logger;
     private readonly DelugeClient _client;
-    private readonly FilenameEvaluator _filenameEvaluator;
     
     public DelugeService(
         ILogger<DelugeService> logger,
         IOptions<DelugeConfig> config,
         IHttpClientFactory httpClientFactory,
-        FilenameEvaluator filenameEvaluator
-    )
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        FilenameEvaluator filenameEvaluator,
+        Striker striker
+    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
     {
-        _logger = logger;
         config.Value.Validate();
         _client = new (config, httpClientFactory);
-        _filenameEvaluator = filenameEvaluator;
     }
     
-    public async Task LoginAsync()
+    public override async Task LoginAsync()
     {
         await _client.LoginAsync();
     }
 
-    public async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         hash = hash.ToLowerInvariant();
         
         DelugeContents? contents = null;
+
+        TorrentStatus? status = await GetTorrentStatus(hash);
         
-        if (!await HasMinimalStatus(hash))
+        if (status?.Hash is null)
         {
+            _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return false;
         }
 
@@ -51,13 +53,7 @@ public sealed class DelugeService : IDownloadService
             _logger.LogDebug(exception, "failed to find torrent {hash} in the download client", hash);
         }
 
-        // if no files found, torrent might be stuck in Downloading metadata
-        if (contents?.Contents?.Count is null or 0)
-        {
-            return false;
-        }
-
-        bool shouldRemove = true;
+        bool shouldRemove = contents?.Contents?.Count > 0;
         
         ProcessFiles(contents.Contents, (_, file) =>
         {
@@ -67,15 +63,18 @@ public sealed class DelugeService : IDownloadService
             }
         });
 
-        return shouldRemove;
+        return shouldRemove || IsItemStuckAndShouldRemove(status);
     }
 
-    public async Task BlockUnwantedFilesAsync(string hash)
+    public override async Task BlockUnwantedFilesAsync(string hash)
     {
         hash = hash.ToLowerInvariant();
 
-        if (!await HasMinimalStatus(hash))
+        TorrentStatus? status = await GetTorrentStatus(hash);
+        
+        if (status?.Hash is null)
         {
+            _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return;
         }
         
@@ -126,22 +125,29 @@ public sealed class DelugeService : IDownloadService
 
         await _client.ChangeFilesPriority(hash, sortedPriorities);
     }
-
-    private async Task<bool> HasMinimalStatus(string hash)
+    
+    private bool IsItemStuckAndShouldRemove(TorrentStatus status)
     {
-        DelugeMinimalStatus? status = await _client.SendRequest<DelugeMinimalStatus?>(
-            "web.get_torrent_status",
-            hash,
-            new[] { "hash" }
-        );
-
-        if (status?.Hash is null)
+        if (status.State is null || !status.State.Equals("Downloading", StringComparison.InvariantCultureIgnoreCase))
         {
-            _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return false;
         }
 
-        return true;
+        if (status.Eta > 0)
+        {
+            return false;
+        }
+
+        return StrikeAndCheckLimit(status.Hash!, status.Name!);
+    }
+
+    private async Task<TorrentStatus?> GetTorrentStatus(string hash)
+    {
+        return await _client.SendRequest<TorrentStatus?>(
+            "web.get_torrent_status",
+            hash,
+            new[] { "hash", "state", "name", "eta" }
+        );
     }
     
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory> contents, Action<string, DelugeFileOrDirectory> processFile)
@@ -161,7 +167,7 @@ public sealed class DelugeService : IDownloadService
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
     }
 }

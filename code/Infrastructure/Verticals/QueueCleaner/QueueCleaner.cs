@@ -1,8 +1,8 @@
-﻿using Common.Configuration;
 using Common.Configuration.Arr;
-using Domain.Arr.Queue;
+using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
+using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
@@ -29,34 +29,45 @@ public sealed class QueueCleaner : GenericHandler
     {
         HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
+        ArrConfig arrConfig = GetConfig(instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
-            foreach (QueueRecord record in items)
+            var groups = items
+                .GroupBy(x => x.DownloadId)
+                .ToList();
+            
+            foreach (var group in groups)
             {
+                if (group.Any(x => !arrClient.IsRecordValid(x)))
+                {
+                    continue;
+                }
+                
+                QueueRecord record = group.First();
+                
                 if (record.Protocol is not "torrent")
                 {
                     continue;
                 }
 
-                if (string.IsNullOrEmpty(record.DownloadId))
+                if (!arrClient.IsRecordValid(record))
                 {
-                    _logger.LogDebug("skip | download id is null for {title}", record.Title);
                     continue;
                 }
 
-                if (!await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId))
+                if (!arrClient.ShouldRemoveFromQueue(record) && !await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId))
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;
                 }
-
-                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record));
+                
+                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
 
                 await arrClient.DeleteQueueItemAsync(instance, record);
             }
         });
         
-        await arrClient.RefreshItemsAsync(instance, GetConfig(instanceType), itemsToBeRefreshed);
+        await arrClient.RefreshItemsAsync(instance, arrConfig, itemsToBeRefreshed);
     }
 }

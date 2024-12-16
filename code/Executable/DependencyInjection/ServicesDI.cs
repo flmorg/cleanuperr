@@ -1,10 +1,10 @@
-﻿using Executable.Jobs;
-using Infrastructure.Verticals.Arr;
+﻿using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.DownloadClient.Transmission;
+using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.QueueCleaner;
 
 namespace Executable.DependencyInjection;
@@ -23,5 +23,6 @@ public static class ServicesDI
             .AddTransient<TransmissionService>()
             .AddTransient<ArrQueueIterator>()
             .AddTransient<DownloadServiceFactory>()
-            .AddSingleton<BlocklistProvider>();
+            .AddSingleton<BlocklistProvider>()
+            .AddSingleton<Striker>();
 }

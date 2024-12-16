@@ -8,9 +8,19 @@ The tool supports both qBittorrent's built-in exclusion features and its own blo
 
 Refer to the [Environment variables](#Environment-variables) section for detailed configuration instructions and the [Setup](#Setup) section for an in-depth explanation of the cleanup process.
 
+## Key features
+- Marks unwanted files as skip/unwanted in the download client.
+- Automatically strikes stalled or stuck downloads. 
+- Removes and blocks downloads that reached the maximum number of strikes or are marked as unwanted by the download client or by cleanuperr and triggers a search for removed downloads.
+
 ## Important note
 
-Only the **latest versions** of qBittorrent, Deluge, Sonarr etc. are supported, or earlier versions that have the same API as the latest version.
+Only the **latest versions** of the following apps are supported, or earlier versions that have the same API as the latest version:
+- qBittorrent
+- Deluge
+- Transmission
+- Sonarr
+- Radarr
 
 This tool is actively developed and still a work in progress. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
 
@@ -28,12 +38,14 @@ This tool is actively developed and still a work in progress. Join the Discord s
 2. **Queue cleaner** will:
    - Run every 5 minutes (or configured cron).
    - Process all items in the *arr queue.
+   - Check each queue item if it is **stalled (download speed is 0)**, **stuck in matadata downloading** or **failed to be imported**.
+     - If it is, the item receives a **strike** and will continue to accumulate strikes every time it meets any of these conditions.
    - Check each queue item if it meets one of the following condition in the download client:
      - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
      - All associated files of are marked as **unwanted/skipped**.
    - If the item **DOES NOT** match the above criteria, it will be skipped.
-   - If the item **DOES** match the criteria:
-     - It will be removed from the *arr's queue.
+   - If the item **DOES** match the criteria or has received the **maximum number of strikes**:
+     - It will be removed from the *arr's queue and blocked.
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
 
@@ -78,6 +90,8 @@ services:
 
       - QUEUECLEANER__ENABLED=true
       - QUEUECLEANER__RUNSEQUENTIALLY=true
+      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
+      - QUEUECLEANER__STALLED_MAX_STRIKES=5
 
       - CONTENTBLOCKER__ENABLED=true
       - CONTENTBLOCKER__BLACKLIST__ENABLED=true
@@ -91,21 +105,25 @@ services:
       - QBITTORRENT__USERNAME=user
       - QBITTORRENT__PASSWORD=pass
       # OR
+      # - DOWNLOAD_CLIENT=deluge
       # - DELUGE__URL=http://localhost:8112
       # - DELUGE__PASSWORD=testing
       # OR
+      # - DOWNLOAD_CLIENT=transmission
       # - TRANSMISSION__URL=http://localhost:9091
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
 
       - SONARR__ENABLED=true
       - SONARR__SEARCHTYPE=Episode
+      - SONARR__STALLED_MAX_STRIKES=5
       - SONARR__INSTANCES__0__URL=http://localhost:8989
       - SONARR__INSTANCES__0__APIKEY=secret1
       - SONARR__INSTANCES__1__URL=http://localhost:8990
       - SONARR__INSTANCES__1__APIKEY=secret2
 
       - RADARR__ENABLED=true
+      - RADARR__STALLED_MAX_STRIKES=5
       - RADARR__INSTANCES__0__URL=http://localhost:7878
       - RADARR__INSTANCES__0__APIKEY=secret3
       - RADARR__INSTANCES__1__URL=http://localhost:7879
@@ -123,11 +141,13 @@ services:
 | LOGGING__FILE__PATH | No | Directory where to save the log files | empty |
 | LOGGING__ENHANCED | No | Enhance logs whenever possible<br>A more detailed description is provided [here](variables.md#LOGGING__ENHANCED) | true |
 |||||
-| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
-| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) | 0 0/5 * * * ? |
+| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 1h interval | 0 0/5 * * * ? |
+| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 1h interval | 0 0/5 * * * ? |
 |||||
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
 | QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |
+| QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES | No | After how many strikes should a failed import be removed<br>0 means never | 0 |
+| QUEUECLEANER__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
 |||||
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
 | CONTENTBLOCKER__BLACKLIST__ENABLED | Yes if content blocker is enabled and whitelist is not enabled | Enable or disable the blacklist | false |
@@ -149,12 +169,12 @@ services:
 |||||
 | SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
 | SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
-| SONARR__INSTANCES__0__URL | Yes | First Sonarr instance url | http://localhost:8989 |
-| SONARR__INSTANCES__0__APIKEY | Yes | First Sonarr instance API key | empty |
+| SONARR__INSTANCES__0__URL | No | First Sonarr instance url | http://localhost:8989 |
+| SONARR__INSTANCES__0__APIKEY | No | First Sonarr instance API key | empty |
 |||||
 | RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
-| RADARR__INSTANCES__0__URL | Yes | First Radarr instance url | http://localhost:8989 |
-| RADARR__INSTANCES__0__APIKEY | Yes | First Radarr instance API key | empty |
+| RADARR__INSTANCES__0__URL | No | First Radarr instance url | http://localhost:8989 |
+| RADARR__INSTANCES__0__APIKEY | No | First Radarr instance API key | empty |
 
 #
 ### To be noted
@@ -187,3 +207,9 @@ SONARR__INSTANCES__<NUMBER>__APIKEY
 ### Run as a Windows Service
 
 Check out this stackoverflow answer on how to do it: https://stackoverflow.com/a/15719678
+
+## Credits
+Special thanks for inspiration go to:
+- [ThijmenGThN/swaparr](https://github.com/ThijmenGThN/swaparr)
+- [ManiMatter/decluttarr](https://github.com/ManiMatter/decluttarr)
+- [PaeyMoopy/sonarr-radarr-queue-cleaner](https://github.com/PaeyMoopy/sonarr-radarr-queue-cleaner)

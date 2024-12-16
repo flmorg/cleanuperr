@@ -1,33 +1,32 @@
-﻿using Common.Configuration;
-using Common.Configuration.DownloadClient;
+﻿using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
-public sealed class QBitService : IDownloadService
+public sealed class QBitService : DownloadServiceBase
 {
-    private readonly ILogger<QBitService> _logger;
     private readonly QBitConfig _config;
     private readonly QBittorrentClient _client;
-    private readonly FilenameEvaluator _filenameEvaluator;
 
     public QBitService(
         ILogger<QBitService> logger,
         IOptions<QBitConfig> config,
-        FilenameEvaluator filenameEvaluator
-    )
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        FilenameEvaluator filenameEvaluator,
+        Striker striker
+    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
     {
-        _logger = logger;
         _config = config.Value;
         _config.Validate();
         _client = new(_config.Url);
-        _filenameEvaluator = filenameEvaluator;
     }
 
-    public async Task LoginAsync()
+    public override async Task LoginAsync()
     {
         if (string.IsNullOrEmpty(_config.Username) && string.IsNullOrEmpty(_config.Password))
         {
@@ -37,13 +36,14 @@ public sealed class QBitService : IDownloadService
         await _client.LoginAsync(_config.Username, _config.Password);
     }
 
-    public async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         TorrentInfo? torrent = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();
 
         if (torrent is null)
         {
+            _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return false;
         }
 
@@ -55,17 +55,16 @@ public sealed class QBitService : IDownloadService
 
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
-        // if no files found, torrent might be stuck in Downloading metadata
-        if (files?.Count is null or 0)
+        // if all files are marked as skip
+        if (files?.Count is > 0 && files.All(x => x.Priority is TorrentContentPriority.Skip))
         {
-            return false;
+            return true;
         }
 
-        // if all files are marked as skip
-        return files.All(x => x.Priority is TorrentContentPriority.Skip);
+        return IsItemStuckAndShouldRemove(torrent);
     }
 
-    public async Task BlockUnwantedFilesAsync(string hash)
+    public override async Task BlockUnwantedFilesAsync(string hash)
     {
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
@@ -91,8 +90,20 @@ public sealed class QBitService : IDownloadService
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         _client.Dispose();
+    }
+    
+    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
+    {
+        if (torrent.State is not TorrentState.StalledDownload and not TorrentState.FetchingMetadata
+            and not TorrentState.ForcedFetchingMetadata)
+        {
+            // ignore other states
+            return false;
+        }
+
+        return StrikeAndCheckLimit(torrent.Hash, torrent.Name);
     }
 }

@@ -172,7 +172,7 @@ services:
     container_name: cleanuperr
     environment:
       - LOGGING__LOGLEVEL=Debug
-      - LOGGING__FILE__ENABLED=false
+      - LOGGING__FILE__ENABLED=true
       - LOGGING__FILE__PATH=/var/logs
       - LOGGING__ENHANCED=true
 
@@ -181,6 +181,8 @@ services:
 
       - QUEUECLEANER__ENABLED=true
       - QUEUECLEANER__RUNSEQUENTIALLY=true
+      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
+      - QUEUECLEANER__STALLED_MAX_STRIKES=5
 
       - CONTENTBLOCKER__ENABLED=true
       - CONTENTBLOCKER__BLACKLIST__ENABLED=true

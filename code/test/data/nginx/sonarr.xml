@@ -45,6 +45,17 @@
     </item>
 
     <item>
+      <title>Top.Gear.S23E03.720p.x265.HDTV.HEVC.-.YSTEAM</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>magnet:?xt=urn:btih:cf92cf859b110af0ad3d94b846e006828417b193&amp;dn=TPG.2303.720p.x265.yourserie.com.mkv</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f5057ac3f81efde384ed216c2de43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
       <title>Top.Gear.S23E01.720p.x265.HDTV.HEVC.-.YSTEAM</title>
       <description>Test</description>
       <size>4138858110</size>
@@ -62,6 +73,17 @@
       <link>http://nginx/custom/sonarr_bad_nested_top.torrent</link>
       <guid isPermaLink="false">
         174674a88c8947f6f9057ac3f82efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Sherlock.S01.1080p.BluRay.DD5.1.x264-DON</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>http://nginx/custom/sonarr_bad_pack.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f9057ac3f82efde384ed216cade43564ec45gf2cb4677554
       </guid>
       <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
     </item>

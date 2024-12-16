@@ -52,6 +52,7 @@ public static class LoggingDI
         Log.Logger = logConfig
             .MinimumLevel.Is(level)
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.Extensions.Http", LogEventLevel.Warning)
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
             .WriteTo.Console(new ExpressionTemplate(consoleOutputTemplate.Replace("PAD", padding.ToString())))

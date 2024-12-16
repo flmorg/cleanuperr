@@ -1,7 +1,7 @@
 ﻿using Common.Configuration;
 using Common.Configuration.Arr;
-using Domain.Arr.Queue;
 using Domain.Enums;
+using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
@@ -58,12 +58,4 @@ public sealed class ContentBlocker : GenericHandler
             }
         });
     }
-    
-    private ArrClient GetClient(InstanceType type) =>
-        type switch
-        {
-            InstanceType.Sonarr => _sonarrClient,
-            InstanceType.Radarr => _radarrClient,
-            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
-        };
 }

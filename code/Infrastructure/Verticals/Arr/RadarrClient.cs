@@ -1,8 +1,12 @@
 ﻿using System.Text;
 using Common.Configuration.Arr;
 using Common.Configuration.Logging;
+using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
+using Domain.Models.Arr.Queue;
 using Domain.Models.Radarr;
+using Infrastructure.Verticals.ItemStriker;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -14,9 +18,16 @@ public sealed class RadarrClient : ArrClient
     public RadarrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
-        IOptions<LoggingConfig> loggingConfig
-    ) : base(logger, httpClientFactory, loggingConfig)
+        IOptions<LoggingConfig> loggingConfig,
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        Striker striker
+    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
     {
+    }
+
+    protected override string GetQueueUrlPath(int page)
+    {
+        return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownMovieItems=true&includeMovie=true";
     }
 
     public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items)
@@ -57,6 +68,17 @@ public sealed class RadarrClient : ArrClient
             _logger.LogError("{log}", GetSearchLog(arrInstance.Url, command, false, logContext));
             throw;
         }
+    }
+
+    public override bool IsRecordValid(QueueRecord record)
+    {
+        if (record.MovieId is 0)
+        {
+            _logger.LogDebug("skip | item information missing | {title}", record.Title);
+            return false;
+        }
+        
+        return base.IsRecordValid(record);
     }
 
     private static string GetSearchLog(Uri instanceUrl, RadarrCommand command, bool success, string? logContext)

@@ -1,6 +1,7 @@
-﻿using Common.Configuration;
-using Common.Configuration.DownloadClient;
+﻿using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Transmission.API.RPC;
@@ -9,21 +10,20 @@ using Transmission.API.RPC.Entity;
 
 namespace Infrastructure.Verticals.DownloadClient.Transmission;
 
-public sealed class TransmissionService : IDownloadService
+public sealed class TransmissionService : DownloadServiceBase
 {
-    private readonly ILogger<TransmissionService> _logger;
     private readonly TransmissionConfig _config;
     private readonly Client _client;
-    private readonly FilenameEvaluator _filenameEvaluator;
     private TorrentInfo[]? _torrentsCache;
 
     public TransmissionService(
         ILogger<TransmissionService> logger,
         IOptions<TransmissionConfig> config,
-        FilenameEvaluator filenameEvaluator
-    )
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        FilenameEvaluator filenameEvaluator,
+        Striker striker
+    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
     {
-        _logger = logger;
         _config = config.Value;
         _config.Validate();
         _client = new(
@@ -31,44 +31,45 @@ public sealed class TransmissionService : IDownloadService
             login: _config.Username,
             password: _config.Password
         );
-        _filenameEvaluator = filenameEvaluator;
     }
 
-    public async Task LoginAsync()
+    public override async Task LoginAsync()
     {
         await _client.GetSessionInformationAsync();
     }
 
-    public async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
-        // if no files found, torrent might be stuck in Downloading metadata
-        if (torrent?.FileStats?.Length is null or 0)
+        if (torrent is null)
         {
+            _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return false;
         }
+        
+        bool shouldRemove = torrent.FileStats?.Length > 0;
 
         foreach (TransmissionTorrentFileStats? stats in torrent.FileStats ?? [])
         {
             if (!stats.Wanted.HasValue)
             {
                 // if any files stats are missing, do not remove
-                return false;
+                shouldRemove = false;
             }
             
             if (stats.Wanted.HasValue && stats.Wanted.Value)
             {
                 // if any files are wanted, do not remove
-                return false;
+                shouldRemove = false;
             }
         }
 
         // remove if all files are unwanted
-        return true;
+        return shouldRemove || IsItemStuckAndShouldRemove(torrent);
     }
 
-    public async Task BlockUnwantedFilesAsync(string hash)
+    public override async Task BlockUnwantedFilesAsync(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
@@ -108,9 +109,25 @@ public sealed class TransmissionService : IDownloadService
             FilesUnwanted = unwantedFiles.ToArray(),
         });
     }
-    
-    public void Dispose()
+
+    public override void Dispose()
     {
+    }
+    
+    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
+    {
+        if (torrent.Status is not 4)
+        {
+            // not in downloading state
+            return false;
+        }
+
+        if (torrent.Eta > 0)
+        {
+            return false;
+        }
+
+        return StrikeAndCheckLimit(torrent.HashString!, torrent.Name!);
     }
 
     private async Task<TorrentInfo?> GetTorrentAsync(string hash)
@@ -120,7 +137,15 @@ public sealed class TransmissionService : IDownloadService
         
         if (_torrentsCache is null || torrent is null)
         {
-            string[] fields = [TorrentFields.FILES, TorrentFields.FILE_STATS, TorrentFields.HASH_STRING, TorrentFields.ID];
+            string[] fields = [
+                TorrentFields.FILES,
+                TorrentFields.FILE_STATS,
+                TorrentFields.HASH_STRING,
+                TorrentFields.ID,
+                TorrentFields.ETA,
+                TorrentFields.NAME,
+                TorrentFields.STATUS
+            ];
             
             // refresh cache
             _torrentsCache = (await _client.TorrentGetAsync(fields))
