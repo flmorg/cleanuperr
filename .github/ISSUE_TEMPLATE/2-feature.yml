@@ -1,0 +1,19 @@
+name: Feature request
+description: File a feature request.
+title: "[FEATURE]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to improve cleanuperr!
+  - type: textarea
+    id: description
+    attributes:
+      label: What would you like to see implemented next?
+      description: |
+        Links? References? Anything that will give us more context about your idea!
+
+        Tip: You can attach images or log files by clicking this area to highlight it and then dragging files in.
+    validations:
+      required: true
