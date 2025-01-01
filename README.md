@@ -21,6 +21,7 @@ Only the **latest versions** of the following apps are supported, or earlier ver
 - Transmission
 - Sonarr
 - Radarr
+- Lidarr
 
 This tool is actively developed and still a work in progress. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
 
@@ -136,6 +137,12 @@ services:
       - RADARR__INSTANCES__0__APIKEY=secret3
       - RADARR__INSTANCES__1__URL=http://localhost:7879
       - RADARR__INSTANCES__1__APIKEY=secret4
+
+      - LIDARR__ENABLED=true
+      - LIDARR__INSTANCES__0__URL=http://radarr:8686
+      - LIDARR__INSTANCES__0__APIKEY=secret5
+      - LIDARR__INSTANCES__1__URL=http://radarr:8687
+      - LIDARR__INSTANCES__1__APIKEY=secret6
     image: ghcr.io/flmorg/cleanuperr:latest
     restart: unless-stopped
 ```
@@ -183,6 +190,10 @@ services:
 | RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
 | RADARR__INSTANCES__0__URL | No | First Radarr instance url | http://localhost:8989 |
 | RADARR__INSTANCES__0__APIKEY | No | First Radarr instance API key | empty |
+|||||
+| LIDARR__ENABLED | No | Enable or disable LIDARR cleanup  | false |
+| LIDARR__INSTANCES__0__URL | No | First LIDARR instance url | http://localhost:8989 |
+| LIDARR__INSTANCES__0__APIKEY | No | First LIDARR instance API key | empty |
 
 #
 ### To be noted
@@ -198,7 +209,7 @@ example*      // file name starts with "example"
 example       // file name is exactly the word "example"
 regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line with "regex:"
 ```
-5. Multiple Sonarr/Radarr instances can be specified using this format, where `<NUMBER>` starts from 0:
+5. Multiple Sonarr/Radarr/Lidarr instances can be specified using this format, where `<NUMBER>` starts from 0:
 ```
 SONARR__INSTANCES__<NUMBER>__URL
 SONARR__INSTANCES__<NUMBER>__APIKEY
