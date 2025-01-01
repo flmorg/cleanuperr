@@ -6,7 +6,6 @@ using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Sonarr;
 using Infrastructure.Verticals.ItemStriker;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;

@@ -105,7 +105,6 @@ _NCrunch_*
 _TeamCity*
 
 # Sonarr
-config.xml
 nzbdrone.log*txt
 UpdateLogs/
 *workspace.xml

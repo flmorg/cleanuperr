@@ -1,5 +1,4 @@
 using Common.Configuration.Arr;
-using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
@@ -17,11 +16,18 @@ public sealed class QueueCleaner : GenericHandler
         ILogger<QueueCleaner> logger,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
+        IOptions<LidarrConfig> lidarrConfig,
         SonarrClient sonarrClient,
         RadarrClient radarrClient,
+        LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory
-    ) : base(logger, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
+    ) : base(
+        logger,
+        sonarrConfig, radarrConfig, lidarrConfig,
+        sonarrClient, radarrClient, lidarrClient,
+        arrArrQueueIterator, downloadServiceFactory
+    )
     {
     }
     
