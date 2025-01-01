@@ -5,7 +5,7 @@ using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.Jobs;
 
@@ -14,26 +14,32 @@ public abstract class GenericHandler : IDisposable
     protected readonly ILogger<GenericHandler> _logger;
     protected readonly SonarrConfig _sonarrConfig;
     protected readonly RadarrConfig _radarrConfig;
+    protected readonly LidarrConfig _lidarrConfig;
     protected readonly SonarrClient _sonarrClient;
     protected readonly RadarrClient _radarrClient;
+    protected readonly LidarrClient _lidarrClient;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly IDownloadService _downloadService;
 
     protected GenericHandler(
         ILogger<GenericHandler> logger,
-        SonarrConfig sonarrConfig,
-        RadarrConfig radarrConfig,
+        IOptions<SonarrConfig> sonarrConfig,
+        IOptions<RadarrConfig> radarrConfig,
+        IOptions<LidarrConfig> lidarrConfig,
         SonarrClient sonarrClient,
         RadarrClient radarrClient,
+        LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory
     )
     {
         _logger = logger;
-        _sonarrConfig = sonarrConfig;
-        _radarrConfig = radarrConfig;
+        _sonarrConfig = sonarrConfig.Value;
+        _radarrConfig = radarrConfig.Value;
+        _lidarrConfig = lidarrConfig.Value;
         _sonarrClient = sonarrClient;
         _radarrClient = radarrClient;
+        _lidarrClient = lidarrClient;
         _arrArrQueueIterator = arrArrQueueIterator;
         _downloadService = downloadServiceFactory.CreateDownloadClient();
     }
@@ -44,6 +50,7 @@ public abstract class GenericHandler : IDisposable
 
         await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr);
         await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr);
+        await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr);
     }
 
     public virtual void Dispose()
@@ -78,6 +85,7 @@ public abstract class GenericHandler : IDisposable
         {
             InstanceType.Sonarr => _sonarrClient,
             InstanceType.Radarr => _radarrClient,
+            InstanceType.Lidarr => _lidarrClient,
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
 
@@ -86,6 +94,7 @@ public abstract class GenericHandler : IDisposable
         {
             InstanceType.Sonarr => _sonarrConfig,
             InstanceType.Radarr => _radarrConfig,
+            InstanceType.Lidarr => _lidarrConfig,
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
     
@@ -113,11 +122,15 @@ public abstract class GenericHandler : IDisposable
             },
             InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Series => new SonarrSearchItem
             {
-                Id = record.SeriesId,
+                Id = record.SeriesId
             },
             InstanceType.Radarr => new SearchItem
             {
-                Id = record.MovieId,
+                Id = record.MovieId
+            },
+            InstanceType.Lidarr => new SearchItem()
+            {
+                Id = record.AlbumId
             },
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
