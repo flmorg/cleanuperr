@@ -1,4 +1,4 @@
-﻿using Common.Configuration.Arr;
+using Common.Configuration.Arr;
 using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
@@ -19,12 +19,19 @@ public sealed class ContentBlocker : GenericHandler
         IOptions<DownloadClientConfig> downloadClientConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
+        IOptions<LidarrConfig> lidarrConfig,
         SonarrClient sonarrClient,
         RadarrClient radarrClient,
+        LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory
-    ) : base(logger, downloadClientConfig, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
+    ) : base(
+        logger, downloadClientConfig,
+        sonarrConfig, radarrConfig, lidarrConfig,
+        sonarrClient, radarrClient, lidarrClient,
+        arrArrQueueIterator, downloadServiceFactory
+    )
     {
         _blocklistProvider = blocklistProvider;
     }

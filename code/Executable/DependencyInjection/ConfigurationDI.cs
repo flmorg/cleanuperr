@@ -1,10 +1,8 @@
-﻿using Common.Configuration;
-using Common.Configuration.Arr;
+﻿using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
-using Domain.Enums;
 
 namespace Executable.DependencyInjection;
 
@@ -20,5 +18,6 @@ public static class ConfigurationDI
             .Configure<TransmissionConfig>(configuration.GetSection(TransmissionConfig.SectionName))
             .Configure<SonarrConfig>(configuration.GetSection(SonarrConfig.SectionName))
             .Configure<RadarrConfig>(configuration.GetSection(RadarrConfig.SectionName))
+            .Configure<LidarrConfig>(configuration.GetSection(LidarrConfig.SectionName))
             .Configure<LoggingConfig>(configuration.GetSection(LoggingConfig.SectionName));
 }

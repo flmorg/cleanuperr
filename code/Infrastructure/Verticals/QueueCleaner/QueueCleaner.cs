@@ -18,11 +18,18 @@ public sealed class QueueCleaner : GenericHandler
         IOptions<DownloadClientConfig> downloadClientConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
+        IOptions<LidarrConfig> lidarrConfig,
         SonarrClient sonarrClient,
         RadarrClient radarrClient,
+        LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory
-    ) : base(logger, downloadClientConfig, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
+    ) : base(
+        logger, downloadClientConfig,
+        sonarrConfig, radarrConfig, lidarrConfig,
+        sonarrClient, radarrClient, lidarrClient,
+        arrArrQueueIterator, downloadServiceFactory
+    )
     {
     }
     
