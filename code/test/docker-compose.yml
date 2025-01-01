@@ -8,10 +8,10 @@
 # ctorrent -t -u "http://tracker:6969/announce" -s example.torrent file_name
 
 # api keys
-# sonarr:   96736c3eb3144936b8f1d62d27be8cee
-# radarr:   705b553732ab4167ab23909305d60600
+# sonarr:   425d1e713f0c405cbbf359ac0502c1f4
+# radarr:   8b7454f668e54c5b8f44f56f93969761
 # lidarr:   7f677cfdc074414397af53dd633860c5
-# readarr:  51c053efbea34bad90120d5c2237aa85
+# readarr:  53388ac405894ef2ac6b82f907f481aa
 
 services:
   qbittorrent:
@@ -206,11 +206,15 @@ services:
       - SONARR__ENABLED=true
       - SONARR__SEARCHTYPE=Episode
       - SONARR__INSTANCES__0__URL=http://sonarr:8989
-      - SONARR__INSTANCES__0__APIKEY=96736c3eb3144936b8f1d62d27be8cee
+      - SONARR__INSTANCES__0__APIKEY=425d1e713f0c405cbbf359ac0502c1f4
 
       - RADARR__ENABLED=true
       - RADARR__INSTANCES__0__URL=http://radarr:7878
-      - RADARR__INSTANCES__0__APIKEY=705b553732ab4167ab23909305d60600
+      - RADARR__INSTANCES__0__APIKEY=8b7454f668e54c5b8f44f56f93969761
+
+      - LIDARR__ENABLED=true
+      - LIDARR__INSTANCES__0__URL=http://radarr:8686
+      - LIDARR__INSTANCES__0__APIKEY=7f677cfdc074414397af53dd633860c5
     volumes:
       - ./data/cleanuperr/logs:/var/logs
     restart: unless-stopped
