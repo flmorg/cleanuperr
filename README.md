@@ -23,7 +23,7 @@ Only the **latest versions** of the following apps are supported, or earlier ver
 - Radarr
 - Lidarr
 
-This tool is actively developed and still a work in progress. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
+This tool is actively developed and still a work in progress, so using the `latest` Docker tag may result in breaking changes. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
 
 > https://discord.gg/sWggpnmGNY
 
