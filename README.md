@@ -198,18 +198,17 @@ services:
 #
 ### To be noted
 
-1. The blacklist and the whitelist can not be both enabled at the same time.
-2. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
-3. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
-4. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
+1. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
+2. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
+3. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
 ```
-*example      // file name ends with "example"
-example*      // file name starts with "example"
-*example*     // file name has "example" in the name
-example       // file name is exactly the word "example"
+*example            // file name ends with "example"
+example*            // file name starts with "example"
+*example*           // file name has "example" in the name
+example             // file name is exactly the word "example"
 regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line with "regex:"
 ```
-5. Multiple Sonarr/Radarr/Lidarr instances can be specified using this format, where `<NUMBER>` starts from 0:
+1. Multiple Sonarr/Radarr/Lidarr instances can be specified using this format, where `<NUMBER>` starts from 0:
 ```
 SONARR__INSTANCES__<NUMBER>__URL
 SONARR__INSTANCES__<NUMBER>__APIKEY

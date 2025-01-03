@@ -1,4 +1,7 @@
-﻿using Common.Configuration.QueueCleaner;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
+using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -33,7 +36,12 @@ public abstract class DownloadServiceBase : IDownloadService
 
     public abstract Task<bool> ShouldRemoveFromArrQueueAsync(string hash);
 
-    public abstract Task BlockUnwantedFilesAsync(string hash);
+    public abstract Task BlockUnwantedFilesAsync(
+        string hash,
+        BlocklistType blocklistType,
+        ConcurrentBag<string> patterns,
+        ConcurrentBag<Regex> regexes
+    );
 
     protected bool StrikeAndCheckLimit(string hash, string itemName)
     {

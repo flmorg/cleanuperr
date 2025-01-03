@@ -1,4 +1,7 @@
-﻿using Common.Configuration.DownloadClient;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -69,7 +72,12 @@ public sealed class TransmissionService : DownloadServiceBase
         return shouldRemove || IsItemStuckAndShouldRemove(torrent);
     }
 
-    public override async Task BlockUnwantedFilesAsync(string hash)
+    public override async Task BlockUnwantedFilesAsync(
+        string hash,
+        BlocklistType blocklistType,
+        ConcurrentBag<string> patterns,
+        ConcurrentBag<Regex> regexes
+    )
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
@@ -87,7 +95,7 @@ public sealed class TransmissionService : DownloadServiceBase
                 continue;
             }
             
-            if (!torrent.FileStats[i].Wanted.Value || _filenameEvaluator.IsValid(torrent.Files[i].Name))
+            if (!torrent.FileStats[i].Wanted.Value || _filenameEvaluator.IsValid(torrent.Files[i].Name, blocklistType, patterns, regexes))
             {
                 continue;
             }

@@ -1,4 +1,7 @@
-﻿using Common.Configuration.DownloadClient;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -64,7 +67,12 @@ public sealed class QBitService : DownloadServiceBase
         return IsItemStuckAndShouldRemove(torrent);
     }
 
-    public override async Task BlockUnwantedFilesAsync(string hash)
+    public override async Task BlockUnwantedFilesAsync(
+        string hash,
+        BlocklistType blocklistType,
+        ConcurrentBag<string> patterns,
+        ConcurrentBag<Regex> regexes
+    )
     {
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
@@ -80,7 +88,7 @@ public sealed class QBitService : DownloadServiceBase
                 continue;
             }
 
-            if (file.Priority is TorrentContentPriority.Skip || _filenameEvaluator.IsValid(file.Name))
+            if (file.Priority is TorrentContentPriority.Skip || _filenameEvaluator.IsValid(file.Name, blocklistType, patterns, regexes))
             {
                 continue;
             }
