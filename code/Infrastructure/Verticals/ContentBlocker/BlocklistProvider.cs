@@ -1,8 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Domain.Enums;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,78 +13,98 @@ namespace Infrastructure.Verticals.ContentBlocker;
 public sealed class BlocklistProvider
 {
     private readonly ILogger<BlocklistProvider> _logger;
-    private readonly ContentBlockerConfig _config;
+    private readonly SonarrConfig _sonarrConfig;
+    private readonly RadarrConfig _radarrConfig;
+    private readonly LidarrConfig _lidarrConfig;
     private readonly HttpClient _httpClient;
-    
-    public BlocklistType BlocklistType { get; }
+    private readonly IMemoryCache _cache;
+    private bool _initialized;
 
-    public ConcurrentBag<string> Patterns { get; } = [];
-
-    public ConcurrentBag<Regex> Regexes { get; } = [];
+    private const string Type = "type";
+    private const string Patterns = "patterns";
+    private const string Regexes = "regexes";
 
     public BlocklistProvider(
         ILogger<BlocklistProvider> logger,
-        IOptions<ContentBlockerConfig> config,
-        IHttpClientFactory httpClientFactory)
+        IOptions<SonarrConfig> sonarrConfig,
+        IOptions<RadarrConfig> radarrConfig,
+        IOptions<LidarrConfig> lidarrConfig,
+        IMemoryCache cache,
+        IHttpClientFactory httpClientFactory
+    )
     {
         _logger = logger;
-        _config = config.Value;
+        _sonarrConfig = sonarrConfig.Value;
+        _radarrConfig = radarrConfig.Value;
+        _lidarrConfig = lidarrConfig.Value;
+        _cache = cache;
         _httpClient = httpClientFactory.CreateClient();
-        
-        _config.Validate();
-        
-        if (_config.Blacklist?.Enabled is true)
-        {
-            BlocklistType = BlocklistType.Blacklist;
-        }
-
-        if (_config.Whitelist?.Enabled is true)
-        {
-            BlocklistType = BlocklistType.Whitelist;
-        }
     }
 
-    public async Task LoadBlocklistAsync()
+    public async Task LoadBlocklistsAsync()
     {
-        if (Patterns.Count > 0 || Regexes.Count > 0)
+        if (_initialized)
         {
-            _logger.LogDebug("blocklist already loaded");
+            _logger.LogDebug("blocklists already loaded");
             return;
         }
         
         try
         {
-            await LoadPatternsAndRegexesAsync();
+            await LoadPatternsAndRegexesAsync(_sonarrConfig.Block.Type, _sonarrConfig.Block.Path, InstanceType.Sonarr);
+            await LoadPatternsAndRegexesAsync(_radarrConfig.Block.Type, _radarrConfig.Block.Path, InstanceType.Radarr);
+            await LoadPatternsAndRegexesAsync(_lidarrConfig.Block.Type, _lidarrConfig.Block.Path, InstanceType.Lidarr);
+            
+            _initialized = true;
         }
         catch
         {
-            _logger.LogError("failed to load {type}", BlocklistType.ToString());
+            _logger.LogError("failed to load blocklists");
             throw;
         }
     }
 
-    private async Task LoadPatternsAndRegexesAsync()
+    public BlocklistType GetBlocklistType(InstanceType instanceType)
     {
-        string[] patterns;
+        _cache.TryGetValue($"{instanceType.ToString()}_{Type}", out BlocklistType? blocklistType);
+
+        return blocklistType ?? BlocklistType.Blacklist;
+    }
+    
+    public ConcurrentBag<string> GetPatterns(InstanceType instanceType)
+    {
+        _cache.TryGetValue($"{instanceType.ToString()}_{Patterns}", out ConcurrentBag<string>? patterns);
+
+        return patterns ?? [];
+    }
+
+    public ConcurrentBag<Regex> GetRegexes(InstanceType instanceType)
+    {
+        _cache.TryGetValue($"{instanceType.ToString()}_{Regexes}", out ConcurrentBag<Regex>? regexes);
         
-        if (BlocklistType is BlocklistType.Blacklist)
+        return regexes ?? [];
+    }
+
+    private async Task LoadPatternsAndRegexesAsync(BlocklistType blocklistType, string? blocklistPath, InstanceType instanceType)
+    {
+        if (string.IsNullOrEmpty(blocklistPath))
         {
-            patterns = await ReadContentAsync(_config.Blacklist.Path);
+            return;
         }
-        else
-        {
-            patterns = await ReadContentAsync(_config.Whitelist.Path);
-        }
+        
+        string[] filePatterns = await ReadContentAsync(blocklistPath);
         
         long startTime = Stopwatch.GetTimestamp();
         ParallelOptions options = new() { MaxDegreeOfParallelism = 5 };
         const string regexId = "regex:";
+        ConcurrentBag<string> patterns = [];
+        ConcurrentBag<Regex> regexes = [];
         
-        Parallel.ForEach(patterns, options, pattern =>
+        Parallel.ForEach(filePatterns, options, pattern =>
         {
             if (!pattern.StartsWith(regexId))
             {
-                Patterns.Add(pattern);
+                patterns.Add(pattern);
                 return;
             }
             
@@ -91,7 +113,7 @@ public sealed class BlocklistProvider
             try
             {
                 Regex regex = new(pattern, RegexOptions.Compiled);
-                Regexes.Add(regex);
+                regexes.Add(regex);
             }
             catch (ArgumentException)
             {
@@ -100,10 +122,14 @@ public sealed class BlocklistProvider
         });
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startTime);
+
+        _cache.Set($"{instanceType.ToString()}_{Type}", blocklistType);
+        _cache.Set($"{instanceType.ToString()}_{Patterns}", patterns);
+        _cache.Set($"{instanceType.ToString()}_{Regexes}", regexes);
         
-        _logger.LogDebug("loaded {count} patterns", Patterns.Count);
-        _logger.LogDebug("loaded {count} regexes", Regexes.Count);
-        _logger.LogDebug("blocklist loaded in {elapsed} ms", elapsed.TotalMilliseconds);
+        _logger.LogDebug("loaded {count} patterns", patterns.Count);
+        _logger.LogDebug("loaded {count} regexes", regexes.Count);
+        _logger.LogDebug("blocklist loaded in {elapsed} ms | {path}", elapsed.TotalMilliseconds, blocklistPath);
     }
     
     private async Task<string[]> ReadContentAsync(string path)

@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Domain.Models.Deluge.Response;
@@ -66,7 +69,12 @@ public sealed class DelugeService : DownloadServiceBase
         return shouldRemove || IsItemStuckAndShouldRemove(status);
     }
 
-    public override async Task BlockUnwantedFilesAsync(string hash)
+    public override async Task BlockUnwantedFilesAsync(
+        string hash,
+        BlocklistType blocklistType,
+        ConcurrentBag<string> patterns,
+        ConcurrentBag<Regex> regexes
+    )
     {
         hash = hash.ToLowerInvariant();
 
@@ -101,7 +109,7 @@ public sealed class DelugeService : DownloadServiceBase
         {
             int priority = file.Priority;
 
-            if (file.Priority is not 0 && !_filenameEvaluator.IsValid(name))
+            if (file.Priority is not 0 && !_filenameEvaluator.IsValid(name, blocklistType, patterns, regexes))
             {
                 priority = 0;
                 hasPriorityUpdates = true;

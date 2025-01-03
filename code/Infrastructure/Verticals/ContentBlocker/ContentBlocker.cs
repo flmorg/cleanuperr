@@ -1,4 +1,7 @@
-﻿using Common.Configuration.Arr;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.Arr;
+using Common.Configuration.ContentBlocker;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
@@ -36,13 +39,23 @@ public sealed class ContentBlocker : GenericHandler
 
     public override async Task ExecuteAsync()
     {
-        await _blocklistProvider.LoadBlocklistAsync();
+        if (string.IsNullOrEmpty(_sonarrConfig.Block.Path) && string.IsNullOrEmpty(_radarrConfig.Block.Path) &&
+            string.IsNullOrEmpty(_lidarrConfig.Block.Path))
+        {
+            _logger.LogWarning("no blocklist is configured");
+            return;
+        }
+        
+        await _blocklistProvider.LoadBlocklistsAsync();
         await base.ExecuteAsync();
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
         ArrClient arrClient = GetClient(instanceType);
+        BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
+        ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
+        ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
@@ -60,7 +73,7 @@ public sealed class ContentBlocker : GenericHandler
                 }
                 
                 _logger.LogDebug("searching unwanted files for {title}", record.Title);
-                await _downloadService.BlockUnwantedFilesAsync(record.DownloadId);
+                await _downloadService.BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes);
             }
         });
     }
