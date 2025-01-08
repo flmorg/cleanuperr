@@ -78,6 +78,11 @@ public sealed class DelugeClient
         await SendRequest<DelugeResponse<object>>("core.set_torrent_options", hash, filePriorities);
     }
 
+    public async Task<DelugeResponse<object>> DeleteTorrent(string hash)
+    {
+        return await SendRequest<DelugeResponse<object>>("core.remove_torrents", new List<string> { hash }, true);
+    }
+
     private async Task<String> PostJson(String json)
     {
         StringContent content = new StringContent(json);

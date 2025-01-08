@@ -4,6 +4,7 @@ using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Domain.Enums;
+using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
@@ -60,6 +61,7 @@ public sealed class ContentBlocker : GenericHandler
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
+        HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
         BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
         ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
@@ -67,8 +69,14 @@ public sealed class ContentBlocker : GenericHandler
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
-            foreach (QueueRecord record in items)
+            var groups = items
+                .GroupBy(x => x.DownloadId)
+                .ToList();
+            
+            foreach (var group in groups)
             {
+                QueueRecord record = group.First();
+                
                 if (record.Protocol is not "torrent")
                 {
                     continue;
@@ -81,8 +89,19 @@ public sealed class ContentBlocker : GenericHandler
                 }
                 
                 _logger.LogDebug("searching unwanted files for {title}", record.Title);
-                await _downloadService.BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes);
+
+                if (!await _downloadService.BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes))
+                {
+                    continue;
+                }
+                
+                _logger.LogDebug("all files are marked as unwanted | {hash}", record.Title);
+                
+                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
+                await arrClient.DeleteQueueItemAsync(instance, record);
             }
         });
+        
+        await arrClient.RefreshItemsAsync(instance, itemsToBeRefreshed);
     }
 }

@@ -6,7 +6,6 @@ using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Radarr;
 using Infrastructure.Verticals.ItemStriker;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -30,7 +29,12 @@ public sealed class RadarrClient : ArrClient
         return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownMovieItems=true&includeMovie=true";
     }
 
-    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items)
+    protected override string GetQueueDeleteUrlPath(long recordId)
+    {
+        return $"/api/v3/queue/{recordId}?removeFromClient=true&blocklist=true&skipRedownload=true&changeCategory=false";
+    }
+
+    public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
     {
         if (items?.Count is null or 0)
         {

@@ -67,7 +67,8 @@ public sealed class QBitService : DownloadServiceBase
         return IsItemStuckAndShouldRemove(torrent);
     }
 
-    public override async Task BlockUnwantedFilesAsync(
+    /// <inheritdoc/>
+    public override async Task<bool> BlockUnwantedFilesAsync(
         string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
@@ -78,8 +79,12 @@ public sealed class QBitService : DownloadServiceBase
 
         if (files is null)
         {
-            return;
+            return false;
         }
+
+        List<int> filesToBeSkipped = [];
+        long totalFiles = 0;
+        long totalUnwantedFiles = 0;
         
         foreach (TorrentContent file in files)
         {
@@ -88,14 +93,42 @@ public sealed class QBitService : DownloadServiceBase
                 continue;
             }
 
-            if (file.Priority is TorrentContentPriority.Skip || _filenameEvaluator.IsValid(file.Name, blocklistType, patterns, regexes))
+            totalFiles++;
+
+            if (file.Priority is TorrentContentPriority.Skip)
+            {
+                totalUnwantedFiles++;
+                continue;
+            }
+
+            if (_filenameEvaluator.IsValid(file.Name, blocklistType, patterns, regexes))
             {
                 continue;
             }
             
             _logger.LogInformation("unwanted file found | {file}", file.Name);
-            await _client.SetFilePriorityAsync(hash, file.Index.Value, TorrentContentPriority.Skip);
+            filesToBeSkipped.Add(file.Index.Value);
+            totalUnwantedFiles++;
         }
+
+        if (totalUnwantedFiles == totalFiles)
+        {
+            // Skip marking files as unwanted. The download will be removed completely.
+            return true;
+        }
+
+        foreach (int fileIndex in filesToBeSkipped)
+        {
+            await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
+        }
+        
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public override async Task Delete(string hash)
+    {
+        await _client.DeleteAsync(hash, deleteDownloadedData: true);
     }
 
     public override void Dispose()
