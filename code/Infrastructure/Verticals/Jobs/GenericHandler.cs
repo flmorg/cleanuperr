@@ -128,7 +128,7 @@ public abstract class GenericHandler : IDisposable
             {
                 Id = record.MovieId
             },
-            InstanceType.Lidarr => new SearchItem()
+            InstanceType.Lidarr => new SearchItem
             {
                 Id = record.AlbumId
             },

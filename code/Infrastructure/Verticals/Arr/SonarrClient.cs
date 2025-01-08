@@ -28,8 +28,13 @@ public sealed class SonarrClient : ArrClient
     {
         return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownSeriesItems=true&includeSeries=true";
     }
+    
+    protected override string GetQueueDeleteUrlPath(long recordId)
+    {
+        return $"/api/v3/queue/{recordId}?removeFromClient=true&blocklist=true&skipRedownload=true&changeCategory=false";
+    }
 
-    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items)
+    public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
     {
         if (items?.Count is null or 0)
         {

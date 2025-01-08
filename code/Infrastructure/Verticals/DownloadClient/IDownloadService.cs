@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
-using Domain.Enums;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
@@ -11,10 +10,23 @@ public interface IDownloadService : IDisposable
 
     public Task<bool> ShouldRemoveFromArrQueueAsync(string hash);
 
-    public Task BlockUnwantedFilesAsync(
+    /// <summary>
+    /// Blocks unwanted files from being fully downloaded.
+    /// </summary>
+    /// <param name="hash">The torrent hash.</param>
+    /// <param name="blocklistType">The <see cref="BlocklistType"/>.</param>
+    /// <param name="patterns">The patterns to test the files against.</param>
+    /// <param name="regexes">The regexes to test the files against.</param>
+    /// <returns>True if all files have been blocked; otherwise false.</returns>
+    public Task<bool> BlockUnwantedFilesAsync(
         string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
         ConcurrentBag<Regex> regexes
     );
+
+    /// <summary>
+    /// Deletes a download item.
+    /// </summary>
+    public Task Delete(string hash);
 }

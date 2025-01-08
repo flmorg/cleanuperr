@@ -23,22 +23,24 @@ public sealed class LidarrClient : ArrClient
     ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
     {
     }
-    
+
     protected override string GetQueueUrlPath(int page)
     {
         return $"/api/v1/queue?page={page}&pageSize=200&includeUnknownArtistItems=true&includeArtist=true&includeAlbum=true";
     }
 
-    public override async Task RefreshItemsAsync(ArrInstance arrInstance, ArrConfig config, HashSet<SearchItem>? items)
+    protected override string GetQueueDeleteUrlPath(long recordId)
     {
-        if (items?.Count is null or 0)
-        {
-            return;
-        }
+        return $"/api/v1/queue/{recordId}?removeFromClient=true&blocklist=true&skipRedownload=true&changeCategory=false";
+    }
+
+    public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
+    {
+        if (items?.Count is null or 0) return;
 
         Uri uri = new(arrInstance.Url, "/api/v1/command");
 
-        foreach (LidarrCommand command in GetSearchCommands(items))
+        foreach (var command in GetSearchCommands(items))
         {
             using HttpRequestMessage request = new(HttpMethod.Post, uri);
             request.Content = new StringContent(
@@ -48,13 +50,13 @@ public sealed class LidarrClient : ArrClient
             );
             SetApiKey(request, arrInstance.ApiKey);
 
-            using HttpResponseMessage response = await _httpClient.SendAsync(request);
+            using var response = await _httpClient.SendAsync(request);
             string? logContext = await ComputeCommandLogContextAsync(arrInstance, command);
 
             try
             {
                 response.EnsureSuccessStatusCode();
-            
+
                 _logger.LogInformation("{log}", GetSearchLog(arrInstance.Url, command, true, logContext));
             }
             catch
@@ -64,7 +66,7 @@ public sealed class LidarrClient : ArrClient
             }
         }
     }
-    
+
     public override bool IsRecordValid(QueueRecord record)
     {
         if (record.ArtistId is 0 || record.AlbumId is 0)
@@ -72,10 +74,10 @@ public sealed class LidarrClient : ArrClient
             _logger.LogDebug("skip | item information missing | {title}", record.Title);
             return false;
         }
-        
+
         return base.IsRecordValid(record);
     }
-    
+
     private static string GetSearchLog(
         Uri instanceUrl,
         LidarrCommand command,
@@ -92,19 +94,13 @@ public sealed class LidarrClient : ArrClient
     {
         try
         {
-            if (!_loggingConfig.Enhanced)
-            {
-                return null;
-            }
-            
+            if (!_loggingConfig.Enhanced) return null;
+
             StringBuilder log = new();
 
-            List<Album>? albums = await GetAlbumsAsync(arrInstance, command.AlbumIds);
+            var albums = await GetAlbumsAsync(arrInstance, command.AlbumIds);
 
-            if (albums?.Count is null or 0)
-            {
-                return null;
-            }
+            if (albums?.Count is null or 0) return null;
 
             var groups = albums
                 .GroupBy(x => x.Artist.Id)
@@ -112,8 +108,8 @@ public sealed class LidarrClient : ArrClient
 
             foreach (var group in groups)
             {
-                Album first = group.First();
-                
+                var first = group.First();
+
                 log.Append($"[{first.Artist.ArtistName} albums {string.Join(',', group.Select(x => x.Title).ToList())}]");
             }
 
@@ -133,9 +129,9 @@ public sealed class LidarrClient : ArrClient
         using HttpRequestMessage request = new(HttpMethod.Get, uri);
         SetApiKey(request, arrInstance.ApiKey);
 
-        using HttpResponseMessage response = await _httpClient.SendAsync(request);
+        using var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
-                
+
         string responseBody = await response.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<List<Album>>(responseBody);
     }
@@ -144,6 +140,6 @@ public sealed class LidarrClient : ArrClient
     {
         const string albumSearch = "AlbumSearch";
 
-        return [new() { Name = albumSearch, AlbumIds = items.Select(i => i.Id).ToList() }];
+        return [new LidarrCommand { Name = albumSearch, AlbumIds = items.Select(i => i.Id).ToList() }];
     }
 }
