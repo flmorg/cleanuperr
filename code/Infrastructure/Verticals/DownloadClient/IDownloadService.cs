@@ -8,6 +8,11 @@ public interface IDownloadService : IDisposable
 {
     public Task LoginAsync();
 
+    /// <summary>
+    /// Checks whether the download should be removed from the *arr queue.
+    /// </summary>
+    /// <param name="hash">The download hash.</param>
+    /// <returns>True if the download should be removed; otherwise false.</returns>
     public Task<bool> ShouldRemoveFromArrQueueAsync(string hash);
 
     /// <summary>

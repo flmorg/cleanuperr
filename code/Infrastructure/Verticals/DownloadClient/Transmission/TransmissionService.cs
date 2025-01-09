@@ -41,6 +41,7 @@ public sealed class TransmissionService : DownloadServiceBase
         await _client.GetSessionInformationAsync();
     }
 
+    /// <inheritdoc/>
     public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);

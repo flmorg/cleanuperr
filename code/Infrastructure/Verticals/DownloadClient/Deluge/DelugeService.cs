@@ -33,6 +33,7 @@ public sealed class DelugeService : DownloadServiceBase
         await _client.LoginAsync();
     }
 
+    /// <inheritdoc/>
     public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         hash = hash.ToLowerInvariant();

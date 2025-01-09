@@ -39,6 +39,7 @@ public sealed class QBitService : DownloadServiceBase
         await _client.LoginAsync(_config.Username, _config.Password);
     }
 
+    /// <inheritdoc/>
     public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
     {
         TorrentInfo? torrent = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
