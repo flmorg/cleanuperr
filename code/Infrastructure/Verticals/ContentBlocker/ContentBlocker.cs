@@ -48,8 +48,11 @@ public sealed class ContentBlocker : GenericHandler
             return;
         }
         
-        if (string.IsNullOrEmpty(_sonarrConfig.Block.Path) && string.IsNullOrEmpty(_radarrConfig.Block.Path) &&
-            string.IsNullOrEmpty(_lidarrConfig.Block.Path))
+        bool blocklistIsConfigured = _sonarrConfig.Enabled && !string.IsNullOrEmpty(_sonarrConfig.Block.Path) ||
+                                     _radarrConfig.Enabled && !string.IsNullOrEmpty(_radarrConfig.Block.Path) ||
+                                     _lidarrConfig.Enabled && !string.IsNullOrEmpty(_lidarrConfig.Block.Path);
+
+        if (!blocklistIsConfigured)
         {
             _logger.LogWarning("no blocklist is configured");
             return;
