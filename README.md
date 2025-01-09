@@ -139,8 +139,8 @@ services:
 | LOGGING__FILE__PATH | No | Directory where to save the log files | empty |
 | LOGGING__ENHANCED | No | Enhance logs whenever possible<br>A more detailed description is provided [here](variables.md#LOGGING__ENHANCED) | true |
 |||||
-| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 1h interval | 0 0/5 * * * ? |
-| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 1h interval | 0 0/5 * * * ? |
+| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 6h interval<br>**Is ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`** | 0 0/5 * * * ? |
+| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 6h interval | 0 0/5 * * * ? |
 |||||
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
 | QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |

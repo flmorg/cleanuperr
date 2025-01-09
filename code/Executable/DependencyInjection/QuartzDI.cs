@@ -1,6 +1,7 @@
 ﻿using Common.Configuration;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.QueueCleaner;
+using Common.Helpers;
 using Executable.Jobs;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Jobs;
@@ -96,17 +97,23 @@ public static class QuartzDI
             return;
         }
         
-        var triggerObj = (IOperableTrigger)TriggerBuilder.Create()
+        IOperableTrigger triggerObj = (IOperableTrigger)TriggerBuilder.Create()
             .WithIdentity("ExampleTrigger")
             .StartNow()
             .WithCronSchedule(trigger)
             .Build();
 
-        var nextFireTimes = TriggerUtils.ComputeFireTimes(triggerObj, null, 2);
+        IReadOnlyList<DateTimeOffset> nextFireTimes = TriggerUtils.ComputeFireTimes(triggerObj, null, 2);
+        TimeSpan triggerValue = nextFireTimes[1] - nextFireTimes[0];
         
-        if (nextFireTimes[1] - nextFireTimes[0] > TimeSpan.FromHours(1))
+        if (triggerValue > Constants.TriggerMaxLimit)
         {
             throw new Exception($"{trigger} should have a fire time of maximum 1 hour");
+        }
+
+        if (triggerValue > StaticConfiguration.TriggerValue)
+        {
+            StaticConfiguration.TriggerValue = triggerValue;
         }
         
         q.AddTrigger(opts =>

@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Common.Helpers;
+using Domain.Enums;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -15,7 +16,7 @@ public class Striker
         _logger = logger;
         _cache = cache;
         _cacheOptions = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromHours(2));
+            .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
     
     public bool StrikeAndCheckLimit(string hash, string itemName, ushort maxStrikes, StrikeType strikeType)
