@@ -82,7 +82,7 @@ public sealed class QBitService : DownloadServiceBase
             return false;
         }
 
-        List<int> filesToBeSkipped = [];
+        List<int> unwantedFiles = [];
         long totalFiles = 0;
         long totalUnwantedFiles = 0;
         
@@ -107,17 +107,22 @@ public sealed class QBitService : DownloadServiceBase
             }
             
             _logger.LogInformation("unwanted file found | {file}", file.Name);
-            filesToBeSkipped.Add(file.Index.Value);
+            unwantedFiles.Add(file.Index.Value);
             totalUnwantedFiles++;
         }
 
+        if (unwantedFiles.Count is 0)
+        {
+            return false;
+        }
+        
         if (totalUnwantedFiles == totalFiles)
         {
             // Skip marking files as unwanted. The download will be removed completely.
             return true;
         }
 
-        foreach (int fileIndex in filesToBeSkipped)
+        foreach (int fileIndex in unwantedFiles)
         {
             await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
         }
