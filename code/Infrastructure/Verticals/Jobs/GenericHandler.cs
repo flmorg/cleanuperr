@@ -93,15 +93,6 @@ public abstract class GenericHandler : IDisposable
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
 
-    protected ArrConfig GetConfig(InstanceType type) =>
-        type switch
-        {
-            InstanceType.Sonarr => _sonarrConfig,
-            InstanceType.Radarr => _radarrConfig,
-            InstanceType.Lidarr => _lidarrConfig,
-            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
-        };
-    
     protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record, bool isPack = false)
     {
         return type switch
