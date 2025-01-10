@@ -69,6 +69,14 @@ This tool is actively developed and still a work in progress. Join the Discord s
    - Execute the **content blocker** job, as explained in the [How it works](#how-it-works) section.
    - Execute the **queue cleaner** job, as explained in the [How it works](#how-it-works) section.
 
+## Using cleanuperr just for failed *arr imports (works for Usenet users as well)
+
+1. Set `QUEUECLEANER_ENABLED` to `true`.
+2. Set `QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES` to a desired value.
+3. Set `DOWNLOAD_CLIENT` to `none`.
+
+**No other action involving a download client would work (e.g. content blocking, removing stalled downloads etc.).**
+
 ## Usage
 
 ### Docker compose yaml
@@ -113,6 +121,8 @@ services:
       # - TRANSMISSION__URL=http://localhost:9091
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
+      # OR
+      # - DOWNLOAD_CLIENT=none
 
       - SONARR__ENABLED=true
       - SONARR__SEARCHTYPE=Episode
@@ -153,7 +163,7 @@ services:
 | CONTENTBLOCKER__WHITELIST__ENABLED | Yes if content blocker is enabled and blacklist is not enabled | Enable or disable the whitelist | false |
 | CONTENTBLOCKER__WHITELIST__PATH | Yes if whitelist is enabled | Path to the whitelist (local file or url)<br>Needs to be json compatible | empty |
 |||||
-| DOWNLOAD_CLIENT | No | Download client that is used by *arrs<br>Can be `qbittorrent`, `deluge` or `transmission` | `qbittorrent` |
+| DOWNLOAD_CLIENT | No | Download client that is used by *arrs<br>Can be `qbittorrent`, `deluge`, `transmission` or `none` | `qbittorrent` |
 | QBITTORRENT__URL | No | qBittorrent instance url | http://localhost:8112 |
 | QBITTORRENT__USERNAME | No | qBittorrent user | empty |
 | QBITTORRENT__PASSWORD | No | qBittorrent password | empty |

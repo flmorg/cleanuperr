@@ -1,5 +1,5 @@
-﻿using Common.Configuration;
-using Common.Configuration.Arr;
+﻿using Common.Configuration.Arr;
+using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
@@ -16,6 +16,7 @@ public sealed class ContentBlocker : GenericHandler
     
     public ContentBlocker(
         ILogger<ContentBlocker> logger,
+        IOptions<DownloadClientConfig> downloadClientConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
         SonarrClient sonarrClient,
@@ -23,13 +24,19 @@ public sealed class ContentBlocker : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory
-    ) : base(logger, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
+    ) : base(logger, downloadClientConfig, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
     {
         _blocklistProvider = blocklistProvider;
     }
 
     public override async Task ExecuteAsync()
     {
+        if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None)
+        {
+            _logger.LogWarning("download client is set to none");
+            return;
+        }
+        
         await _blocklistProvider.LoadBlocklistAsync();
         await base.ExecuteAsync();
     }

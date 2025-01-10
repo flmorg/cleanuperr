@@ -1,8 +1,9 @@
-﻿namespace Domain.Enums;
+﻿namespace Common.Enums;
 
 public enum DownloadClient
 {
     QBittorrent,
     Deluge,
-    Transmission
+    Transmission,
+    None
 }

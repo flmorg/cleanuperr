@@ -18,6 +18,7 @@ public static class ServicesDI
             .AddTransient<QueueCleaner>()
             .AddTransient<ContentBlocker>()
             .AddTransient<FilenameEvaluator>()
+            .AddTransient<DummyDownloadService>()
             .AddTransient<QBitService>()
             .AddTransient<DelugeService>()
             .AddTransient<TransmissionService>()

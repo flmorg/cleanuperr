@@ -1,17 +1,19 @@
 ﻿using Common.Configuration.Arr;
+using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.Jobs;
 
 public abstract class GenericHandler : IDisposable
 {
     protected readonly ILogger<GenericHandler> _logger;
+    protected readonly DownloadClientConfig _downloadClientConfig;
     protected readonly SonarrConfig _sonarrConfig;
     protected readonly RadarrConfig _radarrConfig;
     protected readonly SonarrClient _sonarrClient;
@@ -21,6 +23,7 @@ public abstract class GenericHandler : IDisposable
 
     protected GenericHandler(
         ILogger<GenericHandler> logger,
+        IOptions<DownloadClientConfig> downloadClientConfig,
         SonarrConfig sonarrConfig,
         RadarrConfig radarrConfig,
         SonarrClient sonarrClient,
@@ -30,6 +33,7 @@ public abstract class GenericHandler : IDisposable
     )
     {
         _logger = logger;
+        _downloadClientConfig = downloadClientConfig.Value;
         _sonarrConfig = sonarrConfig;
         _radarrConfig = radarrConfig;
         _sonarrClient = sonarrClient;

@@ -14,6 +14,7 @@ public static class ConfigurationDI
         services
             .Configure<QueueCleanerConfig>(configuration.GetSection(QueueCleanerConfig.SectionName))
             .Configure<ContentBlockerConfig>(configuration.GetSection(ContentBlockerConfig.SectionName))
+            .Configure<DownloadClientConfig>(configuration)
             .Configure<QBitConfig>(configuration.GetSection(QBitConfig.SectionName))
             .Configure<DelugeConfig>(configuration.GetSection(DelugeConfig.SectionName))
             .Configure<TransmissionConfig>(configuration.GetSection(TransmissionConfig.SectionName))

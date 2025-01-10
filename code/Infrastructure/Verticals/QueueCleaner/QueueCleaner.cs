@@ -1,5 +1,5 @@
 using Common.Configuration.Arr;
-using Common.Configuration.QueueCleaner;
+using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
@@ -15,13 +15,14 @@ public sealed class QueueCleaner : GenericHandler
 {
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
+        IOptions<DownloadClientConfig> downloadClientConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
         SonarrClient sonarrClient,
         RadarrClient radarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory
-    ) : base(logger, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
+    ) : base(logger, downloadClientConfig, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
     {
     }
     
@@ -56,7 +57,11 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
 
-                if (!arrClient.ShouldRemoveFromQueue(record) && !await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId))
+                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(record);
+                bool shouldRemoveFromDownloadClient = _downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None &&
+                    await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId);
+
+                if (!shouldRemoveFromArr && !shouldRemoveFromDownloadClient)
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;
