@@ -17,7 +17,7 @@
       <title>Coldplay-Ghost Stories-(Deluxe Edition)-2014-MTD</title>
       <description>Test</description>
       <size>104857600</size>
-      <link>http://nginx/custom/lidarr_bad_1.torrent</link>
+      <link>http://nginx/custom/lidarr_bad_single.torrent</link>
       <guid isPermaLink="false">
         174674a88c8947f6f9057a23f81efde384ed216cade43564ec450f2cb4677554
       </guid>
@@ -28,7 +28,7 @@
       <title>Coldplay-Everyday.Life-2019-C4</title>
       <description>Test</description>
       <size>104857600</size>
-      <link>http://nginx/custom/lidarr_bad_2.torrent</link>
+      <link>http://nginx/custom/lidarr_bad_pack.torrent</link>
       <guid isPermaLink="false">
         174674a88c8947f689057ac3f81efde384ed216cade43564ec450f2cb4677554
       </guid>
