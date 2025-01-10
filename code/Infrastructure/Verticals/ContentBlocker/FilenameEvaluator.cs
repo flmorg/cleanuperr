@@ -1,4 +1,6 @@
-﻿using Domain.Enums;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.ContentBlocker;
@@ -6,46 +8,44 @@ namespace Infrastructure.Verticals.ContentBlocker;
 public sealed class FilenameEvaluator
 {
     private readonly ILogger<FilenameEvaluator> _logger;
-    private readonly BlocklistProvider _blocklistProvider;
     
-    public FilenameEvaluator(ILogger<FilenameEvaluator> logger, BlocklistProvider blocklistProvider)
+    public FilenameEvaluator(ILogger<FilenameEvaluator> logger)
     {
         _logger = logger;
-        _blocklistProvider = blocklistProvider;
     }
     
     // TODO create unit tests
-    public bool IsValid(string filename)
+    public bool IsValid(string filename, BlocklistType type, ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes)
     {
-        return IsValidAgainstPatterns(filename) && IsValidAgainstRegexes(filename);
+        return IsValidAgainstPatterns(filename, type, patterns) && IsValidAgainstRegexes(filename, type, regexes);
     }
 
-    private bool IsValidAgainstPatterns(string filename)
+    private static bool IsValidAgainstPatterns(string filename, BlocklistType type, ConcurrentBag<string> patterns)
     {
-        if (_blocklistProvider.Patterns.Count is 0)
+        if (patterns.Count is 0)
         {
             return true;
         }
 
-        return _blocklistProvider.BlocklistType switch
+        return type switch
         {
-            BlocklistType.Blacklist => !_blocklistProvider.Patterns.Any(pattern => MatchesPattern(filename, pattern)),
-            BlocklistType.Whitelist => _blocklistProvider.Patterns.Any(pattern => MatchesPattern(filename, pattern)),
+            BlocklistType.Blacklist => !patterns.Any(pattern => MatchesPattern(filename, pattern)),
+            BlocklistType.Whitelist => patterns.Any(pattern => MatchesPattern(filename, pattern)),
             _ => true
         };
     }
 
-    private bool IsValidAgainstRegexes(string filename)
+    private static bool IsValidAgainstRegexes(string filename, BlocklistType type, ConcurrentBag<Regex> regexes)
     {
-        if (_blocklistProvider.Regexes.Count is 0)
+        if (regexes.Count is 0)
         {
             return true;
         }
         
-        return _blocklistProvider.BlocklistType switch
+        return type switch
         {
-            BlocklistType.Blacklist => !_blocklistProvider.Regexes.Any(regex => regex.IsMatch(filename)),
-            BlocklistType.Whitelist => _blocklistProvider.Regexes.Any(regex => regex.IsMatch(filename)),
+            BlocklistType.Blacklist => !regexes.Any(regex => regex.IsMatch(filename)),
+            BlocklistType.Whitelist => regexes.Any(regex => regex.IsMatch(filename)),
             _ => true
         };
     }

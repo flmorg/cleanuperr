@@ -1,4 +1,4 @@
-﻿namespace Domain.Enums;
+﻿namespace Common.Configuration.ContentBlocker;
 
 public enum BlocklistType
 {

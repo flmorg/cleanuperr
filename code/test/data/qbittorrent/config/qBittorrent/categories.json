@@ -1,4 +1,7 @@
 {
+    "lidarr": {
+        "save_path": ""
+    },
     "radarr": {
         "save_path": ""
     },

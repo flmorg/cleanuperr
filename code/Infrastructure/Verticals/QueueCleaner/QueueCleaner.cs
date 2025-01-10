@@ -1,5 +1,4 @@
 using Common.Configuration.Arr;
-using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
@@ -17,11 +16,18 @@ public sealed class QueueCleaner : GenericHandler
         ILogger<QueueCleaner> logger,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
+        IOptions<LidarrConfig> lidarrConfig,
         SonarrClient sonarrClient,
         RadarrClient radarrClient,
+        LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory
-    ) : base(logger, sonarrConfig.Value, radarrConfig.Value, sonarrClient, radarrClient, arrArrQueueIterator, downloadServiceFactory)
+    ) : base(
+        logger,
+        sonarrConfig, radarrConfig, lidarrConfig,
+        sonarrClient, radarrClient, lidarrClient,
+        arrArrQueueIterator, downloadServiceFactory
+    )
     {
     }
     
@@ -29,7 +35,6 @@ public sealed class QueueCleaner : GenericHandler
     {
         HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
-        ArrConfig arrConfig = GetConfig(instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
@@ -50,12 +55,7 @@ public sealed class QueueCleaner : GenericHandler
                 {
                     continue;
                 }
-
-                if (!arrClient.IsRecordValid(record))
-                {
-                    continue;
-                }
-
+                
                 if (!arrClient.ShouldRemoveFromQueue(record) && !await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId))
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
@@ -63,11 +63,10 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
-
                 await arrClient.DeleteQueueItemAsync(instance, record);
             }
         });
         
-        await arrClient.RefreshItemsAsync(instance, arrConfig, itemsToBeRefreshed);
+        await arrClient.RefreshItemsAsync(instance, itemsToBeRefreshed);
     }
 }

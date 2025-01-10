@@ -1,4 +1,7 @@
-﻿using Common.Configuration.QueueCleaner;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
+using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -33,8 +36,23 @@ public abstract class DownloadServiceBase : IDownloadService
 
     public abstract Task<bool> ShouldRemoveFromArrQueueAsync(string hash);
 
-    public abstract Task BlockUnwantedFilesAsync(string hash);
+    /// <inheritdoc/>
+    public abstract Task<bool> BlockUnwantedFilesAsync(
+        string hash,
+        BlocklistType blocklistType,
+        ConcurrentBag<string> patterns,
+        ConcurrentBag<Regex> regexes
+    );
 
+    /// <inheritdoc/>
+    public abstract Task Delete(string hash);
+
+    /// <summary>
+    /// Strikes an item and checks if the limit has been reached.
+    /// </summary>
+    /// <param name="hash">The torrent hash.</param>
+    /// <param name="itemName">The name or title of the item.</param>
+    /// <returns>True if the limit has been reached; otherwise, false.</returns>
     protected bool StrikeAndCheckLimit(string hash, string itemName)
     {
         return _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled);

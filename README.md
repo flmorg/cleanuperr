@@ -21,8 +21,9 @@ Only the **latest versions** of the following apps are supported, or earlier ver
 - Transmission
 - Sonarr
 - Radarr
+- Lidarr
 
-This tool is actively developed and still a work in progress. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
+This tool is actively developed and still a work in progress, so using the `latest` Docker tag may result in breaking changes. Join the Discord server if you want to reach out to me quickly (or just stay updated on new releases) so we can squash those pesky bugs together:
 
 > https://discord.gg/sWggpnmGNY
 
@@ -35,8 +36,12 @@ This tool is actively developed and still a work in progress. Join the Discord s
    - Mark the files that were found in the queue as **unwanted/skipped** if:
      - They **are listed in the blacklist**, or
      - They **are not included in the whitelist**.
+   - If **all files** of a download **are unwanted**:
+     - It will be removed from the *arr's queue and blocked.
+     - It will be deleted from the download client.
+     - A new search will be triggered for the *arr item.
 2. **Queue cleaner** will:
-   - Run every 5 minutes (or configured cron).
+   - Run every 5 minutes (or configured cron, or right after `content blocker`).
    - Process all items in the *arr queue.
    - Check each queue item if it is **stalled (download speed is 0)**, **stuck in matadata downloading** or **failed to be imported**.
      - If it is, the item receives a **strike** and will continue to accumulate strikes every time it meets any of these conditions.
@@ -63,8 +68,8 @@ This tool is actively developed and still a work in progress. Join the Discord s
 
 ## Using cleanuperr's blocklist (works with all supported download clients)
 
-1. Set both `QUEUECLEANER_ENABLED` and `CONTENTBLOCKER_ENABLED` to `true` in your environment variables.
-2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Environment variables](#Environment-variables) section.
+1. Set both `QUEUECLEANER__ENABLED` and `CONTENTBLOCKER__ENABLED` to `true` in your environment variables.
+2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Arr variables](#Arr-variables) section.
 3. Once configured, cleanuperr will perform the following tasks:
    - Execute the **content blocker** job, as explained in the [How it works](#how-it-works) section.
    - Execute the **queue cleaner** job, as explained in the [How it works](#how-it-works) section.
@@ -94,11 +99,6 @@ services:
       - QUEUECLEANER__STALLED_MAX_STRIKES=5
 
       - CONTENTBLOCKER__ENABLED=true
-      - CONTENTBLOCKER__BLACKLIST__ENABLED=true
-      - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
-      # OR
-      # - CONTENTBLOCKER__WHITELIST__ENABLED=true
-      # - CONTENTBLOCKER__WHITELIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist
 
       - DOWNLOAD_CLIENT=qBittorrent
       - QBITTORRENT__URL=http://localhost:8080
@@ -116,21 +116,37 @@ services:
 
       - SONARR__ENABLED=true
       - SONARR__SEARCHTYPE=Episode
+      - SONARR__BLOCK__TYPE=blacklist
+      - SONARR__BLOCK__PATH=https://example.com/path/to/file.txt
       - SONARR__INSTANCES__0__URL=http://localhost:8989
       - SONARR__INSTANCES__0__APIKEY=secret1
       - SONARR__INSTANCES__1__URL=http://localhost:8990
       - SONARR__INSTANCES__1__APIKEY=secret2
 
       - RADARR__ENABLED=true
+      - RADARR__BLOCK__TYPE=blacklist
+      - RADARR__BLOCK__PATH=https://example.com/path/to/file.txt
       - RADARR__INSTANCES__0__URL=http://localhost:7878
       - RADARR__INSTANCES__0__APIKEY=secret3
       - RADARR__INSTANCES__1__URL=http://localhost:7879
       - RADARR__INSTANCES__1__APIKEY=secret4
+
+      - LIDARR__ENABLED=true
+      - LIDARR__BLOCK__TYPE=blacklist
+      - LIDARR__BLOCK__PATH=https://example.com/path/to/file.txt
+      - LIDARR__INSTANCES__0__URL=http://radarr:8686
+      - LIDARR__INSTANCES__0__APIKEY=secret5
+      - LIDARR__INSTANCES__1__URL=http://radarr:8687
+      - LIDARR__INSTANCES__1__APIKEY=secret6
     image: ghcr.io/flmorg/cleanuperr:latest
     restart: unless-stopped
 ```
 
-### Environment variables
+## Environment variables
+
+### General variables
+<details>
+  <summary>Click here</summary>
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
@@ -148,11 +164,14 @@ services:
 | QUEUECLEANER__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
 |||||
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
-| CONTENTBLOCKER__BLACKLIST__ENABLED | Yes if content blocker is enabled and whitelist is not enabled | Enable or disable the blacklist | false |
-| CONTENTBLOCKER__BLACKLIST__PATH | Yes if blacklist is enabled | Path to the blacklist (local file or url)<br>Needs to be json compatible | empty |
-| CONTENTBLOCKER__WHITELIST__ENABLED | Yes if content blocker is enabled and blacklist is not enabled | Enable or disable the whitelist | false |
-| CONTENTBLOCKER__WHITELIST__PATH | Yes if whitelist is enabled | Path to the whitelist (local file or url)<br>Needs to be json compatible | empty |
-|||||
+</details>
+
+### Download client variables
+<details>
+  <summary>Click here</summary>
+
+| Variable | Required | Description | Default value |
+|---|---|---|---|
 | DOWNLOAD_CLIENT | No | Download client that is used by *arrs<br>Can be `qbittorrent`, `deluge` or `transmission` | `qbittorrent` |
 | QBITTORRENT__URL | No | qBittorrent instance url | http://localhost:8112 |
 | QBITTORRENT__USERNAME | No | qBittorrent user | empty |
@@ -164,36 +183,53 @@ services:
 | TRANSMISSION__URL | No | Transmission instance url | http://localhost:9091 |
 | TRANSMISSION__USERNAME | No | Transmission user | empty |
 | TRANSMISSION__PASSWORD | No | Transmission password | empty |
-|||||
+</details>
+
+### Arr variables
+<details>
+  <summary>Click here</summary>
+
+| Variable | Required | Description | Default value |
+|---|---|---|---|
 | SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
+| SONARR__BLOCK__TYPE | No | Block type<br>Can be `blacklist` or `whitelist` | `blacklist` |
+| SONARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
 | SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
 | SONARR__INSTANCES__0__URL | No | First Sonarr instance url | http://localhost:8989 |
 | SONARR__INSTANCES__0__APIKEY | No | First Sonarr instance API key | empty |
 |||||
 | RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
+| RADARR__BLOCK__TYPE | No | Block type<br>Can be `blacklist` or `whitelist` | `blacklist` |
+| RADARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
 | RADARR__INSTANCES__0__URL | No | First Radarr instance url | http://localhost:8989 |
 | RADARR__INSTANCES__0__APIKEY | No | First Radarr instance API key | empty |
+|||||
+| LIDARR__ENABLED | No | Enable or disable LIDARR cleanup  | false |
+| LIDARR__BLOCK__TYPE | No | Block type<br>Can be `blacklist` or `whitelist` | `blacklist` |
+| LIDARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
+| LIDARR__INSTANCES__0__URL | No | First LIDARR instance url | http://localhost:8989 |
+| LIDARR__INSTANCES__0__APIKEY | No | First LIDARR instance API key | empty |
+</details>
 
 #
 ### To be noted
 
-1. The blacklist and the whitelist can not be both enabled at the same time.
-2. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
-3. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
-4. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
+1. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
+2. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
+3. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
 ```
-*example      // file name ends with "example"
-example*      // file name starts with "example"
-*example*     // file name has "example" in the name
-example       // file name is exactly the word "example"
+*example            // file name ends with "example"
+example*            // file name starts with "example"
+*example*           // file name has "example" in the name
+example             // file name is exactly the word "example"
 regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line with "regex:"
 ```
-5. Multiple Sonarr/Radarr instances can be specified using this format, where `<NUMBER>` starts from 0:
+4. Multiple Sonarr/Radarr/Lidarr instances can be specified using this format, where `<NUMBER>` starts from `0`:
 ```
 SONARR__INSTANCES__<NUMBER>__URL
 SONARR__INSTANCES__<NUMBER>__APIKEY
 ```
-
+5. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
 #
 
 ### Binaries (if you're not using Docker)
