@@ -71,7 +71,7 @@ public sealed class LidarrClient : ArrClient
     {
         if (record.ArtistId is 0 || record.AlbumId is 0)
         {
-            _logger.LogDebug("skip | item information missing | {title}", record.Title);
+            _logger.LogDebug("skip | artist id and/or album id missing | {title}", record.Title);
             return false;
         }
 

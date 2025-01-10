@@ -78,7 +78,7 @@ public sealed class RadarrClient : ArrClient
     {
         if (record.MovieId is 0)
         {
-            _logger.LogDebug("skip | item information missing | {title}", record.Title);
+            _logger.LogDebug("skip | movie id missing | {title}", record.Title);
             return false;
         }
         

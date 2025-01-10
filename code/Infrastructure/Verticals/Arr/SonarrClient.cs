@@ -74,7 +74,7 @@ public sealed class SonarrClient : ArrClient
     {
         if (record.EpisodeId is 0 || record.SeriesId is 0)
         {
-            _logger.LogDebug("skip | item information missing | {title}", record.Title);
+            _logger.LogDebug("skip | episode id and/or series id missing | {title}", record.Title);
             return false;
         }
 
