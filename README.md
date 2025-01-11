@@ -100,6 +100,8 @@ services:
       - QUEUECLEANER__RUNSEQUENTIALLY=true
       - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
       - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
+      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0="title mismatch"
+      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1="manual import required"
       - QUEUECLEANER__STALLED_MAX_STRIKES=5
       - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
 
@@ -158,6 +160,7 @@ services:
 | QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |
 | QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES | No | After how many strikes should a failed import be removed<br>0 means never | 0 |
 | QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE | No | Whether to ignore failed imports from private trackers | false |
+| QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0 | No | First pattern to look for when an import is failed<br>If the specified pattern is found, the item is skipped | empty |
 | QUEUECLEANER__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
 | QUEUECLEANER__STALLED_IGNORE_PRIVATE | No | Whether to ignore stalled downloads from private trackers | false |
 |||||
@@ -206,6 +209,10 @@ regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line wi
 ```
 SONARR__INSTANCES__<NUMBER>__URL
 SONARR__INSTANCES__<NUMBER>__APIKEY
+```
+6. Multiple failed import patterns can be specified using this format, where `<NUMBER>` starts from 0:
+```
+QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>
 ```
 
 #
