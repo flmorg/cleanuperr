@@ -1,4 +1,4 @@
-﻿using Common.Configuration.DownloadClient;
+using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -48,7 +48,15 @@ public sealed class QBitService : DownloadServiceBase
             return result;
         }
 
-        result.IsPrivate = torrent.AdditionalData.TryGetValue("private", out var dictValue) &&
+        TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(hash);
+
+        if (torrentProperties is null)
+        {
+            _logger.LogDebug("failed to find torrent properties {hash} in the download client", hash);
+            return result;
+        }
+
+        result.IsPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
                            bool.TryParse(dictValue?.ToString(), out bool boolValue)
                            && boolValue;
 
