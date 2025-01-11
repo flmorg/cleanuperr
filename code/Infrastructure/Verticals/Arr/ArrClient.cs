@@ -80,9 +80,15 @@ public abstract class ArrClient
             .Equals("importBlocked", StringComparison.InvariantCultureIgnoreCase);
         bool isImportPending() => record.TrackedDownloadState
             .Equals("importPending", StringComparison.InvariantCultureIgnoreCase);
-
+        
         if (hasWarn() && (isImportBlocked() || isImportPending()))
         {
+            if (HasIgnoredPatterns(record))
+            {
+                _logger.LogDebug("skip failed import check | contains ignored pattern | {name}", record.Title);
+                return false;
+            }
+            
             return _striker.StrikeAndCheckLimit(
                 record.DownloadId,
                 record.Title,
@@ -140,5 +146,33 @@ public abstract class ArrClient
     protected virtual void SetApiKey(HttpRequestMessage request, string apiKey)
     {
         request.Headers.Add("x-api-key", apiKey);
+    }
+
+    private bool HasIgnoredPatterns(QueueRecord record)
+    {
+        if (_queueCleanerConfig.ImportFailedIgnorePatterns?.Count is null or 0)
+        {
+            // no patterns are configured
+            return false;
+        }
+            
+        if (record.StatusMessages?.Count is null or 0)
+        {
+            // no status message found
+            return false;
+        }
+        
+        HashSet<string> messages = record.StatusMessages
+            .SelectMany(x => x.Messages ?? Enumerable.Empty<string>())
+            .ToHashSet();
+        record.StatusMessages.Select(x => x.Title)
+            .ToList()
+            .ForEach(x => messages.Add(x));
+        
+        return messages.Any(
+            m => _queueCleanerConfig.ImportFailedIgnorePatterns.Any(
+                p => !string.IsNullOrWhiteSpace(p.Trim()) && m.Contains(p, StringComparison.InvariantCultureIgnoreCase)
+            )
+        );
     }
 }

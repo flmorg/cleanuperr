@@ -16,6 +16,9 @@ public sealed record QueueCleanerConfig : IJobConfig
     [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PRIVATE")]
     public bool ImportFailedIgnorePrivate { get; init; }
     
+    [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PATTERNS")]
+    public List<string>? ImportFailedIgnorePatterns { get; init; }
+    
     [ConfigurationKeyName("STALLED_MAX_STRIKES")]
     public ushort StalledMaxStrikes { get; init; }
     
