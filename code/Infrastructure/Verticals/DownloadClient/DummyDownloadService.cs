@@ -1,4 +1,7 @@
-﻿using Common.Configuration.QueueCleaner;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
+using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
@@ -26,7 +29,12 @@ public sealed class DummyDownloadService : DownloadServiceBase
         throw new NotImplementedException();
     }
 
-    public override Task BlockUnwantedFilesAsync(string hash)
+    public override Task<bool> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task Delete(string hash)
     {
         throw new NotImplementedException();
     }
