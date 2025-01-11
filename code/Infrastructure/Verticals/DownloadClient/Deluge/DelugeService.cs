@@ -132,6 +132,11 @@ public sealed class DelugeService : DownloadServiceBase
     
     private bool IsItemStuckAndShouldRemove(TorrentStatus status)
     {
+        if (_queueCleanerConfig.StalledMaxStrikes is 0)
+        {
+            return false;
+        }
+        
         if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
         {
             // ignore private trackers

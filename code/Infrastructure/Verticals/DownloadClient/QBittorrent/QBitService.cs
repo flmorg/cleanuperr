@@ -114,6 +114,11 @@ public sealed class QBitService : DownloadServiceBase
     
     private bool IsItemStuckAndShouldRemove(TorrentInfo torrent, bool isPrivate)
     {
+        if (_queueCleanerConfig.StalledMaxStrikes is 0)
+        {
+            return false;
+        }
+        
         if (_queueCleanerConfig.StalledIgnorePrivate && isPrivate)
         {
             // ignore private trackers

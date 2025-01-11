@@ -120,6 +120,11 @@ public sealed class TransmissionService : DownloadServiceBase
     
     private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
     {
+        if (_queueCleanerConfig.StalledMaxStrikes is 0)
+        {
+            return false;
+        }
+        
         if (_queueCleanerConfig.StalledIgnorePrivate && (torrent.IsPrivate ?? false))
         {
             // ignore private trackers
