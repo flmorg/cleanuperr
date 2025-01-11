@@ -65,8 +65,15 @@ public abstract class ArrClient
         return queueResponse;
     }
 
-    public virtual bool ShouldRemoveFromQueue(QueueRecord record)
+    public virtual bool ShouldRemoveFromQueue(QueueRecord record, bool isPrivateDownload)
     {
+        if (_queueCleanerConfig.ImportFailedIgnorePrivate && isPrivateDownload)
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip failed import check | download is private | {name}", record.Title);
+            return false;
+        }
+        
         bool hasWarn() => record.TrackedDownloadStatus
             .Equals("warning", StringComparison.InvariantCultureIgnoreCase);
         bool isImportBlocked() => record.TrackedDownloadState
