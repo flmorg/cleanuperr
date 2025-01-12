@@ -1,4 +1,4 @@
-﻿using Common.Configuration.Arr;
+using Common.Configuration.Arr;
 using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
@@ -36,9 +36,20 @@ public sealed class ContentBlocker : GenericHandler
             _logger.LogWarning("download client is set to none");
             return;
         }
-        
-        await _blocklistProvider.LoadBlocklistAsync();
-        await base.ExecuteAsync();
+
+        try
+        {
+            await _blocklistProvider.LoadBlocklistAsync();
+            await base.ExecuteAsync();
+        }
+        catch (TaskCanceledException)
+        {
+            _logger.LogInformation("[ContentBlocker] Unable to communicate, will retry on next pass");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[ContentBlocker] ContentBlocker encountered an unexpected error");
+        }
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
