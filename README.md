@@ -183,7 +183,9 @@ services:
 | RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
 | RADARR__INSTANCES__0__URL | No | First Radarr instance url | http://localhost:8989 |
 | RADARR__INSTANCES__0__APIKEY | No | First Radarr instance API key | empty |
-
+|||||
+| HTTP_MAX_RETRIES | No | The number of times to retry a failed HTTP call (to *arrs, download clients etc.) | 0 |
+| HTTP_TIMEOUT | No | The number of seconds to wait before failing an HTTP call (to *arrs, download clients etc.) | 100 |
 #
 ### To be noted
 

@@ -12,10 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FLM.Transmission" Version="1.0.0" />
+      <PackageReference Include="FLM.QBittorrent" Version="1.0.0" />
+      <PackageReference Include="FLM.Transmission" Version="1.0.2" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
-      <PackageReference Include="QBittorrent.Client" Version="1.9.24285.1" />
       <PackageReference Include="Quartz" Version="3.13.1" />
     </ItemGroup>
 

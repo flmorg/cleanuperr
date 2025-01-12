@@ -1,5 +1,6 @@
 ﻿using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.Helpers;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,7 @@ public sealed class TransmissionService : DownloadServiceBase
     private TorrentInfo[]? _torrentsCache;
 
     public TransmissionService(
+        IHttpClientFactory httpClientFactory,
         ILogger<TransmissionService> logger,
         IOptions<TransmissionConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
@@ -27,6 +29,7 @@ public sealed class TransmissionService : DownloadServiceBase
         _config = config.Value;
         _config.Validate();
         _client = new(
+            httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
             new Uri(_config.Url, "/transmission/rpc").ToString(),
             login: _config.Username,
             password: _config.Password

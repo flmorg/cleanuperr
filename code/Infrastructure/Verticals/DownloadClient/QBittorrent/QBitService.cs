@@ -1,5 +1,6 @@
 ﻿using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.Helpers;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ public sealed class QBitService : DownloadServiceBase
 
     public QBitService(
         ILogger<QBitService> logger,
+        IHttpClientFactory httpClientFactory,
         IOptions<QBitConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         FilenameEvaluator filenameEvaluator,
@@ -23,7 +25,7 @@ public sealed class QBitService : DownloadServiceBase
     {
         _config = config.Value;
         _config.Validate();
-        _client = new(_config.Url);
+        _client = new(httpClientFactory.CreateClient(Constants.HttpClientWithRetryName), _config.Url);
     }
 
     public override async Task LoginAsync()

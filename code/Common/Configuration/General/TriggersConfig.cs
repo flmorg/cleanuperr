@@ -1,4 +1,4 @@
-﻿namespace Common.Configuration;
+﻿namespace Common.Configuration.General;
 
 public sealed class TriggersConfig
 {

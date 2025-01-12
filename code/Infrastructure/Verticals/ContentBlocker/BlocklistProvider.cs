@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
+using Common.Helpers;
 using Domain.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -27,7 +28,7 @@ public sealed class BlocklistProvider
     {
         _logger = logger;
         _config = config.Value;
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
         
         _config.Validate();
         

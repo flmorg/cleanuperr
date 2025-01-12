@@ -1,6 +1,7 @@
 ﻿using Common.Configuration.Arr;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
+using Common.Helpers;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
@@ -29,7 +30,7 @@ public abstract class ArrClient
     {
         _logger = logger;
         _striker = striker;
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
         _loggingConfig = loggingConfig.Value;
         _queueCleanerConfig = queueCleanerConfig.Value;
         _striker = striker;
