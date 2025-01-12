@@ -1,6 +1,6 @@
 name: Bug report
 description: File a bug report if something is not working right.
-title: "[BUG]: "
+title: "[BUG] "
 labels: ["bug"]
 body:
   - type: markdown
@@ -40,6 +40,7 @@ body:
         - Windows
         - Linux
         - MacOS
+        - Unraid
     validations:
       required: true
   - type: dropdown

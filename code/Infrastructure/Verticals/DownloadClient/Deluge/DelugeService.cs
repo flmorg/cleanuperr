@@ -30,18 +30,19 @@ public sealed class DelugeService : DownloadServiceBase
         await _client.LoginAsync();
     }
 
-    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash)
     {
         hash = hash.ToLowerInvariant();
         
         DelugeContents? contents = null;
+        RemoveResult result = new();
 
         TorrentStatus? status = await GetTorrentStatus(hash);
         
         if (status?.Hash is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
-            return false;
+            return result;
         }
 
         try
@@ -63,7 +64,10 @@ public sealed class DelugeService : DownloadServiceBase
             }
         });
 
-        return shouldRemove || IsItemStuckAndShouldRemove(status);
+        result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(status);
+        result.IsPrivate = status.Private;
+        
+        return result;
     }
 
     public override async Task BlockUnwantedFilesAsync(string hash)
@@ -128,6 +132,18 @@ public sealed class DelugeService : DownloadServiceBase
     
     private bool IsItemStuckAndShouldRemove(TorrentStatus status)
     {
+        if (_queueCleanerConfig.StalledMaxStrikes is 0)
+        {
+            return false;
+        }
+        
+        if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip stalled check | download is private | {name}", status.Name);
+            return false;
+        }
+        
         if (status.State is null || !status.State.Equals("Downloading", StringComparison.InvariantCultureIgnoreCase))
         {
             return false;
@@ -146,7 +162,7 @@ public sealed class DelugeService : DownloadServiceBase
         return await _client.SendRequest<TorrentStatus?>(
             "web.get_torrent_status",
             hash,
-            new[] { "hash", "state", "name", "eta" }
+            new[] { "hash", "state", "name", "eta", "private" }
         );
     }
     

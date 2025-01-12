@@ -57,11 +57,16 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
 
-                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(record);
-                bool shouldRemoveFromDownloadClient = _downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None &&
-                    await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId);
+                RemoveResult removeResult = new();
 
-                if (!shouldRemoveFromArr && !shouldRemoveFromDownloadClient)
+                if (_downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None)
+                {
+                    removeResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId);
+                }
+                
+                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(record, removeResult.IsPrivate);
+
+                if (!shouldRemoveFromArr && !removeResult.ShouldRemove)
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;

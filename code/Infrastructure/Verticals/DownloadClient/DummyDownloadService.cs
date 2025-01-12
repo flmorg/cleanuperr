@@ -21,7 +21,7 @@ public sealed class DummyDownloadService : DownloadServiceBase
         return Task.CompletedTask;
     }
 
-    public override Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
+    public override Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash)
     {
         throw new NotImplementedException();
     }

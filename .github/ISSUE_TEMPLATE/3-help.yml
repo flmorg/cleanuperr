@@ -1,6 +1,6 @@
 name: Help request
 description: Ask a question to receive help.
-title: "[HELP]: "
+title: "[HELP] "
 labels: ["question"]
 body:
   - type: markdown
