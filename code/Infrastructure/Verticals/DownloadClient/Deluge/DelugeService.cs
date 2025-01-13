@@ -82,6 +82,13 @@ public sealed class DelugeService : DownloadServiceBase
             return;
         }
         
+        if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip files check | download is private | {name}", status.Name);
+            return;
+        }
+        
         DelugeContents? contents = null;
 
         try

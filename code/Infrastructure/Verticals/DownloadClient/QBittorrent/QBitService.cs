@@ -83,6 +83,34 @@ public sealed class QBitService : DownloadServiceBase
 
     public override async Task BlockUnwantedFilesAsync(string hash)
     {
+        TorrentInfo? torrent = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
+            .FirstOrDefault();
+
+        if (torrent is null)
+        {
+            _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
+            return;
+        }
+        
+        TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(hash);
+
+        if (torrentProperties is null)
+        {
+            _logger.LogDebug("failed to find torrent properties {hash} in the download client", hash);
+            return;
+        }
+
+        bool isPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
+                         bool.TryParse(dictValue?.ToString(), out bool boolValue)
+                         && boolValue;
+
+        if (_queueCleanerConfig.StalledIgnorePrivate && isPrivate)
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
+            return;
+        }
+        
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
         if (files is null)

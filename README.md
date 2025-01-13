@@ -107,6 +107,7 @@ services:
       - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
 
       - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORE_PRIVATE=true
       - CONTENTBLOCKER__BLACKLIST__ENABLED=true
       - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
       # OR
@@ -166,6 +167,7 @@ services:
 | QUEUECLEANER__STALLED_IGNORE_PRIVATE | No | Whether to ignore stalled downloads from private trackers | false |
 |||||
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
+| CONTENTBLOCKER__IGNORE_PRIVATE | No | Whether to ignore downloads from private trackers | false |
 | CONTENTBLOCKER__BLACKLIST__ENABLED | Yes if content blocker is enabled and whitelist is not enabled | Enable or disable the blacklist | false |
 | CONTENTBLOCKER__BLACKLIST__PATH | Yes if blacklist is enabled | Path to the blacklist (local file or url)<br>Needs to be json compatible | empty |
 | CONTENTBLOCKER__WHITELIST__ENABLED | Yes if content blocker is enabled and blacklist is not enabled | Enable or disable the whitelist | false |

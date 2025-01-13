@@ -188,6 +188,7 @@ services:
       - QUEUECLEANER__STALLED_IGNORE_PRIVATE=true
 
       - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORE_PRIVATE=true
       - CONTENTBLOCKER__BLACKLIST__ENABLED=true
       - CONTENTBLOCKER__BLACKLIST__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
       # OR

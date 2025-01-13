@@ -81,6 +81,13 @@ public sealed class TransmissionService : DownloadServiceBase
         {
             return;
         }
+        
+        if (_queueCleanerConfig.StalledIgnorePrivate && (torrent.IsPrivate ?? false))
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
+            return;
+        }
 
         List<long> unwantedFiles = [];
         
