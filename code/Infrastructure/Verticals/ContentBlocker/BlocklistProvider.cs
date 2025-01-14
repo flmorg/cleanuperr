@@ -1,8 +1,9 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
+using Common.Helpers;
 using Domain.Enums;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -38,7 +39,7 @@ public sealed class BlocklistProvider
         _radarrConfig = radarrConfig.Value;
         _lidarrConfig = lidarrConfig.Value;
         _cache = cache;
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
     }
 
     public async Task LoadBlocklistsAsync()

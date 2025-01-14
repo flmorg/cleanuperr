@@ -176,6 +176,9 @@ services:
       - LOGGING__FILE__PATH=/var/logs
       - LOGGING__ENHANCED=true
 
+      - HTTP_MAX_RETRIES=0
+      - HTTP_TIMEOUT=20
+
       - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
       - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
 

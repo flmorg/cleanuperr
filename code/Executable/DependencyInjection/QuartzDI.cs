@@ -1,5 +1,6 @@
 ﻿using Common.Configuration;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.General;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Executable.Jobs;
