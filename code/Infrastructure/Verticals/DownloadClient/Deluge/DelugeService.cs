@@ -96,7 +96,7 @@ public sealed class DelugeService : DownloadServiceBase
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", status.Name);
-            return;
+            return false;
         }
         
         DelugeContents? contents = null;

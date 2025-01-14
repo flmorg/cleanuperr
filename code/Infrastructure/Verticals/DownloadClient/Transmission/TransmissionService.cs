@@ -96,7 +96,7 @@ public sealed class TransmissionService : DownloadServiceBase
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
-            return;
+            return false;
         }
 
         List<long> unwantedFiles = [];

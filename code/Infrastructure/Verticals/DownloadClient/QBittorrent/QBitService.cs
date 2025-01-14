@@ -99,7 +99,7 @@ public sealed class QBitService : DownloadServiceBase
         if (torrent is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
-            return;
+            return false;
         }
         
         TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(hash);
@@ -107,7 +107,7 @@ public sealed class QBitService : DownloadServiceBase
         if (torrentProperties is null)
         {
             _logger.LogDebug("failed to find torrent properties {hash} in the download client", hash);
-            return;
+            return false;
         }
 
         bool isPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
@@ -118,7 +118,7 @@ public sealed class QBitService : DownloadServiceBase
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
-            return;
+            return false;
         }
         
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
