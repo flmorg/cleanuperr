@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 
@@ -12,8 +12,7 @@ public interface IDownloadService : IDisposable
     /// Checks whether the download should be removed from the *arr queue.
     /// </summary>
     /// <param name="hash">The download hash.</param>
-    /// <returns>True if the download should be removed; otherwise false.</returns>
-    public Task<bool> ShouldRemoveFromArrQueueAsync(string hash);
+    public Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash);
 
     /// <summary>
     /// Blocks unwanted files from being fully downloaded.

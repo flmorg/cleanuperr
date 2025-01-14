@@ -78,9 +78,10 @@ This tool is actively developed and still a work in progress, so using the `late
 
 1. Set `QUEUECLEANER__ENABLED` to `true`.
 2. Set `QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES` to a desired value.
-3. Set `DOWNLOAD_CLIENT` to `none`.
+3. Optionally set failed import message patterns to ignore using `QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>`.
+4. Set `DOWNLOAD_CLIENT` to `none`.
 
-**No other action involving a download client would work (e.g. content blocking, removing stalled downloads etc.).**
+**No other action involving a download client would work (e.g. content blocking, removing stalled downloads, excluding private trackers).**
 
 ## Usage
 
@@ -104,9 +105,14 @@ services:
       - QUEUECLEANER__ENABLED=true
       - QUEUECLEANER__RUNSEQUENTIALLY=true
       - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
+      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
+      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
+      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
       - QUEUECLEANER__STALLED_MAX_STRIKES=5
+      - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
 
       - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORE_PRIVATE=true
 
       - DOWNLOAD_CLIENT=qBittorrent
       - QBITTORRENT__URL=http://localhost:8080
@@ -171,9 +177,13 @@ services:
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
 | QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |
 | QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES | No | After how many strikes should a failed import be removed<br>0 means never | 0 |
+| QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE | No | Whether to ignore failed imports from private trackers | false |
+| QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0 | No | First pattern to look for when an import is failed<br>If the specified message pattern is found, the item is skipped | empty |
 | QUEUECLEANER__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
+| QUEUECLEANER__STALLED_IGNORE_PRIVATE | No | Whether to ignore stalled downloads from private trackers | false |
 |||||
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
+| CONTENTBLOCKER__IGNORE_PRIVATE | No | Whether to ignore downloads from private trackers | false |
 </details>
 
 ### Download client variables
@@ -239,7 +249,12 @@ regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line wi
 SONARR__INSTANCES__<NUMBER>__URL
 SONARR__INSTANCES__<NUMBER>__APIKEY
 ```
-5. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
+6. Multiple failed import patterns can be specified using this format, where `<NUMBER>` starts from 0:
+```
+QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>
+```
+
+7. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
 #
 
 ### Binaries (if you're not using Docker)

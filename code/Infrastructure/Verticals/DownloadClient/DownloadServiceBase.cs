@@ -34,7 +34,7 @@ public abstract class DownloadServiceBase : IDownloadService
 
     public abstract Task LoginAsync();
 
-    public abstract Task<bool> ShouldRemoveFromArrQueueAsync(string hash);
+    public abstract Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash);
 
     /// <inheritdoc/>
     public abstract Task<bool> BlockUnwantedFilesAsync(

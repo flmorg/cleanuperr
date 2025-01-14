@@ -1,6 +1,6 @@
-﻿namespace Domain.Models.Arr.Queue;
+namespace Domain.Models.Arr.Queue;
 
-public record QueueRecord
+public sealed record QueueRecord
 {
     // Sonarr
     public long SeriesId { get; init; }
@@ -20,6 +20,7 @@ public record QueueRecord
     public string Status { get; init; }
     public string TrackedDownloadStatus { get; init; }
     public string TrackedDownloadState { get; init; }
+    public List<TrackedDownloadStatusMessage>? StatusMessages { get; init; }
     public required string DownloadId { get; init; }
     public required string Protocol { get; init; }
     public required long Id { get; init; }

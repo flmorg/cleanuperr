@@ -42,17 +42,19 @@ public sealed class TransmissionService : DownloadServiceBase
     }
 
     /// <inheritdoc/>
-    public override async Task<bool> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash)
     {
+        RemoveResult result = new();
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
         if (torrent is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
-            return false;
+            return result;
         }
         
         bool shouldRemove = torrent.FileStats?.Length > 0;
+        result.IsPrivate = torrent.IsPrivate ?? false;
 
         foreach (TransmissionTorrentFileStats? stats in torrent.FileStats ?? [])
         {
@@ -69,8 +71,10 @@ public sealed class TransmissionService : DownloadServiceBase
             }
         }
 
-        // remove if all files are unwanted
-        return shouldRemove || IsItemStuckAndShouldRemove(torrent);
+        // remove if all files are unwanted or download is stuck
+        result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(torrent);
+        
+        return result;
     }
 
     /// <inheritdoc/>
@@ -86,6 +90,13 @@ public sealed class TransmissionService : DownloadServiceBase
         if (torrent?.FileStats is null || torrent.Files is null)
         {
             return false;
+        }
+        
+        if (_queueCleanerConfig.StalledIgnorePrivate && (torrent.IsPrivate ?? false))
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
+            return;
         }
 
         List<long> unwantedFiles = [];
@@ -157,6 +168,18 @@ public sealed class TransmissionService : DownloadServiceBase
     
     private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
     {
+        if (_queueCleanerConfig.StalledMaxStrikes is 0)
+        {
+            return false;
+        }
+        
+        if (_queueCleanerConfig.StalledIgnorePrivate && (torrent.IsPrivate ?? false))
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip stalled check | download is private | {name}", torrent.Name);
+            return false;
+        }
+        
         if (torrent.Status is not 4)
         {
             // not in downloading state
@@ -185,7 +208,8 @@ public sealed class TransmissionService : DownloadServiceBase
                 TorrentFields.ID,
                 TorrentFields.ETA,
                 TorrentFields.NAME,
-                TorrentFields.STATUS
+                TorrentFields.STATUS,
+                TorrentFields.IS_PRIVATE
             ];
             
             // refresh cache
