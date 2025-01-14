@@ -240,7 +240,9 @@ services:
 | HTTP_MAX_RETRIES | No | The number of times to retry a failed HTTP call (to *arrs, download clients etc.) | 0 |
 | HTTP_TIMEOUT | No | The number of seconds to wait before failing an HTTP call (to *arrs, download clients etc.) | 100 |
 </details>
+
 #
+
 ### To be noted
 
 1. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
