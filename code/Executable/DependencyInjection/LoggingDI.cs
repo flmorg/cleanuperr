@@ -1,4 +1,5 @@
 ﻿using Common.Configuration.Logging;
+using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.QueueCleaner;
 using Serilog;
@@ -27,11 +28,22 @@ public static class LoggingDI
         }
         
         LoggerConfiguration logConfig = new();
-        const string consoleOutputTemplate = "[{@t:yyyy-MM-dd HH:mm:ss.fff} {@l:u3}]{#if JobName is not null} {Concat('[',JobName,']'),PAD}{#end} {@m}\n{@x}";
-        const string fileOutputTemplate = "{@t:yyyy-MM-dd HH:mm:ss.fff zzz} [{@l:u3}]{#if JobName is not null} {Concat('[',JobName,']'),PAD}{#end} {@m:lj}\n{@x}";
+        const string jobNameTemplate = "{#if JobName is not null} {Concat('[',JobName,']'),JOB_PAD}{#end}";
+        const string instanceNameTemplate = "{#if InstanceName is not null} {Concat('[',InstanceName,']'),ARR_PAD}";
+        const string consoleOutputTemplate = $"[{{@t:yyyy-MM-dd HH:mm:ss.fff}} {{@l:u3}}]{jobNameTemplate}{instanceNameTemplate}{{#end}} {{@m}}\n{{@x}}";
+        const string fileOutputTemplate = $"{{@t:yyyy-MM-dd HH:mm:ss.fff zzz}} [{{@l:u3}}]{jobNameTemplate}{instanceNameTemplate} {{@m:lj}}\n{{@x}}";
         LogEventLevel level = LogEventLevel.Information;
-        List<string> jobNames = [nameof(ContentBlocker), nameof(QueueCleaner)];
-        int padding = jobNames.Max(x => x.Length) + 2;
+        List<string> names = [nameof(ContentBlocker), nameof(QueueCleaner)];
+        int jobPadding = names.Max(x => x.Length) + 2;
+        names = [InstanceType.Sonarr.ToString(), InstanceType.Radarr.ToString(), InstanceType.Lidarr.ToString()];
+        int arrPadding = names.Max(x => x.Length) + 2;
+
+        string consoleTemplate = consoleOutputTemplate
+            .Replace("JOB_PAD", jobPadding.ToString())
+            .Replace("ARR_PAD", arrPadding.ToString());
+        string fileTemplate = fileOutputTemplate
+            .Replace("JOB_PAD", jobPadding.ToString())
+            .Replace("ARR_PAD", arrPadding.ToString());
 
         if (config is not null)
         {
@@ -41,7 +53,7 @@ public static class LoggingDI
             {
                 logConfig.WriteTo.File(
                     path: Path.Combine(config.File.Path, "cleanuperr-.txt"),
-                    formatter: new ExpressionTemplate(fileOutputTemplate.Replace("PAD", padding.ToString())),
+                    formatter: new ExpressionTemplate(fileTemplate),
                     fileSizeLimitBytes: 10L * 1024 * 1024,
                     rollingInterval: RollingInterval.Day,
                     rollOnFileSizeLimit: true
@@ -55,7 +67,7 @@ public static class LoggingDI
             .MinimumLevel.Override("Microsoft.Extensions.Http", LogEventLevel.Warning)
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
-            .WriteTo.Console(new ExpressionTemplate(consoleOutputTemplate.Replace("PAD", padding.ToString())))
+            .WriteTo.Console(new ExpressionTemplate(consoleTemplate))
             .Enrich.FromLogContext()
             .Enrich.WithProperty("ApplicationName", "cleanuperr")
             .CreateLogger();

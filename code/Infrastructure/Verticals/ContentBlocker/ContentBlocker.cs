@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
@@ -11,6 +11,7 @@ using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog.Context;
 
 namespace Infrastructure.Verticals.ContentBlocker;
 
@@ -64,6 +65,8 @@ public sealed class ContentBlocker : GenericHandler
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
+        using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
+
         HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
         BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);

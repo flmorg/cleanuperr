@@ -8,6 +8,7 @@ using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog.Context;
 
 namespace Infrastructure.Verticals.QueueCleaner;
 
@@ -35,6 +36,8 @@ public sealed class QueueCleaner : GenericHandler
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
+        using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
+        
         HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
 

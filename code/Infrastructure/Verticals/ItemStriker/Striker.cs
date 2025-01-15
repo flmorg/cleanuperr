@@ -37,7 +37,7 @@ public class Striker
             ++strikeCount;
         }
         
-        _logger.LogDebug("item on strike number {strike} | reason {reason} | {name}", strikeCount, strikeType.ToString(), itemName);
+        _logger.LogInformation("item on strike number {strike} | reason {reason} | {name}", strikeCount, strikeType.ToString(), itemName);
         _cache.Set(key, strikeCount, _cacheOptions);
         
         if (strikeCount < maxStrikes)
