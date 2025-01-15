@@ -114,10 +114,12 @@ services:
       - CONTENTBLOCKER__ENABLED=true
       - CONTENTBLOCKER__IGNORE_PRIVATE=true
 
-      - DOWNLOAD_CLIENT=qBittorrent
-      - QBITTORRENT__URL=http://localhost:8080
-      - QBITTORRENT__USERNAME=user
-      - QBITTORRENT__PASSWORD=pass
+      - DOWNLOAD_CLIENT=none
+      # OR
+      # - DOWNLOAD_CLIENT=qBittorrent
+      # - QBITTORRENT__URL=http://localhost:8080
+      # - QBITTORRENT__USERNAME=user
+      # - QBITTORRENT__PASSWORD=pass
       # OR
       # - DOWNLOAD_CLIENT=deluge
       # - DELUGE__URL=http://localhost:8112
@@ -127,8 +129,6 @@ services:
       # - TRANSMISSION__URL=http://localhost:9091
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
-      # OR
-      # - DOWNLOAD_CLIENT=none
 
       - SONARR__ENABLED=true
       - SONARR__SEARCHTYPE=Episode
@@ -192,7 +192,7 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| DOWNLOAD_CLIENT | No | Download client that is used by *arrs<br>Can be `qbittorrent`, `deluge`, `transmission` or `none` | `qbittorrent` |
+| DOWNLOAD_CLIENT | No | Download client that is used by *arrs<br>Can be `qbittorrent`, `deluge`, `transmission` or `none` | `none` |
 | QBITTORRENT__URL | No | qBittorrent instance url | http://localhost:8112 |
 | QBITTORRENT__USERNAME | No | qBittorrent user | empty |
 | QBITTORRENT__PASSWORD | No | qBittorrent password | empty |
@@ -211,7 +211,7 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | true |
+| SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | false |
 | SONARR__BLOCK__TYPE | No | Block type<br>Can be `blacklist` or `whitelist` | `blacklist` |
 | SONARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
 | SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
