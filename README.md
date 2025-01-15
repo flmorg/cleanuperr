@@ -260,12 +260,11 @@ regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line wi
 SONARR__INSTANCES__<NUMBER>__URL
 SONARR__INSTANCES__<NUMBER>__APIKEY
 ```
-6. Multiple failed import patterns can be specified using this format, where `<NUMBER>` starts from 0:
+5. Multiple failed import patterns can be specified using this format, where `<NUMBER>` starts from 0:
 ```
 QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>
 ```
-
-7. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
+6. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
 #
 
 ### Binaries (if you're not using Docker)
