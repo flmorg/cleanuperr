@@ -29,8 +29,8 @@ public static class LoggingDI
         
         LoggerConfiguration logConfig = new();
         const string jobNameTemplate = "{#if JobName is not null} {Concat('[',JobName,']'),JOB_PAD}{#end}";
-        const string instanceNameTemplate = "{#if InstanceName is not null} {Concat('[',InstanceName,']'),ARR_PAD}";
-        const string consoleOutputTemplate = $"[{{@t:yyyy-MM-dd HH:mm:ss.fff}} {{@l:u3}}]{jobNameTemplate}{instanceNameTemplate}{{#end}} {{@m}}\n{{@x}}";
+        const string instanceNameTemplate = "{#if InstanceName is not null} {Concat('[',InstanceName,']'),ARR_PAD}{#end}";
+        const string consoleOutputTemplate = $"[{{@t:yyyy-MM-dd HH:mm:ss.fff}} {{@l:u3}}]{jobNameTemplate}{instanceNameTemplate} {{@m}}\n{{@x}}";
         const string fileOutputTemplate = $"{{@t:yyyy-MM-dd HH:mm:ss.fff zzz}} [{{@l:u3}}]{jobNameTemplate}{instanceNameTemplate} {{@m:lj}}\n{{@x}}";
         LogEventLevel level = LogEventLevel.Information;
         List<string> names = [nameof(ContentBlocker), nameof(QueueCleaner)];
