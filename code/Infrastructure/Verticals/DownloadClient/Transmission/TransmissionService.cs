@@ -32,9 +32,13 @@ public sealed class TransmissionService : DownloadServiceBase
     {
         _config = config.Value;
         _config.Validate();
+        UriBuilder uriBuilder = new(_config.Url);
+        uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
+            ? $"{uriBuilder.Path.TrimEnd('/')}/rpc"
+            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/')}/rpc";
         _client = new(
             httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
-            new Uri(_config.Url, "/transmission/rpc").ToString(),
+            uriBuilder.Uri.ToString(),
             login: _config.Username,
             password: _config.Password
         );
