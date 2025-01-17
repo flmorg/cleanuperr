@@ -214,15 +214,18 @@ services:
       # OR
       # - DOWNLOAD_CLIENT=qBittorrent
       # - QBITTORRENT__URL=http://localhost:8080
+      # - QBITTORRENT__URL_BASE=myCustomPath
       # - QBITTORRENT__USERNAME=user
       # - QBITTORRENT__PASSWORD=pass
       # OR
       # - DOWNLOAD_CLIENT=deluge
+      # - DELUGE__URL_BASE=myCustomPath
       # - DELUGE__URL=http://localhost:8112
       # - DELUGE__PASSWORD=testing
       # OR
       # - DOWNLOAD_CLIENT=transmission
       # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__URL_BASE=myCustomPath
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
 
