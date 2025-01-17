@@ -33,6 +33,7 @@ public sealed class DelugeClient
     public DelugeClient(IOptions<DelugeConfig> config, IHttpClientFactory httpClientFactory)
     {
         _config = config.Value;
+        _config.Validate();
         _httpClient = httpClientFactory.CreateClient(nameof(DelugeService));
     }
     
@@ -121,8 +122,12 @@ public sealed class DelugeClient
     {
         StringContent content = new StringContent(json);
         content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
-
-        var responseMessage = await _httpClient.PostAsync(new Uri(_config.Url, "/json"), content);
+        
+        UriBuilder uriBuilder = new(_config.Url);
+        uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
+            ? $"{uriBuilder.Path.TrimEnd('/')}/json"
+            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/')}/json";
+        var responseMessage = await _httpClient.PostAsync(uriBuilder.Uri, content);
         responseMessage.EnsureSuccessStatusCode();
 
         var responseJson = await responseMessage.Content.ReadAsStringAsync();
