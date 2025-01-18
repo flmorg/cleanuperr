@@ -61,11 +61,6 @@ public sealed class QueueCleaner : GenericHandler
                 
                 QueueRecord record = group.First();
                 
-                if (record.Protocol is not "torrent")
-                {
-                    continue;
-                }
-
                 if (!arrClient.IsRecordValid(record))
                 {
                     continue;
@@ -73,7 +68,7 @@ public sealed class QueueCleaner : GenericHandler
 
                 StalledResult stalledCheckResult = new();
 
-                if (_downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None)
+                if (_downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None && record.Protocol is "torrent")
                 {
                     // stalled download check
                     stalledCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId);
