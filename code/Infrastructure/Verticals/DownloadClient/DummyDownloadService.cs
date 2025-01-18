@@ -11,7 +11,7 @@ namespace Infrastructure.Verticals.DownloadClient;
 
 public sealed class DummyDownloadService : DownloadServiceBase
 {
-    public DummyDownloadService(ILogger<DownloadServiceBase> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, FilenameEvaluator filenameEvaluator, Striker striker) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
+    public DummyDownloadService(ILogger<DownloadServiceBase> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, FilenameEvaluator filenameEvaluator, Striker striker) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
     {
     }
 

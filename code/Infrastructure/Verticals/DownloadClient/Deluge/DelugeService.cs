@@ -20,9 +20,10 @@ public sealed class DelugeService : DownloadServiceBase
         IOptions<DelugeConfig> config,
         IHttpClientFactory httpClientFactory,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
+        IOptions<ContentBlockerConfig> contentBlockerConfig,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
     {
         config.Value.Validate();
         _client = new (config, httpClientFactory);
@@ -92,7 +93,7 @@ public sealed class DelugeService : DownloadServiceBase
             return false;
         }
         
-        if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
+        if (_contentBlockerConfig.IgnorePrivate && status.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", status.Name);

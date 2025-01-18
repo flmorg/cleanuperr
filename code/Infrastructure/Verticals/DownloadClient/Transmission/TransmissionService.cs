@@ -25,9 +25,10 @@ public sealed class TransmissionService : DownloadServiceBase
         ILogger<TransmissionService> logger,
         IOptions<TransmissionConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
+        IOptions<ContentBlockerConfig> contentBlockerConfig,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -95,7 +96,7 @@ public sealed class TransmissionService : DownloadServiceBase
             return false;
         }
         
-        if (_queueCleanerConfig.StalledIgnorePrivate && (torrent.IsPrivate ?? false))
+        if (_contentBlockerConfig.IgnorePrivate && (torrent.IsPrivate ?? false))
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);

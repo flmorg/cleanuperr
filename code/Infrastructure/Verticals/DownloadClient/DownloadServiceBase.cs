@@ -14,18 +14,21 @@ public abstract class DownloadServiceBase : IDownloadService
 {
     protected readonly ILogger<DownloadServiceBase> _logger;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
+    protected readonly ContentBlockerConfig _contentBlockerConfig;
     protected readonly FilenameEvaluator _filenameEvaluator;
     protected readonly Striker _striker;
     
     protected DownloadServiceBase(
         ILogger<DownloadServiceBase> logger,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
+        IOptions<ContentBlockerConfig> contentBlockerConfig,
         FilenameEvaluator filenameEvaluator,
         Striker striker
     )
     {
         _logger = logger;
         _queueCleanerConfig = queueCleanerConfig.Value;
+        _contentBlockerConfig = contentBlockerConfig.Value;
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
     }

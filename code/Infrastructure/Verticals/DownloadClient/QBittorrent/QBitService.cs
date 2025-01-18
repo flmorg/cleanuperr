@@ -22,9 +22,10 @@ public sealed class QBitService : DownloadServiceBase
         IHttpClientFactory httpClientFactory,
         IOptions<QBitConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
+        IOptions<ContentBlockerConfig> contentBlockerConfig,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -116,7 +117,7 @@ public sealed class QBitService : DownloadServiceBase
                          bool.TryParse(dictValue?.ToString(), out bool boolValue)
                          && boolValue;
 
-        if (_queueCleanerConfig.StalledIgnorePrivate && isPrivate)
+        if (_contentBlockerConfig.IgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
