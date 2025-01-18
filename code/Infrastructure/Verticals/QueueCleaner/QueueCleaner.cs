@@ -1,5 +1,6 @@
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
@@ -14,8 +15,11 @@ namespace Infrastructure.Verticals.QueueCleaner;
 
 public sealed class QueueCleaner : GenericHandler
 {
+    private readonly QueueCleanerConfig _config;
+    
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
+        IOptions<QueueCleanerConfig> config,
         IOptions<DownloadClientConfig> downloadClientConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
@@ -32,6 +36,7 @@ public sealed class QueueCleaner : GenericHandler
         arrArrQueueIterator, downloadServiceFactory
     )
     {
+        _config = config.Value;
     }
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
@@ -66,23 +71,41 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
 
-                RemoveResult removeResult = new();
+                StalledResult stalledCheckResult = new();
 
                 if (_downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None)
                 {
-                    removeResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId);
+                    // stalled download check
+                    stalledCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId);
                 }
                 
-                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(record, removeResult.IsPrivate);
+                // failed import check
+                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(record, stalledCheckResult.IsPrivate);
 
-                if (!shouldRemoveFromArr && !removeResult.ShouldRemove)
+                if (!shouldRemoveFromArr && !stalledCheckResult.ShouldRemove)
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;
                 }
                 
                 itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
-                await arrClient.DeleteQueueItemAsync(instance, record);
+
+                bool removeFromClient = true;
+
+                if (stalledCheckResult.IsPrivate)
+                {
+                    if (stalledCheckResult.ShouldRemove && !_config.StalledDeletePrivate)
+                    {
+                        removeFromClient = false;
+                    }
+
+                    if (shouldRemoveFromArr && !_config.ImportFailedDeletePrivate)
+                    {
+                        removeFromClient = false;
+                    }
+                }
+                
+                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
             }
         });
         

@@ -101,9 +101,9 @@ public abstract class ArrClient
         return false;
     }
     
-    public virtual async Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record)
+    public virtual async Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient)
     {
-        Uri uri = new(arrInstance.Url, GetQueueDeleteUrlPath(record.Id));
+        Uri uri = new(arrInstance.Url, GetQueueDeleteUrlPath(record.Id, removeFromClient));
         
         using HttpRequestMessage request = new(HttpMethod.Delete, uri);
         SetApiKey(request, arrInstance.ApiKey);
@@ -113,8 +113,14 @@ public abstract class ArrClient
         try
         {
             response.EnsureSuccessStatusCode();
-            
-            _logger.LogInformation("queue item deleted | {url} | {title}", arrInstance.Url, record.Title);
+
+            _logger.LogInformation(
+                removeFromClient
+                    ? "queue item deleted | {url} | {title}"
+                    : "queue item removed from arr | {url} | {title}",
+                arrInstance.Url,
+                record.Title
+            );
         }
         catch
         {
@@ -144,7 +150,7 @@ public abstract class ArrClient
     
     protected abstract string GetQueueUrlPath(int page);
 
-    protected abstract string GetQueueDeleteUrlPath(long recordId);
+    protected abstract string GetQueueDeleteUrlPath(long recordId, bool removeFromClient);
     
     protected virtual void SetApiKey(HttpRequestMessage request, string apiKey)
     {

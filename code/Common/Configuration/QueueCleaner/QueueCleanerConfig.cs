@@ -16,6 +16,9 @@ public sealed record QueueCleanerConfig : IJobConfig
     [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PRIVATE")]
     public bool ImportFailedIgnorePrivate { get; init; }
     
+    [ConfigurationKeyName("IMPORT_FAILED_DELETE_PRIVATE")]
+    public bool ImportFailedDeletePrivate { get; init; }
+    
     [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PATTERNS")]
     public List<string>? ImportFailedIgnorePatterns { get; init; }
     
@@ -24,6 +27,9 @@ public sealed record QueueCleanerConfig : IJobConfig
     
     [ConfigurationKeyName("STALLED_IGNORE_PRIVATE")]
     public bool StalledIgnorePrivate { get; init; }
+    
+    [ConfigurationKeyName("STALLED_DELETE_PRIVATE")]
+    public bool StalledDeletePrivate { get; init; }
 
     public void Validate()
     {

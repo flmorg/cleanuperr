@@ -37,10 +37,10 @@ public abstract class DownloadServiceBase : IDownloadService
 
     public abstract Task LoginAsync();
 
-    public abstract Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash);
+    public abstract Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash);
 
     /// <inheritdoc/>
-    public abstract Task<bool> BlockUnwantedFilesAsync(
+    public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(
         string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,

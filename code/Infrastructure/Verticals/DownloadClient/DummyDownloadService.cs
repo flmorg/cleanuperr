@@ -24,12 +24,12 @@ public sealed class DummyDownloadService : DownloadServiceBase
         return Task.CompletedTask;
     }
 
-    public override Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash)
+    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash)
     {
         throw new NotImplementedException();
     }
 
-    public override Task<bool> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes)
+    public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes)
     {
         throw new NotImplementedException();
     }

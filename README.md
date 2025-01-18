@@ -106,13 +106,16 @@ services:
       - QUEUECLEANER__RUNSEQUENTIALLY=true
       - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
       - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
+      - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
       # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
       # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
       - QUEUECLEANER__STALLED_MAX_STRIKES=5
       - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
+      - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
 
       - CONTENTBLOCKER__ENABLED=true
-      - CONTENTBLOCKER__IGNORE_PRIVATE=true
+      - CONTENTBLOCKER__IGNORE_PRIVATE=false
+      - CONTENTBLOCKER__DELETE_PRIVATE=false
 
       - DOWNLOAD_CLIENT=none
       # OR
@@ -166,24 +169,27 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| LOGGING__LOGLEVEL | No | Can be `Verbose`, `Debug`, `Information`, `Warning`, `Error` or `Fatal` | `Information` |
-| LOGGING__FILE__ENABLED | No | Enable or disable logging to file | false |
-| LOGGING__FILE__PATH | No | Directory where to save the log files | empty |
-| LOGGING__ENHANCED | No | Enhance logs whenever possible<br>A more detailed description is provided [here](variables.md#LOGGING__ENHANCED) | true |
+| LOGGING__LOGLEVEL | No | Can be `Verbose`, `Debug`, `Information`, `Warning`, `Error` or `Fatal`. | `Information` |
+| LOGGING__FILE__ENABLED | No | Enable or disable logging to file. | false |
+| LOGGING__FILE__PATH | No | Directory where to save the log files. | empty |
+| LOGGING__ENHANCED | No | Enhance logs whenever possible.<br>A more detailed description is provided. [here](variables.md#LOGGING__ENHANCED) | true |
 |||||
-| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 6h interval<br>**Is ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`** | 0 0/5 * * * ? |
-| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html)<br>Can be a max of 6h interval | 0 0/5 * * * ? |
+| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval.<br>- **Is ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`**. | 0 0/5 * * * ? |
+| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval. | 0 0/5 * * * ? |
 |||||
-| QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner | true |
-| QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process | true |
-| QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES | No | After how many strikes should a failed import be removed<br>0 means never | 0 |
-| QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE | No | Whether to ignore failed imports from private trackers | false |
-| QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0 | No | First pattern to look for when an import is failed<br>If the specified message pattern is found, the item is skipped | empty |
-| QUEUECLEANER__STALLED_MAX_STRIKES | No | After how many strikes should a stalled download be removed<br>0 means never | 0 |
-| QUEUECLEANER__STALLED_IGNORE_PRIVATE | No | Whether to ignore stalled downloads from private trackers | false |
+| QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner. | true |
+| QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process. | true |
+| QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES | No | - After how many strikes should a failed import be removed.<br>- 0 means never. | 0 |
+| QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE | No | Whether to ignore failed imports from private trackers. | false |
+| QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE | No | - Whether to delete failed imports from the download client.<br>- Does not have any effect if `QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
+| QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0 | No | - First pattern to look for when an import is failed.<br>- If the specified message pattern is found, the item is skipped. | empty |
+| QUEUECLEANER__STALLED_MAX_STRIKES | No | - After how many strikes should a stalled download be removed.<br>- 0 means never. | 0 |
+| QUEUECLEANER__STALLED_IGNORE_PRIVATE | No | Whether to ignore stalled downloads from private trackers. | false |
+| QUEUECLEANER__STALLED_DELETE_PRIVATE | No | - Whether to delete stalled downloads from the download client.<br>- Does not have any effect if `QUEUECLEANER__STALLED_IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
 |||||
-| CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker | false |
-| CONTENTBLOCKER__IGNORE_PRIVATE | No | Whether to ignore downloads from private trackers | false |
+| CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker. | false |
+| CONTENTBLOCKER__IGNORE_PRIVATE | No | Whether to ignore downloads from private trackers. | false |
+| CONTENTBLOCKER__DELETE_PRIVATE | No | - Whether to delete items that have all files blocked from the download client.<br>- Does not have any effect if `CONTENTBLOCKER__IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
 </details>
 
 ### Download client variables

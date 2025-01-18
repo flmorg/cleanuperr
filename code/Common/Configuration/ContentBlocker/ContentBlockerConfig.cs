@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.ContentBlocker;
 
@@ -10,6 +10,9 @@ public sealed record ContentBlockerConfig : IJobConfig
     
     [ConfigurationKeyName("IGNORE_PRIVATE")]
     public bool IgnorePrivate { get; init; }
+    
+    [ConfigurationKeyName("DELETE_PRIVATE")]
+    public bool DeletePrivate { get; init; }
     
     public void Validate()
     {

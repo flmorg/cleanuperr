@@ -12,7 +12,7 @@ public interface IDownloadService : IDisposable
     /// Checks whether the download should be removed from the *arr queue.
     /// </summary>
     /// <param name="hash">The download hash.</param>
-    public Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash);
+    public Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash);
 
     /// <summary>
     /// Blocks unwanted files from being fully downloaded.
@@ -22,7 +22,7 @@ public interface IDownloadService : IDisposable
     /// <param name="patterns">The patterns to test the files against.</param>
     /// <param name="regexes">The regexes to test the files against.</param>
     /// <returns>True if all files have been blocked; otherwise false.</returns>
-    public Task<bool> BlockUnwantedFilesAsync(
+    public Task<BlockFilesResult> BlockUnwantedFilesAsync(
         string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,

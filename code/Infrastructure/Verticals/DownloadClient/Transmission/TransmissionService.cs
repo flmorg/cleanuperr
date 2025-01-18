@@ -46,9 +46,9 @@ public sealed class TransmissionService : DownloadServiceBase
     }
 
     /// <inheritdoc/>
-    public override async Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash)
     {
-        RemoveResult result = new();
+        StalledResult result = new();
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
         if (torrent is null)
@@ -82,7 +82,7 @@ public sealed class TransmissionService : DownloadServiceBase
     }
 
     /// <inheritdoc/>
-    public override async Task<bool> BlockUnwantedFilesAsync(
+    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(
         string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
@@ -90,17 +90,21 @@ public sealed class TransmissionService : DownloadServiceBase
     )
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
+        BlockFilesResult result = new();
 
         if (torrent?.FileStats is null || torrent.Files is null)
         {
-            return false;
+            return result;
         }
+
+        bool isPrivate = torrent.IsPrivate ?? false;
+        result.IsPrivate = isPrivate;
         
-        if (_contentBlockerConfig.IgnorePrivate && (torrent.IsPrivate ?? false))
+        if (_contentBlockerConfig.IgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
-            return false;
+            return result;
         }
 
         List<long> unwantedFiles = [];
@@ -134,13 +138,15 @@ public sealed class TransmissionService : DownloadServiceBase
 
         if (unwantedFiles.Count is 0)
         {
-            return false;
+            return result;
         }
 
         if (totalUnwantedFiles == totalFiles)
         {
             // Skip marking files as unwanted. The download will be removed completely.
-            return true;
+            result.ShouldRemove = true;
+            
+            return result;
         }
         
         _logger.LogDebug("changing priorities | torrent {hash}", hash);
@@ -151,7 +157,7 @@ public sealed class TransmissionService : DownloadServiceBase
             FilesUnwanted = unwantedFiles.ToArray(),
         });
 
-        return false;
+        return result;
     }
 
     public override async Task Delete(string hash)

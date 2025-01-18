@@ -43,9 +43,9 @@ public sealed class QBitService : DownloadServiceBase
     }
 
     /// <inheritdoc/>
-    public override async Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash)
     {
-        RemoveResult result = new();
+        StalledResult result = new();
         TorrentInfo? torrent = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();
 
@@ -89,7 +89,7 @@ public sealed class QBitService : DownloadServiceBase
     }
 
     /// <inheritdoc/>
-    public override async Task<bool> BlockUnwantedFilesAsync(
+    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(
         string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
@@ -98,11 +98,12 @@ public sealed class QBitService : DownloadServiceBase
     {
         TorrentInfo? torrent = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();
+        BlockFilesResult result = new();
 
         if (torrent is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
-            return false;
+            return result;
         }
         
         TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(hash);
@@ -110,25 +111,27 @@ public sealed class QBitService : DownloadServiceBase
         if (torrentProperties is null)
         {
             _logger.LogDebug("failed to find torrent properties {hash} in the download client", hash);
-            return false;
+            return result;
         }
 
         bool isPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
                          bool.TryParse(dictValue?.ToString(), out bool boolValue)
                          && boolValue;
 
+        result.IsPrivate = isPrivate;
+
         if (_contentBlockerConfig.IgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
-            return false;
+            return result;
         }
         
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
         if (files is null)
         {
-            return false;
+            return result;
         }
 
         List<int> unwantedFiles = [];
@@ -162,13 +165,15 @@ public sealed class QBitService : DownloadServiceBase
 
         if (unwantedFiles.Count is 0)
         {
-            return false;
+            return result;
         }
         
         if (totalUnwantedFiles == totalFiles)
         {
             // Skip marking files as unwanted. The download will be removed completely.
-            return true;
+            result.ShouldRemove = true;
+            
+            return result;
         }
 
         foreach (int fileIndex in unwantedFiles)
@@ -176,7 +181,7 @@ public sealed class QBitService : DownloadServiceBase
             await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
         }
         
-        return false;
+        return result;
     }
 
     /// <inheritdoc/>

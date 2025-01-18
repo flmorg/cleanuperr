@@ -17,10 +17,12 @@ namespace Infrastructure.Verticals.ContentBlocker;
 
 public sealed class ContentBlocker : GenericHandler
 {
+    private readonly ContentBlockerConfig _config;
     private readonly BlocklistProvider _blocklistProvider;
     
     public ContentBlocker(
         ILogger<ContentBlocker> logger,
+        IOptions<ContentBlockerConfig> config,
         IOptions<DownloadClientConfig> downloadClientConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
@@ -38,6 +40,7 @@ public sealed class ContentBlocker : GenericHandler
         arrArrQueueIterator, downloadServiceFactory
     )
     {
+        _config = config.Value;
         _blocklistProvider = blocklistProvider;
     }
 
@@ -96,7 +99,10 @@ public sealed class ContentBlocker : GenericHandler
                 
                 _logger.LogDebug("searching unwanted files for {title}", record.Title);
 
-                if (!await _downloadService.BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes))
+                BlockFilesResult result = await _downloadService
+                    .BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes);
+                
+                if (!result.ShouldRemove)
                 {
                     continue;
                 }
@@ -104,7 +110,15 @@ public sealed class ContentBlocker : GenericHandler
                 _logger.LogDebug("all files are marked as unwanted | {hash}", record.Title);
                 
                 itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
-                await arrClient.DeleteQueueItemAsync(instance, record);
+
+                bool removeFromClient = true;
+                
+                if (result.IsPrivate && !_config.DeletePrivate)
+                {
+                    removeFromClient = false;
+                }
+                
+                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
             }
         });
         

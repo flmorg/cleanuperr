@@ -35,12 +35,12 @@ public sealed class DelugeService : DownloadServiceBase
     }
 
     /// <inheritdoc/>
-    public override async Task<RemoveResult> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash)
     {
         hash = hash.ToLowerInvariant();
         
         DelugeContents? contents = null;
-        RemoveResult result = new();
+        StalledResult result = new();
 
         TorrentStatus? status = await GetTorrentStatus(hash);
         
@@ -76,7 +76,7 @@ public sealed class DelugeService : DownloadServiceBase
     }
 
     /// <inheritdoc/>
-    public override async Task<bool> BlockUnwantedFilesAsync(
+    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(
         string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
@@ -86,18 +86,21 @@ public sealed class DelugeService : DownloadServiceBase
         hash = hash.ToLowerInvariant();
 
         TorrentStatus? status = await GetTorrentStatus(hash);
+        BlockFilesResult result = new();
         
         if (status?.Hash is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
-            return false;
+            return result;
         }
+
+        result.IsPrivate = status.Private;
         
         if (_contentBlockerConfig.IgnorePrivate && status.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", status.Name);
-            return false;
+            return result;
         }
         
         DelugeContents? contents = null;
@@ -113,7 +116,7 @@ public sealed class DelugeService : DownloadServiceBase
 
         if (contents is null)
         {
-            return false;
+            return result;
         }
         
         Dictionary<int, int> priorities = [];
@@ -144,7 +147,7 @@ public sealed class DelugeService : DownloadServiceBase
 
         if (!hasPriorityUpdates)
         {
-            return false;
+            return result;
         }
         
         _logger.LogDebug("changing priorities | torrent {hash}", hash);
@@ -157,12 +160,14 @@ public sealed class DelugeService : DownloadServiceBase
         if (totalUnwantedFiles == totalFiles)
         {
             // Skip marking files as unwanted. The download will be removed completely.
-            return true;
+            result.ShouldRemove = true;
+            
+            return result;
         }
 
         await _client.ChangeFilesPriority(hash, sortedPriorities);
 
-        return false;
+        return result;
     }
     
     /// <inheritdoc/>

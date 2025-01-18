@@ -29,9 +29,13 @@ public sealed class LidarrClient : ArrClient
         return $"/api/v1/queue?page={page}&pageSize=200&includeUnknownArtistItems=true&includeArtist=true&includeAlbum=true";
     }
 
-    protected override string GetQueueDeleteUrlPath(long recordId)
+    protected override string GetQueueDeleteUrlPath(long recordId, bool removeFromClient)
     {
-        return $"/api/v1/queue/{recordId}?removeFromClient=true&blocklist=true&skipRedownload=true&changeCategory=false";
+        string path = $"/api/v1/queue/{recordId}?blocklist=true&skipRedownload=true&changeCategory=false";
+
+        path += removeFromClient ? "&removeFromClient=true" : "&removeFromClient=false";
+
+        return path;
     }
 
     public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
