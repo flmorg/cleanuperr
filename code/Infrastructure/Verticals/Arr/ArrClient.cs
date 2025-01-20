@@ -1,4 +1,4 @@
-﻿using Common.Configuration.Arr;
+using Common.Configuration.Arr;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
@@ -81,8 +81,10 @@ public abstract class ArrClient
             .Equals("importBlocked", StringComparison.InvariantCultureIgnoreCase);
         bool isImportPending() => record.TrackedDownloadState
             .Equals("importPending", StringComparison.InvariantCultureIgnoreCase);
+        bool isImportFailed() => record.TrackedDownloadState
+            .Equals("importFailed", StringComparison.InvariantCultureIgnoreCase);
         
-        if (hasWarn() && (isImportBlocked() || isImportPending()))
+        if (hasWarn() && (isImportBlocked() || isImportPending() || isImportFailed()))
         {
             if (HasIgnoredPatterns(record))
             {
