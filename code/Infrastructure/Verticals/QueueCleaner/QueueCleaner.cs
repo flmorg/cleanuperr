@@ -75,7 +75,7 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 // failed import check
-                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(record, stalledCheckResult.IsPrivate);
+                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(instanceType, record, stalledCheckResult.IsPrivate);
 
                 if (!shouldRemoveFromArr && !stalledCheckResult.ShouldRemove)
                 {

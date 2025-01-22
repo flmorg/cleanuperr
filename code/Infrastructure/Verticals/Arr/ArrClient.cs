@@ -66,7 +66,7 @@ public abstract class ArrClient
         return queueResponse;
     }
 
-    public virtual bool ShouldRemoveFromQueue(QueueRecord record, bool isPrivateDownload)
+    public virtual bool ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload)
     {
         if (_queueCleanerConfig.ImportFailedIgnorePrivate && isPrivateDownload)
         {
@@ -83,8 +83,12 @@ public abstract class ArrClient
             .Equals("importPending", StringComparison.InvariantCultureIgnoreCase);
         bool isImportFailed() => record.TrackedDownloadState
             .Equals("importFailed", StringComparison.InvariantCultureIgnoreCase);
+        bool isFailedLidarr() => instanceType is InstanceType.Lidarr &&
+                                 (record.Status.Equals("failed", StringComparison.InvariantCultureIgnoreCase) ||
+                                  record.Status.Equals("completed", StringComparison.InvariantCultureIgnoreCase)) &&
+                                 hasWarn();
         
-        if (hasWarn() && (isImportBlocked() || isImportPending() || isImportFailed()))
+        if (hasWarn() && (isImportBlocked() || isImportPending() || isImportFailed()) || isFailedLidarr())
         {
             if (HasIgnoredPatterns(record))
             {
