@@ -110,6 +110,7 @@ services:
       # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
       # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
       - QUEUECLEANER__STALLED_MAX_STRIKES=5
+      - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=false
       - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
       - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
 
@@ -184,6 +185,7 @@ services:
 | QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE | No | - Whether to delete failed imports of private downloads from the download client.<br>- Does not have any effect if `QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
 | QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0 | No | - First pattern to look for when an import is failed.<br>- If the specified message pattern is found, the item is skipped. | empty |
 | QUEUECLEANER__STALLED_MAX_STRIKES | No | - After how many strikes should a stalled download be removed.<br>- 0 means never. | 0 |
+| QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS | No | Removes strikes if any download progress was made since last checked. | false |
 | QUEUECLEANER__STALLED_IGNORE_PRIVATE | No | Whether to ignore stalled downloads from private trackers. | false |
 | QUEUECLEANER__STALLED_DELETE_PRIVATE | No | - Whether to delete stalled private downloads from the download client.<br>- Does not have any effect if `QUEUECLEANER__STALLED_IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
 |||||

@@ -1,4 +1,6 @@
-﻿namespace Domain.Models.Deluge.Response;
+﻿using Newtonsoft.Json;
+
+namespace Domain.Models.Deluge.Response;
 
 public sealed record TorrentStatus
 {
@@ -11,4 +13,7 @@ public sealed record TorrentStatus
     public ulong Eta { get; init; }
     
     public bool Private { get; init; }
+    
+    [JsonProperty("total_done")]
+    public long TotalDone { get; init; }
 }

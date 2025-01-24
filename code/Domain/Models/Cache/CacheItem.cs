@@ -1,0 +1,9 @@
+﻿namespace Domain.Models.Cache;
+
+public sealed record CacheItem
+{
+    /// <summary>
+    /// The amount of bytes that have been downloaded.
+    /// </summary>
+    public long Downloaded { get; set; }
+}

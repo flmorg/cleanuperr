@@ -4,6 +4,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,7 +12,7 @@ namespace Infrastructure.Verticals.DownloadClient;
 
 public sealed class DummyDownloadService : DownloadServiceBase
 {
-    public DummyDownloadService(ILogger<DownloadServiceBase> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, FilenameEvaluator filenameEvaluator, Striker striker) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
+    public DummyDownloadService(ILogger<DownloadServiceBase> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IMemoryCache cache, FilenameEvaluator filenameEvaluator, Striker striker) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
     {
     }
 

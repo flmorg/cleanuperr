@@ -6,6 +6,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -21,9 +22,10 @@ public sealed class DelugeService : DownloadServiceBase
         IHttpClientFactory httpClientFactory,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
     {
         config.Value.Validate();
         _client = new (config, httpClientFactory);
@@ -201,6 +203,8 @@ public sealed class DelugeService : DownloadServiceBase
         {
             return false;
         }
+        
+        ResetStrikesOnProgress(status.Hash!, status.TotalDone);
 
         return StrikeAndCheckLimit(status.Hash!, status.Name!);
     }
@@ -210,7 +214,7 @@ public sealed class DelugeService : DownloadServiceBase
         return await _client.SendRequest<TorrentStatus?>(
             "web.get_torrent_status",
             hash,
-            new[] { "hash", "state", "name", "eta", "private" }
+            new[] { "hash", "state", "name", "eta", "private", "total_done" }
         );
     }
     

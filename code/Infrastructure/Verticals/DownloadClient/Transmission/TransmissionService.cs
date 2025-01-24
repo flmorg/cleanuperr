@@ -6,6 +6,7 @@ using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Transmission.API.RPC;
@@ -26,9 +27,10 @@ public sealed class TransmissionService : DownloadServiceBase
         IOptions<TransmissionConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -200,6 +202,8 @@ public sealed class TransmissionService : DownloadServiceBase
         {
             return false;
         }
+        
+        ResetStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
 
         return StrikeAndCheckLimit(torrent.HashString!, torrent.Name!);
     }
@@ -219,7 +223,8 @@ public sealed class TransmissionService : DownloadServiceBase
                 TorrentFields.ETA,
                 TorrentFields.NAME,
                 TorrentFields.STATUS,
-                TorrentFields.IS_PRIVATE
+                TorrentFields.IS_PRIVATE,
+                TorrentFields.DOWNLOADED_EVER
             ];
             
             // refresh cache

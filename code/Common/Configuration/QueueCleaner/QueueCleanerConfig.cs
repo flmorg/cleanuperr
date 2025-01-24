@@ -25,6 +25,9 @@ public sealed record QueueCleanerConfig : IJobConfig
     [ConfigurationKeyName("STALLED_MAX_STRIKES")]
     public ushort StalledMaxStrikes { get; init; }
     
+    [ConfigurationKeyName("STALLED_RESET_STRIKES_ON_PROGRESS")]
+    public bool StalledResetStrikesOnProgress { get; init; }
+    
     [ConfigurationKeyName("STALLED_IGNORE_PRIVATE")]
     public bool StalledIgnorePrivate { get; init; }
     

@@ -1,5 +1,6 @@
 ﻿using Common.Helpers;
 using Domain.Enums;
+using Infrastructure.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -26,7 +27,7 @@ public class Striker
             return false;
         }
         
-        string key = $"{strikeType.ToString()}_{hash}";
+        string key = CacheKeys.Strike(strikeType, hash);
         
         if (!_cache.TryGetValue(key, out int? strikeCount))
         {

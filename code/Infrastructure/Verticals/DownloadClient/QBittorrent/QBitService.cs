@@ -6,6 +6,7 @@ using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QBittorrent.Client;
@@ -23,9 +24,10 @@ public sealed class QBitService : DownloadServiceBase
         IOptions<QBitConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -215,6 +217,8 @@ public sealed class QBitService : DownloadServiceBase
             // ignore other states
             return false;
         }
+
+        ResetStrikesOnProgress(torrent.Hash, torrent.Downloaded ?? 0);
 
         return StrikeAndCheckLimit(torrent.Hash, torrent.Name);
     }

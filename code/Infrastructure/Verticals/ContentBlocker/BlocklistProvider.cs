@@ -5,6 +5,7 @@ using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Helpers;
 using Domain.Enums;
+using Infrastructure.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -20,10 +21,6 @@ public sealed class BlocklistProvider
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
     private bool _initialized;
-
-    private const string Type = "type";
-    private const string Patterns = "patterns";
-    private const string Regexes = "regexes";
 
     public BlocklistProvider(
         ILogger<BlocklistProvider> logger,
@@ -67,21 +64,21 @@ public sealed class BlocklistProvider
 
     public BlocklistType GetBlocklistType(InstanceType instanceType)
     {
-        _cache.TryGetValue($"{instanceType.ToString()}_{Type}", out BlocklistType? blocklistType);
+        _cache.TryGetValue(CacheKeys.BlocklistType(instanceType), out BlocklistType? blocklistType);
 
         return blocklistType ?? BlocklistType.Blacklist;
     }
     
     public ConcurrentBag<string> GetPatterns(InstanceType instanceType)
     {
-        _cache.TryGetValue($"{instanceType.ToString()}_{Patterns}", out ConcurrentBag<string>? patterns);
+        _cache.TryGetValue(CacheKeys.BlocklistPatterns(instanceType), out ConcurrentBag<string>? patterns);
 
         return patterns ?? [];
     }
 
     public ConcurrentBag<Regex> GetRegexes(InstanceType instanceType)
     {
-        _cache.TryGetValue($"{instanceType.ToString()}_{Regexes}", out ConcurrentBag<Regex>? regexes);
+        _cache.TryGetValue(CacheKeys.BlocklistRegexes(instanceType), out ConcurrentBag<Regex>? regexes);
         
         return regexes ?? [];
     }
@@ -124,9 +121,9 @@ public sealed class BlocklistProvider
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startTime);
 
-        _cache.Set($"{instanceType.ToString()}_{Type}", blocklistType);
-        _cache.Set($"{instanceType.ToString()}_{Patterns}", patterns);
-        _cache.Set($"{instanceType.ToString()}_{Regexes}", regexes);
+        _cache.Set(CacheKeys.BlocklistType(instanceType), blocklistType);
+        _cache.Set(CacheKeys.BlocklistPatterns(instanceType), patterns);
+        _cache.Set(CacheKeys.BlocklistRegexes(instanceType), regexes);
         
         _logger.LogDebug("loaded {count} patterns", patterns.Count);
         _logger.LogDebug("loaded {count} regexes", regexes.Count);
