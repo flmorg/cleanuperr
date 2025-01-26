@@ -124,15 +124,18 @@ services:
       # OR
       # - DOWNLOAD_CLIENT=qBittorrent
       # - QBITTORRENT__URL=http://localhost:8080
+      # - QBITTORRENT__URL_BASE=myCustomPath
       # - QBITTORRENT__USERNAME=user
       # - QBITTORRENT__PASSWORD=pass
       # OR
       # - DOWNLOAD_CLIENT=deluge
+      # - DELUGE__URL_BASE=myCustomPath
       # - DELUGE__URL=http://localhost:8112
       # - DELUGE__PASSWORD=testing
       # OR
       # - DOWNLOAD_CLIENT=transmission
       # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__URL_BASE=myCustomPath
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
 
@@ -203,14 +206,18 @@ services:
 | Variable | Required | Description | Default value |
 |---|---|---|---|
 | DOWNLOAD_CLIENT | No | Download client that is used by *arrs<br>Can be `qbittorrent`, `deluge`, `transmission` or `none` | `none` |
+| DOWNLOAD_CLIENT_URL_BASE | No | desc | empty |
 | QBITTORRENT__URL | No | qBittorrent instance url | http://localhost:8112 |
+| QBITTORRENT__URL_BASE | No | Adds a prefix to the qBittorrent url, such as http://[QBITTORRENT__URL]/[QBITTORRENT__URL_BASE]/api | empty |
 | QBITTORRENT__USERNAME | No | qBittorrent user | empty |
 | QBITTORRENT__PASSWORD | No | qBittorrent password | empty |
 |||||
 | DELUGE__URL | No | Deluge instance url | http://localhost:8080 |
+| DELUGE__URL_BASE | No | Adds a prefix to the deluge json url, see http://[DELUGE__URL]/[DELUGE__URL_BASE]/json | empty |
 | DELUGE__PASSWORD | No | Deluge password | empty |
 |||||
 | TRANSMISSION__URL | No | Transmission instance url | http://localhost:9091 |
+| TRANSMISSION__URL_BASE | No | Adds a prefix to the Transmission rpc url, eg http://[TRANSMISSION__URL]/[TRANSMISSION__URL_BASE]/rpc | `transmission` |
 | TRANSMISSION__USERNAME | No | Transmission user | empty |
 | TRANSMISSION__PASSWORD | No | Transmission password | empty |
 </details>
