@@ -4,6 +4,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
+using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Caching.Memory;
@@ -76,9 +77,19 @@ public sealed class TransmissionService : DownloadServiceBase
                 shouldRemove = false;
             }
         }
+        
+        if (shouldRemove)
+        {
+            result.DeleteReason = DeleteReason.AllFilesBlocked;
+        }
 
         // remove if all files are unwanted or download is stuck
         result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(torrent);
+
+        if (!shouldRemove && result.ShouldRemove)
+        {
+            result.DeleteReason = DeleteReason.Stalled;
+        }
         
         return result;
     }

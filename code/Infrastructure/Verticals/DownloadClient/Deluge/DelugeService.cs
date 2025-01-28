@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -71,8 +72,18 @@ public sealed class DelugeService : DownloadServiceBase
             }
         });
 
+        if (shouldRemove)
+        {
+            result.DeleteReason = DeleteReason.AllFilesBlocked;
+        }
+        
         result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(status);
         result.IsPrivate = status.Private;
+
+        if (!shouldRemove && result.ShouldRemove)
+        {
+            result.DeleteReason = DeleteReason.Stalled;
+        }
         
         return result;
     }

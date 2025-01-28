@@ -7,13 +7,19 @@ public sealed record QueueRecord
     public long EpisodeId { get; init; }
     public long SeasonNumber { get; init; }
     
+    public QueueSeries? Series { get; init; }
+    
     // Radarr
     public long MovieId { get; init; }
+    
+    public QueueSeries? Movie { get; init; }
     
     // Lidarr
     public long ArtistId { get; init; }
     
     public long AlbumId { get; init; }
+    
+    public QueueAlbum? Album { get; init; }
     
     // common
     public required string Title { get; init; }

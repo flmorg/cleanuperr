@@ -4,6 +4,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
+using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Caching.Memory;
@@ -73,6 +74,7 @@ public sealed class QBitService : DownloadServiceBase
         if (torrent is { CompletionOn: not null, Downloaded: null or 0 })
         {
             result.ShouldRemove = true;
+            result.DeleteReason = DeleteReason.AllFilesBlocked;
             return result;
         }
 
@@ -82,10 +84,16 @@ public sealed class QBitService : DownloadServiceBase
         if (files?.Count is > 0 && files.All(x => x.Priority is TorrentContentPriority.Skip))
         {
             result.ShouldRemove = true;
+            result.DeleteReason = DeleteReason.AllFilesBlocked;
             return result;
         }
 
         result.ShouldRemove = IsItemStuckAndShouldRemove(torrent, result.IsPrivate);
+
+        if (result.ShouldRemove)
+        {
+            result.DeleteReason = result.DeleteReason = DeleteReason.Stalled;
+        }
 
         return result;
     }

@@ -5,6 +5,7 @@ using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -22,6 +23,7 @@ public abstract class GenericHandler : IDisposable
     protected readonly LidarrClient _lidarrClient;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly IDownloadService _downloadService;
+    protected readonly NotificationPublisher _notifier;
 
     protected GenericHandler(
         ILogger<GenericHandler> logger,
@@ -33,7 +35,8 @@ public abstract class GenericHandler : IDisposable
         RadarrClient radarrClient,
         LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
-        DownloadServiceFactory downloadServiceFactory
+        DownloadServiceFactory downloadServiceFactory,
+        NotificationPublisher notifier
     )
     {
         _logger = logger;
@@ -46,6 +49,7 @@ public abstract class GenericHandler : IDisposable
         _lidarrClient = lidarrClient;
         _arrArrQueueIterator = arrArrQueueIterator;
         _downloadService = downloadServiceFactory.CreateDownloadClient();
+        _notifier = notifier;
     }
 
     public virtual async Task ExecuteAsync()

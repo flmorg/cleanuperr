@@ -16,7 +16,8 @@ public static class MainDI
             .AddConfiguration(configuration)
             .AddMemoryCache()
             .AddServices()
-            .AddQuartzServices(configuration);
+            .AddQuartzServices(configuration)
+            .AddNotifications(configuration);
     
     private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
     {

@@ -9,6 +9,7 @@ using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Series = Domain.Models.Sonarr.Series;
 
 namespace Infrastructure.Verticals.Arr;
 
@@ -26,7 +27,7 @@ public sealed class SonarrClient : ArrClient
     
     protected override string GetQueueUrlPath(int page)
     {
-        return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownSeriesItems=true&includeSeries=true";
+        return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownSeriesItems=true&includeSeries=true&includeEpisode=true";
     }
     
     protected override string GetQueueDeleteUrlPath(long recordId, bool removeFromClient)
