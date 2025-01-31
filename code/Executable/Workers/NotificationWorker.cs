@@ -37,16 +37,19 @@ public sealed class NotificationWorker : BackgroundService
                 {
                     case FailedImportStrikeNotification failedMessage:
                         await _notificationService.Notify(failedMessage);
-                        continue;
+                        break;
                     case StalledStrikeNotification stalledMessage:
                         await _notificationService.Notify(stalledMessage);
-                        continue;
+                        break;
                     case QueueItemDeleteNotification queueItemDeleteMessage:
                         await _notificationService.Notify(queueItemDeleteMessage);
-                        continue;
+                        break;
                     default:
                         throw new NotImplementedException();
                 }
+                
+                // prevent spamming
+                await Task.Delay(500, stoppingToken);
             }
             catch (Exception exception)
             {
