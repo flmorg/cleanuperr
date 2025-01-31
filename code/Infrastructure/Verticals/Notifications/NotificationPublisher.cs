@@ -76,7 +76,7 @@ public sealed class NotificationPublisher
             Title = $"Deleting item from queue with reason: {reason}",
             Description = record.Title,
             Image = imageUrl,
-            Fields = [new() { Title = "Remove from download client", Text = removeFromClient.ToString() }]
+            Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
         };
         
         Notify(notification.Adapt<QueueItemDeleteNotification>());

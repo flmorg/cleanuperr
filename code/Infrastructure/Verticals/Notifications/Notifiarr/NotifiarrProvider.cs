@@ -1,3 +1,4 @@
+using Domain.Enums;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
 using Microsoft.Extensions.Options;
@@ -35,7 +36,7 @@ public class NotifiarrProvider : NotificationProvider
 
     private NotifiarrPayload BuildPayload(Notification notification, string color)
     {
-        return new()
+        NotifiarrPayload payload = new()
         {
             Discord = new()
             {
@@ -45,7 +46,12 @@ public class NotifiarrProvider : NotificationProvider
                     Title = notification.Title,
                     Icon = "https://github.com/flmorg/cleanuperr/blob/main/Logo/48.png?raw=true",
                     Description = notification.Description,
-                    Fields = notification.Fields?.Select(x => x.Adapt<Field>()).ToList() ?? []
+                    Fields = new()
+                    {
+                        new() { Title = "Instance type", Text = notification.InstanceType.ToString() },
+                        new() { Title = "Url", Text = notification.InstanceUrl.ToString() },
+                        new() { Title = "Download hash", Text = notification.Hash }
+                    }
                 },
                 Ids = new Ids
                 {
@@ -58,5 +64,9 @@ public class NotifiarrProvider : NotificationProvider
                 }
             }
         };
+        
+        payload.Discord.Text.Fields.AddRange(notification.Fields?.Adapt<List<Field>>() ?? []);
+
+        return payload;
     }
 }
