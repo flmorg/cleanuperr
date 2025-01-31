@@ -228,6 +228,12 @@ services:
       - LIDARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist # TODO
       - LIDARR__INSTANCES__0__URL=http://lidarr:8686
       - LIDARR__INSTANCES__0__APIKEY=7f677cfdc074414397af53dd633860c5
+
+      # - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
+      # - NOTIFIARR__ON_STALLED_STRIKE=true
+      # - NOTIFIARR__ON_QUEUE_ITEM_DELETE=true
+      # - NOTIFIARR__API_KEY=notifiarr_secret
+      # - NOTIFIARR__CHANNEL_ID=discord_channel_id
     volumes:
       - ./data/cleanuperr/logs:/var/logs
     restart: unless-stopped
