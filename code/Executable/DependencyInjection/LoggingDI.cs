@@ -63,6 +63,7 @@ public static class LoggingDI
 
         Log.Logger = logConfig
             .MinimumLevel.Is(level)
+            .MinimumLevel.Override("MassTransit", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
             .MinimumLevel.Override("Microsoft.Extensions.Http", LogEventLevel.Warning)
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
