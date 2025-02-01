@@ -14,43 +14,26 @@ public class NotificationService
         _notificationFactory = notificationFactory;
     }
 
-    public async Task Notify(FailedImportStrikeNotification notification)
+    public async Task Notify(Notification notification)
     {
         foreach (INotificationProvider provider in _notificationFactory.OnFailedImportStrikeEnabled())
         {
             try
             {
-                await provider.OnFailedImportStrike(notification);
-            }
-            catch (Exception exception)
-            {
-                _logger.LogWarning(exception, "failed to send notification | provider {provider}", provider.Name);
-            }
-        }
-    }
-    
-    public async Task Notify(StalledStrikeNotification notification)
-    {
-        foreach (INotificationProvider provider in _notificationFactory.OnStalledStrikeEnabled())
-        {
-            try
-            {
-                await provider.OnStalledStrike(notification);
-            }
-            catch (Exception exception)
-            {
-                _logger.LogWarning(exception, "failed to send notification | provider {provider}", provider.Name);
-            }
-        }
-    }
-    
-    public async Task Notify(QueueItemDeleteNotification notification)
-    {
-        foreach (INotificationProvider provider in _notificationFactory.OnQueueItemDeleteEnabled())
-        {
-            try
-            {
-                await provider.OnQueueItemDelete(notification);
+                switch (notification)
+                {
+                    case FailedImportStrikeNotification failedMessage:
+                        await provider.OnFailedImportStrike(failedMessage);
+                        break;
+                    case StalledStrikeNotification stalledMessage:
+                        await provider.OnStalledStrike(stalledMessage);
+                        break;
+                    case QueueItemDeleteNotification queueItemDeleteMessage:
+                        await provider.OnQueueItemDelete(queueItemDeleteMessage);
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
             }
             catch (Exception exception)
             {
