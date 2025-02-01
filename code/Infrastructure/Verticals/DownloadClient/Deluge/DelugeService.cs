@@ -77,7 +77,7 @@ public sealed class DelugeService : DownloadServiceBase
             result.DeleteReason = DeleteReason.AllFilesBlocked;
         }
         
-        result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(status);
+        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(status);
         result.IsPrivate = status.Private;
 
         if (!shouldRemove && result.ShouldRemove)
@@ -191,7 +191,7 @@ public sealed class DelugeService : DownloadServiceBase
         await _client.DeleteTorrent(hash);
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentStatus status)
+    private async Task<bool> IsItemStuckAndShouldRemove(TorrentStatus status)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
@@ -217,7 +217,7 @@ public sealed class DelugeService : DownloadServiceBase
         
         ResetStrikesOnProgress(status.Hash!, status.TotalDone);
 
-        return StrikeAndCheckLimit(status.Hash!, status.Name!);
+        return await StrikeAndCheckLimit(status.Hash!, status.Name!);
     }
 
     private async Task<TorrentStatus?> GetTorrentStatus(string hash)

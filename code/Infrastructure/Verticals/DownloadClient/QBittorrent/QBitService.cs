@@ -88,7 +88,7 @@ public sealed class QBitService : DownloadServiceBase
             return result;
         }
 
-        result.ShouldRemove = IsItemStuckAndShouldRemove(torrent, result.IsPrivate);
+        result.ShouldRemove = await IsItemStuckAndShouldRemove(torrent, result.IsPrivate);
 
         if (result.ShouldRemove)
         {
@@ -205,7 +205,7 @@ public sealed class QBitService : DownloadServiceBase
         _client.Dispose();
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent, bool isPrivate)
+    private async Task<bool> IsItemStuckAndShouldRemove(TorrentInfo torrent, bool isPrivate)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
@@ -228,6 +228,6 @@ public sealed class QBitService : DownloadServiceBase
 
         ResetStrikesOnProgress(torrent.Hash, torrent.Downloaded ?? 0);
 
-        return StrikeAndCheckLimit(torrent.Hash, torrent.Name);
+        return await StrikeAndCheckLimit(torrent.Hash, torrent.Name);
     }
 }

@@ -24,7 +24,7 @@ public class Striker
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
     
-    public bool StrikeAndCheckLimit(string hash, string itemName, ushort maxStrikes, StrikeType strikeType)
+    public async Task<bool> StrikeAndCheckLimit(string hash, string itemName, ushort maxStrikes, StrikeType strikeType)
     {
         if (maxStrikes is 0)
         {
@@ -44,7 +44,7 @@ public class Striker
         
         _logger.LogInformation("item on strike number {strike} | reason {reason} | {name}", strikeCount, strikeType.ToString(), itemName);
 
-        _notifier.NotifyStrike(strikeType, strikeCount);
+        await _notifier.NotifyStrike(strikeType, strikeCount);
         
         _cache.Set(key, strikeCount, _cacheOptions);
         

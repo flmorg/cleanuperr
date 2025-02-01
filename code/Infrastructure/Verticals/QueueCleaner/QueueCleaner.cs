@@ -86,7 +86,7 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 // failed import check
-                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(instanceType, record, stalledCheckResult.IsPrivate);
+                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, stalledCheckResult.IsPrivate);
                 DeleteReason deleteReason = stalledCheckResult.ShouldRemove ? stalledCheckResult.DeleteReason : DeleteReason.ImportFailed;
 
                 if (!shouldRemoveFromArr && !stalledCheckResult.ShouldRemove)
@@ -113,7 +113,7 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
-                _notifier.NotifyQueueItemDelete(removeFromClient, deleteReason);
+                await _notifier.NotifyQueueItemDelete(removeFromClient, deleteReason);
             }
         });
         

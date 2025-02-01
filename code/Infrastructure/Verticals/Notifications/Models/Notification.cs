@@ -2,7 +2,7 @@
 
 namespace Infrastructure.Verticals.Notifications.Models;
 
-public record Notification : INotification
+public record Notification
 {
     public required InstanceType InstanceType { get; init; }
     

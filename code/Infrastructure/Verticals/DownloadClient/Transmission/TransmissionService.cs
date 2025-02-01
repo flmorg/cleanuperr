@@ -84,7 +84,7 @@ public sealed class TransmissionService : DownloadServiceBase
         }
 
         // remove if all files are unwanted or download is stuck
-        result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(torrent);
+        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(torrent);
 
         if (!shouldRemove && result.ShouldRemove)
         {
@@ -189,7 +189,7 @@ public sealed class TransmissionService : DownloadServiceBase
     {
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
+    private async Task<bool> IsItemStuckAndShouldRemove(TorrentInfo torrent)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
@@ -216,7 +216,7 @@ public sealed class TransmissionService : DownloadServiceBase
         
         ResetStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
 
-        return StrikeAndCheckLimit(torrent.HashString!, torrent.Name!);
+        return await StrikeAndCheckLimit(torrent.HashString!, torrent.Name!);
     }
 
     private async Task<TorrentInfo?> GetTorrentAsync(string hash)

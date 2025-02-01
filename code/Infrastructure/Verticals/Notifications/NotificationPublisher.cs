@@ -1,10 +1,10 @@
-﻿using System.Collections.Concurrent;
-using Common.Configuration.Arr;
+﻿using Common.Configuration.Arr;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
+using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Notifications;
@@ -12,20 +12,15 @@ namespace Infrastructure.Verticals.Notifications;
 public sealed class NotificationPublisher
 {
     private readonly ILogger<NotificationPublisher> _logger;
-    private readonly ConcurrentQueue<INotification> _notifications;
+    private readonly IBus _messageBus;
 
-    public NotificationPublisher(ILogger<NotificationPublisher> logger, ConcurrentQueue<INotification> notifications)
+    public NotificationPublisher(ILogger<NotificationPublisher> logger, IBus messageBus)
     {
         _logger = logger;
-        _notifications = notifications;
+        _messageBus = messageBus;
     }
     
-    public void Notify(INotification notification)
-    {
-        _notifications.Enqueue(notification);
-    }
-
-    public void NotifyStrike(StrikeType strikeType, int strikeCount)
+    public async Task NotifyStrike(StrikeType strikeType, int strikeCount)
     {
         try
         {
@@ -48,10 +43,10 @@ public sealed class NotificationPublisher
             switch (strikeType)
             {
                 case StrikeType.Stalled:
-                    Notify(notification.Adapt<StalledStrikeNotification>());
+                    await _messageBus.Publish(notification.Adapt<StalledStrikeNotification>());
                     break;
                 case StrikeType.ImportFailed:
-                    Notify(notification.Adapt<FailedImportStrikeNotification>());
+                    await _messageBus.Publish(notification.Adapt<FailedImportStrikeNotification>());
                     break;
             }
         }
@@ -61,7 +56,7 @@ public sealed class NotificationPublisher
         }
     }
 
-    public void NotifyQueueItemDelete(bool removeFromClient, DeleteReason reason)
+    public async Task NotifyQueueItemDelete(bool removeFromClient, DeleteReason reason)
     {
         QueueRecord record = GetRecordFromContext();
         InstanceType instanceType = GetInstanceTypeFromContext();
@@ -79,7 +74,7 @@ public sealed class NotificationPublisher
             Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
         };
         
-        Notify(notification.Adapt<QueueItemDeleteNotification>());
+        await _messageBus.Publish(notification.Adapt<QueueItemDeleteNotification>());
     }
 
     private static QueueRecord GetRecordFromContext() =>
