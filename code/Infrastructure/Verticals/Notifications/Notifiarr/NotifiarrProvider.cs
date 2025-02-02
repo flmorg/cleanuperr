@@ -10,6 +10,9 @@ public class NotifiarrProvider : NotificationProvider
     private readonly NotifiarrConfig _config;
     private readonly INotifiarrProxy _proxy;
 
+    private const string WarningColor = "f0ad4e";
+    private const string ImportantColor = "bb2124";
+
     public NotifiarrProvider(IOptions<NotifiarrConfig> config, INotifiarrProxy proxy)
         : base(config)
     {
@@ -21,17 +24,17 @@ public class NotifiarrProvider : NotificationProvider
 
     public override async Task OnFailedImportStrike(FailedImportStrikeNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification, "f0ad4e"), _config);
+        await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
     }
     
     public override async Task OnStalledStrike(StalledStrikeNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification, "f0ad4e"), _config);
+        await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
     }
     
     public override async Task OnQueueItemDelete(QueueItemDeleteNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification, "bb2124"), _config);
+        await _proxy.SendNotification(BuildPayload(notification, ImportantColor), _config);
     }
 
     private NotifiarrPayload BuildPayload(Notification notification, string color)
