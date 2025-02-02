@@ -145,12 +145,6 @@ public abstract class ArrClient
             return false;
         }
 
-        if (record.DownloadId.Equals(record.Title, StringComparison.InvariantCultureIgnoreCase))
-        {
-            _logger.LogDebug("skip | item is not ready yet | {title}", record.Title);
-            return false;
-        }
-
         return true;
     }
     
