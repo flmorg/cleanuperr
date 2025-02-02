@@ -2,6 +2,9 @@
 using Common.Configuration.General;
 using Common.Helpers;
 using Infrastructure.Verticals.DownloadClient.Deluge;
+using Infrastructure.Verticals.Notifications.Consumers;
+using Infrastructure.Verticals.Notifications.Models;
+using MassTransit;
 using Polly;
 using Polly.Extensions.Http;
 
@@ -16,7 +19,26 @@ public static class MainDI
             .AddConfiguration(configuration)
             .AddMemoryCache()
             .AddServices()
-            .AddQuartzServices(configuration);
+            .AddQuartzServices(configuration)
+            .AddNotifications(configuration)
+            .AddMassTransit(config =>
+            {
+                config.AddConsumer<NotificationConsumer<FailedImportStrikeNotification>>();
+                config.AddConsumer<NotificationConsumer<StalledStrikeNotification>>();
+                config.AddConsumer<NotificationConsumer<QueueItemDeleteNotification>>();
+
+                config.UsingInMemory((context, cfg) =>
+                {
+                    cfg.ReceiveEndpoint("notification-queue", e =>
+                    {
+                        e.ConfigureConsumer<NotificationConsumer<FailedImportStrikeNotification>>(context);
+                        e.ConfigureConsumer<NotificationConsumer<StalledStrikeNotification>>(context);
+                        e.ConfigureConsumer<NotificationConsumer<QueueItemDeleteNotification>>(context);
+                        e.ConcurrentMessageLimit = 1;
+                        e.PrefetchCount = 1;
+                    });
+                });
+            });
     
     private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
     {

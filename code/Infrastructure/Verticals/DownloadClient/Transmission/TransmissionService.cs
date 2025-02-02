@@ -4,6 +4,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
+using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Caching.Memory;
@@ -76,9 +77,19 @@ public sealed class TransmissionService : DownloadServiceBase
                 shouldRemove = false;
             }
         }
+        
+        if (shouldRemove)
+        {
+            result.DeleteReason = DeleteReason.AllFilesBlocked;
+        }
 
         // remove if all files are unwanted or download is stuck
-        result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(torrent);
+        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(torrent);
+
+        if (!shouldRemove && result.ShouldRemove)
+        {
+            result.DeleteReason = DeleteReason.Stalled;
+        }
         
         return result;
     }
@@ -178,7 +189,7 @@ public sealed class TransmissionService : DownloadServiceBase
     {
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentInfo torrent)
+    private async Task<bool> IsItemStuckAndShouldRemove(TorrentInfo torrent)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
@@ -205,7 +216,7 @@ public sealed class TransmissionService : DownloadServiceBase
         
         ResetStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
 
-        return StrikeAndCheckLimit(torrent.HashString!, torrent.Name!);
+        return await StrikeAndCheckLimit(torrent.HashString!, torrent.Name!);
     }
 
     private async Task<TorrentInfo?> GetTorrentAsync(string hash)

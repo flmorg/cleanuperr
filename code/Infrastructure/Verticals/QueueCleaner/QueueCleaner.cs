@@ -5,8 +5,10 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog.Context;
@@ -28,12 +30,14 @@ public sealed class QueueCleaner : GenericHandler
         RadarrClient radarrClient,
         LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
-        DownloadServiceFactory downloadServiceFactory
+        DownloadServiceFactory downloadServiceFactory,
+        NotificationPublisher notifier
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
         sonarrClient, radarrClient, lidarrClient,
-        arrArrQueueIterator, downloadServiceFactory
+        arrArrQueueIterator, downloadServiceFactory,
+        notifier
     )
     {
         _config = config.Value;
@@ -45,6 +49,10 @@ public sealed class QueueCleaner : GenericHandler
         
         HashSet<SearchItem> itemsToBeRefreshed = [];
         ArrClient arrClient = GetClient(instanceType);
+        
+        // push to context
+        ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
+        ContextProvider.Set(nameof(InstanceType), instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
@@ -65,6 +73,9 @@ public sealed class QueueCleaner : GenericHandler
                 {
                     continue;
                 }
+                
+                // push record to context
+                ContextProvider.Set(nameof(QueueRecord), record);
 
                 StalledResult stalledCheckResult = new();
 
@@ -75,7 +86,8 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 // failed import check
-                bool shouldRemoveFromArr = arrClient.ShouldRemoveFromQueue(instanceType, record, stalledCheckResult.IsPrivate);
+                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, stalledCheckResult.IsPrivate);
+                DeleteReason deleteReason = stalledCheckResult.ShouldRemove ? stalledCheckResult.DeleteReason : DeleteReason.ImportFailed;
 
                 if (!shouldRemoveFromArr && !stalledCheckResult.ShouldRemove)
                 {
@@ -101,6 +113,7 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
+                await _notifier.NotifyQueueItemDelete(removeFromClient, deleteReason);
             }
         });
         

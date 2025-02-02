@@ -7,8 +7,10 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog.Context;
@@ -32,12 +34,15 @@ public sealed class ContentBlocker : GenericHandler
         LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
-        DownloadServiceFactory downloadServiceFactory
+        DownloadServiceFactory downloadServiceFactory,
+        NotificationPublisher notifier
+        
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
         sonarrClient, radarrClient, lidarrClient,
-        arrArrQueueIterator, downloadServiceFactory
+        arrArrQueueIterator, downloadServiceFactory,
+        notifier
     )
     {
         _config = config.Value;
@@ -75,6 +80,10 @@ public sealed class ContentBlocker : GenericHandler
         BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
         ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
         ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
+        
+        // push to context
+        ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
+        ContextProvider.Set(nameof(InstanceType), instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
@@ -96,6 +105,9 @@ public sealed class ContentBlocker : GenericHandler
                     _logger.LogDebug("skip | download id is null for {title}", record.Title);
                     continue;
                 }
+                
+                // push record to context
+                ContextProvider.Set(nameof(QueueRecord), record);
                 
                 _logger.LogDebug("searching unwanted files for {title}", record.Title);
 
@@ -119,6 +131,7 @@ public sealed class ContentBlocker : GenericHandler
                 }
                 
                 await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
+                await _notifier.NotifyQueueItemDelete(removeFromClient, DeleteReason.AllFilesBlocked);
             }
         });
         

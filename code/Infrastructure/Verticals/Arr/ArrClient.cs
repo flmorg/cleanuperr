@@ -66,7 +66,7 @@ public abstract class ArrClient
         return queueResponse;
     }
 
-    public virtual bool ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload)
+    public virtual async Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload)
     {
         if (_queueCleanerConfig.ImportFailedIgnorePrivate && isPrivateDownload)
         {
@@ -96,7 +96,7 @@ public abstract class ArrClient
                 return false;
             }
             
-            return _striker.StrikeAndCheckLimit(
+            return await _striker.StrikeAndCheckLimit(
                 record.DownloadId,
                 record.Title,
                 _queueCleanerConfig.ImportFailedMaxStrikes,

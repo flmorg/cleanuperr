@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -71,8 +72,18 @@ public sealed class DelugeService : DownloadServiceBase
             }
         });
 
-        result.ShouldRemove = shouldRemove || IsItemStuckAndShouldRemove(status);
+        if (shouldRemove)
+        {
+            result.DeleteReason = DeleteReason.AllFilesBlocked;
+        }
+        
+        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(status);
         result.IsPrivate = status.Private;
+
+        if (!shouldRemove && result.ShouldRemove)
+        {
+            result.DeleteReason = DeleteReason.Stalled;
+        }
         
         return result;
     }
@@ -180,7 +191,7 @@ public sealed class DelugeService : DownloadServiceBase
         await _client.DeleteTorrent(hash);
     }
     
-    private bool IsItemStuckAndShouldRemove(TorrentStatus status)
+    private async Task<bool> IsItemStuckAndShouldRemove(TorrentStatus status)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
@@ -206,7 +217,7 @@ public sealed class DelugeService : DownloadServiceBase
         
         ResetStrikesOnProgress(status.Hash!, status.TotalDone);
 
-        return StrikeAndCheckLimit(status.Hash!, status.Name!);
+        return await StrikeAndCheckLimit(status.Hash!, status.Name!);
     }
 
     private async Task<TorrentStatus?> GetTorrentStatus(string hash)

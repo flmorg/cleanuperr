@@ -1,6 +1,8 @@
 ﻿using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Helpers;
+using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -11,16 +13,18 @@ public class Striker
     private readonly ILogger<Striker> _logger;
     private readonly IMemoryCache _cache;
     private readonly MemoryCacheEntryOptions _cacheOptions;
+    private readonly NotificationPublisher _notifier;
 
-    public Striker(ILogger<Striker> logger, IMemoryCache cache)
+    public Striker(ILogger<Striker> logger, IMemoryCache cache, NotificationPublisher notifier)
     {
         _logger = logger;
         _cache = cache;
+        _notifier = notifier;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
     
-    public bool StrikeAndCheckLimit(string hash, string itemName, ushort maxStrikes, StrikeType strikeType)
+    public async Task<bool> StrikeAndCheckLimit(string hash, string itemName, ushort maxStrikes, StrikeType strikeType)
     {
         if (maxStrikes is 0)
         {
@@ -29,7 +33,7 @@ public class Striker
         
         string key = CacheKeys.Strike(strikeType, hash);
         
-        if (!_cache.TryGetValue(key, out int? strikeCount))
+        if (!_cache.TryGetValue(key, out int strikeCount))
         {
             strikeCount = 1;
         }
@@ -39,6 +43,9 @@ public class Striker
         }
         
         _logger.LogInformation("item on strike number {strike} | reason {reason} | {name}", strikeCount, strikeType.ToString(), itemName);
+
+        await _notifier.NotifyStrike(strikeType, strikeCount);
+        
         _cache.Set(key, strikeCount, _cacheOptions);
         
         if (strikeCount < maxStrikes)

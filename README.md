@@ -178,6 +178,12 @@ services:
       - LIDARR__INSTANCES__0__APIKEY=secret5
       - LIDARR__INSTANCES__1__URL=http://radarr:8687
       - LIDARR__INSTANCES__1__APIKEY=secret6
+
+      # - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=false
+      # - NOTIFIARR__ON_STALLED_STRIKE=false
+      # - NOTIFIARR__ON_QUEUE_ITEM_DELETE=false
+      # - NOTIFIARR__API_KEY=notifiarr_secret
+      # - NOTIFIARR__CHANNEL_ID=discord_channel_id
 ```
 
 ## Environment variables
@@ -256,6 +262,20 @@ services:
 | LIDARR__INSTANCES__0__URL | No | First LIDARR instance url | http://localhost:8686 |
 | LIDARR__INSTANCES__0__APIKEY | No | First LIDARR instance API key | empty |
 </details>
+
+### Notifications variables
+<details>
+  <summary>Click here</summary>
+
+| Variable | Required | Description | Default value |
+|---|---|---|---|
+| NOTIFIARR__ON_IMPORT_FAILED_STRIKE | No | Notify on failed import strike.  | false |
+| NOTIFIARR__ON_STALLED_STRIKE | No | Notify on stalled download strike. | false |
+| NOTIFIARR__ON_QUEUE_ITEM_DELETE | No | Notify on deleting a queue item. | false |
+| NOTIFIARR__API_KEY | No | Notifiarr API key.<br>Requires Notifiarr's `Passthrough` integration to work. | empty |
+| NOTIFIARR__CHANNEL_ID | No | Discord channel id for notifications. | empty |
+</details>
+
 
 ### Advanced variables
 <details>
