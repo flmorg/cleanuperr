@@ -92,7 +92,7 @@ public sealed class QBitService : DownloadServiceBase
 
         if (result.ShouldRemove)
         {
-            result.DeleteReason = result.DeleteReason = DeleteReason.Stalled;
+            result.DeleteReason = DeleteReason.Stalled;
         }
 
         return result;
