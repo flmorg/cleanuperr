@@ -28,6 +28,13 @@ public interface IDownloadService : IDisposable
         ConcurrentBag<string> patterns,
         ConcurrentBag<Regex> regexes
     );
+    
+    /// <summary>
+    /// Fetches all downloads.
+    /// </summary>
+    /// <param name="includedCategories">The categories that should be cleaned.</param>
+    /// <param name="excludedHashes">The hashes that should not be cleaned.</param>
+    public abstract Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes);
 
     /// <summary>
     /// Deletes a download item.

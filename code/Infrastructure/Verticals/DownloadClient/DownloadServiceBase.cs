@@ -60,6 +60,9 @@ public abstract class DownloadServiceBase : IDownloadService
     /// <inheritdoc/>
     public abstract Task Delete(string hash);
 
+    /// <inheritdoc/>
+    public abstract Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes);
+
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {
         if (!_queueCleanerConfig.StalledResetStrikesOnProgress)

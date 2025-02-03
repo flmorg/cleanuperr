@@ -200,6 +200,11 @@ public sealed class QBitService : DownloadServiceBase
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
     }
 
+    /// <inheritdoc/>
+    public override async Task CleanDownloads()
+    {
+    }
+
     public override void Dispose()
     {
         _client.Dispose();

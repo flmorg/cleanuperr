@@ -173,6 +173,51 @@ public sealed class TransmissionService : DownloadServiceBase
         return result;
     }
 
+    /// <inheritdoc/>
+    public override async Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes)
+    {
+        List<TorrentInfo>? downloads = await GetTorrentsAsync();
+
+        if (downloads?.Count is null or 0)
+        {
+            _logger.LogDebug("no downloads found in the download client");
+            return;
+        }
+
+        List<long> downloadsToDelete = [];
+
+        foreach (TorrentInfo download in downloads)
+        {
+            if (string.IsNullOrEmpty(download.HashString))
+            {
+                continue;
+            }
+
+            // seed or queued to seed
+            if (download.Status is not 5 and not 6)
+            {
+                continue;
+            }
+
+            if (excludedHashes.Any(x => x.Equals(download.HashString, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                continue;
+            }
+            
+            // TODO check for download path
+            
+            downloadsToDelete.Add(download.Id);
+            
+            await _client.TorrentRemoveAsync(downloadsToDelete.ToArray(), true);
+        }
+        
+        if (downloadsToDelete.Count is 0)
+        {
+            _logger.LogDebug("nothing to clean");
+            return;
+        }
+    }
+
     public override async Task Delete(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
@@ -256,5 +301,22 @@ public sealed class TransmissionService : DownloadServiceBase
         }
 
         return torrent;
+    }
+
+    private async Task<List<TorrentInfo>?> GetTorrentsAsync()
+    {
+        string[] fields = [
+            TorrentFields.FILES,
+            TorrentFields.FILE_STATS,
+            TorrentFields.HASH_STRING,
+            TorrentFields.ID,
+            TorrentFields.ETA,
+            TorrentFields.NAME,
+            TorrentFields.STATUS,
+            TorrentFields.IS_PRIVATE,
+            TorrentFields.DOWNLOADED_EVER
+        ];
+            
+        return (await _client.TorrentGetAsync(fields))?.Torrents?.ToList();
     }
 }

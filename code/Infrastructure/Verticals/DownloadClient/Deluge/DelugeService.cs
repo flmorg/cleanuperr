@@ -45,7 +45,7 @@ public sealed class DelugeService : DownloadServiceBase
         DelugeContents? contents = null;
         StalledResult result = new();
 
-        TorrentStatus? status = await GetTorrentStatus(hash);
+        TorrentStatus? status = await _client.GetTorrentStatus(hash);
         
         if (status?.Hash is null)
         {
@@ -98,7 +98,7 @@ public sealed class DelugeService : DownloadServiceBase
     {
         hash = hash.ToLowerInvariant();
 
-        TorrentStatus? status = await GetTorrentStatus(hash);
+        TorrentStatus? status = await _client.GetTorrentStatus(hash);
         BlockFilesResult result = new();
         
         if (status?.Hash is null)
@@ -182,13 +182,57 @@ public sealed class DelugeService : DownloadServiceBase
 
         return result;
     }
+
+    /// <inheritdoc/>
+    public override async Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes)
+    {
+        List<TorrentStatus>? downloads = await _client.GetStatusForAllTorrents();
+
+        if (downloads?.Count is null or 0)
+        {
+            _logger.LogDebug("no downloads found in the download client");
+            return;
+        }
+
+        List<string> downloadsToDelete = [];
+
+        foreach (TorrentStatus download in downloads)
+        {
+            if (string.IsNullOrEmpty(download.Hash))
+            {
+                continue;
+            }
+            
+            if (download.State?.Equals("seeding", StringComparison.InvariantCultureIgnoreCase) is false)
+            {
+                continue;
+            }
+
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                continue;
+            }
+            
+            // TODO check for label
+            
+            downloadsToDelete.Add(download.Hash);
+        }
+
+        if (downloadsToDelete.Count is 0)
+        {
+            _logger.LogDebug("nothing to clean");
+            return;
+        }
+        
+        await _client.DeleteTorrents(downloadsToDelete);
+    }
     
     /// <inheritdoc/>
     public override async Task Delete(string hash)
     {
         hash = hash.ToLowerInvariant();
         
-        await _client.DeleteTorrent(hash);
+        await _client.DeleteTorrents([hash]);
     }
     
     private async Task<bool> IsItemStuckAndShouldRemove(TorrentStatus status)
@@ -218,15 +262,6 @@ public sealed class DelugeService : DownloadServiceBase
         ResetStrikesOnProgress(status.Hash!, status.TotalDone);
 
         return await StrikeAndCheckLimit(status.Hash!, status.Name!);
-    }
-
-    private async Task<TorrentStatus?> GetTorrentStatus(string hash)
-    {
-        return await _client.SendRequest<TorrentStatus?>(
-            "web.get_torrent_status",
-            hash,
-            new[] { "hash", "state", "name", "eta", "private", "total_done" }
-        );
     }
     
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory>? contents, Action<string, DelugeFileOrDirectory> processFile)

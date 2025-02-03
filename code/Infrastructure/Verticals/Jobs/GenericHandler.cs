@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.Jobs;
 
-public abstract class GenericHandler : IDisposable
+public abstract class GenericHandler : IHandler, IDisposable
 {
     protected readonly ILogger<GenericHandler> _logger;
     protected readonly DownloadClientConfig _downloadClientConfig;
@@ -68,7 +68,7 @@ public abstract class GenericHandler : IDisposable
 
     protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType);
     
-    private async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType)
+    protected async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType, bool throwOnFailure = false)
     {
         if (!config.Enabled)
         {
@@ -84,6 +84,11 @@ public abstract class GenericHandler : IDisposable
             catch (Exception exception)
             {
                 _logger.LogError(exception, "failed to clean {type} instance | {url}", instanceType, arrInstance.Url);
+
+                if (throwOnFailure)
+                {
+                    throw;
+                }
             }
         }
     }

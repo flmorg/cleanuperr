@@ -16,4 +16,6 @@ public sealed record TorrentStatus
     
     [JsonProperty("total_done")]
     public long TotalDone { get; init; }
+    
+    public string? Label { get; init; }
 }
