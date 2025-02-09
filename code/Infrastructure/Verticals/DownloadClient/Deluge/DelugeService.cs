@@ -1,12 +1,14 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
+using MassTransit.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,10 +25,11 @@ public sealed class DelugeService : DownloadServiceBase
         IHttpClientFactory httpClientFactory,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker)
     {
         config.Value.Validate();
         _client = new (config, httpClientFactory);
@@ -183,17 +186,19 @@ public sealed class DelugeService : DownloadServiceBase
         return result;
     }
 
-    /// <inheritdoc/>
-    public override async Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes)
+    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
     {
-        List<TorrentStatus>? downloads = await _client.GetStatusForAllTorrents();
+        return (await _client.GetStatusForAllTorrents())
+            ?.Where(x => categories.Any(cat => cat.Name.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => x.State?.Equals("seeding", StringComparison.InvariantCultureIgnoreCase) is true)
+            .Cast<object>()
+            .ToList();
+    }
 
-        if (downloads?.Count is null or 0)
-        {
-            _logger.LogDebug("no downloads found in the download client");
-            return;
-        }
-
+    /// <inheritdoc/>
+    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    {
         List<string> downloadsToDelete = [];
 
         foreach (TorrentStatus download in downloads)
@@ -203,18 +208,60 @@ public sealed class DelugeService : DownloadServiceBase
                 continue;
             }
             
-            if (download.State?.Equals("seeding", StringComparison.InvariantCultureIgnoreCase) is false)
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
             {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
 
-            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            if (!_downloadCleanerConfig.RemovePrivate && download.Private)
+            {
+                _logger.LogDebug("skip | download is private | {name}", download.Name);
+                continue;
+            }
+            
+            Category? category = categoriesToClean
+                .FirstOrDefault(x => x.Name.Equals(download.Label, StringComparison.InvariantCultureIgnoreCase));
+
+            if (category is null)
             {
                 continue;
             }
             
-            // TODO check for label
+            TimeSpan seedingTime = TimeSpan.FromSeconds(download.SeedingTime);
+            TimeSpan minSeedingTime = TimeSpan.FromHours(category.MinSeedTime);
+            TimeSpan maxSeedingTime = TimeSpan.FromHours(category.MaxSeedTime);
+
+            // check ratio
+            if (category.MaxRatio > 0)
+            {
+                if (category.MinSeedTime > 0 && seedingTime < minSeedingTime)
+                {
+                    _logger.LogDebug("skip | download has not MIN_SEED_TIME | {name}", download.Name);
+                    continue;
+                }
+
+                if (download.Ratio < category.MaxRatio)
+                {
+                    _logger.LogDebug("skip | download has not reached MAX_RATIO | {name}", download.Name);
+                    continue;
+                }
+                
+                // TODO log & notify?
+                _logger.LogDebug("marked for deletion | download has reached MAX_RATIO & MIN_SEED_TIME | {name}", download.Name);
+                downloadsToDelete.Add(download.Hash);
+                continue;
+            }
             
+            // check max seed time
+            if (category.MaxSeedTime > 0 && seedingTime < maxSeedingTime)
+            {
+                _logger.LogDebug("skip | download has not reached MAX_SEED_TIME | {name}", download.Name);
+                continue;
+            }
+            
+            // TODO log & notify?
+            _logger.LogDebug("marked for deletion | download has reached MAX_SEED_TIME | {name}", download.Name);
             downloadsToDelete.Add(download.Hash);
         }
 

@@ -18,4 +18,9 @@ public sealed record TorrentStatus
     public long TotalDone { get; init; }
     
     public string? Label { get; init; }
+    
+    [JsonProperty("seeding_time")]
+    public long SeedingTime { get; init; }
+    
+    public double Ratio { get; init; }
 }

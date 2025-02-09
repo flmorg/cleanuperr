@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
@@ -18,6 +19,7 @@ public static class ServicesDI
             .AddTransient<LidarrClient>()
             .AddTransient<QueueCleaner>()
             .AddTransient<ContentBlocker>()
+            .AddTransient<DownloadCleaner>()
             .AddTransient<FilenameEvaluator>()
             .AddTransient<DummyDownloadService>()
             .AddTransient<QBitService>()

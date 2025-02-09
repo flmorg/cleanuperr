@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
@@ -28,10 +29,11 @@ public sealed class TransmissionService : DownloadServiceBase
         IOptions<TransmissionConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -173,8 +175,15 @@ public sealed class TransmissionService : DownloadServiceBase
         return result;
     }
 
+    /// <param name="categories"></param>
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes)
+    public override Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc/>
+    public override async Task CleanDownloads(List<object> downloads1, List<Category> categoriesToClean, HashSet<string> excludedHashes)
     {
         List<TorrentInfo>? downloads = await GetTorrentsAsync();
 
@@ -205,6 +214,7 @@ public sealed class TransmissionService : DownloadServiceBase
             }
             
             // TODO check for download path
+            // TODO check for how much
             
             downloadsToDelete.Add(download.Id);
             

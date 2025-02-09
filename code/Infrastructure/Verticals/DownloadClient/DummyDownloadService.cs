@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
@@ -12,7 +13,7 @@ namespace Infrastructure.Verticals.DownloadClient;
 
 public sealed class DummyDownloadService : DownloadServiceBase
 {
-    public DummyDownloadService(ILogger<DownloadServiceBase> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IMemoryCache cache, FilenameEvaluator filenameEvaluator, Striker striker) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
+    public DummyDownloadService(ILogger<DownloadServiceBase> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IOptions<DownloadCleanerConfig> downloadCleanerConfig, IMemoryCache cache, FilenameEvaluator filenameEvaluator, Striker striker) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker)
     {
     }
 
@@ -31,6 +32,16 @@ public sealed class DummyDownloadService : DownloadServiceBase
     }
 
     public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }

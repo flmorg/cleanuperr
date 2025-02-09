@@ -1,5 +1,6 @@
 ﻿using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
@@ -12,6 +13,7 @@ public static class ConfigurationDI
         services
             .Configure<QueueCleanerConfig>(configuration.GetSection(QueueCleanerConfig.SectionName))
             .Configure<ContentBlockerConfig>(configuration.GetSection(ContentBlockerConfig.SectionName))
+            .Configure<DownloadCleanerConfig>(configuration.GetSection(DownloadCleanerConfig.SectionName))
             .Configure<DownloadClientConfig>(configuration)
             .Configure<QBitConfig>(configuration.GetSection(QBitConfig.SectionName))
             .Configure<DelugeConfig>(configuration.GetSection(DelugeConfig.SectionName))

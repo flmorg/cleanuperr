@@ -68,17 +68,19 @@ public sealed class DelugeClient
         return await SendRequest<TorrentStatus?>(
             "web.get_torrent_status",
             hash,
-            new[] { "hash", "state", "name", "eta", "private", "total_done", "label" }
+            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
         );
     }
     
     public async Task<List<TorrentStatus>?> GetStatusForAllTorrents()
     {
-        return await SendRequest<List<TorrentStatus>?>(
-            "web.get_torrent_status",
+        Dictionary<string, TorrentStatus>? downloads = await SendRequest<Dictionary<string, TorrentStatus>?>(
+            "core.get_torrents_status",
             "",
-            new[] { "hash", "state", "name", "eta", "private", "total_done", "label" }
+            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
         );
+        
+        return downloads?.Values.ToList();
     }
 
     public async Task<DelugeContents?> GetTorrentFiles(string hash)

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
@@ -28,13 +29,21 @@ public interface IDownloadService : IDisposable
         ConcurrentBag<string> patterns,
         ConcurrentBag<Regex> regexes
     );
-    
+
     /// <summary>
     /// Fetches all downloads.
     /// </summary>
-    /// <param name="includedCategories">The categories that should be cleaned.</param>
+    /// <param name="categories">The categories by which to filter the downloads.</param>
+    /// <returns>A list of downloads for the provided categories.</returns>
+    Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories);
+    
+    /// <summary>
+    /// Cleans the downloads.
+    /// </summary>
+    /// <param name="downloads"></param>
+    /// <param name="categoriesToClean">The categories that should be cleaned.</param>
     /// <param name="excludedHashes">The hashes that should not be cleaned.</param>
-    public abstract Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes);
+    public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes);
 
     /// <summary>
     /// Deletes a download item.

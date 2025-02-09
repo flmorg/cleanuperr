@@ -1,10 +1,12 @@
 ﻿using Common.Configuration;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.General;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Executable.Jobs;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.QueueCleaner;
 using Quartz;
@@ -59,6 +61,12 @@ public static class QuartzDI
         {
             q.AddJob<QueueCleaner>(queueCleanerConfig, triggersConfig.QueueCleaner);
         }
+        
+        DownloadCleanerConfig? downloadCleanerConfig = configuration
+            .GetRequiredSection(DownloadCleanerConfig.SectionName)
+            .Get<DownloadCleanerConfig>();
+
+        q.AddJob<DownloadCleaner>(downloadCleanerConfig, "0 0 * * * ?");
     }
     
     private static void AddJob<T>(

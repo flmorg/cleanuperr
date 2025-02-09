@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QBittorrent.Client;
+using Category = Common.Configuration.DownloadCleaner.Category;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
@@ -25,10 +27,11 @@ public sealed class QBitService : DownloadServiceBase
         IOptions<QBitConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
         Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker)
     {
         _config = config.Value;
         _config.Validate();
@@ -200,9 +203,17 @@ public sealed class QBitService : DownloadServiceBase
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
     }
 
+    /// <param name="categories"></param>
     /// <inheritdoc/>
-    public override async Task CleanDownloads()
+    public override Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
     {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc/>
+    public override Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    {
+        throw new NotImplementedException();
     }
 
     public override void Dispose()

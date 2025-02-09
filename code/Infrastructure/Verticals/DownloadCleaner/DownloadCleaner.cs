@@ -1,9 +1,9 @@
 ﻿using Common.Configuration.Arr;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
-using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
@@ -15,11 +15,12 @@ namespace Infrastructure.Verticals.DownloadCleaner;
 
 public sealed class DownloadCleaner : GenericHandler
 {
+    private readonly DownloadCleanerConfig _config;
     private readonly HashSet<string> _excludedHashes = [];
     
     public DownloadCleaner(
         ILogger<DownloadCleaner> logger,
-        // IOptions<Download> config, TODO
+        IOptions<DownloadCleanerConfig> config,
         IOptions<DownloadClientConfig> downloadClientConfig,
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
@@ -38,18 +39,33 @@ public sealed class DownloadCleaner : GenericHandler
         notifier
     )
     {
-        // _config = config.Value;
+        _config = config.Value;
+        _config.Validate();
     }
     
     public override async Task ExecuteAsync()
     {
+        if (_config.Categories?.Count is null or 0)
+        {
+            _logger.LogWarning("no categories configured");
+            return;
+        }
+        
         await _downloadService.LoginAsync();
+
+        List<object>? downloads = await _downloadService.GetAllDownloadsToBeCleaned(_config.Categories);
+
+        if (downloads?.Count is null or 0)
+        {
+            _logger.LogDebug("no downloads found in the download client");
+            return;
+        }
 
         await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr, true);
         await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr, true);
         await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
         
-        // TODO remove from download client by tag/category
+        await _downloadService.CleanDownloads(downloads, _config.Categories, _excludedHashes);
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)

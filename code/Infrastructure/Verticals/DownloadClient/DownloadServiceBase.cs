@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Domain.Enums;
@@ -19,6 +20,7 @@ public abstract class DownloadServiceBase : IDownloadService
     protected readonly ILogger<DownloadServiceBase> _logger;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
     protected readonly ContentBlockerConfig _contentBlockerConfig;
+    protected readonly DownloadCleanerConfig _downloadCleanerConfig;
     protected readonly IMemoryCache _cache;
     protected readonly FilenameEvaluator _filenameEvaluator;
     protected readonly Striker _striker;
@@ -28,6 +30,7 @@ public abstract class DownloadServiceBase : IDownloadService
         ILogger<DownloadServiceBase> logger,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
         Striker striker
@@ -36,6 +39,7 @@ public abstract class DownloadServiceBase : IDownloadService
         _logger = logger;
         _queueCleanerConfig = queueCleanerConfig.Value;
         _contentBlockerConfig = contentBlockerConfig.Value;
+        _downloadCleanerConfig = downloadCleanerConfig.Value;
         _cache = cache;
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
@@ -61,7 +65,10 @@ public abstract class DownloadServiceBase : IDownloadService
     public abstract Task Delete(string hash);
 
     /// <inheritdoc/>
-    public abstract Task CleanDownloads(List<string> includedCategories, List<string> excludedHashes);
+    public abstract Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories);
+
+    /// <inheritdoc/>
+    public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes);
 
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {
