@@ -66,7 +66,7 @@ public static class QuartzDI
             .GetRequiredSection(DownloadCleanerConfig.SectionName)
             .Get<DownloadCleanerConfig>();
 
-        q.AddJob<DownloadCleaner>(downloadCleanerConfig, "0 0 * * * ?");
+        q.AddJob<DownloadCleaner>(downloadCleanerConfig, triggersConfig.DownloadCleaner);
     }
     
     private static void AddJob<T>(
@@ -117,7 +117,7 @@ public static class QuartzDI
         
         if (triggerValue > Constants.TriggerMaxLimit)
         {
-            throw new Exception($"{trigger} should have a fire time of maximum 1 hour");
+            throw new Exception($"{trigger} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
         }
 
         if (triggerValue > StaticConfiguration.TriggerValue)

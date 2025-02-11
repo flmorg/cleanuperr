@@ -27,8 +27,11 @@ public sealed class NotificationConsumer<T> : IConsumer<T> where T : Notificatio
                 case StalledStrikeNotification stalledMessage:
                     await _notificationService.Notify(stalledMessage);
                     break;
-                case QueueItemDeleteNotification queueItemDeleteMessage:
+                case QueueItemDeletedNotification queueItemDeleteMessage:
                     await _notificationService.Notify(queueItemDeleteMessage);
+                    break;
+                case DownloadCleanedNotification downloadCleanedNotification:
+                    await _notificationService.Notify(downloadCleanedNotification);
                     break;
                 default:
                     throw new NotImplementedException();

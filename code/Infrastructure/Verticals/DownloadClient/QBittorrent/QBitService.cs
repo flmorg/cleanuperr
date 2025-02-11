@@ -7,7 +7,9 @@ using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -30,8 +32,9 @@ public sealed class QBitService : DownloadServiceBase
         IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
-        Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker)
+        Striker striker,
+        NotificationPublisher notifier
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
         _config = config.Value;
         _config.Validate();
@@ -196,24 +199,76 @@ public sealed class QBitService : DownloadServiceBase
         
         return result;
     }
+    
+    /// <inheritdoc/>
+    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories) =>
+        (await _client.GetTorrentListAsync(new()
+        {
+            Filter = TorrentListFilter.Seeding
+        }))
+        ?.Where(x => !string.IsNullOrEmpty(x.Hash))
+        .Where(x => categories.Any(cat => cat.Name.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+        .Cast<object>()
+        .ToList();
+
+    /// <inheritdoc/>
+    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    {
+        foreach (TorrentInfo download in downloads)
+        {
+            if (string.IsNullOrEmpty(download.Hash))
+            {
+                continue;
+            }
+            
+            Category? category = categoriesToClean
+                .FirstOrDefault(x => download.Category.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase));
+            
+            if (category is null)
+            {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+            
+            if (!_downloadCleanerConfig.DeletePrivate)
+            {
+                TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(download.Hash);
+
+                bool isPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
+                                 bool.TryParse(dictValue?.ToString(), out bool boolValue)
+                                 && boolValue;
+
+                if (isPrivate)
+                {
+                    _logger.LogDebug("skip | download is private | {name}", download.Name);
+                    continue;
+                }
+            }
+            
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+
+            SeedingCheckResult result = ShouldCleanDownload(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category);
+
+            if (!result.ShouldClean)
+            {
+                continue;
+            }
+
+            await _client.DeleteAsync([download.Hash], true);
+            await _notifier.NotifyDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
+        }
+    }
 
     /// <inheritdoc/>
     public override async Task Delete(string hash)
     {
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
-    }
-
-    /// <param name="categories"></param>
-    /// <inheritdoc/>
-    public override Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
-    {
-        throw new NotImplementedException();
-    }
-
-    /// <inheritdoc/>
-    public override Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
-    {
-        throw new NotImplementedException();
     }
 
     public override void Dispose()

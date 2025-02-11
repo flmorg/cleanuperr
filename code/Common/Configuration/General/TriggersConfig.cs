@@ -7,4 +7,6 @@ public sealed class TriggersConfig
     public required string QueueCleaner { get; init; }
     
     public required string ContentBlocker { get; init; }
+    
+    public required string DownloadCleaner { get; init; }
 }

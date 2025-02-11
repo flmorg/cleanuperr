@@ -10,10 +10,13 @@ public abstract record NotificationConfig
     [ConfigurationKeyName("ON_STALLED_STRIKE")]
     public bool OnStalledStrike { get; init; }
     
-    [ConfigurationKeyName("ON_QUEUE_ITEM_DELETE")]
-    public bool OnQueueItemDelete { get; init; }
+    [ConfigurationKeyName("ON_QUEUE_ITEM_DELETED")]
+    public bool OnQueueItemDeleted { get; init; }
+    
+    [ConfigurationKeyName("ON_DOWNLOAD_CLEANED")]
+    public bool OnDownloadCleaned { get; init; }
 
-    public bool IsEnabled => OnImportFailedStrike || OnStalledStrike || OnQueueItemDelete;
+    public bool IsEnabled => OnImportFailedStrike || OnStalledStrike || OnQueueItemDeleted || OnDownloadCleaned;
 
     public abstract bool IsValid();
 }

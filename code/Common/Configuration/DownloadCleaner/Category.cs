@@ -1,44 +1,45 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Common.Exceptions;
+using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadCleaner;
 
 public sealed record Category : IConfig
 {
     public required string Name { get; init; }
-    
+
     /// <summary>
     /// Max ratio before removing a download.
     /// </summary>
     [ConfigurationKeyName("MAX_RATIO")]
-    public required float MaxRatio { get; init; }
-    
+    public required float MaxRatio { get; init; } = -1;
+
     /// <summary>
     /// Min number of hours to seed before removing a download, if the ratio has been met.
     /// </summary>
     [ConfigurationKeyName("MIN_SEED_TIME")]
-    public required float MinSeedTime { get; init; }
-    
+    public required float MinSeedTime { get; init; } = 0;
+
     /// <summary>
     /// Number of hours to seed before removing a download.
     /// </summary>
     [ConfigurationKeyName("MAX_SEED_TIME")]
-    public required float MaxSeedTime { get; init; }
+    public required float MaxSeedTime { get; init; } = -1;
 
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            throw new ArgumentException("can not be empty", nameof(Name));
+            throw new ValidationException($"{nameof(Name)} can not be empty");
         }
 
-        if (MaxRatio < 0)
+        if (MaxRatio < 0 && MaxSeedTime < 0)
         {
-            throw new ArgumentException("can not be negative", nameof(MaxRatio));
+            throw new ValidationException($"both {nameof(MaxRatio)} and {nameof(MaxSeedTime)} are disabled");
         }
 
-        if (MaxSeedTime > 0 && MinSeedTime > 0 && MaxSeedTime < MinSeedTime)
+        if (MinSeedTime < 0)
         {
-            throw new ArgumentException("can not be less than min seed time", nameof(MaxSeedTime));
+            throw new ValidationException($"{nameof(MinSeedTime)} can not be negative");
         }
     }
 }

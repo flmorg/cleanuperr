@@ -1,4 +1,6 @@
-﻿namespace Common.Configuration.DownloadClient;
+﻿using Common.Exceptions;
+
+namespace Common.Configuration.DownloadClient;
 
 public sealed record DelugeConfig : IConfig
 {
@@ -12,7 +14,7 @@ public sealed record DelugeConfig : IConfig
     {
         if (Url is null)
         {
-            throw new ArgumentNullException(nameof(Url));
+            throw new ValidationException($"{nameof(Url)} is empty");
         }
     }
 }

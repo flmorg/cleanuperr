@@ -17,8 +17,8 @@ public static class ContextProvider
         return _asyncLocalDict.Value?.TryGetValue(key, out object? value) is true ? value : null;
     }
     
-    public static T? Get<T>(string key) where T : class
+    public static T Get<T>(string key) where T : class
     {
-        return Get(key) as T;
+        return Get(key) as T ?? throw new Exception($"failed to get \"{key}\" from context");
     }
 }

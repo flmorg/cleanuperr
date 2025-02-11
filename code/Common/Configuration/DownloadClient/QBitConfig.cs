@@ -1,4 +1,6 @@
-﻿namespace Common.Configuration.DownloadClient;
+﻿using Common.Exceptions;
+
+namespace Common.Configuration.DownloadClient;
 
 public sealed class QBitConfig : IConfig
 {
@@ -14,7 +16,7 @@ public sealed class QBitConfig : IConfig
     {
         if (Url is null)
         {
-            throw new ArgumentNullException(nameof(Url));
+            throw new ValidationException($"{nameof(Url)} is empty");
         }
     }
 }

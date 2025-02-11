@@ -7,7 +7,9 @@ using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -32,8 +34,9 @@ public sealed class TransmissionService : DownloadServiceBase
         IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
-        Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker)
+        Striker striker,
+        NotificationPublisher notifier
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
         _config = config.Value;
         _config.Validate();
@@ -175,56 +178,78 @@ public sealed class TransmissionService : DownloadServiceBase
         return result;
     }
 
-    /// <param name="categories"></param>
     /// <inheritdoc/>
-    public override Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
     {
-        throw new NotImplementedException();
+        string[] fields = [
+            TorrentFields.FILES,
+            TorrentFields.FILE_STATS,
+            TorrentFields.HASH_STRING,
+            TorrentFields.ID,
+            TorrentFields.ETA,
+            TorrentFields.NAME,
+            TorrentFields.STATUS,
+            TorrentFields.IS_PRIVATE,
+            TorrentFields.DOWNLOADED_EVER,
+            TorrentFields.DOWNLOAD_DIR,
+            TorrentFields.SECONDS_SEEDING,
+            TorrentFields.UPLOAD_RATIO
+        ];
+            
+        return (await _client.TorrentGetAsync(fields))
+            ?.Torrents
+            ?.Where(x => !string.IsNullOrEmpty(x.HashString))
+            .Where(x => x.Status is 5 or 6)
+            .Where(x => categories
+                .Any(cat => x.DownloadDir?.EndsWith(cat.Name, StringComparison.InvariantCultureIgnoreCase) is true)
+            )
+            .Cast<object>()
+            .ToList();
     }
 
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads1, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
     {
-        List<TorrentInfo>? downloads = await GetTorrentsAsync();
-
-        if (downloads?.Count is null or 0)
-        {
-            _logger.LogDebug("no downloads found in the download client");
-            return;
-        }
-
-        List<long> downloadsToDelete = [];
-
         foreach (TorrentInfo download in downloads)
         {
             if (string.IsNullOrEmpty(download.HashString))
             {
                 continue;
             }
+            
+            Category? category = categoriesToClean
+                .FirstOrDefault(x => download.DownloadDir?.EndsWith(x.Name, StringComparison.InvariantCultureIgnoreCase) is true);
 
-            // seed or queued to seed
-            if (download.Status is not 5 and not 6)
+            if (category is null)
             {
                 continue;
             }
 
             if (excludedHashes.Any(x => x.Equals(download.HashString, StringComparison.InvariantCultureIgnoreCase)))
             {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            if (!_downloadCleanerConfig.DeletePrivate && download.IsPrivate is true)
+            {
+                _logger.LogDebug("skip | download is private | {name}", download.Name);
                 continue;
             }
             
-            // TODO check for download path
-            // TODO check for how much
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.HashString);
+
+            TimeSpan seedingTime = TimeSpan.FromSeconds(download.SecondsSeeding ?? 0);
+            SeedingCheckResult result = ShouldCleanDownload(download.uploadRatio ?? 0, seedingTime, category);
             
-            downloadsToDelete.Add(download.Id);
+            if (!result.ShouldClean)
+            {
+                continue;
+            }
             
-            await _client.TorrentRemoveAsync(downloadsToDelete.ToArray(), true);
-        }
-        
-        if (downloadsToDelete.Count is 0)
-        {
-            _logger.LogDebug("nothing to clean");
-            return;
+            await _client.TorrentRemoveAsync([download.Id], true);
+            await _notifier.NotifyDownloadCleaned(download.uploadRatio ?? 0, seedingTime, category.Name, result.Reason);
         }
     }
 
@@ -311,22 +336,5 @@ public sealed class TransmissionService : DownloadServiceBase
         }
 
         return torrent;
-    }
-
-    private async Task<List<TorrentInfo>?> GetTorrentsAsync()
-    {
-        string[] fields = [
-            TorrentFields.FILES,
-            TorrentFields.FILE_STATS,
-            TorrentFields.HASH_STRING,
-            TorrentFields.ID,
-            TorrentFields.ETA,
-            TorrentFields.NAME,
-            TorrentFields.STATUS,
-            TorrentFields.IS_PRIVATE,
-            TorrentFields.DOWNLOADED_EVER
-        ];
-            
-        return (await _client.TorrentGetAsync(fields))?.Torrents?.ToList();
     }
 }

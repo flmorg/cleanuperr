@@ -22,5 +22,5 @@ public sealed record TorrentStatus
     [JsonProperty("seeding_time")]
     public long SeedingTime { get; init; }
     
-    public double Ratio { get; init; }
+    public float Ratio { get; init; }
 }

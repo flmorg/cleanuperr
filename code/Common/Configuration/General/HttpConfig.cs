@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Common.Exceptions;
+using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.General;
 
@@ -14,7 +15,7 @@ public class HttpConfig : IConfig
     {
         if (Timeout is 0)
         {
-            throw new ArgumentException("HTTP_TIMEOUT must be greater than 0");
+            throw new ValidationException("HTTP_TIMEOUT must be greater than 0");
         }
     }
 }

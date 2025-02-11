@@ -8,7 +8,9 @@ using Domain.Enums;
 using Domain.Models.Cache;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,6 +27,7 @@ public abstract class DownloadServiceBase : IDownloadService
     protected readonly FilenameEvaluator _filenameEvaluator;
     protected readonly Striker _striker;
     protected readonly MemoryCacheEntryOptions _cacheOptions;
+    protected readonly NotificationPublisher _notifier;
     
     protected DownloadServiceBase(
         ILogger<DownloadServiceBase> logger,
@@ -33,8 +36,8 @@ public abstract class DownloadServiceBase : IDownloadService
         IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         FilenameEvaluator filenameEvaluator,
-        Striker striker
-    )
+        Striker striker,
+        NotificationPublisher notifier)
     {
         _logger = logger;
         _queueCleanerConfig = queueCleanerConfig.Value;
@@ -43,6 +46,7 @@ public abstract class DownloadServiceBase : IDownloadService
         _cache = cache;
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
+        _notifier = notifier;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
@@ -96,5 +100,77 @@ public abstract class DownloadServiceBase : IDownloadService
     protected async Task<bool> StrikeAndCheckLimit(string hash, string itemName)
     {
         return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled);
+    }
+    
+    protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)
+    {
+        // check ratio
+        if (DownloadReachedRatio(ratio, seedingTime, category))
+        {
+            return new()
+            {
+                ShouldClean = true,
+                Reason = CleanReason.MaxRatioReached
+            };
+        }
+            
+        // check max seed time
+        if (DownloadReachedMaxSeedTime(seedingTime, category))
+        {
+            return new()
+            {
+                ShouldClean = true,
+                Reason = CleanReason.MaxSeedTimeReached
+            };
+        }
+
+        return new();
+    }
+    
+    private bool DownloadReachedRatio(double ratio, TimeSpan seedingTime, Category category)
+    {
+        if (category.MaxRatio < 0)
+        {
+            return false;
+        }
+        
+        string downloadName = ContextProvider.Get<string>("downloadName");
+        TimeSpan minSeedingTime = TimeSpan.FromHours(category.MinSeedTime);
+        
+        if (category.MinSeedTime > 0 && seedingTime < minSeedingTime)
+        {
+            _logger.LogDebug("skip | download has not reached MIN_SEED_TIME | {name}", downloadName);
+            return false;
+        }
+
+        if (ratio < category.MaxRatio)
+        {
+            _logger.LogDebug("skip | download has not reached MAX_RATIO | {name}", downloadName);
+            return false;
+        }
+        
+        _logger.LogInformation("download cleaned | MAX_RATIO & MIN_SEED_TIME reached | {name}", downloadName);
+        return true;
+    }
+    
+    private bool DownloadReachedMaxSeedTime(TimeSpan seedingTime, Category category)
+    {
+        if (category.MaxSeedTime < 0)
+        {
+            return false;
+        }
+        
+        string downloadName = ContextProvider.Get<string>("downloadName");
+        TimeSpan maxSeedingTime = TimeSpan.FromHours(category.MaxSeedTime);
+        
+        if (category.MaxSeedTime > 0 && seedingTime < maxSeedingTime)
+        {
+            _logger.LogDebug("skip | download has not reached MAX_SEED_TIME | {name}", downloadName);
+            return false;
+        }
+
+        // max seed time is 0 or reached
+        _logger.LogInformation("download cleaned | MAX_SEED_TIME reached | {name}", downloadName);
+        return true;
     }
 }

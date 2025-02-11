@@ -1,4 +1,3 @@
-using Domain.Enums;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
 using Microsoft.Extensions.Options;
@@ -12,6 +11,7 @@ public class NotifiarrProvider : NotificationProvider
 
     private const string WarningColor = "f0ad4e";
     private const string ImportantColor = "bb2124";
+    private const string Logo = "https://github.com/flmorg/cleanuperr/blob/main/Logo/48.png?raw=true";
 
     public NotifiarrProvider(IOptions<NotifiarrConfig> config, INotifiarrProxy proxy)
         : base(config)
@@ -32,12 +32,17 @@ public class NotifiarrProvider : NotificationProvider
         await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
     }
     
-    public override async Task OnQueueItemDelete(QueueItemDeleteNotification notification)
+    public override async Task OnQueueItemDeleted(QueueItemDeletedNotification notification)
     {
         await _proxy.SendNotification(BuildPayload(notification, ImportantColor), _config);
     }
 
-    private NotifiarrPayload BuildPayload(Notification notification, string color)
+    public override async Task OnDownloadCleaned(DownloadCleanedNotification notification)
+    {
+        await _proxy.SendNotification(BuildPayload(notification), _config);
+    }
+
+    private NotifiarrPayload BuildPayload(ArrNotification notification, string color)
     {
         NotifiarrPayload payload = new()
         {
@@ -47,7 +52,7 @@ public class NotifiarrProvider : NotificationProvider
                 Text = new()
                 {
                     Title = notification.Title,
-                    Icon = "https://github.com/flmorg/cleanuperr/blob/main/Logo/48.png?raw=true",
+                    Icon = Logo,
                     Description = notification.Description,
                     Fields = new()
                     {
@@ -62,7 +67,7 @@ public class NotifiarrProvider : NotificationProvider
                 },
                 Images = new()
                 {
-                    Thumbnail = new Uri("https://github.com/flmorg/cleanuperr/blob/main/Logo/48.png?raw=true"),
+                    Thumbnail = new Uri(Logo),
                     Image = notification.Image
                 }
             }
@@ -70,6 +75,34 @@ public class NotifiarrProvider : NotificationProvider
         
         payload.Discord.Text.Fields.AddRange(notification.Fields?.Adapt<List<Field>>() ?? []);
 
+        return payload;
+    }
+
+    private NotifiarrPayload BuildPayload(DownloadCleanedNotification notification)
+    {
+        NotifiarrPayload payload = new()
+        {
+            Discord = new()
+            {
+                Color = ImportantColor,
+                Text = new()
+                {
+                    Title = notification.Title,
+                    Icon = Logo,
+                    Description = notification.Description,
+                    Fields = notification.Fields?.Adapt<List<Field>>() ?? []
+                },
+                Ids = new Ids
+                {
+                    Channel = _config.ChannelId
+                },
+                Images = new()
+                {
+                    Thumbnail = new Uri(Logo)
+                }
+            }
+        };
+        
         return payload;
     }
 }

@@ -1,5 +1,5 @@
 ﻿namespace Infrastructure.Verticals.Notifications.Models;
 
-public sealed record StalledStrikeNotification : Notification
+public sealed record StalledStrikeNotification : ArrNotification
 {
 }
