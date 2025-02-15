@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Common.Attributes;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
@@ -17,9 +18,14 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
-public sealed class DelugeService : DownloadServiceBase
+public class DelugeService : DownloadService, IDelugeService
 {
     private readonly DelugeClient _client;
+
+    /// <inheritdoc/>
+    public DelugeService()
+    {
+    }
     
     public DelugeService(
         ILogger<DelugeService> logger,
@@ -29,8 +35,8 @@ public sealed class DelugeService : DownloadServiceBase
         IOptions<ContentBlockerConfig> contentBlockerConfig,
         IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
-        FilenameEvaluator filenameEvaluator,
-        Striker striker,
+        IFilenameEvaluator filenameEvaluator,
+        IStriker striker,
         NotificationPublisher notifier
     ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
@@ -184,7 +190,7 @@ public sealed class DelugeService : DownloadServiceBase
             return result;
         }
 
-        await _client.ChangeFilesPriority(hash, sortedPriorities);
+        await ((DelugeService)Proxy).ChangeFilesPriority(hash, sortedPriorities);
 
         return result;
     }
@@ -240,17 +246,33 @@ public sealed class DelugeService : DownloadServiceBase
                 continue;
             }
             
-            await _client.DeleteTorrents([download.Hash]);
+            await ((DelugeService)Proxy).DeleteDownload(download.Hash);
+
+            _logger.LogInformation(
+                "download cleaned | {reason} reached | {name}",
+                result.Reason is CleanReason.MaxRatioReached
+                    ? "MAX_RATIO & MIN_SEED_TIME"
+                    : "MAX_SEED_TIME",
+                download.Name
+            );
+            
             await _notifier.NotifyDownloadCleaned(download.Ratio, seedingTime, category.Name, result.Reason);
         }
     }
     
     /// <inheritdoc/>
-    public override async Task Delete(string hash)
+    [DryRunSafeguard]
+    public override async Task DeleteDownload(string hash)
     {
         hash = hash.ToLowerInvariant();
         
         await _client.DeleteTorrents([hash]);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task ChangeFilesPriority(string hash, List<int> sortedPriorities)
+    {
+        await _client.ChangeFilesPriority(hash, sortedPriorities);
     }
     
     private async Task<bool> IsItemStuckAndShouldRemove(TorrentStatus status)

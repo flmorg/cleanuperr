@@ -7,6 +7,7 @@ using Common.Helpers;
 using Domain.Enums;
 using Domain.Models.Cache;
 using Infrastructure.Helpers;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
@@ -17,26 +18,33 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
-public abstract class DownloadServiceBase : IDownloadService
+public abstract class DownloadService : InterceptedService, IDownloadService
 {
-    protected readonly ILogger<DownloadServiceBase> _logger;
+    protected readonly ILogger<DownloadService> _logger;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
     protected readonly ContentBlockerConfig _contentBlockerConfig;
     protected readonly DownloadCleanerConfig _downloadCleanerConfig;
     protected readonly IMemoryCache _cache;
-    protected readonly FilenameEvaluator _filenameEvaluator;
-    protected readonly Striker _striker;
+    protected readonly IFilenameEvaluator _filenameEvaluator;
+    protected readonly IStriker _striker;
     protected readonly MemoryCacheEntryOptions _cacheOptions;
     protected readonly NotificationPublisher _notifier;
+
+    /// <summary>
+    /// Constructor to be used by interceptors.
+    /// </summary>
+    protected DownloadService()
+    {
+    }
     
-    protected DownloadServiceBase(
-        ILogger<DownloadServiceBase> logger,
+    protected DownloadService(
+        ILogger<DownloadService> logger,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
         IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
-        FilenameEvaluator filenameEvaluator,
-        Striker striker,
+        IFilenameEvaluator filenameEvaluator,
+        IStriker striker,
         NotificationPublisher notifier)
     {
         _logger = logger;
@@ -66,7 +74,7 @@ public abstract class DownloadServiceBase : IDownloadService
     );
 
     /// <inheritdoc/>
-    public abstract Task Delete(string hash);
+    public abstract Task DeleteDownload(string hash);
 
     /// <inheritdoc/>
     public abstract Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories);
@@ -149,7 +157,7 @@ public abstract class DownloadServiceBase : IDownloadService
             return false;
         }
         
-        _logger.LogInformation("download cleaned | MAX_RATIO & MIN_SEED_TIME reached | {name}", downloadName);
+        // max ration is 0 or reached
         return true;
     }
     
@@ -170,7 +178,6 @@ public abstract class DownloadServiceBase : IDownloadService
         }
 
         // max seed time is 0 or reached
-        _logger.LogInformation("download cleaned | MAX_SEED_TIME reached | {name}", downloadName);
         return true;
     }
 }

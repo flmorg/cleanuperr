@@ -5,6 +5,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Lidarr;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,14 +13,19 @@ using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
 
-public sealed class LidarrClient : ArrClient
+public class LidarrClient : ArrClient, ILidarrClient
 {
+    /// <inheritdoc/>
+    public LidarrClient()
+    {
+    }
+    
     public LidarrClient(
         ILogger<LidarrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        Striker striker
+        IStriker striker
     ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
     {
     }
@@ -54,13 +60,12 @@ public sealed class LidarrClient : ArrClient
             );
             SetApiKey(request, arrInstance.ApiKey);
 
-            using var response = await _httpClient.SendAsync(request);
             string? logContext = await ComputeCommandLogContextAsync(arrInstance, command);
 
             try
             {
-                response.EnsureSuccessStatusCode();
-
+                using var _ = await ((LidarrClient)Proxy).SendRequestAsync(request);
+                
                 _logger.LogInformation("{log}", GetSearchLog(arrInstance.Url, command, true, logContext));
             }
             catch

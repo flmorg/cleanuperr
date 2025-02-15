@@ -5,6 +5,7 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
@@ -48,7 +49,7 @@ public sealed class QueueCleaner : GenericHandler
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
         
         HashSet<SearchItem> itemsToBeRefreshed = [];
-        ArrClient arrClient = GetClient(instanceType);
+        IArrClient arrClient = GetClient(instanceType);
         
         // push to context
         ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
@@ -113,7 +114,7 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
-                await _notifier.NotifyQueueItemDelete(removeFromClient, deleteReason);
+                await _notifier.NotifyQueueItemDeleted(removeFromClient, deleteReason);
             }
         });
         

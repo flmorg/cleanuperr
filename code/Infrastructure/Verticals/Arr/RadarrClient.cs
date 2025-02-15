@@ -5,6 +5,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Radarr;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,14 +13,19 @@ using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
 
-public sealed class RadarrClient : ArrClient
+public class RadarrClient : ArrClient, IRadarrClient
 {
+    /// <inheritdoc/>
+    public RadarrClient()
+    {
+    }
+    
     public RadarrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        Striker striker
+        IStriker striker
     ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
     {
     }
@@ -62,12 +68,11 @@ public sealed class RadarrClient : ArrClient
         );
         SetApiKey(request, arrInstance.ApiKey);
 
-        using HttpResponseMessage response = await _httpClient.SendAsync(request);
         string? logContext = await ComputeCommandLogContextAsync(arrInstance, command);
 
         try
         {
-            response.EnsureSuccessStatusCode();
+            using var _ = await ((RadarrClient)Proxy).SendRequestAsync(request);
             
             _logger.LogInformation("{log}", GetSearchLog(arrInstance.Url, command, true, logContext));
         }

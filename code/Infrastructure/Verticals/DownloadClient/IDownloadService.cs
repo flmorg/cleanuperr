@@ -2,10 +2,11 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
+using Infrastructure.Interceptors;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
-public interface IDownloadService : IDisposable
+public interface IDownloadService : IDisposable, IDryRunService
 {
     public Task LoginAsync();
 
@@ -48,5 +49,5 @@ public interface IDownloadService : IDisposable
     /// <summary>
     /// Deletes a download item.
     /// </summary>
-    public Task Delete(string hash);
+    public Task DeleteDownload(string hash);
 }

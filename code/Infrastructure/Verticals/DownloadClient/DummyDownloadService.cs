@@ -12,9 +12,9 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
-public sealed class DummyDownloadService : DownloadServiceBase
+public sealed class DummyDownloadService : DownloadService
 {
-    public DummyDownloadService(ILogger<DownloadServiceBase> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IOptions<DownloadCleanerConfig> downloadCleanerConfig, IMemoryCache cache, FilenameEvaluator filenameEvaluator, Striker striker, NotificationPublisher notifier) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
+    public DummyDownloadService(ILogger<DownloadService> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IOptions<DownloadCleanerConfig> downloadCleanerConfig, IMemoryCache cache, FilenameEvaluator filenameEvaluator, IStriker striker, NotificationPublisher notifier) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
     }
 
@@ -47,7 +47,7 @@ public sealed class DummyDownloadService : DownloadServiceBase
         throw new NotImplementedException();
     }
 
-    public override Task Delete(string hash)
+    public override Task DeleteDownload(string hash)
     {
         throw new NotImplementedException();
     }

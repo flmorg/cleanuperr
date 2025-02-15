@@ -2,6 +2,7 @@
 
 public enum CleanReason
 {
+    None,
     MaxRatioReached,
     MaxSeedTimeReached,
 }

@@ -1,7 +1,9 @@
 ﻿using System.Globalization;
+using Common.Attributes;
 using Common.Configuration.Arr;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
@@ -10,18 +12,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Notifications;
 
-public sealed class NotificationPublisher
+public class NotificationPublisher : InterceptedService, IDryRunService
 {
     private readonly ILogger<NotificationPublisher> _logger;
     private readonly IBus _messageBus;
-
+    
+    /// <summary>
+    /// Constructor to be used by interceptors.
+    /// </summary>
+    public NotificationPublisher()
+    {
+    }
+    
     public NotificationPublisher(ILogger<NotificationPublisher> logger, IBus messageBus)
     {
         _logger = logger;
         _messageBus = messageBus;
     }
     
-    public async Task NotifyStrike(StrikeType strikeType, int strikeCount)
+    [DryRunSafeguard]
+    public virtual async Task NotifyStrike(StrikeType strikeType, int strikeCount)
     {
         try
         {
@@ -57,7 +67,8 @@ public sealed class NotificationPublisher
         }
     }
 
-    public async Task NotifyQueueItemDelete(bool removeFromClient, DeleteReason reason)
+    [DryRunSafeguard]
+    public virtual async Task NotifyQueueItemDeleted(bool removeFromClient, DeleteReason reason)
     {
         QueueRecord record = ContextProvider.Get<QueueRecord>(nameof(QueueRecord));
         InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
@@ -78,7 +89,8 @@ public sealed class NotificationPublisher
         await _messageBus.Publish(notification);
     }
 
-    public async Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
+    [DryRunSafeguard]
+    public virtual async Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
     {
         DownloadCleanedNotification notification = new()
         {

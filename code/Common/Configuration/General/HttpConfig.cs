@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.General;
 
-public class HttpConfig : IConfig
+public sealed record HttpConfig : IConfig
 {
     [ConfigurationKeyName("HTTP_MAX_RETRIES")]
     public ushort MaxRetries { get; init; }

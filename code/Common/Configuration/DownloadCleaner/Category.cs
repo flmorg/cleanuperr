@@ -11,19 +11,19 @@ public sealed record Category : IConfig
     /// Max ratio before removing a download.
     /// </summary>
     [ConfigurationKeyName("MAX_RATIO")]
-    public required float MaxRatio { get; init; } = -1;
+    public required double MaxRatio { get; init; } = -1;
 
     /// <summary>
     /// Min number of hours to seed before removing a download, if the ratio has been met.
     /// </summary>
     [ConfigurationKeyName("MIN_SEED_TIME")]
-    public required float MinSeedTime { get; init; } = 0;
+    public required double MinSeedTime { get; init; } = 0;
 
     /// <summary>
     /// Number of hours to seed before removing a download.
     /// </summary>
     [ConfigurationKeyName("MAX_SEED_TIME")]
-    public required float MaxSeedTime { get; init; } = -1;
+    public required double MaxSeedTime { get; init; } = -1;
 
     public void Validate()
     {

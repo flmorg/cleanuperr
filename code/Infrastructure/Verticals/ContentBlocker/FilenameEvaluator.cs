@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.ContentBlocker;
 
-public sealed class FilenameEvaluator
+public class FilenameEvaluator : IFilenameEvaluator
 {
     private readonly ILogger<FilenameEvaluator> _logger;
     
@@ -31,7 +31,6 @@ public sealed class FilenameEvaluator
         {
             BlocklistType.Blacklist => !patterns.Any(pattern => MatchesPattern(filename, pattern)),
             BlocklistType.Whitelist => patterns.Any(pattern => MatchesPattern(filename, pattern)),
-            _ => true
         };
     }
 
@@ -46,7 +45,6 @@ public sealed class FilenameEvaluator
         {
             BlocklistType.Blacklist => !regexes.Any(regex => regex.IsMatch(filename)),
             BlocklistType.Whitelist => regexes.Any(regex => regex.IsMatch(filename)),
-            _ => true
         };
     }
     
@@ -76,6 +74,6 @@ public sealed class FilenameEvaluator
             );
         }
 
-        return filename == pattern;
+        return filename.Equals(pattern, StringComparison.InvariantCultureIgnoreCase);
     }
 }

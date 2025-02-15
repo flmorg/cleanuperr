@@ -1,9 +1,10 @@
-﻿using Common.Configuration.Arr;
+using Common.Configuration.Arr;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
@@ -72,7 +73,7 @@ public sealed class DownloadCleaner : GenericHandler
     {
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
         
-        ArrClient arrClient = GetClient(instanceType);
+        IArrClient arrClient = GetClient(instanceType);
         
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {

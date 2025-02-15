@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Common.Attributes;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
@@ -19,12 +20,17 @@ using Transmission.API.RPC.Entity;
 
 namespace Infrastructure.Verticals.DownloadClient.Transmission;
 
-public sealed class TransmissionService : DownloadServiceBase
+public class TransmissionService : DownloadService, ITransmissionService
 {
     private readonly TransmissionConfig _config;
     private readonly Client _client;
     private TorrentInfo[]? _torrentsCache;
 
+    /// <inheritdoc/>
+    public TransmissionService()
+    {
+    }
+    
     public TransmissionService(
         IHttpClientFactory httpClientFactory,
         ILogger<TransmissionService> logger,
@@ -33,8 +39,8 @@ public sealed class TransmissionService : DownloadServiceBase
         IOptions<ContentBlockerConfig> contentBlockerConfig,
         IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
-        FilenameEvaluator filenameEvaluator,
-        Striker striker,
+        IFilenameEvaluator filenameEvaluator,
+        IStriker striker,
         NotificationPublisher notifier
     ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
@@ -169,11 +175,7 @@ public sealed class TransmissionService : DownloadServiceBase
         
         _logger.LogDebug("changing priorities | torrent {hash}", hash);
         
-        await _client.TorrentSetAsync(new TorrentSettings
-        {
-            Ids = [ torrent.Id ],
-            FilesUnwanted = unwantedFiles.ToArray(),
-        });
+        await ((TransmissionService)Proxy).SetUnwantedFiles(torrent.Id, unwantedFiles.ToArray());
 
         return result;
     }
@@ -247,13 +249,22 @@ public sealed class TransmissionService : DownloadServiceBase
             {
                 continue;
             }
-            
-            await _client.TorrentRemoveAsync([download.Id], true);
+
+            await ((TransmissionService)Proxy).RemoveDownloadAsync(download.Id);
+
+            _logger.LogInformation(
+                "download cleaned | {reason} reached | {name}",
+                result.Reason is CleanReason.MaxRatioReached
+                    ? "MAX_RATIO & MIN_SEED_TIME"
+                    : "MAX_SEED_TIME",
+                download.Name
+            );
+
             await _notifier.NotifyDownloadCleaned(download.uploadRatio ?? 0, seedingTime, category.Name, result.Reason);
         }
     }
-
-    public override async Task Delete(string hash)
+    
+    public override async Task DeleteDownload(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 
@@ -267,6 +278,22 @@ public sealed class TransmissionService : DownloadServiceBase
 
     public override void Dispose()
     {
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task RemoveDownloadAsync(long downloadId)
+    {
+        await _client.TorrentRemoveAsync([downloadId], true);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task SetUnwantedFiles(long downloadId, long[] unwantedFiles)
+    {
+        await _client.TorrentSetAsync(new TorrentSettings
+        {
+            Ids = [downloadId],
+            FilesUnwanted = unwantedFiles,
+        });
     }
     
     private async Task<bool> IsItemStuckAndShouldRemove(TorrentInfo torrent)

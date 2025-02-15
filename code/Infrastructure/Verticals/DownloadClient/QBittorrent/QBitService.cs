@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Common.Attributes;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
@@ -18,11 +19,16 @@ using Category = Common.Configuration.DownloadCleaner.Category;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
-public sealed class QBitService : DownloadServiceBase
+public class QBitService : DownloadService, IQBitService
 {
     private readonly QBitConfig _config;
     private readonly QBittorrentClient _client;
 
+    /// <inheritdoc/>
+    public QBitService()
+    {
+    }
+    
     public QBitService(
         ILogger<QBitService> logger,
         IHttpClientFactory httpClientFactory,
@@ -31,8 +37,8 @@ public sealed class QBitService : DownloadServiceBase
         IOptions<ContentBlockerConfig> contentBlockerConfig,
         IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
-        FilenameEvaluator filenameEvaluator,
-        Striker striker,
+        IFilenameEvaluator filenameEvaluator,
+        IStriker striker,
         NotificationPublisher notifier
     ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
@@ -194,7 +200,7 @@ public sealed class QBitService : DownloadServiceBase
 
         foreach (int fileIndex in unwantedFiles)
         {
-            await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
+            await ((QBitService)Proxy).SkipFile(hash, fileIndex);
         }
         
         return result;
@@ -260,15 +266,31 @@ public sealed class QBitService : DownloadServiceBase
                 continue;
             }
 
-            await _client.DeleteAsync([download.Hash], true);
+            await ((QBitService)Proxy).DeleteDownload(download.Hash);
+
+            _logger.LogInformation(
+                "download cleaned | {reason} reached | {name}",
+                result.Reason is CleanReason.MaxRatioReached
+                    ? "MAX_RATIO & MIN_SEED_TIME"
+                    : "MAX_SEED_TIME",
+                download.Name
+            );
+            
             await _notifier.NotifyDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
         }
     }
 
     /// <inheritdoc/>
-    public override async Task Delete(string hash)
+    [DryRunSafeguard]
+    public override async Task DeleteDownload(string hash)
     {
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task SkipFile(string hash, int fileIndex)
+    {
+        await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
     }
 
     public override void Dispose()

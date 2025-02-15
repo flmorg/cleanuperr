@@ -1,6 +1,7 @@
 ﻿using Common.Configuration;
 using Common.Configuration.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Arr;
@@ -14,7 +15,7 @@ public sealed class ArrQueueIterator
         _logger = logger;
     }
     
-    public async Task Iterate(ArrClient arrClient, ArrInstance arrInstance, Func<IReadOnlyList<QueueRecord>, Task> action)
+    public async Task Iterate(IArrClient arrClient, ArrInstance arrInstance, Func<IReadOnlyList<QueueRecord>, Task> action)
     {
         const ushort maxPage = 100;
         ushort page = 1;

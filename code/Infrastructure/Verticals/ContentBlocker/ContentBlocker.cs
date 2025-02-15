@@ -7,6 +7,7 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
@@ -36,7 +37,6 @@ public sealed class ContentBlocker : GenericHandler
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory,
         NotificationPublisher notifier
-        
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
@@ -76,7 +76,7 @@ public sealed class ContentBlocker : GenericHandler
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
 
         HashSet<SearchItem> itemsToBeRefreshed = [];
-        ArrClient arrClient = GetClient(instanceType);
+        IArrClient arrClient = GetClient(instanceType);
         BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
         ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
         ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
@@ -131,7 +131,7 @@ public sealed class ContentBlocker : GenericHandler
                 }
                 
                 await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
-                await _notifier.NotifyQueueItemDelete(removeFromClient, DeleteReason.AllFilesBlocked);
+                await _notifier.NotifyQueueItemDeleted(removeFromClient, DeleteReason.AllFilesBlocked);
             }
         });
         

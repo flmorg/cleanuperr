@@ -2,6 +2,7 @@
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.General;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
 
@@ -11,6 +12,7 @@ public static class ConfigurationDI
 {
     public static IServiceCollection AddConfiguration(this IServiceCollection services, IConfiguration configuration) =>
         services
+            .Configure<DryRunConfig>(configuration)
             .Configure<QueueCleanerConfig>(configuration.GetSection(QueueCleanerConfig.SectionName))
             .Configure<ContentBlockerConfig>(configuration.GetSection(ContentBlockerConfig.SectionName))
             .Configure<DownloadCleanerConfig>(configuration.GetSection(DownloadCleanerConfig.SectionName))
