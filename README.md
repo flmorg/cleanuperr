@@ -61,7 +61,7 @@ This tool is actively developed and still a work in progress, so using the `late
 2. **Queue cleaner** will:
    - Run every 5 minutes (or configured cron, or right after `content blocker`).
    - Process all items in the *arr queue.
-   - Check each queue item if it is **stalled (download speed is 0)**, **stuck in matadata downloading** or **failed to be imported**.
+   - Check each queue item if it is **stalled (download speed is 0)**, **stuck in metadata downloading** or **failed to be imported**.
      - If it is, the item receives a **strike** and will continue to accumulate strikes every time it meets any of these conditions.
    - Check each queue item if it meets one of the following condition in the download client:
      - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
@@ -71,6 +71,9 @@ This tool is actively developed and still a work in progress, so using the `late
      - It will be removed from the *arr's queue and blocked.
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
+3. **Download cleaner** will:
+   - Run every hour (or configured cron).
+   - Automatically clean up downloads that have been seeding for a certain amount of time.
 
 # Setup
 
@@ -194,13 +197,15 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
+| DRY_RUN | No | If `true`, irreversible actions such as notifying or deleting are skipped. | false |
 | LOGGING__LOGLEVEL | No | Can be `Verbose`, `Debug`, `Information`, `Warning`, `Error` or `Fatal`. | `Information` |
 | LOGGING__FILE__ENABLED | No | Enable or disable logging to file. | false |
 | LOGGING__FILE__PATH | No | Directory where to save the log files. | empty |
 | LOGGING__ENHANCED | No | Enhance logs whenever possible.<br>A more detailed description is provided. [here](variables.md#LOGGING__ENHANCED) | true |
 |||||
-| TRIGGERS__QUEUECLEANER | Yes if queue cleaner is enabled | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval.<br>- **Is ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`**. | 0 0/5 * * * ? |
-| TRIGGERS__CONTENTBLOCKER | Yes if content blocker is enabled | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval. | 0 0/5 * * * ? |
+| TRIGGERS__QUEUECLEANER | No | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval.<br>- **Is ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`**. | 0 0/5 * * * ? (every 5 minutes) |
+| TRIGGERS__CONTENTBLOCKER | No | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval. | 0 0/5 * * * ? (every 5 minutes) |
+| TRIGGERS__DOWNLOADCLEANER | No | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval. | 0 0 * * * ? (every hour) |
 |||||
 | QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner. | true |
 | QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process. | true |
@@ -216,6 +221,27 @@ services:
 | CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker. | false |
 | CONTENTBLOCKER__IGNORE_PRIVATE | No | Whether to ignore downloads from private trackers. | false |
 | CONTENTBLOCKER__DELETE_PRIVATE | No | - Whether to delete private downloads that have all files blocked from the download client.<br>- Does not have any effect if `CONTENTBLOCKER__IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
+| DOWNLOADCLEANER__ENABLED | No | Enable or disable the download cleaner. | false |
+| DOWNLOADCLEANER__DELETE_PRIVATE | No | - Whether to delete private downloads.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
+| DOWNLOADCLEANER__CATEGORIES__0__NAME | No | Name of the category to clean. | empty |
+| DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO | No | Maximum ratio for the category. | `-1` |
+| DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME | No | Minimum seed time for the category. It is used with `MAX_RATIO` to ensure a minimum seed time. | `0` |
+| DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME | No | Maximum seed time for the category. | `-1` |
+
+> [!NOTE]
+> 1. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
+> 2. Multiple failed import patterns can be specified using this format, where `<NUMBER>` starts from 0:
+> ```
+> QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>
+> ```
+> 3. A download is cleaned when any of (`MAX_RATIO` & `MIN_SEED_TIME`) or `MAX_SEED_TIME` is reached.
+> 4. Multiple categories can be specified using this format, where `<NUMBER>` starts from 0:
+> ```
+> DOWNLOADCLEANER__CATEGORIES__<NUMBER>__NAME
+> DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_RATIO
+> DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MIN_SEED_TIME
+> DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_SEED_TIME
+> ```
 </details>
 
 ### Download client variables
@@ -235,6 +261,9 @@ services:
 | TRANSMISSION__URL | No | Transmission instance url | http://localhost:9091 |
 | TRANSMISSION__USERNAME | No | Transmission user | empty |
 | TRANSMISSION__PASSWORD | No | Transmission password | empty |
+
+> [!NOTE]
+> 1. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
 </details>
 
 ### Arr variables
@@ -261,6 +290,22 @@ services:
 | LIDARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
 | LIDARR__INSTANCES__0__URL | No | First LIDARR instance url | http://localhost:8686 |
 | LIDARR__INSTANCES__0__APIKEY | No | First LIDARR instance API key | empty |
+
+> [!NOTE]
+> 1. Multiple Sonarr/Radarr/Lidarr instances can be specified using this format, where `<NUMBER>` starts from `0`:
+> ```
+> SONARR__INSTANCES__<NUMBER>__URL
+> SONARR__INSTANCES__<NUMBER>__APIKEY
+> ```
+> 2. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
+> ```
+> *example            // file name ends with "example"
+> example*            // file name starts with "example"
+> *example*           // file name has "example" in the name
+> example             // file name is exactly the word "example"
+> regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line with "regex:"
+> ```
+> 3. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
 </details>
 
 ### Notifications variables
@@ -269,11 +314,13 @@ services:
 
 | Variable | Required | Description | Default value |
 |---|---|---|---|
-| NOTIFIARR__ON_IMPORT_FAILED_STRIKE | No | Notify on failed import strike.  | false |
-| NOTIFIARR__ON_STALLED_STRIKE | No | Notify on stalled download strike. | false |
-| NOTIFIARR__ON_QUEUE_ITEM_DELETE | No | Notify on deleting a queue item. | false |
 | NOTIFIARR__API_KEY | No | Notifiarr API key.<br>Requires Notifiarr's `Passthrough` integration to work. | empty |
 | NOTIFIARR__CHANNEL_ID | No | Discord channel id for notifications. | empty |
+| NOTIFIARR__ON_IMPORT_FAILED_STRIKE | No | Notify on failed import strike.  | false |
+| NOTIFIARR__ON_STALLED_STRIKE | No | Notify on stalled download strike. | false |
+| NOTIFIARR__ON_QUEUE_ITEM_DELETED | No | Notify on queue item deleted. | false |
+| NOTIFIARR__ON_DOWNLOAD_CLEANED | No | Notify on download cleaned. | false |
+
 </details>
 
 
@@ -286,30 +333,6 @@ services:
 | HTTP_MAX_RETRIES | No | The number of times to retry a failed HTTP call (to *arrs, download clients etc.) | 0 |
 | HTTP_TIMEOUT | No | The number of seconds to wait before failing an HTTP call (to *arrs, download clients etc.) | 100 |
 </details>
-
-#
-
-> [!NOTE]
-> 1. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
-> 2. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
-> 3. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
-> ```
-> *example            // file name ends with "example"
-> example*            // file name starts with "example"
-> *example*           // file name has "example" in the name
-> example             // file name is exactly the word "example"
-> regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line with "regex:"
-> ```
-> 4. Multiple Sonarr/Radarr/Lidarr instances can be specified using this format, where `<NUMBER>` starts from `0`:
-> ```
-> SONARR__INSTANCES__<NUMBER>__URL
-> SONARR__INSTANCES__<NUMBER>__APIKEY
-> ```
-> 5. Multiple failed import patterns can be specified using this format, where `<NUMBER>` starts from 0:
-> ```
-> QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>
-> ```
-> 6. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
 
 #
 
@@ -328,7 +351,7 @@ Special thanks for inspiration go to:
 - [ThijmenGThN/swaparr](https://github.com/ThijmenGThN/swaparr)
 - [ManiMatter/decluttarr](https://github.com/ManiMatter/decluttarr)
 - [PaeyMoopy/sonarr-radarr-queue-cleaner](https://github.com/PaeyMoopy/sonarr-radarr-queue-cleaner)
-- [Sonarr](https://github.com/Sonarr/Sonarr) & [Radarr](https://github.com/Radarr/Radarr) for the logo
+- [Sonarr](https://github.com/Sonarr/Sonarr) & [Radarr](https://github.com/Radarr/Radarr)
 
 # Buy me a coffee
 If I made your life just a tiny bit easier, consider buying me a coffee!
