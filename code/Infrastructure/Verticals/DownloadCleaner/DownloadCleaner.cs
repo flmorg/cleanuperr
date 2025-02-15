@@ -62,6 +62,9 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
 
+        // wait for the downloads to appear in the arr queue
+        await Task.Delay(10 * 1000);
+
         await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr, true);
         await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr, true);
         await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
