@@ -160,6 +160,9 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Default: `0 0/5 * * * ?` (every 5 minutes).
 - Required: No.
 
+> [!NOTE]
+> - Maximum interval is 6 hours.
+
 **`CONTENTBLOCKER__ENABLED`**
 - Enables or disables the content blocker functionality.
 - When enabled, processes all items in the *arr queue and marks unwanted files.
@@ -196,6 +199,9 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Default: `0 0 * * * ?` (every hour).
 - Required: No.
 
+> [!NOTE]
+> - Maximum interval is 6 hours.
+
 **`DOWNLOADCLEANER__ENABLED`**
 - Enables or disables the download cleaner functionality.
 - When enabled, automatically cleans up downloads that have been seeding for a certain amount of time.
@@ -220,6 +226,12 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Default: Empty.
 - Required: No.
 
+> [!NOTE]
+> The category name must match the category that was set in the *arr.
+> For qBittorrent, the category name is the name of the download category.
+> For Deluge, the category name is the name of the label.
+> For Transmission, the category name is the name of the download location.
+
 **`DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO`**
 - Maximum ratio to reach before removing a download.
 - Type: Decimal.
@@ -243,8 +255,10 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Required: No.
 
 > [!NOTE]
-> 1. A download is cleaned when any of (`MAX_RATIO` & `MIN_SEED_TIME`) or `MAX_SEED_TIME` is reached.
-> 2. Multiple categories can be specified using this format, where `<NUMBER>` starts from 0:
+> A download is cleaned when any of (`MAX_RATIO` & `MIN_SEED_TIME`) or `MAX_SEED_TIME` is reached.
+
+> [!NOTE]
+> Multiple categories can be specified using this format, where `<NUMBER>` starts from 0:
 > ```yaml
 > DOWNLOADCLEANER__CATEGORIES__<NUMBER>__NAME
 > DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_RATIO
@@ -425,12 +439,14 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Required: No.
 
 > [!NOTE]
-> 1. Multiple instances can be specified for each *arr using this format, where `<NUMBER>` starts from 0:
+> Multiple instances can be specified for each *arr using this format, where `<NUMBER>` starts from 0:
 > ```yaml
 > <ARR>__INSTANCES__<NUMBER>__URL
 > <ARR>__INSTANCES__<NUMBER>__APIKEY
 > ```
-> 2. The blocklists (blacklist/whitelist) support the following patterns:
+
+> [!NOTE]
+> The blocklists (blacklist/whitelist) support the following patterns:
 > ```
 > *example            // file name ends with "example"
 > example*            // file name starts with "example"
@@ -438,7 +454,9 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 > example             // file name is exactly the word "example"
 > regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line with "regex:"
 > ```
-> 3. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
+
+> [!NOTE]
+> [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
 
 #
 
