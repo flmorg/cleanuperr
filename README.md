@@ -117,6 +117,8 @@ services:
     volumes:
       - ./cleanuperr/logs:/var/logs
     environment:
+      - DRY_RUN=false
+
       - LOGGING__LOGLEVEL=Information
       - LOGGING__FILE__ENABLED=false
       - LOGGING__FILE__PATH=/var/logs/
@@ -124,6 +126,7 @@ services:
 
       - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
       - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
+      - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
 
       - QUEUECLEANER__ENABLED=true
       - QUEUECLEANER__RUNSEQUENTIALLY=true
@@ -195,7 +198,8 @@ services:
 
       # - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=false
       # - NOTIFIARR__ON_STALLED_STRIKE=false
-      # - NOTIFIARR__ON_QUEUE_ITEM_DELETE=false
+      # - NOTIFIARR__ON_QUEUE_ITEM_DELETED=false
+      # - NOTIFIARR__ON_DOWNLOAD_CLEANED=false
       # - NOTIFIARR__API_KEY=notifiarr_secret
       # - NOTIFIARR__CHANNEL_ID=discord_channel_id
 ```
