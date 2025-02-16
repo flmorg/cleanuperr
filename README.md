@@ -191,52 +191,258 @@ services:
 
 ## Environment variables
 
-### General variables
+### General settings
 <details>
   <summary>Click here</summary>
+<br>
 
-| Variable | Required | Description | Default value |
-|---|---|---|---|
-| DRY_RUN | No | If `true`, irreversible actions such as notifying or deleting are skipped. | false |
-| LOGGING__LOGLEVEL | No | Can be `Verbose`, `Debug`, `Information`, `Warning`, `Error` or `Fatal`. | `Information` |
-| LOGGING__FILE__ENABLED | No | Enable or disable logging to file. | false |
-| LOGGING__FILE__PATH | No | Directory where to save the log files. | empty |
-| LOGGING__ENHANCED | No | Enhance logs whenever possible.<br>A more detailed description is provided. [here](variables.md#LOGGING__ENHANCED) | true |
-|||||
-| TRIGGERS__QUEUECLEANER | No | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval.<br>- **Is ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`**. | 0 0/5 * * * ? (every 5 minutes) |
-| TRIGGERS__CONTENTBLOCKER | No | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval. | 0 0/5 * * * ? (every 5 minutes) |
-| TRIGGERS__DOWNLOADCLEANER | No | - [Quartz cron trigger](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).<br>- Can be a max of 6h interval. | 0 0 * * * ? (every hour) |
-|||||
-| QUEUECLEANER__ENABLED | No | Enable or disable the queue cleaner. | true |
-| QUEUECLEANER__RUNSEQUENTIALLY | No | If set to true, the queue cleaner will run after the content blocker instead of running in parallel, streamlining the cleaning process. | true |
-| QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES | No | - After how many strikes should a failed import be removed.<br>- 0 means never. | 0 |
-| QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE | No | Whether to ignore failed imports from private trackers. | false |
-| QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE | No | - Whether to delete failed imports of private downloads from the download client.<br>- Does not have any effect if `QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
-| QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0 | No | - First pattern to look for when an import is failed.<br>- If the specified message pattern is found, the item is skipped. | empty |
-| QUEUECLEANER__STALLED_MAX_STRIKES | No | - After how many strikes should a stalled download be removed.<br>- 0 means never. | 0 |
-| QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS | No | Whether to remove strikes if any download progress was made since last checked. | false |
-| QUEUECLEANER__STALLED_IGNORE_PRIVATE | No | Whether to ignore stalled downloads from private trackers. | false |
-| QUEUECLEANER__STALLED_DELETE_PRIVATE | No | - Whether to delete stalled private downloads from the download client.<br>- Does not have any effect if `QUEUECLEANER__STALLED_IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
-|||||
-| CONTENTBLOCKER__ENABLED | No | Enable or disable the content blocker. | false |
-| CONTENTBLOCKER__IGNORE_PRIVATE | No | Whether to ignore downloads from private trackers. | false |
-| CONTENTBLOCKER__DELETE_PRIVATE | No | - Whether to delete private downloads that have all files blocked from the download client.<br>- Does not have any effect if `CONTENTBLOCKER__IGNORE_PRIVATE` is `true`.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
-| DOWNLOADCLEANER__ENABLED | No | Enable or disable the download cleaner. | false |
-| DOWNLOADCLEANER__DELETE_PRIVATE | No | - Whether to delete private downloads.<br>- **Set this to `true` if you don't care about seeding, ratio, H&R and potentially losing your tracker account.** | false |
-| DOWNLOADCLEANER__CATEGORIES__0__NAME | No | Name of the category to clean. | empty |
-| DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO | No | Maximum ratio for the category. | `-1` |
-| DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME | No | Minimum seed time for the category. It is used with `MAX_RATIO` to ensure a minimum seed time. | `0` |
-| DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME | No | Maximum seed time for the category. | `-1` |
+**`DRY_RUN`**
+- When enabled, simulates irreversible operations (like deletions and notifications) without making actual changes.
+- Type: Boolean.
+- Possible values: `true`, `false`.
+- Default: `false`.
+- Required: No.
+
+**`LOGGING__LOGLEVEL`**
+- Controls the detail level of application logs.
+- Type: String.
+- Possible values: `Verbose`, `Debug`, `Information`, `Warning`, `Error`, `Fatal`.
+- Default: `Information`.
+- Required: No.
+
+**`LOGGING__FILE__ENABLED`**
+- Enables logging to a file.
+- Type: Boolean.
+- Possible values: `true`, `false`.
+- Default: `false`.
+- Required: No.
+
+**`LOGGING__FILE__PATH`**
+- Directory where log files will be saved.
+- Type: String.
+- Default: Empty.
+- Required: No.
+
+**`LOGGING__ENHANCED`**
+- Provides more detailed descriptions in logs whenever possible.
+- Type: Boolean.
+- Possible values: `true`, `false`.
+- Default: `true`.
+- Required: No.
+</details>
+
+#
+
+### Queue Cleaner settings
+<details>
+  <summary>Click here</summary>
+<br>
+
+**`TRIGGERS__QUEUECLEANER`**
+- Cron schedule for the queue cleaner job.
+- Type: String - [Quartz cron format](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).
+- Default: `0 0/5 * * * ?` (every 5 minutes).
+- Required: Yes if queue cleaner is enabled.
 
 > [!NOTE]
-> 1. The queue cleaner and content blocker can be enabled or disabled separately, if you want to run only one of them.
-> 2. Multiple failed import patterns can be specified using this format, where `<NUMBER>` starts from 0:
-> ```
-> QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>
-> ```
-> 3. A download is cleaned when any of (`MAX_RATIO` & `MIN_SEED_TIME`) or `MAX_SEED_TIME` is reached.
-> 4. Multiple categories can be specified using this format, where `<NUMBER>` starts from 0:
-> ```
+> - Maximum interval is 6 hours.
+> - Ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`.
+
+**`QUEUECLEANER__ENABLED`**
+- Enables or disables the queue cleaning functionality.
+- When enabled, processes all items in the *arr queue.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `true`
+- Required: No.
+
+**`QUEUECLEANER__RUNSEQUENTIALLY`**
+- Controls whether queue cleaner runs after content blocker instead of in parallel.
+- When `true`, streamlines the cleaning process by running immediately after content blocker.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `true`
+- Required: No.
+
+**`QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES`**
+- Number of strikes before removing a failed import.
+- Set to `0` to never remove failed imports.
+- A strike is given when an item is stalled, stuck in metadata downloading, or failed to be imported.
+- Type: Integer
+- Possible values: `0` or greater
+- Default: `0`
+- Required: No.
+
+**`QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE`**
+- Controls whether to ignore failed imports from private trackers.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE`**
+- Controls whether to delete failed imports from private trackers from the download client.
+- Has no effect if `QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE` is `true`.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+> [!WARNING]
+> Setting `QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+
+**`QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS`**
+- Patterns to look for in failed import messages that should be ignored.
+- Multiple patterns can be specified using incrementing numbers starting from 0.
+- Type: String array
+- Default: Empty.
+- Required: No.
+- Example:
+```yaml
+QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0: "title mismatch"
+QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
+```
+
+**`QUEUECLEANER__STALLED_MAX_STRIKES`**
+- Number of strikes before removing a stalled download.
+- Set to `0` to never remove stalled downloads.
+- A strike is given when download speed is 0.
+- Type: Integer
+- Possible values: `0` or greater
+- Default: `0`
+- Required: No.
+
+**`QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS`**
+- Controls whether to remove strikes if any download progress was made since last checked.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`QUEUECLEANER__STALLED_IGNORE_PRIVATE`**
+- Controls whether to ignore stalled downloads from private trackers.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`QUEUECLEANER__STALLED_DELETE_PRIVATE`**
+- Controls whether to delete stalled private downloads from the download client.
+- Has no effect if `QUEUECLEANER__STALLED_IGNORE_PRIVATE` is `true`.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+> [!WARNING]
+> Setting `QUEUECLEANER__STALLED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+</details>
+
+
+
+#
+
+### Content Blocker settings
+<details>
+  <summary>Click here</summary>
+<br>
+
+**`TRIGGERS__CONTENTBLOCKER`**
+- Cron schedule for the content blocker job.
+- Type: String - [Quartz cron format](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).
+- Default: `0 0/5 * * * ?` (every 5 minutes).
+- Required: No.
+
+**`CONTENTBLOCKER__ENABLED`**
+- Enables or disables the content blocker functionality.
+- When enabled, processes all items in the *arr queue and marks unwanted files.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`CONTENTBLOCKER__IGNORE_PRIVATE`**
+- Controls whether to ignore downloads from private trackers.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`CONTENTBLOCKER__DELETE_PRIVATE`**
+- Controls whether to delete private downloads that have all files blocked from the download client.
+- Has no effect if `CONTENTBLOCKER__IGNORE_PRIVATE` is `true`.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+> [!WARNING]
+> Setting `CONTENTBLOCKER__DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+</details>
+
+#
+
+### Download Cleaner settings
+<details>
+  <summary>Click here</summary>
+<br>
+
+**`TRIGGERS__DOWNLOADCLEANER`**
+- Cron schedule for the download cleaner job.
+- Type: String - [Quartz cron format](https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html).
+- Default: `0 0 * * * ?` (every hour).
+- Required: No.
+
+**`DOWNLOADCLEANER__ENABLED`**
+- Enables or disables the download cleaner functionality.
+- When enabled, automatically cleans up downloads that have been seeding for a certain amount of time.
+- Type: Boolean.
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`DOWNLOADCLEANER__DELETE_PRIVATE`**
+- Controls whether to delete private downloads.
+- Type: Boolean.
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+> [!WARNING]
+> Setting `DOWNLOADCLEANER__DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+
+**`DOWNLOADCLEANER__CATEGORIES__0__NAME`**
+- Name of the category to clean.
+- Type: String.
+- Default: Empty.
+- Required: No.
+
+**`DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO`**
+- Maximum ratio to reach before removing a download.
+- Type: Decimal.
+- Possible values: `-1` or greater (`-1` means no limit or disabled).
+- Default: `-1`
+- Required: No.
+
+**`DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME`**
+- Minimum number of hours to seed before removing a download, if the ratio has been met.
+- Used with `MAX_RATIO` to ensure a minimum seed time.
+- Type: Decimal.
+- Possible values: `0` or greater.
+- Default: `0`
+- Required: No.
+
+**`DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME`**
+- Maximum number of hours to seed before removing a download.
+- Type: Decimal.
+- Possible values: `-1` or greater (`-1` means no limit or disabled).
+- Default: `-1`
+- Required: No.
+
+> [!NOTE]
+> 1. A download is cleaned when any of (`MAX_RATIO` & `MIN_SEED_TIME`) or `MAX_SEED_TIME` is reached.
+> 2. Multiple categories can be specified using this format, where `<NUMBER>` starts from 0:
+> ```yaml
 > DOWNLOADCLEANER__CATEGORIES__<NUMBER>__NAME
 > DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_RATIO
 > DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MIN_SEED_TIME
@@ -244,60 +450,193 @@ services:
 > ```
 </details>
 
-### Download client variables
+
+#
+
+### Download Client settings
 <details>
   <summary>Click here</summary>
+<br>
 
-| Variable | Required | Description | Default value |
-|---|---|---|---|
-| DOWNLOAD_CLIENT | No | Download client that is used by *arrs<br>Can be `qbittorrent`, `deluge`, `transmission` or `none` | `none` |
-| QBITTORRENT__URL | No | qBittorrent instance url | http://localhost:8112 |
-| QBITTORRENT__USERNAME | No | qBittorrent user | empty |
-| QBITTORRENT__PASSWORD | No | qBittorrent password | empty |
-|||||
-| DELUGE__URL | No | Deluge instance url | http://localhost:8080 |
-| DELUGE__PASSWORD | No | Deluge password | empty |
-|||||
-| TRANSMISSION__URL | No | Transmission instance url | http://localhost:9091 |
-| TRANSMISSION__USERNAME | No | Transmission user | empty |
-| TRANSMISSION__PASSWORD | No | Transmission password | empty |
+**`DOWNLOAD_CLIENT`**
+- Specifies which download client is used by *arrs.
+- Type: String.
+- Possible values: `none`, `qbittorrent`, `deluge`, `transmission`.
+- Default: `none`
+- Required: No.
 
 > [!NOTE]
-> 1. Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
+> Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
+
+**`QBITTORRENT__URL`**
+- URL of the qBittorrent instance.
+- Type: String.
+- Default: `http://localhost:8080`.
+- Required: No.
+
+**`QBITTORRENT__USERNAME`**
+- Username for qBittorrent authentication.
+- Type: String.
+- Default: Empty.
+- Required: No.
+
+**`QBITTORRENT__PASSWORD`**
+- Password for qBittorrent authentication.
+- Type: String.
+- Default: Empty.
+- Required: No.
+
+**`DELUGE__URL`**
+- URL of the Deluge instance.
+- Type: String.
+- Default: `http://localhost:8112`.
+- Required: No.
+
+**`DELUGE__PASSWORD`**
+- Password for Deluge authentication.
+- Type: String.
+- Default: Empty.
+- Required: No.
+
+**`TRANSMISSION__URL`**
+- URL of the Transmission instance.
+- Type: String.
+- Default: `http://localhost:9091`.
+- Required: No.
+
+**`TRANSMISSION__USERNAME`**
+- Username for Transmission authentication.
+- Type: String.
+- Default: Empty.
+- Required: No.
+
+**`TRANSMISSION__PASSWORD`**
+- Password for Transmission authentication.
+- Type: String.
+- Default: Empty.
+- Required: No.
 </details>
 
-### Arr variables
+#
+
+### Arr settings
 <details>
   <summary>Click here</summary>
+<br>
 
-| Variable | Required | Description | Default value |
-|---|---|---|---|
-| SONARR__ENABLED | No | Enable or disable Sonarr cleanup  | false |
-| SONARR__BLOCK__TYPE | No | Block type<br>Can be `blacklist` or `whitelist` | `blacklist` |
-| SONARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
-| SONARR__SEARCHTYPE | No | What to search for after removing a queue item<br>Can be `Episode`, `Season` or `Series` | `Episode` |
-| SONARR__INSTANCES__0__URL | No | First Sonarr instance url | http://localhost:8989 |
-| SONARR__INSTANCES__0__APIKEY | No | First Sonarr instance API key | empty |
-|||||
-| RADARR__ENABLED | No | Enable or disable Radarr cleanup  | false |
-| RADARR__BLOCK__TYPE | No | Block type<br>Can be `blacklist` or `whitelist` | `blacklist` |
-| RADARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
-| RADARR__INSTANCES__0__URL | No | First Radarr instance url | http://localhost:7878 |
-| RADARR__INSTANCES__0__APIKEY | No | First Radarr instance API key | empty |
-|||||
-| LIDARR__ENABLED | No | Enable or disable LIDARR cleanup  | false |
-| LIDARR__BLOCK__TYPE | No | Block type<br>Can be `blacklist` or `whitelist` | `blacklist` |
-| LIDARR__BLOCK__PATH | No | Path to the blocklist (local file or url)<br>Needs to be json compatible | empty |
-| LIDARR__INSTANCES__0__URL | No | First LIDARR instance url | http://localhost:8686 |
-| LIDARR__INSTANCES__0__APIKEY | No | First LIDARR instance API key | empty |
+**`SONARR__ENABLED`**
+- Enables or disables Sonarr cleanup.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`SONARR__BLOCK__TYPE`**
+- Determines how file blocking works for Sonarr.
+- Type: String
+- Possible values: `blacklist`, `whitelist`
+- Default: `blacklist`
+- Required: No.
+
+**`SONARR__BLOCK__PATH`**
+- Path to the blocklist file (local file or URL).
+- Must be JSON compatible.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+**`SONARR__SEARCHTYPE`**
+- Determines what to search for after removing a queue item.
+- Type: String
+- Possible values: `Episode`, `Season`, `Series`
+- Default: `Episode`
+- Required: No.
+
+**`SONARR__INSTANCES__0__URL`**
+- URL of the Sonarr instance.
+- Type: String
+- Default: `http://localhost:8989`
+- Required: No.
+
+**`SONARR__INSTANCES__0__APIKEY`**
+- API key for the Sonarr instance.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+**`RADARR__ENABLED`**
+- Enables or disables Radarr cleanup.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`RADARR__BLOCK__TYPE`**
+- Determines how file blocking works for Radarr.
+- Type: String
+- Possible values: `blacklist`, `whitelist`
+- Default: `blacklist`
+- Required: No.
+
+**`RADARR__BLOCK__PATH`**
+- Path to the blocklist file (local file or URL).
+- Must be JSON compatible.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+**`RADARR__INSTANCES__0__URL`**
+- URL of the Radarr instance.
+- Type: String
+- Default: `http://localhost:7878`
+- Required: No.
+
+**`RADARR__INSTANCES__0__APIKEY`**
+- API key for the Radarr instance.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+**`LIDARR__ENABLED`**
+- Enables or disables Lidarr cleanup.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`LIDARR__BLOCK__TYPE`**
+- Determines how file blocking works for Lidarr.
+- Type: String
+- Possible values: `blacklist`, `whitelist`
+- Default: `blacklist`
+- Required: No.
+
+**`LIDARR__BLOCK__PATH`**
+- Path to the blocklist file (local file or URL).
+- Must be JSON compatible.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+**`LIDARR__INSTANCES__0__URL`**
+- URL of the Lidarr instance.
+- Type: String
+- Default: `http://localhost:8686`
+- Required: No.
+
+**`LIDARR__INSTANCES__0__APIKEY`**
+- API key for the Lidarr instance.
+- Type: String
+- Default: Empty.
+- Required: No.
 
 > [!NOTE]
-> 1. Multiple Sonarr/Radarr/Lidarr instances can be specified using this format, where `<NUMBER>` starts from `0`:
+> 1. Multiple instances can be specified for each *arr using this format, where `<NUMBER>` starts from 0:
+> ```yaml
+> <ARR>__INSTANCES__<NUMBER>__URL
+> <ARR>__INSTANCES__<NUMBER>__APIKEY
 > ```
-> SONARR__INSTANCES__<NUMBER>__URL
-> SONARR__INSTANCES__<NUMBER>__APIKEY
-> ```
-> 2. The blocklists (blacklist/whitelist) should have a single pattern on each line and supports the following:
+> 2. The blocklists (blacklist/whitelist) support the following patterns:
 > ```
 > *example            // file name ends with "example"
 > example*            // file name starts with "example"
@@ -308,30 +647,77 @@ services:
 > 3. [This blacklist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist) and [this whitelist](https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/whitelist) can be used for Sonarr and Radarr, but they are not suitable for other *arrs.
 </details>
 
-### Notifications variables
+#
+
+### Notification settings
 <details>
   <summary>Click here</summary>
+<br>
 
-| Variable | Required | Description | Default value |
-|---|---|---|---|
-| NOTIFIARR__API_KEY | No | Notifiarr API key.<br>Requires Notifiarr's `Passthrough` integration to work. | empty |
-| NOTIFIARR__CHANNEL_ID | No | Discord channel id for notifications. | empty |
-| NOTIFIARR__ON_IMPORT_FAILED_STRIKE | No | Notify on failed import strike.  | false |
-| NOTIFIARR__ON_STALLED_STRIKE | No | Notify on stalled download strike. | false |
-| NOTIFIARR__ON_QUEUE_ITEM_DELETED | No | Notify on queue item deleted. | false |
-| NOTIFIARR__ON_DOWNLOAD_CLEANED | No | Notify on download cleaned. | false |
+**`NOTIFIARR__API_KEY`**
+- Notifiarr API key for sending notifications.
+- Requires Notifiarr's [`Passthrough`](https://notifiarr.wiki/en/Website/Integrations/Passthrough) integration to work.
+- Type: String
+- Default: Empty.
+- Required: No.
 
+**`NOTIFIARR__CHANNEL_ID`**
+- Discord channel ID where notifications will be sent.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+**`NOTIFIARR__ON_IMPORT_FAILED_STRIKE`**
+- Controls whether to notify when an item receives a failed import strike.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`NOTIFIARR__ON_STALLED_STRIKE`**
+- Controls whether to notify when an item receives a stalled download strike.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`NOTIFIARR__ON_QUEUE_ITEM_DELETED`**
+- Controls whether to notify when a queue item is deleted.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+**`NOTIFIARR__ON_DOWNLOAD_CLEANED`**
+- Controls whether to notify when a download is cleaned.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
 </details>
 
+#
 
-### Advanced variables
+### Advanced settings
 <details>
   <summary>Click here</summary>
+<br>
 
-| Variable | Required | Description | Default value |
-|---|---|---|---|
-| HTTP_MAX_RETRIES | No | The number of times to retry a failed HTTP call (to *arrs, download clients etc.) | 0 |
-| HTTP_TIMEOUT | No | The number of seconds to wait before failing an HTTP call (to *arrs, download clients etc.) | 100 |
+**`HTTP_MAX_RETRIES`**
+- The number of times to retry a failed HTTP call.
+- Applies to calls to *arrs, download clients, and other services.
+- Type: Integer
+- Possible values: `0` or greater
+- Default: `0`
+- Required: No.
+
+**`HTTP_TIMEOUT`**
+- The number of seconds to wait before failing an HTTP call.
+- Applies to calls to *arrs, download clients, and other services.
+- Type: Integer
+- Possible values: Greater than `0`
+- Default: `100`
+- Required: No.
 </details>
 
 #
@@ -357,3 +743,4 @@ Special thanks for inspiration go to:
 If I made your life just a tiny bit easier, consider buying me a coffee!
 
 <a href="https://buymeacoffee.com/flaminel" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
