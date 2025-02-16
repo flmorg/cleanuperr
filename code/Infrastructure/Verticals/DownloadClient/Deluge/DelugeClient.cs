@@ -62,6 +62,26 @@ public sealed class DelugeClient
             await ListTorrentsExtended(new Dictionary<string, string> { { "hash", hash } });
         return torrents.FirstOrDefault();
     }
+    
+    public async Task<TorrentStatus?> GetTorrentStatus(string hash)
+    {
+        return await SendRequest<TorrentStatus?>(
+            "web.get_torrent_status",
+            hash,
+            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
+        );
+    }
+    
+    public async Task<List<TorrentStatus>?> GetStatusForAllTorrents()
+    {
+        Dictionary<string, TorrentStatus>? downloads = await SendRequest<Dictionary<string, TorrentStatus>?>(
+            "core.get_torrents_status",
+            "",
+            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
+        );
+        
+        return downloads?.Values.ToList();
+    }
 
     public async Task<DelugeContents?> GetTorrentFiles(string hash)
     {
@@ -78,9 +98,9 @@ public sealed class DelugeClient
         await SendRequest<DelugeResponse<object>>("core.set_torrent_options", hash, filePriorities);
     }
 
-    public async Task<DelugeResponse<object>> DeleteTorrent(string hash)
+    public async Task DeleteTorrents(List<string> hashes)
     {
-        return await SendRequest<DelugeResponse<object>>("core.remove_torrents", new List<string> { hash }, true);
+        await SendRequest<DelugeResponse<object>>("core.remove_torrents", hashes, true);
     }
 
     private async Task<String> PostJson(String json)

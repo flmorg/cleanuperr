@@ -4,6 +4,7 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Logging;
@@ -11,16 +12,16 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.Jobs;
 
-public abstract class GenericHandler : IDisposable
+public abstract class GenericHandler : IHandler, IDisposable
 {
     protected readonly ILogger<GenericHandler> _logger;
     protected readonly DownloadClientConfig _downloadClientConfig;
     protected readonly SonarrConfig _sonarrConfig;
     protected readonly RadarrConfig _radarrConfig;
     protected readonly LidarrConfig _lidarrConfig;
-    protected readonly SonarrClient _sonarrClient;
-    protected readonly RadarrClient _radarrClient;
-    protected readonly LidarrClient _lidarrClient;
+    protected readonly ISonarrClient _sonarrClient;
+    protected readonly IRadarrClient _radarrClient;
+    protected readonly ILidarrClient _lidarrClient;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly IDownloadService _downloadService;
     protected readonly NotificationPublisher _notifier;
@@ -31,9 +32,9 @@ public abstract class GenericHandler : IDisposable
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
         IOptions<LidarrConfig> lidarrConfig,
-        SonarrClient sonarrClient,
-        RadarrClient radarrClient,
-        LidarrClient lidarrClient,
+        ISonarrClient sonarrClient,
+        IRadarrClient radarrClient,
+        ILidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         NotificationPublisher notifier
@@ -68,7 +69,7 @@ public abstract class GenericHandler : IDisposable
 
     protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType);
     
-    private async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType)
+    protected async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType, bool throwOnFailure = false)
     {
         if (!config.Enabled)
         {
@@ -84,11 +85,16 @@ public abstract class GenericHandler : IDisposable
             catch (Exception exception)
             {
                 _logger.LogError(exception, "failed to clean {type} instance | {url}", instanceType, arrInstance.Url);
+
+                if (throwOnFailure)
+                {
+                    throw;
+                }
             }
         }
     }
     
-    protected ArrClient GetClient(InstanceType type) =>
+    protected IArrClient GetClient(InstanceType type) =>
         type switch
         {
             InstanceType.Sonarr => _sonarrClient,

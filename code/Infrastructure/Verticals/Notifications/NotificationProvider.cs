@@ -19,5 +19,7 @@ public abstract class NotificationProvider : INotificationProvider
 
     public abstract Task OnStalledStrike(StalledStrikeNotification notification);
 
-    public abstract Task OnQueueItemDelete(QueueItemDeleteNotification notification);
+    public abstract Task OnQueueItemDeleted(QueueItemDeletedNotification notification);
+
+    public abstract Task OnDownloadCleaned(DownloadCleanedNotification notification);
 }

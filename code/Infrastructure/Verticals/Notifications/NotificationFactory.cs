@@ -25,8 +25,13 @@ public class NotificationFactory : INotificationFactory
             .Where(n => n.Config.OnStalledStrike)
             .ToList();
 
-    public List<INotificationProvider> OnQueueItemDeleteEnabled() =>
+    public List<INotificationProvider> OnQueueItemDeletedEnabled() =>
         ActiveProviders()
-            .Where(n => n.Config.OnQueueItemDelete)
+            .Where(n => n.Config.OnQueueItemDeleted)
+            .ToList();
+    
+    public List<INotificationProvider> OnDownloadCleanedEnabled() =>
+        ActiveProviders()
+            .Where(n => n.Config.OnDownloadCleaned)
             .ToList();
 }

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.ItemStriker;
 
-public class Striker
+public sealed class Striker : IStriker
 {
     private readonly ILogger<Striker> _logger;
     private readonly IMemoryCache _cache;

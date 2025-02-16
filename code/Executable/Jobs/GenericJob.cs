@@ -6,7 +6,7 @@ namespace Executable.Jobs;
 
 [DisallowConcurrentExecution]
 public sealed class GenericJob<T> : IJob
-    where T : GenericHandler
+    where T : IHandler
 {
     private readonly ILogger<GenericJob<T>> _logger;
     private readonly T _handler;

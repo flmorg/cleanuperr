@@ -1,6 +1,8 @@
 ﻿using System.Net;
+using Castle.DynamicProxy;
 using Common.Configuration.General;
 using Common.Helpers;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.Notifications.Consumers;
 using Infrastructure.Verticals.Notifications.Models;
@@ -25,7 +27,8 @@ public static class MainDI
             {
                 config.AddConsumer<NotificationConsumer<FailedImportStrikeNotification>>();
                 config.AddConsumer<NotificationConsumer<StalledStrikeNotification>>();
-                config.AddConsumer<NotificationConsumer<QueueItemDeleteNotification>>();
+                config.AddConsumer<NotificationConsumer<QueueItemDeletedNotification>>();
+                config.AddConsumer<NotificationConsumer<DownloadCleanedNotification>>();
 
                 config.UsingInMemory((context, cfg) =>
                 {
@@ -33,12 +36,14 @@ public static class MainDI
                     {
                         e.ConfigureConsumer<NotificationConsumer<FailedImportStrikeNotification>>(context);
                         e.ConfigureConsumer<NotificationConsumer<StalledStrikeNotification>>(context);
-                        e.ConfigureConsumer<NotificationConsumer<QueueItemDeleteNotification>>(context);
+                        e.ConfigureConsumer<NotificationConsumer<QueueItemDeletedNotification>>(context);
+                        e.ConfigureConsumer<NotificationConsumer<DownloadCleanedNotification>>(context);
                         e.ConcurrentMessageLimit = 1;
                         e.PrefetchCount = 1;
                     });
                 });
-            });
+            })
+            .AddDryRunInterceptor();
     
     private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
     {
@@ -86,4 +91,31 @@ public static class MainDI
                 .OrResult(response => !response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized)
                 .WaitAndRetryAsync(config.MaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
         );
+
+    private static IServiceCollection AddDryRunInterceptor(this IServiceCollection services)
+    {
+        services
+            .Where(s => s.ServiceType != typeof(IDryRunService) && typeof(IDryRunService).IsAssignableFrom(s.ServiceType))
+            .ToList()
+            .ForEach(service =>
+            {
+                services.Decorate(service.ServiceType, (target, svc) =>
+                {
+                    ProxyGenerator proxyGenerator = new();
+                    DryRunAsyncInterceptor interceptor = svc.GetRequiredService<DryRunAsyncInterceptor>();
+
+                    object implementation = proxyGenerator.CreateClassProxyWithTarget(
+                        service.ServiceType,
+                        target,
+                        interceptor
+                    );
+
+                    ((IInterceptedService)target).Proxy = implementation;
+
+                    return implementation;
+                });
+            });
+
+        return services;
+    }
 }

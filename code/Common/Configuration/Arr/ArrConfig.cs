@@ -11,9 +11,9 @@ public abstract record ArrConfig
     public required List<ArrInstance> Instances { get; init; }
 }
 
-public record Block
+public readonly record struct Block
 {
-    public BlocklistType Type { get; set; }
+    public BlocklistType Type { get; init; }
     
-    public string? Path { get; set; }
+    public string? Path { get; init; }
 }

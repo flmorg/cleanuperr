@@ -148,6 +148,8 @@ services:
       - ./data/lidarr/config:/config
       - ./data/lidarr/music:/music
       - ./data/qbittorrent/downloads:/downloads
+      # - ./data/deluge/downloads:/downloads
+      # - ./data/transmission/downloads:/downloads
     ports:
       - 8686:8686
     restart: unless-stopped
@@ -163,6 +165,8 @@ services:
       - ./data/readarr/config:/config
       - ./data/readarr/books:/books
       - ./data/qbittorrent/downloads:/downloads
+      # - ./data/deluge/downloads:/downloads
+      # - ./data/transmission/downloads:/downloads
     ports:
       - 8787:8787
     restart: unless-stopped
@@ -171,6 +175,8 @@ services:
     image: ghcr.io/flmorg/cleanuperr:latest
     container_name: cleanuperr
     environment:
+      - DRY_RUN=false
+
       - LOGGING__LOGLEVEL=Debug
       - LOGGING__FILE__ENABLED=true
       - LOGGING__FILE__PATH=/var/logs
@@ -181,6 +187,7 @@ services:
 
       - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
       - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
+      - TRIGGERS__DOWNLOADCLEANER=0/30 * * * * ?
 
       - QUEUECLEANER__ENABLED=true
       - QUEUECLEANER__RUNSEQUENTIALLY=true
@@ -196,17 +203,28 @@ services:
       - CONTENTBLOCKER__IGNORE_PRIVATE=true
       - CONTENTBLOCKER__DELETE_PRIVATE=false
 
+      - DOWNLOADCLEANER__ENABLED=true
+      - DOWNLOADCLEANER__DELETE_PRIVATE=false
+      - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=0.01
+      - DOWNLOADCLEANER__CATEGORIES__1__NAME=radarr
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=0.01
+
       - DOWNLOAD_CLIENT=qbittorrent
       - QBITTORRENT__URL=http://qbittorrent:8080
       - QBITTORRENT__USERNAME=test
       - QBITTORRENT__PASSWORD=testing
       # OR
       # - DOWNLOAD_CLIENT=deluge
-      # - DELUGE__URL=http://localhost:8112
+      # - DELUGE__URL=http://deluge:8112
       # - DELUGE__PASSWORD=testing
       # OR
       # - DOWNLOAD_CLIENT=transmission
-      # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__URL=http://transmission:9091
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
 
@@ -231,7 +249,7 @@ services:
 
       # - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
       # - NOTIFIARR__ON_STALLED_STRIKE=true
-      # - NOTIFIARR__ON_QUEUE_ITEM_DELETE=true
+      # - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
       # - NOTIFIARR__API_KEY=notifiarr_secret
       # - NOTIFIARR__CHANNEL_ID=discord_channel_id
     volumes:

@@ -1,34 +1,46 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Common.Attributes;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
+using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QBittorrent.Client;
+using Category = Common.Configuration.DownloadCleaner.Category;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
-public sealed class QBitService : DownloadServiceBase
+public class QBitService : DownloadService, IQBitService
 {
     private readonly QBitConfig _config;
     private readonly QBittorrentClient _client;
 
+    /// <inheritdoc/>
+    public QBitService()
+    {
+    }
+    
     public QBitService(
         ILogger<QBitService> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<QBitConfig> config,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
-        FilenameEvaluator filenameEvaluator,
-        Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
+        IFilenameEvaluator filenameEvaluator,
+        IStriker striker,
+        NotificationPublisher notifier
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
         _config = config.Value;
         _config.Validate();
@@ -188,16 +200,97 @@ public sealed class QBitService : DownloadServiceBase
 
         foreach (int fileIndex in unwantedFiles)
         {
-            await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
+            await ((QBitService)Proxy).SkipFile(hash, fileIndex);
         }
         
         return result;
     }
+    
+    /// <inheritdoc/>
+    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories) =>
+        (await _client.GetTorrentListAsync(new()
+        {
+            Filter = TorrentListFilter.Seeding
+        }))
+        ?.Where(x => !string.IsNullOrEmpty(x.Hash))
+        .Where(x => categories.Any(cat => cat.Name.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+        .Cast<object>()
+        .ToList();
 
     /// <inheritdoc/>
-    public override async Task Delete(string hash)
+    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    {
+        foreach (TorrentInfo download in downloads)
+        {
+            if (string.IsNullOrEmpty(download.Hash))
+            {
+                continue;
+            }
+            
+            Category? category = categoriesToClean
+                .FirstOrDefault(x => download.Category.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase));
+            
+            if (category is null)
+            {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+            
+            if (!_downloadCleanerConfig.DeletePrivate)
+            {
+                TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(download.Hash);
+
+                bool isPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
+                                 bool.TryParse(dictValue?.ToString(), out bool boolValue)
+                                 && boolValue;
+
+                if (isPrivate)
+                {
+                    _logger.LogDebug("skip | download is private | {name}", download.Name);
+                    continue;
+                }
+            }
+            
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+
+            SeedingCheckResult result = ShouldCleanDownload(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category);
+
+            if (!result.ShouldClean)
+            {
+                continue;
+            }
+
+            await ((QBitService)Proxy).DeleteDownload(download.Hash);
+
+            _logger.LogInformation(
+                "download cleaned | {reason} reached | {name}",
+                result.Reason is CleanReason.MaxRatioReached
+                    ? "MAX_RATIO & MIN_SEED_TIME"
+                    : "MAX_SEED_TIME",
+                download.Name
+            );
+            
+            await _notifier.NotifyDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
+        }
+    }
+
+    /// <inheritdoc/>
+    [DryRunSafeguard]
+    public override async Task DeleteDownload(string hash)
     {
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task SkipFile(string hash, int fileIndex)
+    {
+        await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
     }
 
     public override void Dispose()

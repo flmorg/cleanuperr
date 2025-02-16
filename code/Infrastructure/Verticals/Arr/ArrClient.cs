@@ -1,3 +1,4 @@
+using Common.Attributes;
 using Common.Configuration.Arr;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
@@ -5,6 +6,8 @@ using Common.Helpers;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Interceptors;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,24 +15,30 @@ using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
 
-public abstract class ArrClient
+public abstract class ArrClient : InterceptedService, IArrClient, IDryRunService
 {
     protected readonly ILogger<ArrClient> _logger;
     protected readonly HttpClient _httpClient;
     protected readonly LoggingConfig _loggingConfig;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
-    protected readonly Striker _striker;
+    protected readonly IStriker _striker;
+    
+    /// <summary>
+    /// Constructor to be used by interceptors.
+    /// </summary>
+    protected ArrClient()
+    {
+    }
     
     protected ArrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        Striker striker
+        IStriker striker
     )
     {
         _logger = logger;
-        _striker = striker;
         _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
         _loggingConfig = loggingConfig.Value;
         _queueCleanerConfig = queueCleanerConfig.Value;
@@ -110,16 +119,14 @@ public abstract class ArrClient
     public virtual async Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient)
     {
         Uri uri = new(arrInstance.Url, GetQueueDeleteUrlPath(record.Id, removeFromClient));
-        
-        using HttpRequestMessage request = new(HttpMethod.Delete, uri);
-        SetApiKey(request, arrInstance.ApiKey);
-
-        using HttpResponseMessage response = await _httpClient.SendAsync(request);
 
         try
         {
-            response.EnsureSuccessStatusCode();
+            using HttpRequestMessage request = new(HttpMethod.Delete, uri);
+            SetApiKey(request, arrInstance.ApiKey);
 
+            using var _ = await ((ArrClient)Proxy).SendRequestAsync(request);
+            
             _logger.LogInformation(
                 removeFromClient
                     ? "queue item deleted | {url} | {title}"
@@ -157,6 +164,16 @@ public abstract class ArrClient
         request.Headers.Add("x-api-key", apiKey);
     }
 
+    [DryRunSafeguard]
+    protected virtual async Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request)
+    {
+        HttpResponseMessage response = await _httpClient.SendAsync(request);
+        
+        response.EnsureSuccessStatusCode();
+        
+        return response;
+    }
+    
     private bool HasIgnoredPatterns(QueueRecord record)
     {
         if (_queueCleanerConfig.ImportFailedIgnorePatterns?.Count is null or 0)

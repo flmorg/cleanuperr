@@ -44,13 +44,28 @@ public class NotificationService
         }
     }
     
-    public async Task Notify(QueueItemDeleteNotification notification)
+    public async Task Notify(QueueItemDeletedNotification notification)
     {
-        foreach (INotificationProvider provider in _notificationFactory.OnQueueItemDeleteEnabled())
+        foreach (INotificationProvider provider in _notificationFactory.OnQueueItemDeletedEnabled())
         {
             try
             {
-                await provider.OnQueueItemDelete(notification);
+                await provider.OnQueueItemDeleted(notification);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "failed to send notification | provider {provider}", provider.Name);
+            }
+        }
+    }
+    
+    public async Task Notify(DownloadCleanedNotification notification)
+    {
+        foreach (INotificationProvider provider in _notificationFactory.OnDownloadCleanedEnabled())
+        {
+            try
+            {
+                await provider.OnDownloadCleaned(notification);
             }
             catch (Exception exception)
             {

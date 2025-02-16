@@ -1,5 +1,7 @@
-﻿using Infrastructure.Verticals.Arr;
+﻿using Infrastructure.Interceptors;
+using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
@@ -13,12 +15,14 @@ public static class ServicesDI
 {
     public static IServiceCollection AddServices(this IServiceCollection services) =>
         services
+            .AddTransient<DryRunAsyncInterceptor>()
             .AddTransient<SonarrClient>()
             .AddTransient<RadarrClient>()
             .AddTransient<LidarrClient>()
             .AddTransient<QueueCleaner>()
             .AddTransient<ContentBlocker>()
-            .AddTransient<FilenameEvaluator>()
+            .AddTransient<DownloadCleaner>()
+            .AddTransient<IFilenameEvaluator, FilenameEvaluator>()
             .AddTransient<DummyDownloadService>()
             .AddTransient<QBitService>()
             .AddTransient<DelugeService>()
@@ -26,5 +30,5 @@ public static class ServicesDI
             .AddTransient<ArrQueueIterator>()
             .AddTransient<DownloadServiceFactory>()
             .AddSingleton<BlocklistProvider>()
-            .AddSingleton<Striker>();
+            .AddSingleton<IStriker, Striker>();
 }

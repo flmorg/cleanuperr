@@ -12,13 +12,15 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Castle.Core.AsyncInterceptor" Version="2.1.0" />
       <PackageReference Include="FLM.QBittorrent" Version="1.0.0" />
       <PackageReference Include="FLM.Transmission" Version="1.0.2" />
       <PackageReference Include="Mapster" Version="7.4.0" />
       <PackageReference Include="MassTransit" Version="8.3.6" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
       <PackageReference Include="Quartz" Version="3.13.1" />
+      <PackageReference Include="Scrutor" Version="6.0.1" />
     </ItemGroup>
 
 </Project>

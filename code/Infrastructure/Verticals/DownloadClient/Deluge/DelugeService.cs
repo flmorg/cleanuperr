@@ -1,21 +1,31 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Common.Attributes;
 using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
+using Infrastructure.Verticals.Notifications;
+using MassTransit.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
-public sealed class DelugeService : DownloadServiceBase
+public class DelugeService : DownloadService, IDelugeService
 {
     private readonly DelugeClient _client;
+
+    /// <inheritdoc/>
+    public DelugeService()
+    {
+    }
     
     public DelugeService(
         ILogger<DelugeService> logger,
@@ -23,10 +33,12 @@ public sealed class DelugeService : DownloadServiceBase
         IHttpClientFactory httpClientFactory,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
         IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
-        FilenameEvaluator filenameEvaluator,
-        Striker striker
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, cache, filenameEvaluator, striker)
+        IFilenameEvaluator filenameEvaluator,
+        IStriker striker,
+        NotificationPublisher notifier
+    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
     {
         config.Value.Validate();
         _client = new (config, httpClientFactory);
@@ -45,7 +57,7 @@ public sealed class DelugeService : DownloadServiceBase
         DelugeContents? contents = null;
         StalledResult result = new();
 
-        TorrentStatus? status = await GetTorrentStatus(hash);
+        TorrentStatus? status = await _client.GetTorrentStatus(hash);
         
         if (status?.Hash is null)
         {
@@ -98,7 +110,7 @@ public sealed class DelugeService : DownloadServiceBase
     {
         hash = hash.ToLowerInvariant();
 
-        TorrentStatus? status = await GetTorrentStatus(hash);
+        TorrentStatus? status = await _client.GetTorrentStatus(hash);
         BlockFilesResult result = new();
         
         if (status?.Hash is null)
@@ -178,17 +190,89 @@ public sealed class DelugeService : DownloadServiceBase
             return result;
         }
 
-        await _client.ChangeFilesPriority(hash, sortedPriorities);
+        await ((DelugeService)Proxy).ChangeFilesPriority(hash, sortedPriorities);
 
         return result;
     }
+
+    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    {
+        return (await _client.GetStatusForAllTorrents())
+            ?.Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => x.State?.Equals("seeding", StringComparison.InvariantCultureIgnoreCase) is true)
+            .Where(x => categories.Any(cat => cat.Name.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
+    }
+
+    /// <inheritdoc/>
+    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    {
+        foreach (TorrentStatus download in downloads)
+        {
+            if (string.IsNullOrEmpty(download.Hash))
+            {
+                continue;
+            }
+            
+            Category? category = categoriesToClean
+                .FirstOrDefault(x => x.Name.Equals(download.Label, StringComparison.InvariantCultureIgnoreCase));
+
+            if (category is null)
+            {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            if (!_downloadCleanerConfig.DeletePrivate && download.Private)
+            {
+                _logger.LogDebug("skip | download is private | {name}", download.Name);
+                continue;
+            }
+            
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+            
+            TimeSpan seedingTime = TimeSpan.FromSeconds(download.SeedingTime);
+            SeedingCheckResult result = ShouldCleanDownload(download.Ratio, seedingTime, category);
+
+            if (!result.ShouldClean)
+            {
+                continue;
+            }
+            
+            await ((DelugeService)Proxy).DeleteDownload(download.Hash);
+
+            _logger.LogInformation(
+                "download cleaned | {reason} reached | {name}",
+                result.Reason is CleanReason.MaxRatioReached
+                    ? "MAX_RATIO & MIN_SEED_TIME"
+                    : "MAX_SEED_TIME",
+                download.Name
+            );
+            
+            await _notifier.NotifyDownloadCleaned(download.Ratio, seedingTime, category.Name, result.Reason);
+        }
+    }
     
     /// <inheritdoc/>
-    public override async Task Delete(string hash)
+    [DryRunSafeguard]
+    public override async Task DeleteDownload(string hash)
     {
         hash = hash.ToLowerInvariant();
         
-        await _client.DeleteTorrent(hash);
+        await _client.DeleteTorrents([hash]);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task ChangeFilesPriority(string hash, List<int> sortedPriorities)
+    {
+        await _client.ChangeFilesPriority(hash, sortedPriorities);
     }
     
     private async Task<bool> IsItemStuckAndShouldRemove(TorrentStatus status)
@@ -218,15 +302,6 @@ public sealed class DelugeService : DownloadServiceBase
         ResetStrikesOnProgress(status.Hash!, status.TotalDone);
 
         return await StrikeAndCheckLimit(status.Hash!, status.Name!);
-    }
-
-    private async Task<TorrentStatus?> GetTorrentStatus(string hash)
-    {
-        return await _client.SendRequest<TorrentStatus?>(
-            "web.get_torrent_status",
-            hash,
-            new[] { "hash", "state", "name", "eta", "private", "total_done" }
-        );
     }
     
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory>? contents, Action<string, DelugeFileOrDirectory> processFile)

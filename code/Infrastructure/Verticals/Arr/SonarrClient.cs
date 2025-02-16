@@ -5,6 +5,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Sonarr;
+using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,14 +14,19 @@ using Series = Domain.Models.Sonarr.Series;
 
 namespace Infrastructure.Verticals.Arr;
 
-public sealed class SonarrClient : ArrClient
+public class SonarrClient : ArrClient, ISonarrClient
 {
+    /// <inheritdoc/>
+    public SonarrClient()
+    {
+    }
+    
     public SonarrClient(
         ILogger<SonarrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        Striker striker
+        IStriker striker
     ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
     {
     }
@@ -58,13 +64,12 @@ public sealed class SonarrClient : ArrClient
             );
             SetApiKey(request, arrInstance.ApiKey);
 
-            using HttpResponseMessage response = await _httpClient.SendAsync(request);
             string? logContext = await ComputeCommandLogContextAsync(arrInstance, command, command.SearchType);
 
             try
             {
-                response.EnsureSuccessStatusCode();
-            
+                using var _ = await ((SonarrClient)Proxy).SendRequestAsync(request);
+
                 _logger.LogInformation("{log}", GetSearchLog(command.SearchType, arrInstance.Url, command, true, logContext));
             }
             catch

@@ -13,5 +13,7 @@ public interface INotificationProvider
         
     Task OnStalledStrike(StalledStrikeNotification notification);
 
-    Task OnQueueItemDelete(QueueItemDeleteNotification notification);
+    Task OnQueueItemDeleted(QueueItemDeletedNotification notification);
+
+    Task OnDownloadCleaned(DownloadCleanedNotification notification);
 }

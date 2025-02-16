@@ -6,5 +6,7 @@ public interface INotificationFactory
     
     List<INotificationProvider> OnStalledStrikeEnabled();
     
-    List<INotificationProvider> OnQueueItemDeleteEnabled();
+    List<INotificationProvider> OnQueueItemDeletedEnabled();
+
+    List<INotificationProvider> OnDownloadCleanedEnabled();
 }

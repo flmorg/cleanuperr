@@ -1,6 +1,7 @@
 ﻿using Common.Configuration.Logging;
 using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.QueueCleaner;
 using Serilog;
 using Serilog.Events;
@@ -33,7 +34,7 @@ public static class LoggingDI
         const string consoleOutputTemplate = $"[{{@t:yyyy-MM-dd HH:mm:ss.fff}} {{@l:u3}}]{jobNameTemplate}{instanceNameTemplate} {{@m}}\n{{@x}}";
         const string fileOutputTemplate = $"{{@t:yyyy-MM-dd HH:mm:ss.fff zzz}} [{{@l:u3}}]{jobNameTemplate}{instanceNameTemplate} {{@m:lj}}\n{{@x}}";
         LogEventLevel level = LogEventLevel.Information;
-        List<string> names = [nameof(ContentBlocker), nameof(QueueCleaner)];
+        List<string> names = [nameof(ContentBlocker), nameof(QueueCleaner), nameof(DownloadCleaner)];
         int jobPadding = names.Max(x => x.Length) + 2;
         names = [InstanceType.Sonarr.ToString(), InstanceType.Radarr.ToString(), InstanceType.Lidarr.ToString()];
         int arrPadding = names.Max(x => x.Length) + 2;

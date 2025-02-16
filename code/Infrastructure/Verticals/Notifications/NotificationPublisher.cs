@@ -1,6 +1,9 @@
-﻿using Common.Configuration.Arr;
+﻿using System.Globalization;
+using Common.Attributes;
+using Common.Configuration.Arr;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
@@ -9,27 +12,35 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Notifications;
 
-public sealed class NotificationPublisher
+public class NotificationPublisher : InterceptedService, IDryRunService
 {
     private readonly ILogger<NotificationPublisher> _logger;
     private readonly IBus _messageBus;
-
+    
+    /// <summary>
+    /// Constructor to be used by interceptors.
+    /// </summary>
+    public NotificationPublisher()
+    {
+    }
+    
     public NotificationPublisher(ILogger<NotificationPublisher> logger, IBus messageBus)
     {
         _logger = logger;
         _messageBus = messageBus;
     }
     
-    public async Task NotifyStrike(StrikeType strikeType, int strikeCount)
+    [DryRunSafeguard]
+    public virtual async Task NotifyStrike(StrikeType strikeType, int strikeCount)
     {
         try
         {
-            QueueRecord record = GetRecordFromContext();
-            InstanceType instanceType = GetInstanceTypeFromContext();
-            Uri instanceUrl = GetInstanceUrlFromContext();
-            Uri? imageUrl = GetImageFromContext(record, instanceType);
+            QueueRecord record = ContextProvider.Get<QueueRecord>(nameof(QueueRecord));
+            InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
+            Uri instanceUrl = ContextProvider.Get<Uri>(nameof(ArrInstance) + nameof(ArrInstance.Url));
+            Uri imageUrl = GetImageFromContext(record, instanceType);
 
-            Notification notification = new()
+            ArrNotification notification = new()
             {
                 InstanceType = instanceType,
                 InstanceUrl = instanceUrl,
@@ -56,14 +67,15 @@ public sealed class NotificationPublisher
         }
     }
 
-    public async Task NotifyQueueItemDelete(bool removeFromClient, DeleteReason reason)
+    [DryRunSafeguard]
+    public virtual async Task NotifyQueueItemDeleted(bool removeFromClient, DeleteReason reason)
     {
-        QueueRecord record = GetRecordFromContext();
-        InstanceType instanceType = GetInstanceTypeFromContext();
-        Uri instanceUrl = GetInstanceUrlFromContext();
-        Uri? imageUrl = GetImageFromContext(record, instanceType);
+        QueueRecord record = ContextProvider.Get<QueueRecord>(nameof(QueueRecord));
+        InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
+        Uri instanceUrl = ContextProvider.Get<Uri>(nameof(ArrInstance) + nameof(ArrInstance.Url));
+        Uri imageUrl = GetImageFromContext(record, instanceType);
         
-        Notification notification = new()
+        QueueItemDeletedNotification notification = new()
         {
             InstanceType = instanceType,
             InstanceUrl = instanceUrl,
@@ -74,20 +86,29 @@ public sealed class NotificationPublisher
             Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
         };
         
-        await _messageBus.Publish(notification.Adapt<QueueItemDeleteNotification>());
+        await _messageBus.Publish(notification);
     }
 
-    private static QueueRecord GetRecordFromContext() =>
-        ContextProvider.Get<QueueRecord>(nameof(QueueRecord)) ?? throw new Exception("failed to get record from context");
+    [DryRunSafeguard]
+    public virtual async Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
+    {
+        DownloadCleanedNotification notification = new()
+        {
+            Title = $"Cleaned item from download client with reason: {reason}",
+            Description = ContextProvider.Get<string>("downloadName"),
+            Fields =
+            [
+                new() { Title = "Hash", Text = ContextProvider.Get<string>("hash").ToLowerInvariant() },
+                new() { Title = "Category", Text = categoryName.ToLowerInvariant() },
+                new() { Title = "Ratio", Text = $"{ratio.ToString(CultureInfo.InvariantCulture)}%" },
+                new() { Title = "Seeding hours", Text = $"{Math.Round(seedingTime.TotalHours, 0).ToString(CultureInfo.InvariantCulture)}h" }
+            ],
+            Level = NotificationLevel.Important
+        };
+
+        await _messageBus.Publish(notification);
+    }
     
-    private static InstanceType GetInstanceTypeFromContext() =>
-        (InstanceType)(ContextProvider.Get<object>(nameof(InstanceType)) ??
-                       throw new Exception("failed to get instance type from context"));
-
-    private static Uri GetInstanceUrlFromContext() =>
-        ContextProvider.Get<Uri>(nameof(ArrInstance) + nameof(ArrInstance.Url)) ??
-        throw new Exception("failed to get instance url from context");
-
     private static Uri GetImageFromContext(QueueRecord record, InstanceType instanceType) =>
         instanceType switch
         {
