@@ -196,12 +196,12 @@ services:
       - LIDARR__INSTANCES__1__URL=http://radarr:8687
       - LIDARR__INSTANCES__1__APIKEY=secret6
 
-      # - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=false
-      # - NOTIFIARR__ON_STALLED_STRIKE=false
-      # - NOTIFIARR__ON_QUEUE_ITEM_DELETED=false
-      # - NOTIFIARR__ON_DOWNLOAD_CLEANED=false
-      # - NOTIFIARR__API_KEY=notifiarr_secret
-      # - NOTIFIARR__CHANNEL_ID=discord_channel_id
+      - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
+      - NOTIFIARR__ON_STALLED_STRIKE=true
+      - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
+      - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
+      - NOTIFIARR__API_KEY=notifiarr_secret
+      - NOTIFIARR__CHANNEL_ID=discord_channel_id
 ```
 
 ## Environment variables
