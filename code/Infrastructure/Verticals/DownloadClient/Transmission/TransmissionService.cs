@@ -203,7 +203,16 @@ public class TransmissionService : DownloadService, ITransmissionService
             ?.Where(x => !string.IsNullOrEmpty(x.HashString))
             .Where(x => x.Status is 5 or 6)
             .Where(x => categories
-                .Any(cat => x.DownloadDir?.EndsWith(cat.Name, StringComparison.InvariantCultureIgnoreCase) is true)
+                .Any(cat =>
+                {
+                    if (x.DownloadDir is null)
+                    {
+                        return false;
+                    }
+                    
+                    return Path.GetFileName(Path.TrimEndingDirectorySeparator(x.DownloadDir))
+                        .Equals(cat.Name, StringComparison.InvariantCultureIgnoreCase);
+                })
             )
             .Cast<object>()
             .ToList();
@@ -220,8 +229,17 @@ public class TransmissionService : DownloadService, ITransmissionService
             }
             
             Category? category = categoriesToClean
-                .FirstOrDefault(x => download.DownloadDir?.EndsWith(x.Name, StringComparison.InvariantCultureIgnoreCase) is true);
+                .FirstOrDefault(x =>
+                {
+                    if (download.DownloadDir is null)
+                    {
+                        return false;
+                    }
 
+                    return Path.GetFileName(Path.TrimEndingDirectorySeparator(download.DownloadDir))
+                        .Equals(x.Name, StringComparison.InvariantCultureIgnoreCase);
+                });
+            
             if (category is null)
             {
                 continue;
