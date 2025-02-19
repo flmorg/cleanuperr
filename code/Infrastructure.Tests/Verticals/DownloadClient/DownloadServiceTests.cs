@@ -132,7 +132,7 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
         public void WhenRatioAndMinSeedTimeReached_ShouldReturnTrue()
         {
             // Arrange
-            Category category = new()
+            CleanCategory category = new()
             {
                 Name = "test",
                 MaxRatio = 1.0,
@@ -158,7 +158,7 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
         public void WhenRatioReachedAndMinSeedTimeNotReached_ShouldReturnFalse()
         {
             // Arrange
-            Category category = new()
+            CleanCategory category = new()
             {
                 Name = "test",
                 MaxRatio = 1.0,
@@ -184,7 +184,7 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
         public void WhenMaxSeedTimeReached_ShouldReturnTrue()
         {
             // Arrange
-            Category category = new()
+            CleanCategory category = new()
             {
                 Name = "test",
                 MaxRatio = -1,
@@ -210,7 +210,7 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
         public void WhenNeitherConditionMet_ShouldReturnFalse()
         {
             // Arrange
-            Category category = new()
+            CleanCategory category = new()
             {
                 Name = "test",
                 MaxRatio = 2.0,

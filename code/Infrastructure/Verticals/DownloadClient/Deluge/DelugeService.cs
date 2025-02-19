@@ -9,9 +9,9 @@ using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
-using MassTransit.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -37,8 +37,14 @@ public class DelugeService : DownloadService, IDelugeService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        NotificationPublisher notifier
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
+        NotificationPublisher notifier,
+        IHardlinkFileService hardlinkFileService
+    ) : base(
+        logger,
+        queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig,
+        cache, filenameEvaluator, striker, notifier,
+        hardlinkFileService
+    )
     {
         config.Value.Validate();
         _client = new (config, httpClientFactory);
@@ -195,7 +201,7 @@ public class DelugeService : DownloadService, IDelugeService
         return result;
     }
 
-    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    public override async Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories)
     {
         return (await _client.GetStatusForAllTorrents())
             ?.Where(x => !string.IsNullOrEmpty(x.Hash))
@@ -205,8 +211,13 @@ public class DelugeService : DownloadService, IDelugeService
             .ToList();
     }
 
+    public override Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
     {
         foreach (TorrentStatus download in downloads)
         {
@@ -215,7 +226,7 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
             
-            Category? category = categoriesToClean
+            CleanCategory? category = categoriesToClean
                 .FirstOrDefault(x => x.Name.Equals(download.Label, StringComparison.InvariantCultureIgnoreCase));
 
             if (category is null)
@@ -259,7 +270,12 @@ public class DelugeService : DownloadService, IDelugeService
             await _notifier.NotifyDownloadCleaned(download.Ratio, seedingTime, category.Name, result.Reason);
         }
     }
-    
+
+    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc/>
     [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)

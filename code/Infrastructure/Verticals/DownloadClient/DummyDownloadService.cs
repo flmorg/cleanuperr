@@ -4,6 +4,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Verticals.ContentBlocker;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -19,7 +20,20 @@ public class DummyDownloadService : DownloadService
     {
     }
     
-    public DummyDownloadService(ILogger<DownloadService> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IOptions<DownloadCleanerConfig> downloadCleanerConfig, IMemoryCache cache, IFilenameEvaluator filenameEvaluator, IStriker striker, NotificationPublisher notifier) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
+    public DummyDownloadService(
+        ILogger<DownloadService> logger,
+        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        IOptions<ContentBlockerConfig> contentBlockerConfig,
+        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
+        IMemoryCache cache,
+        IFilenameEvaluator filenameEvaluator,
+        IStriker striker,
+        NotificationPublisher notifier,
+        IHardlinkFileService hardlinkFileService
+    ) : base(
+        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig,
+        cache, filenameEvaluator, striker, notifier, hardlinkFileService
+    )
     {
     }
 
@@ -42,12 +56,22 @@ public class DummyDownloadService : DownloadService
         throw new NotImplementedException();
     }
 
-    public override Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    public override Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories)
     {
         throw new NotImplementedException();
     }
 
-    public override Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }

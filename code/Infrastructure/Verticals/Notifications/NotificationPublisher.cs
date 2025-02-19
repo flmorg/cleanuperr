@@ -108,6 +108,25 @@ public class NotificationPublisher : InterceptedService, IDryRunService
 
         await _messageBus.Publish(notification);
     }
+
+    [DryRunSafeguard]
+    public virtual async Task NotifyCategoryChanged(string oldCategory, string newCategory)
+    {
+        CategoryChangedNotification notification = new()
+        {
+            Title = "Category changed",
+            Description = ContextProvider.Get<string>("downloadName"),
+            Fields =
+            [
+                new() { Title = "Hash", Text = ContextProvider.Get<string>("hash").ToLowerInvariant() },
+                new() { Title = "Old category", Text = oldCategory },
+                new() { Title = "New category", Text = newCategory }
+            ],
+            Level = NotificationLevel.Important
+        };
+
+        await _messageBus.Publish(notification);
+    }
     
     private static Uri GetImageFromContext(QueueRecord record, InstanceType instanceType) =>
         instanceType switch
