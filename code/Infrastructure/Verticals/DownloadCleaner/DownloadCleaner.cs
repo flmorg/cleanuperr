@@ -60,11 +60,20 @@ public sealed class DownloadCleaner : GenericHandler
         
         await _downloadService.LoginAsync();
 
-        List<object>? downloads = await _downloadService.GetAllDownloadsToBeCleaned(_config.Categories);
+        List<object>? downloadsToBeCleaned = await _downloadService.GetDownloadsToBeCleaned(_config.Categories);
+        List<object>? downloadsToChangeCategory = null;
 
-        if (downloads?.Count is null or 0)
+        if (!string.IsNullOrEmpty(_config.NoHardlinksCategory) && _config.HardlinkCategories?.Count > 0)
         {
-            _logger.LogDebug("no downloads found in the download client");
+            downloadsToChangeCategory = await _downloadService.GetDownloadsToChangeCategory(_config.HardlinkCategories);
+        }
+        
+        bool hasDownloadsToClean = downloadsToBeCleaned?.Count > 0;
+        bool hasDownloadsToChange = downloadsToChangeCategory?.Count > 0;
+
+        if (!hasDownloadsToClean && !hasDownloadsToChange)
+        {
+            _logger.LogDebug("no downloads to process");
             return;
         }
 
@@ -75,7 +84,23 @@ public sealed class DownloadCleaner : GenericHandler
         await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr, true);
         await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
         
-        await _downloadService.CleanDownloads(downloads, _config.Categories, _excludedHashes);
+        if (hasDownloadsToChange)
+        {
+            await _downloadService.ChangeCategoryForNoHardlinksAsync(downloadsToChangeCategory, _excludedHashes);
+        }
+        else
+        {
+            _logger.LogDebug("no downloads found to change category");
+        }
+        
+        if (hasDownloadsToClean)
+        {
+            await _downloadService.CleanDownloads(downloadsToBeCleaned, _config.Categories, _excludedHashes);
+        }
+        else
+        {
+            _logger.LogDebug("no downloads found to be cleaned");
+        }
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)

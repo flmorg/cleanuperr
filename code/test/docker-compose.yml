@@ -209,11 +209,14 @@ services:
       - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
       - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
       - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
-      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=0.01
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=-1
       - DOWNLOADCLEANER__CATEGORIES__1__NAME=radarr
       - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
       - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
-      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=0.01
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=-1
+
+      - DOWNLOADCLEANER__HARDLINK_CATEGORIES__0=tv-sonarr
+      - DOWNLOADCLEANER__HARDLINK_CATEGORIES__1=radarr
 
       - DOWNLOAD_CLIENT=qbittorrent
       - QBITTORRENT__URL=http://qbittorrent:8080
@@ -252,10 +255,12 @@ services:
       # - NOTIFIARR__ON_STALLED_STRIKE=true
       # - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
       # - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
+      # - NOTIFIARR__ON_CATEGORY_CHANGED=true
       # - NOTIFIARR__API_KEY=notifiarr_secret
       # - NOTIFIARR__CHANNEL_ID=discord_channel_id
     volumes:
       - ./data/cleanuperr/logs:/var/logs
+      - ./data/qbittorrent/downloads:/downloads
     restart: unless-stopped
     depends_on:
       - qbittorrent

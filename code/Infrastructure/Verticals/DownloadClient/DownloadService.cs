@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
@@ -10,6 +10,7 @@ using Infrastructure.Helpers;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -30,6 +31,7 @@ public abstract class DownloadService : IDownloadService
     protected readonly MemoryCacheEntryOptions _cacheOptions;
     protected readonly INotificationPublisher _notifier;
     protected readonly IDryRunInterceptor _dryRunInterceptor;
+    protected readonly IHardlinkFileService _hardlinkFileService;
 
     protected DownloadService(
         ILogger<DownloadService> logger,
@@ -40,7 +42,8 @@ public abstract class DownloadService : IDownloadService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         INotificationPublisher notifier,
-        IDryRunInterceptor dryRunInterceptor
+        IDryRunInterceptor dryRunInterceptor,
+        IHardlinkFileService hardlinkFileService
     )
     {
         _logger = logger;
@@ -52,6 +55,7 @@ public abstract class DownloadService : IDownloadService
         _striker = striker;
         _notifier = notifier;
         _dryRunInterceptor = dryRunInterceptor;
+        _hardlinkFileService = hardlinkFileService;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
@@ -74,11 +78,17 @@ public abstract class DownloadService : IDownloadService
     public abstract Task DeleteDownload(string hash);
 
     /// <inheritdoc/>
-    public abstract Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories);
+    public abstract Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories);
 
     /// <inheritdoc/>
-    public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes);
+    public abstract Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories);
 
+    /// <inheritdoc/>
+    public abstract Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+
+    /// <inheritdoc/>
+    public abstract Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {
         if (!_queueCleanerConfig.StalledResetStrikesOnProgress)
@@ -107,7 +117,7 @@ public abstract class DownloadService : IDownloadService
         return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled);
     }
     
-    protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)
+    protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, CleanCategory category)
     {
         // check ratio
         if (DownloadReachedRatio(ratio, seedingTime, category))
@@ -132,7 +142,7 @@ public abstract class DownloadService : IDownloadService
         return new();
     }
     
-    private bool DownloadReachedRatio(double ratio, TimeSpan seedingTime, Category category)
+    private bool DownloadReachedRatio(double ratio, TimeSpan seedingTime, CleanCategory category)
     {
         if (category.MaxRatio < 0)
         {
@@ -158,7 +168,7 @@ public abstract class DownloadService : IDownloadService
         return true;
     }
     
-    private bool DownloadReachedMaxSeedTime(TimeSpan seedingTime, Category category)
+    private bool DownloadReachedMaxSeedTime(TimeSpan seedingTime, CleanCategory category)
     {
         if (category.MaxSeedTime < 0)
         {

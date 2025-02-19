@@ -10,6 +10,7 @@ using Domain.Enums;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -38,10 +39,11 @@ public class TransmissionService : DownloadService, ITransmissionService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         INotificationPublisher notifier,
-        IDryRunInterceptor dryRunInterceptor
+        IDryRunInterceptor dryRunInterceptor,
+        IHardlinkFileService hardlinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardlinkFileService
     )
     {
         _config = config.Value;
@@ -181,7 +183,7 @@ public class TransmissionService : DownloadService, ITransmissionService
     }
 
     /// <inheritdoc/>
-    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    public override async Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories)
     {
         string[] fields = [
             TorrentFields.FILES,
@@ -218,8 +220,13 @@ public class TransmissionService : DownloadService, ITransmissionService
             .ToList();
     }
 
+    public override Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
     {
         foreach (TorrentInfo download in downloads)
         {
@@ -228,7 +235,7 @@ public class TransmissionService : DownloadService, ITransmissionService
                 continue;
             }
             
-            Category? category = categoriesToClean
+            CleanCategory? category = categoriesToClean
                 .FirstOrDefault(x =>
                 {
                     if (download.DownloadDir is null)
@@ -281,7 +288,12 @@ public class TransmissionService : DownloadService, ITransmissionService
             await _notifier.NotifyDownloadCleaned(download.uploadRatio ?? 0, seedingTime, category.Name, result.Reason);
         }
     }
-    
+
+    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    {
+        throw new NotImplementedException();
+    }
+
     public override async Task DeleteDownload(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
