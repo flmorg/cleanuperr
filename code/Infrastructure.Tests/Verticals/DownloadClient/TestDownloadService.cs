@@ -40,11 +40,11 @@ public class TestDownloadService : DownloadService
     public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash) => Task.FromResult(new StalledResult());
     public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, 
         ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes) => Task.FromResult(new BlockFilesResult());
-
-    public override Task DeleteDownload(string hash) => Task.CompletedTask;
-    public override Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories) => Task.FromResult<List<object>?>(null);
-    public override Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories) => Task.FromResult<List<object>?>(null);
-    public override Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes) => Task.CompletedTask;
+    public override Task DeleteDownloadAsync(string hash) => Task.CompletedTask;
+    public override Task CreateCategoryAsync(string name) => Task.CompletedTask;
+    public override Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories) => Task.FromResult<List<object>?>(null);
+    public override Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories) => Task.FromResult<List<object>?>(null);
+    public override Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes) => Task.CompletedTask;
     public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes) => Task.CompletedTask;
     
     // Expose protected methods for testing

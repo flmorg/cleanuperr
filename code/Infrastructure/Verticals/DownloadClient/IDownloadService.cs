@@ -32,13 +32,18 @@ public interface IDownloadService : IDisposable
     );
 
     /// <summary>
-    /// Fetches all downloads.
+    /// Fetches all downloads that should be cleaned.
     /// </summary>
     /// <param name="categories">The categories by which to filter the downloads.</param>
     /// <returns>A list of downloads for the provided categories.</returns>
-    Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories);
+    Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories);
 
-    Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories);
+    /// <summary>
+    /// Fetches all downloads that should have their category changed.
+    /// </summary>
+    /// <param name="categories">The categories by which to filter the downloads.</param>
+    /// <returns>A list of downloads for the provided categories.</returns>
+    Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories);
     
     /// <summary>
     /// Cleans the downloads.
@@ -46,7 +51,7 @@ public interface IDownloadService : IDisposable
     /// <param name="downloads">The downloads to clean.</param>
     /// <param name="categoriesToClean">The categories that should be cleaned.</param>
     /// <param name="excludedHashes">The hashes that should not be cleaned.</param>
-    Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+    Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
 
     /// <summary>
     /// Changes the category for downloads that have no hardlinks.
@@ -58,5 +63,11 @@ public interface IDownloadService : IDisposable
     /// <summary>
     /// Deletes a download item.
     /// </summary>
-    public Task DeleteDownload(string hash);
+    public Task DeleteDownloadAsync(string hash);
+
+    /// <summary>
+    /// Creates a category.
+    /// </summary>
+    /// <param name="name">The category name.</param>
+    public Task CreateCategoryAsync(string name);
 }

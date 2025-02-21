@@ -183,7 +183,7 @@ public class TransmissionService : DownloadService, ITransmissionService
     }
 
     /// <inheritdoc/>
-    public override async Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories)
+    public override async Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories)
     {
         string[] fields = [
             TorrentFields.FILES,
@@ -220,13 +220,13 @@ public class TransmissionService : DownloadService, ITransmissionService
             .ToList();
     }
 
-    public override Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories)
+    public override Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
     {
         foreach (TorrentInfo download in downloads)
         {
@@ -288,13 +288,18 @@ public class TransmissionService : DownloadService, ITransmissionService
             await _notifier.NotifyDownloadCleaned(download.uploadRatio ?? 0, seedingTime, category.Name, result.Reason);
         }
     }
+    
+    public override async Task CreateCategoryAsync(string name)
+    {
+        throw new NotImplementedException();
+    }
 
     public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }
 
-    public override async Task DeleteDownload(string hash)
+    public override async Task DeleteDownloadAsync(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);
 

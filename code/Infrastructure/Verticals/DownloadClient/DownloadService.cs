@@ -75,19 +75,22 @@ public abstract class DownloadService : IDownloadService
     );
 
     /// <inheritdoc/>
-    public abstract Task DeleteDownload(string hash);
+    public abstract Task DeleteDownloadAsync(string hash);
 
     /// <inheritdoc/>
-    public abstract Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories);
+    public abstract Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories);
 
     /// <inheritdoc/>
-    public abstract Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories);
+    public abstract Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories);
 
     /// <inheritdoc/>
-    public abstract Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+    public abstract Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
 
     /// <inheritdoc/>
     public abstract Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    
+    /// <inheritdoc/>
+    public abstract Task CreateCategoryAsync(string name);
     
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {

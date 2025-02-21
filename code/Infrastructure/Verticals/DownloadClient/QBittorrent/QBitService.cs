@@ -209,7 +209,7 @@ public class QBitService : DownloadService, IQBitService
     }
     
     /// <inheritdoc/>
-    public override async Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories) =>
+    public override async Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories) =>
         (await _client.GetTorrentListAsync(new()
         {
             Filter = TorrentListFilter.Seeding
@@ -219,7 +219,7 @@ public class QBitService : DownloadService, IQBitService
         .Cast<object>()
         .ToList();
 
-    public override async Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories)
+    public override async Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories)
     {
         return (await _client.GetTorrentListAsync(new()
             {
@@ -231,7 +231,7 @@ public class QBitService : DownloadService, IQBitService
     }
 
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
     {
         foreach (TorrentInfo download in downloads)
         {
@@ -297,6 +297,18 @@ public class QBitService : DownloadService, IQBitService
             
             await _notifier.NotifyDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
         }
+    }
+
+    public override async Task CreateCategoryAsync(string name)
+    {
+        IReadOnlyDictionary<string, Category>? existingCategories = await _client.GetCategoriesAsync();
+        
+        if (existingCategories.Any(x => x.Value.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return;
+        }
+        
+        await _client.AddCategoryAsync(name);
     }
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
@@ -380,7 +392,7 @@ public class QBitService : DownloadService, IQBitService
     
     /// <inheritdoc/>
     [DryRunSafeguard]
-    public override async Task DeleteDownload(string hash)
+    public override async Task DeleteDownloadAsync(string hash)
     {
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
     }
