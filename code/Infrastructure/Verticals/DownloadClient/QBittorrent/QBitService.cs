@@ -353,6 +353,8 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
             
+            _logger.LogInformation("no hardlinks found | changing category for {name}", download.Name);
+            
             await ((QBitService)Proxy).ChangeCategory(download.Hash, _downloadCleanerConfig.NoHardlinksCategory);
             await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardlinksCategory);
         }
