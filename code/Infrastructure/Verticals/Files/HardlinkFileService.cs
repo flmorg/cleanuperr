@@ -79,7 +79,7 @@ public class HardlinkFileService : IHardlinkFileService
     {
         try
         {
-            Stat stat = default;
+            Stat stat = new();
             
             if (stat_file(filePath, ref stat) == 0)
             {
