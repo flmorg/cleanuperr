@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
+using Mono.Unix.Native;
 
 namespace Infrastructure.Verticals.Files;
 
@@ -79,42 +80,18 @@ public class HardlinkFileService : IHardlinkFileService
     {
         try
         {
-            Stat stat = new();
-            
-            if (stat_file(filePath, ref stat) == 0)
+            if (Syscall.stat(filePath, out Stat stat) == 0)
             {
                 // TODO remove
-                _logger.LogDebug("file {file} has {links} links", filePath, stat.st_nlink);
+                _logger.LogDebug("file {file} has links", filePath);
                 return stat.st_nlink;
             }
         }
         catch (Exception exception)
         {
-            // TODO log download name?
-            _logger.LogError(exception, "failed to stat Unix file {file}", filePath);
+            _logger.LogError(exception, "failed to stat file {file}", filePath);
         }
-
+        
         return 0;
-    }
-
-    [DllImport("libc", EntryPoint = "stat", SetLastError = true)]
-    static extern int stat_file(string path, ref Stat statStruct);
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct Stat
-    {
-        public ulong st_dev;
-        public ulong st_ino;   // Inode number
-        public ulong st_nlink; // Hard link count
-        public uint st_mode;
-        public uint st_uid;
-        public uint st_gid;
-        public ulong st_rdev;
-        public long st_size;
-        public long st_blksize;
-        public long st_blocks;
-        public long st_atime;
-        public long st_mtime;
-        public long st_ctime;
     }
 }
