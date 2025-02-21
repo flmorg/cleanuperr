@@ -68,7 +68,7 @@ public class DummyDownloadService : DownloadService
         throw new NotImplementedException();
     }
 
-    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }

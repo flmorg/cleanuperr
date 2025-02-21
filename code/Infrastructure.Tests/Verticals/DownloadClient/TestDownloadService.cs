@@ -45,7 +45,7 @@ public class TestDownloadService : DownloadService
     public override Task<List<object>?> GetDownloadsToBeCleaned(List<CleanCategory> categories) => Task.FromResult<List<object>?>(null);
     public override Task<List<object>?> GetDownloadsToChangeCategory(List<string> categories) => Task.FromResult<List<object>?>(null);
     public override Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes) => Task.CompletedTask;
-    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes) => Task.CompletedTask;
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes) => Task.CompletedTask;
     
     // Expose protected methods for testing
     public new void ResetStrikesOnProgress(string hash, long downloaded) => base.ResetStrikesOnProgress(hash, downloaded);

@@ -53,7 +53,7 @@ public interface IDownloadService : IDisposable
     /// </summary>
     /// <param name="downloads">The downloads to change.</param>
     /// <param name="excludedHashes"></param>
-    Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes);
     
     /// <summary>
     /// Deletes a download item.

@@ -87,7 +87,7 @@ public abstract class DownloadService : IDownloadService
     public abstract Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
 
     /// <inheritdoc/>
-    public abstract Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    public abstract Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes);
     
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {

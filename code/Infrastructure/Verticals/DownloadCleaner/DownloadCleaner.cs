@@ -86,7 +86,7 @@ public sealed class DownloadCleaner : GenericHandler
         
         if (hasDownloadsToChange)
         {
-            await _downloadService.ChangeCategoryForNoHardlinksAsync(downloadsToChangeCategory, _excludedHashes);
+            await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes);
         }
         else
         {

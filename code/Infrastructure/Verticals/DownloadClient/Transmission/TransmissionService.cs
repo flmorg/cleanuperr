@@ -289,7 +289,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         }
     }
 
-    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }
