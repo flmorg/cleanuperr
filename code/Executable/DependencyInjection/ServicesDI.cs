@@ -25,6 +25,8 @@ public static class ServicesDI
             .AddTransient<DownloadCleaner>()
             .AddTransient<IFilenameEvaluator, FilenameEvaluator>()
             .AddTransient<IHardlinkFileService, HardlinkFileService>()
+            .AddTransient<UnixHardlinkFileService>()
+            .AddTransient<WindowsHardlinkFileService>()
             .AddTransient<DummyDownloadService>()
             .AddTransient<QBitService>()
             .AddTransient<DelugeService>()

@@ -343,9 +343,9 @@ public class QBitService : DownloadService, IQBitService
                     : download.SavePath, file.Name
                 );
 
-                ulong hardlinkCount = _hardlinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.IgnoreRootDir);
+                long hardlinkCount = _hardlinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.IgnoreRootDir);
 
-                if (hardlinkCount is 0)
+                if (hardlinkCount < 0)
                 {
                     _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
                     hasHardlinks = true;
