@@ -16,6 +16,9 @@ public sealed record DownloadCleanerConfig : IJobConfig
 
     [ConfigurationKeyName("NO_HARDLINKS_CATEGORY")]
     public string NoHardlinksCategory { get; init; } = "";
+    
+    [ConfigurationKeyName("IGNORE_ROOT_DIR")]
+    public bool IgnoreRootDir { get; init; }
 
     [ConfigurationKeyName("HARDLINK_CATEGORIES")]
     public List<string>? HardlinkCategories { get; init; }

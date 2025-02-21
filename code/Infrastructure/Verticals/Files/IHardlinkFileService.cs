@@ -2,5 +2,6 @@
 
 public interface IHardlinkFileService
 {
-    ulong GetHardLinkCount(string filePath);
+    void PopulateInodeCounts(string directoryPath);
+    ulong GetHardLinkCount(string filePath, bool ignoreRootDir);
 }
