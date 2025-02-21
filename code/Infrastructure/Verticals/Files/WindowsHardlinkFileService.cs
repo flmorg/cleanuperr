@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32.SafeHandles;
 
@@ -7,30 +8,86 @@ namespace Infrastructure.Verticals.Files;
 public class WindowsHardlinkFileService
 {
     private readonly ILogger<WindowsHardlinkFileService> _logger;
+    // Track file indices in the ignored directory (e.g., root directory)
+    private readonly ConcurrentDictionary<ulong, int> _fileIndexCounts = new();
 
     public WindowsHardlinkFileService(ILogger<WindowsHardlinkFileService> logger)
     {
         _logger = logger;
     }
     
-    public long GetWindowsHardLinkCount(string filePath)
+    public long GetWindowsHardLinkCount(string filePath, bool ignoreRootDir)
     {
         try
         {
             using SafeFileHandle fileStream = File.OpenHandle(filePath);
 
-            if (GetFileInformationByHandle(fileStream, out var file))
+            if (!GetFileInformationByHandle(fileStream, out var file))
             {
+                _logger.LogDebug("failed to get file handle {file}", filePath);
+                return -1;
+            }
+
+            if (!ignoreRootDir)
+            {
+                _logger.LogDebug("stat file | hardlinks: {nlink} | {file}", file.NumberOfLinks, filePath);
                 return file.NumberOfLinks;
             }
+
+            // Get unique file ID (combination of high and low indices)
+            ulong fileIndex = ((ulong)file.FileIndexHigh << 32) | file.FileIndexLow;
+            
+            // Adjusted case: Check if there are links outside the ignored directory
+            int linksInIgnoredDir = _fileIndexCounts.TryGetValue(fileIndex, out int count)
+                ? count
+                : 1; // Default to 1 if not found
+
+            _logger.LogDebug("stat file {file} | links: {links} | ignored: {ignored}", filePath, file.NumberOfLinks, linksInIgnoredDir);
+            return file.NumberOfLinks - linksInIgnoredDir;
         }
         catch (Exception exception)
         {
-            // TODO log download name?
-            _logger.LogError(exception, "failed to stat Windows file {file}", filePath);
+            _logger.LogError(exception, "failed to stat file {file}", filePath);
+            return -1;
         }
+    }
 
-        return -1;
+    public void PopulateFileIndexCounts(string directoryPath)
+    {
+        try
+        {
+            // Traverse all files and directories in the ignored path
+            foreach (var file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
+            {
+                AddFileIndexToCount(file);
+            }
+
+            foreach (var dir in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories))
+            {
+                AddFileIndexToCount(dir);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to populate file index counts from {dir}", directoryPath);
+        }
+    }
+
+    private void AddFileIndexToCount(string path)
+    {
+        try
+        {
+            using SafeFileHandle fileStream = File.OpenHandle(path);
+            if (GetFileInformationByHandle(fileStream, out var file))
+            {
+                ulong fileIndex = ((ulong)file.FileIndexHigh << 32) | file.FileIndexLow;
+                _fileIndexCounts.AddOrUpdate(fileIndex, 1, (_, count) => count + 1);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Couldn't stat {path} during file index counting", path);
+        }
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]

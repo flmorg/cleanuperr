@@ -24,7 +24,7 @@ public class HardlinkFileService : IHardlinkFileService
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // TODO
+            _windowsHardlinkFileService.PopulateFileIndexCounts(directoryPath);
             return;
         }
         
@@ -41,7 +41,7 @@ public class HardlinkFileService : IHardlinkFileService
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return _windowsHardlinkFileService.GetWindowsHardLinkCount(filePath);
+            return _windowsHardlinkFileService.GetWindowsHardLinkCount(filePath, ignoreRootDir);
         }
 
         return _unixHardlinkFileService.GetHardlinkCount(filePath, ignoreRootDir);
