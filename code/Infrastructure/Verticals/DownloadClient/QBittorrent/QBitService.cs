@@ -300,6 +300,17 @@ public class QBitService : DownloadService, IQBitService
 
     public override async Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
+        if (_downloadCleanerConfig.IgnoreRootDir)
+        {
+            // TODO call this only if Unix
+            downloads
+                .Cast<TorrentInfo>()
+                .GroupBy(x => x.SavePath)
+                .Select(x => x.Key)
+                .ToList()
+                .ForEach(x => _hardlinkFileService.PopulateInodeCounts(x));
+        }
+        
         // TODO account for cross-seed
         foreach (TorrentInfo download in downloads)
         {
@@ -332,7 +343,7 @@ public class QBitService : DownloadService, IQBitService
                     : download.SavePath, file.Name
                 );
 
-                ulong hardlinkCount = _hardlinkFileService.GetHardLinkCount(filePath);
+                ulong hardlinkCount = _hardlinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.IgnoreRootDir);
 
                 if (hardlinkCount is 0)
                 {
