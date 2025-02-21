@@ -21,11 +21,17 @@ public class HardlinkFileService : IHardlinkFileService
             return default;
         }
         
+        // TODO remove
+        _logger.LogDebug("file {file} exists", filePath);
+        
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
+            _logger.LogDebug("Windows platform detected");
             return GetWindowsHardLinkCount(filePath);
         }
 
+        // TODO remove
+        _logger.LogDebug("Unix platform detected");
         return GetUnixHardLinkCount(filePath);
     }
 
@@ -77,6 +83,8 @@ public class HardlinkFileService : IHardlinkFileService
             
             if (stat_file(filePath, ref stat) == 0)
             {
+                // TODO remove
+                _logger.LogDebug("file {file} has {links} links", filePath, stat.st_nlink);
                 return stat.st_nlink;
             }
         }
