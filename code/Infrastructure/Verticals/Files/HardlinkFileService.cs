@@ -67,7 +67,9 @@ public class HardlinkFileService : IHardlinkFileService
     {
         try
         {
-            if (HardlinkFileService.stat(filePath, out StatStruct stat) == 0)
+            Stat stat = default;
+            
+            if (stat_file(filePath, ref stat) == 0)
             {
                 return stat.st_nlink;
             }
@@ -81,15 +83,24 @@ public class HardlinkFileService : IHardlinkFileService
         return 0;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct StatStruct
-    {
-        public ulong st_dev;     // Device ID
-        public ulong st_ino;     // Inode number
-        public ulong st_nlink;   // Number of hard links
-        // Additional fields are omitted for brevity
-    }
+    [DllImport("libc", EntryPoint = "stat", SetLastError = true)]
+    static extern int stat_file(string path, ref Stat statStruct);
 
-    [DllImport("libc", SetLastError = true, CharSet = CharSet.Auto)]
-    private static extern int stat(string path, out StatStruct stat);
+    [StructLayout(LayoutKind.Sequential)]
+    struct Stat
+    {
+        public ulong st_dev;
+        public ulong st_ino;   // Inode number
+        public ulong st_nlink; // Hard link count
+        public uint st_mode;
+        public uint st_uid;
+        public uint st_gid;
+        public ulong st_rdev;
+        public long st_size;
+        public long st_blksize;
+        public long st_blocks;
+        public long st_atime;
+        public long st_mtime;
+        public long st_ctime;
+    }
 }
