@@ -19,7 +19,7 @@ public sealed class DownloadCleaner : GenericHandler
     private readonly DownloadCleanerConfig _config;
     private readonly HashSet<string> _excludedHashes = [];
     
-    private static bool _hardLinkCategoryCreated = false;
+    private static bool _hardLinkCategoryCreated;
     
     public DownloadCleaner(
         ILogger<DownloadCleaner> logger,
@@ -69,10 +69,13 @@ public sealed class DownloadCleaner : GenericHandler
         {
             if (!_hardLinkCategoryCreated)
             {
+                _logger.LogTrace("creating category {cat}", _config.NoHardlinksCategory);
+                
                 await _downloadService.CreateCategoryAsync(_config.NoHardlinksCategory);
                 _hardLinkCategoryCreated = true;
             }
             
+            _logger.LogTrace("getting downloads to change category");
             downloadsToChangeCategory = await _downloadService.GetDownloadsToChangeCategoryAsync(_config.HardlinkCategories);
         }
         
@@ -94,20 +97,22 @@ public sealed class DownloadCleaner : GenericHandler
         
         if (hasDownloadsToChange)
         {
+            _logger.LogTrace("processing downloads to change category");
             await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes);
         }
         else
         {
-            _logger.LogDebug("no downloads found to change category");
+            _logger.LogTrace("no downloads found to change category");
         }
         
         if (hasDownloadsToClean)
         {
+            _logger.LogTrace("processing downloads to be cleaned");
             await _downloadService.CleanDownloadsAsync(downloadsToBeCleaned, _config.Categories, _excludedHashes);
         }
         else
         {
-            _logger.LogDebug("no downloads found to be cleaned");
+            _logger.LogTrace("no downloads found to be cleaned");
         }
     }
 

@@ -322,6 +322,8 @@ public class QBitService : DownloadService, IQBitService
                 .ToList()
                 .ForEach(x =>
                 {
+                    _logger.LogTrace("populating file counts from {dir}", x);
+                    
                     if (!Directory.Exists(x))
                     {
                         throw new ValidationException($"directory \"{x}\" does not exist");
