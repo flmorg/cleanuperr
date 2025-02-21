@@ -327,7 +327,12 @@ public class QBitService : DownloadService, IQBitService
                     return;
                 }
 
-                ulong hardlinkCount = _hardlinkFileService.GetHardLinkCount(file.Name);
+                string filePath = Path.Combine(Directory.Exists(download.ContentPath)
+                    ? download.ContentPath
+                    : download.SavePath, file.Name
+                );
+
+                ulong hardlinkCount = _hardlinkFileService.GetHardLinkCount(filePath);
 
                 if (hardlinkCount is 0)
                 {
@@ -339,7 +344,7 @@ public class QBitService : DownloadService, IQBitService
                 if (hardlinkCount > 1)
                 {
                     hasHardlinks = true;
-                };
+                }
             }
             
             if (hasHardlinks)

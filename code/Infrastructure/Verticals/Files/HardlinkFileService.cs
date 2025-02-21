@@ -15,6 +15,12 @@ public class HardlinkFileService : IHardlinkFileService
     
     public ulong GetHardLinkCount(string filePath)
     {
+        if (!File.Exists(filePath))
+        {
+            _logger.LogDebug("file {file} does not exist", filePath);
+            return default;
+        }
+        
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             return GetWindowsHardLinkCount(filePath);
