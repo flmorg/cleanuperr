@@ -117,25 +117,31 @@ public class HardlinkFileService : IHardlinkFileService
         try
         {
             if (Syscall.stat(filePath, out Stat stat) != 0)
+            {
+                _logger.LogDebug("failed to stat file {file}", filePath);
                 return 0;
+            }
 
             if (!ignoreRootDir)
             {
                 // Simple case: Just check if >1 hardlink exists
-                return stat.st_nlink > 1 ? stat.st_nlink : 0;
+                _logger.LogDebug("stat file {file} | nlink: {nlink}", filePath, stat.st_nlink);
+                return stat.st_nlink;
             }
 
             // Adjusted case: Subtract links from the ignored directory
             int linksInIgnoredDir = _inodeCounts.TryGetValue(stat.st_ino, out int count) 
                 ? count 
                 : 1; // Default to 1 if not found
+            
+            _logger.LogDebug("stat file {file} | nlink: {nlink} | ignored: {ignored}", filePath, stat.st_nlink, linksInIgnoredDir);
 
             long adjustedCount = (long)stat.st_nlink - linksInIgnoredDir;
             return (ulong)Math.Max(adjustedCount, 0);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Failed to stat file {file}", filePath);
+            _logger.LogError(exception, "failed to stat file {file}", filePath);
             return 0;
         }
     }
