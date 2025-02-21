@@ -1,148 +1,49 @@
-﻿using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32.SafeHandles;
-using Mono.Unix.Native;
 
 namespace Infrastructure.Verticals.Files;
 
 public class HardlinkFileService : IHardlinkFileService
 {
     private readonly ILogger<HardlinkFileService> _logger;
-    // Track inode counts in the ignored directory (e.g., root directory)
-    private readonly ConcurrentDictionary<ulong, int> _inodeCounts = new();
-    
-    public HardlinkFileService(ILogger<HardlinkFileService> logger)
+    private readonly UnixHardlinkFileService _unixHardlinkFileService;
+    private readonly WindowsHardlinkFileService _windowsHardlinkFileService;
+
+    public HardlinkFileService(
+        ILogger<HardlinkFileService> logger,
+        UnixHardlinkFileService unixHardlinkFileService,
+        WindowsHardlinkFileService windowsHardlinkFileService
+    )
     {
         _logger = logger;
+        _unixHardlinkFileService = unixHardlinkFileService;
+        _windowsHardlinkFileService = windowsHardlinkFileService;
     }
-    
-    public ulong GetHardLinkCount(string filePath, bool ignoreRootDir)
+
+    public void PopulateInodeCounts(string directoryPath)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // TODO
+            return;
+        }
+        
+        _unixHardlinkFileService.PopulateInodeCounts(directoryPath);
+    }
+
+    public long GetHardLinkCount(string filePath, bool ignoreRootDir)
     {
         if (!File.Exists(filePath))
         {
             _logger.LogDebug("file {file} does not exist", filePath);
-            return default;
+            return -1;
         }
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            _logger.LogDebug("Windows platform detected");
-            return GetWindowsHardLinkCount(filePath);
+            return _windowsHardlinkFileService.GetWindowsHardLinkCount(filePath);
         }
 
-        return GetUnixHardLinkCount(filePath, ignoreRootDir);
-    }
-
-    private uint GetWindowsHardLinkCount(string filePath)
-    {
-        try
-        {
-            using SafeFileHandle fileStream = File.OpenHandle(filePath);
-
-            if (GetFileInformationByHandle(fileStream, out var file))
-            {
-                return file.NumberOfLinks;
-            }
-        }
-        catch (Exception exception)
-        {
-            // TODO log download name?
-            _logger.LogError(exception, "failed to stat Windows file {file}", filePath);
-        }
-
-        return default;
-    }
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool GetFileInformationByHandle(
-        SafeFileHandle hFile,
-        out BY_HANDLE_FILE_INFORMATION lpFileInformation
-    );
-
-    private struct BY_HANDLE_FILE_INFORMATION
-    {
-        public uint FileAttributes;
-        public System.Runtime.InteropServices.ComTypes.FILETIME CreationTime;
-        public System.Runtime.InteropServices.ComTypes.FILETIME LastAccessTime;
-        public System.Runtime.InteropServices.ComTypes.FILETIME LastWriteTime;
-        public uint VolumeSerialNumber;
-        public uint FileSizeHigh;
-        public uint FileSizeLow;
-        public uint NumberOfLinks;
-        public uint FileIndexHigh;
-        public uint FileIndexLow;
-    }
-
-    // Call this first to populate inode counts from the directory you want to ignore
-    public void PopulateInodeCounts(string directoryPath)
-    {
-        try
-        {
-            // Traverse all files and directories in the ignored path
-            foreach (var file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
-            {
-                AddInodeToCount(file);
-            }
-
-            foreach (var dir in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories))
-            {
-                AddInodeToCount(dir);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to populate inode counts from {dir}", directoryPath);
-        }
-    }
-
-    private void AddInodeToCount(string path)
-    {
-        try
-        {
-            if (Syscall.stat(path, out Stat stat) == 0)
-            {
-                _inodeCounts.AddOrUpdate(stat.st_ino, 1, (_, count) => count + 1);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Couldn't stat {path} during inode counting", path);
-        }
-    }
-
-    // Modified GetUnixHardLinkCount with ignore logic
-    public ulong GetUnixHardLinkCount(string filePath, bool ignoreRootDir)
-    {
-        try
-        {
-            if (Syscall.stat(filePath, out Stat stat) != 0)
-            {
-                _logger.LogDebug("failed to stat file {file}", filePath);
-                return 0;
-            }
-
-            if (!ignoreRootDir)
-            {
-                // Simple case: Just check if >1 hardlink exists
-                _logger.LogDebug("stat file {file} | nlink: {nlink}", filePath, stat.st_nlink);
-                return stat.st_nlink;
-            }
-
-            // Adjusted case: Subtract links from the ignored directory
-            int linksInIgnoredDir = _inodeCounts.TryGetValue(stat.st_ino, out int count) 
-                ? count 
-                : 1; // Default to 1 if not found
-            
-            _logger.LogDebug("stat file {file} | nlink: {nlink} | ignored: {ignored}", filePath, stat.st_nlink, linksInIgnoredDir);
-
-            long adjustedCount = (long)stat.st_nlink - linksInIgnoredDir;
-            return (ulong)Math.Max(adjustedCount, 0);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "failed to stat file {file}", filePath);
-            return 0;
-        }
+        return _unixHardlinkFileService.GetHardlinkCount(filePath, ignoreRootDir);
     }
 }
