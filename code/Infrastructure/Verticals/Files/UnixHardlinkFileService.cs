@@ -38,9 +38,7 @@ public class UnixHardlinkFileService
                 : 1; // Default to 1 if not found
             
             _logger.LogDebug("stat file | hardlinks: {nlink} | ignored: {ignored} | {file}", stat.st_nlink, linksInIgnoredDir, filePath);
-
-            long adjustedCount = (long)stat.st_nlink - linksInIgnoredDir;
-            return Math.Max(adjustedCount, 0);
+            return (long)stat.st_nlink - linksInIgnoredDir;
         }
         catch (Exception exception)
         {
