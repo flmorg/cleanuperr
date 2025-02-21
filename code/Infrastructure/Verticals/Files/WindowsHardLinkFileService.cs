@@ -5,18 +5,18 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Infrastructure.Verticals.Files;
 
-public class WindowsHardlinkFileService
+public class WindowsHardLinkFileService : IHardLinkFileService
 {
-    private readonly ILogger<WindowsHardlinkFileService> _logger;
-    // Track file indices in the ignored directory (e.g., root directory)
+    private readonly ILogger<WindowsHardLinkFileService> _logger;
     private readonly ConcurrentDictionary<ulong, int> _fileIndexCounts = new();
 
-    public WindowsHardlinkFileService(ILogger<WindowsHardlinkFileService> logger)
+    public WindowsHardLinkFileService(ILogger<WindowsHardLinkFileService> logger)
     {
         _logger = logger;
     }
     
-    public long GetWindowsHardLinkCount(string filePath, bool ignoreRootDir)
+    /// <inheritdoc/>
+    public long GetHardLinkCount(string filePath, bool ignoreRootDir)
     {
         try
         {
@@ -31,7 +31,7 @@ public class WindowsHardlinkFileService
             if (!ignoreRootDir)
             {
                 _logger.LogDebug("stat file | hardlinks: {nlink} | {file}", file.NumberOfLinks, filePath);
-                return file.NumberOfLinks;
+                return file.NumberOfLinks == 1 ? 0 : 1;
             }
 
             // Get unique file ID (combination of high and low indices)
@@ -52,7 +52,8 @@ public class WindowsHardlinkFileService
         }
     }
 
-    public void PopulateFileIndexCounts(string directoryPath)
+    /// <inheritdoc/>
+    public void PopulateFileCounts(string directoryPath)
     {
         try
         {

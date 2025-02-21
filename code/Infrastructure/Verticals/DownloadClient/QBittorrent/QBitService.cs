@@ -5,6 +5,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.Exceptions;
 using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Verticals.ContentBlocker;
@@ -40,12 +41,12 @@ public class QBitService : DownloadService, IQBitService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         NotificationPublisher notifier,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger,
         queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig,
         cache, filenameEvaluator, striker, notifier,
-        hardlinkFileService
+        hardLinkFileService
     )
     {
         _config = config.Value;
@@ -303,20 +304,26 @@ public class QBitService : DownloadService, IQBitService
         }
     }
 
-    public override async Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
         if (_downloadCleanerConfig.IgnoreRootDir)
         {
-            // TODO call this only if Unix
             downloads
                 .Cast<TorrentInfo>()
-                .GroupBy(x => x.SavePath)
+                .GroupBy(x => Path.GetPathRoot(x.SavePath))
                 .Select(x => x.Key)
                 .ToList()
-                .ForEach(x => _hardlinkFileService.PopulateInodeCounts(x));
+                .ForEach(x =>
+                {
+                    if (!Directory.Exists(x))
+                    {
+                        throw new ValidationException($"directory \"{x}\" does not exist");
+                    }
+                    
+                    _hardLinkFileService.PopulateFileCounts(x);
+                });
         }
         
-        // TODO account for cross-seed
         foreach (TorrentInfo download in downloads)
         {
             IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(download.Hash);
@@ -348,7 +355,7 @@ public class QBitService : DownloadService, IQBitService
                     : download.SavePath, file.Name
                 );
 
-                long hardlinkCount = _hardlinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.IgnoreRootDir);
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.IgnoreRootDir);
 
                 if (hardlinkCount < 0)
                 {
@@ -369,7 +376,7 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
             
-            _logger.LogInformation("no hardlinks found | changing category for {name}", download.Name);
+            _logger.LogInformation("changing category for {name}", download.Name);
             
             await ((QBitService)Proxy).ChangeCategory(download.Hash, _downloadCleanerConfig.NoHardlinksCategory);
             await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardlinksCategory);

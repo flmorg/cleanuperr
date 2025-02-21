@@ -29,10 +29,10 @@ public class DummyDownloadService : DownloadService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         NotificationPublisher notifier,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig,
-        cache, filenameEvaluator, striker, notifier, hardlinkFileService
+        cache, filenameEvaluator, striker, notifier, hardLinkFileService
     )
     {
     }
@@ -71,7 +71,7 @@ public class DummyDownloadService : DownloadService
         throw new NotImplementedException();
     }
 
-    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }

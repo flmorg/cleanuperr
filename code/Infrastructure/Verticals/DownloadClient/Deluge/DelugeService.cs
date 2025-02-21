@@ -38,12 +38,12 @@ public class DelugeService : DownloadService, IDelugeService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         NotificationPublisher notifier,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger,
         queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig,
         cache, filenameEvaluator, striker, notifier,
-        hardlinkFileService
+        hardLinkFileService
     )
     {
         config.Value.Validate();
@@ -271,7 +271,7 @@ public class DelugeService : DownloadService, IDelugeService
         }
     }
 
-    public override Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }

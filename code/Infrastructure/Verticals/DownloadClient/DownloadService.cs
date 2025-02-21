@@ -30,7 +30,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
     protected readonly IStriker _striker;
     protected readonly MemoryCacheEntryOptions _cacheOptions;
     protected readonly NotificationPublisher _notifier;
-    protected readonly IHardlinkFileService _hardlinkFileService;
+    protected readonly IHardLinkFileService _hardLinkFileService;
 
     /// <summary>
     /// Constructor to be used by interceptors.
@@ -48,7 +48,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         NotificationPublisher notifier,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     )
     {
         _logger = logger;
@@ -59,7 +59,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
         _notifier = notifier;
-        _hardlinkFileService = hardlinkFileService;
+        _hardLinkFileService = hardLinkFileService;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
@@ -91,7 +91,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
     public abstract Task CleanDownloads(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
 
     /// <inheritdoc/>
-    public abstract Task ChangeCategoryForNoHardlinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    public abstract Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes);
     
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {
