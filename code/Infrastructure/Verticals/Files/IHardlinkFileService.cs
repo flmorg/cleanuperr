@@ -2,5 +2,5 @@
 
 public interface IHardlinkFileService
 {
-    uint GetHardLinkCount(string filePath);
+    ulong GetHardLinkCount(string filePath);
 }

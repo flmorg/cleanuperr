@@ -327,7 +327,16 @@ public class QBitService : DownloadService, IQBitService
                     return;
                 }
 
-                if (_hardlinkFileService.GetHardLinkCount(file.Name) > 1)
+                ulong hardlinkCount = _hardlinkFileService.GetHardLinkCount(file.Name);
+
+                if (hardlinkCount is 0)
+                {
+                    _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
+                    hasHardlinks = true;
+                    break;
+                }
+
+                if (hardlinkCount > 1)
                 {
                     hasHardlinks = true;
                 };
