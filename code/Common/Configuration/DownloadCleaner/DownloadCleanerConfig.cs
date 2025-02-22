@@ -15,13 +15,13 @@ public sealed record DownloadCleanerConfig : IJobConfig
     public bool DeletePrivate { get; init; }
 
     [ConfigurationKeyName("NO_HL_CATEGORY")]
-    public string NoHardlinksCategory { get; init; } = "";
+    public string NoHardLinksCategory { get; init; } = "";
     
     [ConfigurationKeyName("NO_HL_IGNORE_ROOT_DIR")]
-    public bool IgnoreRootDir { get; init; }
+    public bool NoHardLinksIgnoreRootDir { get; init; }
     
     [ConfigurationKeyName("NO_HL_CATEGORIES")]
-    public List<string>? HardlinkCategories { get; init; }
+    public List<string>? NoHardLinksCategories { get; init; }
 
     public void Validate()
     {
@@ -42,22 +42,22 @@ public sealed record DownloadCleanerConfig : IJobConfig
         
         Categories?.ForEach(x => x.Validate());
         
-        if (string.IsNullOrEmpty(NoHardlinksCategory))
+        if (string.IsNullOrEmpty(NoHardLinksCategory))
         {
             return;
         }
 
-        if (HardlinkCategories?.Count is null or 0)
+        if (NoHardLinksCategories?.Count is null or 0)
         {
             throw new ValidationException("no categories configured");
         }
 
-        if (HardlinkCategories.Contains(NoHardlinksCategory))
+        if (NoHardLinksCategories.Contains(NoHardLinksCategory))
         {
             throw new ValidationException("NO_HARDLINKS_CATEGORY is present in the list of filtered categories");
         }
 
-        if (HardlinkCategories.Any(string.IsNullOrEmpty))
+        if (NoHardLinksCategories.Any(string.IsNullOrEmpty))
         {
             throw new ValidationException("empty hardlink filter category found");
         }

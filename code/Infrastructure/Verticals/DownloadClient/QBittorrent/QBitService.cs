@@ -226,6 +226,7 @@ public class QBitService : DownloadService, IQBitService
                 Filter = TorrentListFilter.Seeding
             }))
             ?.Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
             .Cast<object>()
             .ToList();
     }
@@ -313,7 +314,7 @@ public class QBitService : DownloadService, IQBitService
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
     {
-        if (_downloadCleanerConfig.IgnoreRootDir)
+        if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
         {
             downloads
                 .Cast<TorrentInfo>()
@@ -365,6 +366,8 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
 
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
             bool hasHardlinks = false;
             
             foreach (TorrentContent file in files)
@@ -380,7 +383,7 @@ public class QBitService : DownloadService, IQBitService
                     : download.SavePath, file.Name
                 );
 
-                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.IgnoreRootDir);
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
 
                 if (hardlinkCount < 0)
                 {
@@ -403,8 +406,8 @@ public class QBitService : DownloadService, IQBitService
             
             _logger.LogInformation("changing category for {name}", download.Name);
             
-            await ((QBitService)Proxy).ChangeCategory(download.Hash, _downloadCleanerConfig.NoHardlinksCategory);
-            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardlinksCategory);
+            await ((QBitService)Proxy).ChangeCategory(download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
+            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardLinksCategory);
         }
     }
     

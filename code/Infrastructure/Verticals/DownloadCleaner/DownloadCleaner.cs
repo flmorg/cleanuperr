@@ -65,18 +65,18 @@ public sealed class DownloadCleaner : GenericHandler
         List<object>? downloadsToBeCleaned = await _downloadService.GetDownloadsToBeCleanedAsync(_config.Categories);
         List<object>? downloadsToChangeCategory = null;
 
-        if (!string.IsNullOrEmpty(_config.NoHardlinksCategory) && _config.HardlinkCategories?.Count > 0)
+        if (!string.IsNullOrEmpty(_config.NoHardLinksCategory) && _config.NoHardLinksCategories?.Count > 0)
         {
             if (!_hardLinkCategoryCreated)
             {
-                _logger.LogTrace("creating category {cat}", _config.NoHardlinksCategory);
+                _logger.LogTrace("creating category {cat}", _config.NoHardLinksCategory);
                 
-                await _downloadService.CreateCategoryAsync(_config.NoHardlinksCategory);
+                await _downloadService.CreateCategoryAsync(_config.NoHardLinksCategory);
                 _hardLinkCategoryCreated = true;
             }
             
             _logger.LogTrace("getting downloads to change category");
-            downloadsToChangeCategory = await _downloadService.GetDownloadsToChangeCategoryAsync(_config.HardlinkCategories);
+            downloadsToChangeCategory = await _downloadService.GetDownloadsToChangeCategoryAsync(_config.NoHardLinksCategories);
         }
         
         bool hasDownloadsToClean = downloadsToBeCleaned?.Count > 0;
