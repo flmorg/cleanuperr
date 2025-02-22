@@ -37,7 +37,7 @@ public sealed record DownloadCleanerConfig : IJobConfig
 
         if (Categories?.GroupBy(x => x.Name).Any(x => x.Count() > 1) is true)
         {
-            throw new ValidationException("duplicated categories found");
+            throw new ValidationException("duplicated clean categories found");
         }
         
         Categories?.ForEach(x => x.Validate());
@@ -54,7 +54,7 @@ public sealed record DownloadCleanerConfig : IJobConfig
 
         if (NoHardLinksCategories.Contains(NoHardLinksCategory))
         {
-            throw new ValidationException("NO_HARDLINKS_CATEGORY is present in the list of filtered categories");
+            throw new ValidationException("NO_HARDLINKS_CATEGORY is present in NO_HARDLINKS_CATEGORIES");
         }
 
         if (NoHardLinksCategories.Any(string.IsNullOrEmpty))
