@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
@@ -10,6 +11,7 @@ using Infrastructure.Helpers;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -29,6 +31,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
     protected readonly IStriker _striker;
     protected readonly MemoryCacheEntryOptions _cacheOptions;
     protected readonly NotificationPublisher _notifier;
+    protected readonly IHardLinkFileService _hardLinkFileService;
 
     /// <summary>
     /// Constructor to be used by interceptors.
@@ -45,7 +48,9 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        NotificationPublisher notifier)
+        NotificationPublisher notifier,
+        IHardLinkFileService hardLinkFileService
+    )
     {
         _logger = logger;
         _queueCleanerConfig = queueCleanerConfig.Value;
@@ -55,6 +60,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
         _notifier = notifier;
+        _hardLinkFileService = hardLinkFileService;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
@@ -74,14 +80,23 @@ public abstract class DownloadService : InterceptedService, IDownloadService
     );
 
     /// <inheritdoc/>
-    public abstract Task DeleteDownload(string hash);
+    public abstract Task DeleteDownloadAsync(string hash);
 
     /// <inheritdoc/>
-    public abstract Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories);
+    public abstract Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories);
 
     /// <inheritdoc/>
-    public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes);
+    public abstract Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories);
 
+    /// <inheritdoc/>
+    public abstract Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+
+    /// <inheritdoc/>
+    public abstract Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    
+    /// <inheritdoc/>
+    public abstract Task CreateCategoryAsync(string name);
+    
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {
         if (!_queueCleanerConfig.StalledResetStrikesOnProgress)
@@ -110,7 +125,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled);
     }
     
-    protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)
+    protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, CleanCategory category)
     {
         // check ratio
         if (DownloadReachedRatio(ratio, seedingTime, category))
@@ -135,7 +150,27 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         return new();
     }
     
-    private bool DownloadReachedRatio(double ratio, TimeSpan seedingTime, Category category)
+    protected string? GetRootWithFirstDirectory(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null;
+        }
+
+        string? root = Path.GetPathRoot(path);
+        
+        if (root is null)
+        {
+            return null;
+        }
+
+        string relativePath = path[root.Length..].TrimStart(Path.DirectorySeparatorChar);
+        string[] parts = relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+
+        return parts.Length > 0 ? Path.Combine(root, parts[0]) : root;
+    }
+    
+    private bool DownloadReachedRatio(double ratio, TimeSpan seedingTime, CleanCategory category)
     {
         if (category.MaxRatio < 0)
         {
@@ -161,7 +196,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         return true;
     }
     
-    private bool DownloadReachedMaxSeedTime(TimeSpan seedingTime, Category category)
+    private bool DownloadReachedMaxSeedTime(TimeSpan seedingTime, CleanCategory category)
     {
         if (category.MaxSeedTime < 0)
         {

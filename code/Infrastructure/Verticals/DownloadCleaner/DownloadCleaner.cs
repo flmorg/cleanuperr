@@ -19,6 +19,8 @@ public sealed class DownloadCleaner : GenericHandler
     private readonly DownloadCleanerConfig _config;
     private readonly HashSet<string> _excludedHashes = [];
     
+    private static bool _hardLinkCategoryCreated;
+    
     public DownloadCleaner(
         ILogger<DownloadCleaner> logger,
         IOptions<DownloadCleanerConfig> config,
@@ -54,11 +56,29 @@ public sealed class DownloadCleaner : GenericHandler
         
         await _downloadService.LoginAsync();
 
-        List<object>? downloads = await _downloadService.GetAllDownloadsToBeCleaned(_config.Categories);
+        List<object>? downloadsToBeCleaned = await _downloadService.GetDownloadsToBeCleanedAsync(_config.Categories);
+        List<object>? downloadsToChangeCategory = null;
 
-        if (downloads?.Count is null or 0)
+        if (!string.IsNullOrEmpty(_config.NoHardLinksCategory) && _config.NoHardLinksCategories?.Count > 0)
         {
-            _logger.LogDebug("no downloads found in the download client");
+            if (!_hardLinkCategoryCreated)
+            {
+                _logger.LogTrace("creating category {cat}", _config.NoHardLinksCategory);
+                
+                await _downloadService.CreateCategoryAsync(_config.NoHardLinksCategory);
+                _hardLinkCategoryCreated = true;
+            }
+            
+            _logger.LogTrace("getting downloads to change category");
+            downloadsToChangeCategory = await _downloadService.GetDownloadsToChangeCategoryAsync(_config.NoHardLinksCategories);
+        }
+        
+        bool hasDownloadsToClean = downloadsToBeCleaned?.Count > 0;
+        bool hasDownloadsToChange = downloadsToChangeCategory?.Count > 0;
+
+        if (!hasDownloadsToClean && !hasDownloadsToChange)
+        {
+            _logger.LogDebug("no downloads to process");
             return;
         }
 
@@ -69,7 +89,25 @@ public sealed class DownloadCleaner : GenericHandler
         await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr, true);
         await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
         
-        await _downloadService.CleanDownloads(downloads, _config.Categories, _excludedHashes);
+        if (hasDownloadsToChange)
+        {
+            _logger.LogTrace("processing downloads to change category");
+            await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes);
+        }
+        else
+        {
+            _logger.LogTrace("no downloads found to change category");
+        }
+        
+        if (hasDownloadsToClean)
+        {
+            _logger.LogTrace("processing downloads to be cleaned");
+            await _downloadService.CleanDownloadsAsync(downloadsToBeCleaned, _config.Categories, _excludedHashes);
+        }
+        else
+        {
+            _logger.LogTrace("no downloads found to be cleaned");
+        }
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
