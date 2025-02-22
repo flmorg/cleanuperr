@@ -404,9 +404,10 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
             
-            _logger.LogInformation("changing category for {name}", download.Name);
-            
             await ((QBitService)Proxy).ChangeCategory(download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
+            
+            _logger.LogInformation("category changed for {name}", download.Name);
+            
             await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardLinksCategory);
         }
     }
