@@ -317,8 +317,24 @@ public class QBitService : DownloadService, IQBitService
         {
             downloads
                 .Cast<TorrentInfo>()
-                .GroupBy(x => Path.GetPathRoot(x.SavePath))
-                .Select(x => x.Key)
+                .Select(x =>
+                {
+                    string? firstDir = GetRootWithFirstDirectory(x.SavePath);
+
+                    if (string.IsNullOrEmpty(firstDir))
+                    {
+                        return string.Empty;
+                    }
+
+                    if (firstDir == Path.GetPathRoot(x.SavePath))
+                    {
+                        return string.Empty;
+                    }
+                    
+                    return firstDir;
+                })
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Distinct()
                 .ToList()
                 .ForEach(x =>
                 {

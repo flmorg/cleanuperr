@@ -14,13 +14,13 @@ public sealed record DownloadCleanerConfig : IJobConfig
     [ConfigurationKeyName("DELETE_PRIVATE")]
     public bool DeletePrivate { get; init; }
 
-    [ConfigurationKeyName("NO_HARDLINKS_CATEGORY")]
+    [ConfigurationKeyName("NO_HL_CATEGORY")]
     public string NoHardlinksCategory { get; init; } = "";
     
-    [ConfigurationKeyName("IGNORE_ROOT_DIR")]
+    [ConfigurationKeyName("NO_HL_IGNORE_ROOT_DIR")]
     public bool IgnoreRootDir { get; init; }
-
-    [ConfigurationKeyName("HARDLINK_CATEGORIES")]
+    
+    [ConfigurationKeyName("NO_HL_CATEGORIES")]
     public List<string>? HardlinkCategories { get; init; }
 
     public void Validate()
