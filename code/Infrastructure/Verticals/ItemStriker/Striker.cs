@@ -1,6 +1,7 @@
 ﻿using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Helpers;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,12 +15,14 @@ public sealed class Striker : IStriker
     private readonly IMemoryCache _cache;
     private readonly MemoryCacheEntryOptions _cacheOptions;
     private readonly INotificationPublisher _notifier;
+    private readonly IDryRunInterceptor _dryRunInterceptor;
 
-    public Striker(ILogger<Striker> logger, IMemoryCache cache, INotificationPublisher notifier)
+    public Striker(ILogger<Striker> logger, IMemoryCache cache, INotificationPublisher notifier, IDryRunInterceptor dryRunInterceptor)
     {
         _logger = logger;
         _cache = cache;
         _notifier = notifier;
+        _dryRunInterceptor = dryRunInterceptor;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }

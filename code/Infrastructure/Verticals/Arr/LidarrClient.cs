@@ -61,7 +61,7 @@ public class LidarrClient : ArrClient, ILidarrClient
 
             try
             {
-                using var _ = await SendRequestAsync(request);
+                using var _ = await _dryRunInterceptor.InterceptAsync<HttpResponseMessage>(SendRequestAsync, request);
                 
                 _logger.LogInformation("{log}", GetSearchLog(arrInstance.Url, command, true, logContext));
             }

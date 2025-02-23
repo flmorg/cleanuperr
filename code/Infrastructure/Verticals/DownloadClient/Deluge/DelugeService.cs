@@ -189,7 +189,7 @@ public class DelugeService : DownloadService, IDelugeService
             return result;
         }
 
-        await ChangeFilesPriority(hash, sortedPriorities);
+        await _dryRunInterceptor.InterceptAsync(ChangeFilesPriority, hash, sortedPriorities);
 
         return result;
     }
@@ -244,8 +244,8 @@ public class DelugeService : DownloadService, IDelugeService
             {
                 continue;
             }
-            
-            await DeleteDownload(download.Hash);
+
+            await _dryRunInterceptor.InterceptAsync(DeleteDownload, download.Hash);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",

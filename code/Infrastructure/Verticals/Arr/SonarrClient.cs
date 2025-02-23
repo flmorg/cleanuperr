@@ -65,7 +65,7 @@ public class SonarrClient : ArrClient, ISonarrClient
 
             try
             {
-                using var _ = await SendRequestAsync(request);
+                using var _ = await _dryRunInterceptor.InterceptAsync<HttpResponseMessage>(SendRequestAsync, request);
 
                 _logger.LogInformation("{log}", GetSearchLog(command.SearchType, arrInstance.Url, command, true, logContext));
             }

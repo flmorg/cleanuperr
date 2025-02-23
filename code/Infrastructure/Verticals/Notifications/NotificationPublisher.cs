@@ -48,10 +48,10 @@ public class NotificationPublisher : INotificationPublisher
             switch (strikeType)
             {
                 case StrikeType.Stalled:
-                    await _dryRunInterceptor.InterceptAsync(() => Publish(notification.Adapt<StalledStrikeNotification>()));
+                    await _dryRunInterceptor.InterceptAsync(Notify<StalledStrikeNotification>, notification.Adapt<StalledStrikeNotification>());
                     break;
                 case StrikeType.ImportFailed:
-                    await _dryRunInterceptor.InterceptAsync(() => Publish(notification.Adapt<FailedImportStrikeNotification>()));
+                    await _dryRunInterceptor.InterceptAsync(Notify<FailedImportStrikeNotification>, notification.Adapt<FailedImportStrikeNotification>());
                     break;
             }
         }
@@ -79,7 +79,7 @@ public class NotificationPublisher : INotificationPublisher
             Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
         };
         
-        await _dryRunInterceptor.InterceptAsync(() => Publish(notification));
+        await _dryRunInterceptor.InterceptAsync(Notify<QueueItemDeletedNotification>, notification);
     }
 
     public virtual async Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
@@ -98,11 +98,11 @@ public class NotificationPublisher : INotificationPublisher
             Level = NotificationLevel.Important
         };
 
-        await _dryRunInterceptor.InterceptAsync(() => Publish(notification));
+        await _dryRunInterceptor.InterceptAsync(Notify<DownloadCleanedNotification>, notification);
     }
 
     [DryRunSafeguard]
-    private Task Publish<T>(T message) where T: notnull
+    private Task Notify<T>(T message) where T: notnull
     {
         return _messageBus.Publish(message);
     }
