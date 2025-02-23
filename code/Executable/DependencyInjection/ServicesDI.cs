@@ -15,7 +15,7 @@ public static class ServicesDI
 {
     public static IServiceCollection AddServices(this IServiceCollection services) =>
         services
-            .AddTransient<DryRunAsyncInterceptor>()
+            .AddTransient<IDryRunInterceptor, DryRunInterceptor>()
             .AddTransient<SonarrClient>()
             .AddTransient<RadarrClient>()
             .AddTransient<LidarrClient>()

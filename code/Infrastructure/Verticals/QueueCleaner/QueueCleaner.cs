@@ -32,7 +32,7 @@ public sealed class QueueCleaner : GenericHandler
         LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        NotificationPublisher notifier
+        INotificationPublisher notifier
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,

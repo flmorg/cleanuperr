@@ -7,11 +7,11 @@ using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Deluge.Response;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
-using MassTransit.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,11 +22,6 @@ public class DelugeService : DownloadService, IDelugeService
 {
     private readonly DelugeClient _client;
 
-    /// <inheritdoc/>
-    public DelugeService()
-    {
-    }
-    
     public DelugeService(
         ILogger<DelugeService> logger,
         IOptions<DelugeConfig> config,
@@ -37,8 +32,12 @@ public class DelugeService : DownloadService, IDelugeService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        NotificationPublisher notifier
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
+        INotificationPublisher notifier,
+        IDryRunInterceptor dryRunInterceptor
+    ) : base(
+        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
+        filenameEvaluator, striker, notifier, dryRunInterceptor
+    )
     {
         config.Value.Validate();
         _client = new (config, httpClientFactory);

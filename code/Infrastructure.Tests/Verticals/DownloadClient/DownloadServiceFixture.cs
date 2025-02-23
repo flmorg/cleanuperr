@@ -1,6 +1,7 @@
 ﻿using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.ItemStriker;
@@ -53,7 +54,8 @@ public class DownloadServiceFixture : IDisposable
         downloadCleanerOptions.Value.Returns(new DownloadCleanerConfig());
 
         var filenameEvaluator = Substitute.For<IFilenameEvaluator>();
-        var notifier = Substitute.For<NotificationPublisher>();
+        var notifier = Substitute.For<INotificationPublisher>();
+        var dryRunInterceptor = Substitute.For<IDryRunInterceptor>();
 
         return new TestDownloadService(
             Logger,
@@ -63,7 +65,8 @@ public class DownloadServiceFixture : IDisposable
             Cache,
             filenameEvaluator,
             Striker,
-            notifier
+            notifier,
+            dryRunInterceptor
         );
     }
 

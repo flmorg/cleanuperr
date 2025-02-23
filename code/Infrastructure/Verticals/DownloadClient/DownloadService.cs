@@ -18,7 +18,7 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
-public abstract class DownloadService : InterceptedService, IDownloadService
+public abstract class DownloadService : IDownloadService
 {
     protected readonly ILogger<DownloadService> _logger;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
@@ -28,15 +28,9 @@ public abstract class DownloadService : InterceptedService, IDownloadService
     protected readonly IFilenameEvaluator _filenameEvaluator;
     protected readonly IStriker _striker;
     protected readonly MemoryCacheEntryOptions _cacheOptions;
-    protected readonly NotificationPublisher _notifier;
+    protected readonly INotificationPublisher _notifier;
+    protected readonly IDryRunInterceptor _dryRunInterceptor;
 
-    /// <summary>
-    /// Constructor to be used by interceptors.
-    /// </summary>
-    protected DownloadService()
-    {
-    }
-    
     protected DownloadService(
         ILogger<DownloadService> logger,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
@@ -45,7 +39,9 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        NotificationPublisher notifier)
+        INotificationPublisher notifier,
+        IDryRunInterceptor dryRunInterceptor
+    )
     {
         _logger = logger;
         _queueCleanerConfig = queueCleanerConfig.Value;
@@ -55,6 +51,7 @@ public abstract class DownloadService : InterceptedService, IDownloadService
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
         _notifier = notifier;
+        _dryRunInterceptor = dryRunInterceptor;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }

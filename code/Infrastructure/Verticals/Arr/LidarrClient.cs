@@ -5,6 +5,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Lidarr;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
@@ -15,18 +16,14 @@ namespace Infrastructure.Verticals.Arr;
 
 public class LidarrClient : ArrClient, ILidarrClient
 {
-    /// <inheritdoc/>
-    public LidarrClient()
-    {
-    }
-    
     public LidarrClient(
         ILogger<LidarrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IStriker striker
-    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
+        IStriker striker,
+        IDryRunInterceptor dryRunInterceptor
+    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker, dryRunInterceptor)
     {
     }
 

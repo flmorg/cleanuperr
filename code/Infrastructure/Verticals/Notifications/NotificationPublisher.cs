@@ -12,25 +12,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Notifications;
 
-public class NotificationPublisher : InterceptedService, IDryRunService
+public class NotificationPublisher : INotificationPublisher
 {
-    private readonly ILogger<NotificationPublisher> _logger;
+    private readonly ILogger<INotificationPublisher> _logger;
     private readonly IBus _messageBus;
-    
-    /// <summary>
-    /// Constructor to be used by interceptors.
-    /// </summary>
-    public NotificationPublisher()
-    {
-    }
-    
-    public NotificationPublisher(ILogger<NotificationPublisher> logger, IBus messageBus)
+    private readonly IDryRunInterceptor _dryRunInterceptor;
+
+    public NotificationPublisher(ILogger<INotificationPublisher> logger, IBus messageBus, IDryRunInterceptor dryRunInterceptor)
     {
         _logger = logger;
         _messageBus = messageBus;
+        _dryRunInterceptor = dryRunInterceptor;
     }
     
-    [DryRunSafeguard]
     public virtual async Task NotifyStrike(StrikeType strikeType, int strikeCount)
     {
         try
@@ -54,10 +48,10 @@ public class NotificationPublisher : InterceptedService, IDryRunService
             switch (strikeType)
             {
                 case StrikeType.Stalled:
-                    await _messageBus.Publish(notification.Adapt<StalledStrikeNotification>());
+                    await _dryRunInterceptor.InterceptAsync(() => Publish(notification.Adapt<StalledStrikeNotification>()));
                     break;
                 case StrikeType.ImportFailed:
-                    await _messageBus.Publish(notification.Adapt<FailedImportStrikeNotification>());
+                    await _dryRunInterceptor.InterceptAsync(() => Publish(notification.Adapt<FailedImportStrikeNotification>()));
                     break;
             }
         }
@@ -67,7 +61,6 @@ public class NotificationPublisher : InterceptedService, IDryRunService
         }
     }
 
-    [DryRunSafeguard]
     public virtual async Task NotifyQueueItemDeleted(bool removeFromClient, DeleteReason reason)
     {
         QueueRecord record = ContextProvider.Get<QueueRecord>(nameof(QueueRecord));
@@ -86,10 +79,9 @@ public class NotificationPublisher : InterceptedService, IDryRunService
             Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
         };
         
-        await _messageBus.Publish(notification);
+        await _dryRunInterceptor.InterceptAsync(() => Publish(notification));
     }
 
-    [DryRunSafeguard]
     public virtual async Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
     {
         DownloadCleanedNotification notification = new()
@@ -106,7 +98,13 @@ public class NotificationPublisher : InterceptedService, IDryRunService
             Level = NotificationLevel.Important
         };
 
-        await _messageBus.Publish(notification);
+        await _dryRunInterceptor.InterceptAsync(() => Publish(notification));
+    }
+
+    [DryRunSafeguard]
+    private Task Publish<T>(T message) where T: notnull
+    {
+        return _messageBus.Publish(message);
     }
     
     private static Uri GetImageFromContext(QueueRecord record, InstanceType instanceType) =>

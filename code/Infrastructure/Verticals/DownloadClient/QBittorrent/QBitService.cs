@@ -7,6 +7,7 @@ using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Domain.Enums;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
@@ -24,11 +25,6 @@ public class QBitService : DownloadService, IQBitService
     private readonly QBitConfig _config;
     private readonly QBittorrentClient _client;
 
-    /// <inheritdoc/>
-    public QBitService()
-    {
-    }
-    
     public QBitService(
         ILogger<QBitService> logger,
         IHttpClientFactory httpClientFactory,
@@ -39,8 +35,12 @@ public class QBitService : DownloadService, IQBitService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        NotificationPublisher notifier
-    ) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
+        INotificationPublisher notifier,
+        IDryRunInterceptor dryRunInterceptor
+    ) : base(
+        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
+        filenameEvaluator, striker, notifier, dryRunInterceptor
+    )
     {
         _config = config.Value;
         _config.Validate();

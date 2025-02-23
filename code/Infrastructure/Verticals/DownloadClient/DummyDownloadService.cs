@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
@@ -14,12 +15,7 @@ namespace Infrastructure.Verticals.DownloadClient;
 
 public class DummyDownloadService : DownloadService
 {
-    /// <inheritdoc/>
-    public DummyDownloadService()
-    {
-    }
-    
-    public DummyDownloadService(ILogger<DownloadService> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IOptions<DownloadCleanerConfig> downloadCleanerConfig, IMemoryCache cache, IFilenameEvaluator filenameEvaluator, IStriker striker, NotificationPublisher notifier) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier)
+    public DummyDownloadService(ILogger<DownloadService> logger, IOptions<QueueCleanerConfig> queueCleanerConfig, IOptions<ContentBlockerConfig> contentBlockerConfig, IOptions<DownloadCleanerConfig> downloadCleanerConfig, IMemoryCache cache, IFilenameEvaluator filenameEvaluator, IStriker striker, INotificationPublisher notifier, IDryRunInterceptor dryRunInterceptor) : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache, filenameEvaluator, striker, notifier, dryRunInterceptor)
     {
     }
 

@@ -5,6 +5,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Sonarr;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
@@ -16,18 +17,14 @@ namespace Infrastructure.Verticals.Arr;
 
 public class SonarrClient : ArrClient, ISonarrClient
 {
-    /// <inheritdoc/>
-    public SonarrClient()
-    {
-    }
-    
     public SonarrClient(
         ILogger<SonarrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IStriker striker
-    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
+        IStriker striker,
+        IDryRunInterceptor dryRunInterceptor
+    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker, dryRunInterceptor)
     {
     }
     

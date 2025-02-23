@@ -6,7 +6,7 @@ using Infrastructure.Interceptors;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
-public interface IDownloadService : IDisposable, IDryRunService
+public interface IDownloadService : IDisposable
 {
     public Task LoginAsync();
 

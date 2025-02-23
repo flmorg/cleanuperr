@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.ItemStriker;
@@ -23,9 +24,12 @@ public class TestDownloadService : DownloadService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        NotificationPublisher notifier) 
-        : base(logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, 
-            cache, filenameEvaluator, striker, notifier)
+        INotificationPublisher notifier,
+        IDryRunInterceptor dryRunInterceptor
+    ) : base(
+        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
+        filenameEvaluator, striker, notifier, dryRunInterceptor
+    )
     {
     }
 

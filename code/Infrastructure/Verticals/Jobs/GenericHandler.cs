@@ -24,7 +24,7 @@ public abstract class GenericHandler : IHandler, IDisposable
     protected readonly ILidarrClient _lidarrClient;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly IDownloadService _downloadService;
-    protected readonly NotificationPublisher _notifier;
+    protected readonly INotificationPublisher _notifier;
 
     protected GenericHandler(
         ILogger<GenericHandler> logger,
@@ -37,7 +37,7 @@ public abstract class GenericHandler : IHandler, IDisposable
         ILidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        NotificationPublisher notifier
+        INotificationPublisher notifier
     )
     {
         _logger = logger;

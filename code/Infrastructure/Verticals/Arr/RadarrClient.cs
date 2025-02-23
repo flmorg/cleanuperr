@@ -5,6 +5,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Radarr;
+using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
@@ -15,18 +16,14 @@ namespace Infrastructure.Verticals.Arr;
 
 public class RadarrClient : ArrClient, IRadarrClient
 {
-    /// <inheritdoc/>
-    public RadarrClient()
-    {
-    }
-    
     public RadarrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IStriker striker
-    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker)
+        IStriker striker,
+        IDryRunInterceptor dryRunInterceptor
+    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker, dryRunInterceptor)
     {
     }
 

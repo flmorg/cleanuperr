@@ -13,9 +13,9 @@ public sealed class Striker : IStriker
     private readonly ILogger<Striker> _logger;
     private readonly IMemoryCache _cache;
     private readonly MemoryCacheEntryOptions _cacheOptions;
-    private readonly NotificationPublisher _notifier;
+    private readonly INotificationPublisher _notifier;
 
-    public Striker(ILogger<Striker> logger, IMemoryCache cache, NotificationPublisher notifier)
+    public Striker(ILogger<Striker> logger, IMemoryCache cache, INotificationPublisher notifier)
     {
         _logger = logger;
         _cache = cache;

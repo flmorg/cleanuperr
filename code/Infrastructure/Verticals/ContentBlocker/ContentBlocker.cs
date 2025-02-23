@@ -36,7 +36,7 @@ public sealed class ContentBlocker : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory,
-        NotificationPublisher notifier
+        INotificationPublisher notifier
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,

@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Castle.DynamicProxy;
 using Common.Attributes;
 using Common.Configuration.General;
 using Microsoft.Extensions.Logging;
@@ -7,39 +6,41 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Interceptors;
 
-public class DryRunAsyncInterceptor : AsyncInterceptorBase
+public class DryRunInterceptor : IDryRunInterceptor
 {
-    private readonly ILogger<DryRunAsyncInterceptor> _logger;
+    private readonly ILogger<DryRunInterceptor> _logger;
     private readonly DryRunConfig _config;
     
-    public DryRunAsyncInterceptor(ILogger<DryRunAsyncInterceptor> logger, IOptions<DryRunConfig> config)
+    public DryRunInterceptor(ILogger<DryRunInterceptor> logger, IOptions<DryRunConfig> config)
     {
         _logger = logger;
         _config = config.Value;
     }
     
-    protected override async Task InterceptAsync(IInvocation invocation, IInvocationProceedInfo proceedInfo, Func<IInvocation, IInvocationProceedInfo, Task> proceed)
+    public void Intercept(Action action)
     {
-        MethodInfo? method = invocation.MethodInvocationTarget ?? invocation.Method;
-        if (IsDryRun(method))
+        MethodInfo methodInfo = action.Method;
+        
+        if (IsDryRun(methodInfo))
         {
-            _logger.LogInformation("[DRY RUN] skipping method: {name}", method.Name);
+            _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
             return;
         }
 
-        await proceed(invocation, proceedInfo);
+        action();
     }
-
-    protected override async Task<TResult> InterceptAsync<TResult>(IInvocation invocation, IInvocationProceedInfo proceedInfo, Func<IInvocation, IInvocationProceedInfo, Task<TResult>> proceed)
+    
+    public Task InterceptAsync(Func<Task> action)
     {
-        MethodInfo? method = invocation.MethodInvocationTarget ?? invocation.Method;
-        if (IsDryRun(method))
+        MethodInfo methodInfo = action.Method;
+        
+        if (IsDryRun(methodInfo))
         {
-            _logger.LogInformation("[DRY RUN] skipping method: {name}", method.Name);
-            return default!;
+            _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
+            return Task.CompletedTask;
         }
 
-        return await proceed(invocation, proceedInfo);
+        return action();
     }
 
     private bool IsDryRun(MethodInfo method)

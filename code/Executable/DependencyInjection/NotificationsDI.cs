@@ -10,7 +10,7 @@ public static class NotificationsDI
             .Configure<NotifiarrConfig>(configuration.GetSection(NotifiarrConfig.SectionName))
             .AddTransient<INotifiarrProxy, NotifiarrProxy>()
             .AddTransient<INotificationProvider, NotifiarrProvider>()
-            .AddTransient<NotificationPublisher>()
+            .AddTransient<INotificationPublisher, NotificationPublisher>()
             .AddTransient<INotificationFactory, NotificationFactory>()
             .AddTransient<NotificationService>();
 }

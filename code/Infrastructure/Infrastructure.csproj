@@ -12,7 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Castle.Core.AsyncInterceptor" Version="2.1.0" />
       <PackageReference Include="FLM.QBittorrent" Version="1.0.0" />
       <PackageReference Include="FLM.Transmission" Version="1.0.2" />
       <PackageReference Include="Mapster" Version="7.4.0" />

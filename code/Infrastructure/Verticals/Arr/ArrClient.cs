@@ -15,27 +15,22 @@ using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
 
-public abstract class ArrClient : InterceptedService, IArrClient, IDryRunService
+public abstract class ArrClient : IArrClient
 {
     protected readonly ILogger<ArrClient> _logger;
     protected readonly HttpClient _httpClient;
     protected readonly LoggingConfig _loggingConfig;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
     protected readonly IStriker _striker;
-    
-    /// <summary>
-    /// Constructor to be used by interceptors.
-    /// </summary>
-    protected ArrClient()
-    {
-    }
+    protected readonly IDryRunInterceptor _dryRunInterceptor;
     
     protected ArrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
         IOptions<LoggingConfig> loggingConfig,
         IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IStriker striker
+        IStriker striker,
+        IDryRunInterceptor dryRunInterceptor
     )
     {
         _logger = logger;
@@ -43,6 +38,7 @@ public abstract class ArrClient : InterceptedService, IArrClient, IDryRunService
         _loggingConfig = loggingConfig.Value;
         _queueCleanerConfig = queueCleanerConfig.Value;
         _striker = striker;
+        _dryRunInterceptor = dryRunInterceptor;
     }
 
     public virtual async Task<QueueListResponse> GetQueueItemsAsync(ArrInstance arrInstance, int page)
