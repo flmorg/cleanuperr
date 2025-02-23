@@ -4,7 +4,7 @@ using Mono.Unix.Native;
 
 namespace Infrastructure.Verticals.Files;
 
-public class UnixHardLinkFileService : IHardLinkFileService
+public class UnixHardLinkFileService : IHardLinkFileService, IDisposable
 {
     private readonly ILogger<UnixHardLinkFileService> _logger;
     private readonly ConcurrentDictionary<ulong, int> _inodeCounts = new();
@@ -82,5 +82,10 @@ public class UnixHardLinkFileService : IHardLinkFileService
             _logger.LogWarning(ex, "could not stat {path} during inode counting", path);
             throw;
         }
+    }
+
+    public void Dispose()
+    {
+        _inodeCounts.Clear();
     }
 }

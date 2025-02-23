@@ -5,7 +5,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Infrastructure.Verticals.Files;
 
-public class WindowsHardLinkFileService : IHardLinkFileService
+public class WindowsHardLinkFileService : IHardLinkFileService, IDisposable
 {
     private readonly ILogger<WindowsHardLinkFileService> _logger;
     private readonly ConcurrentDictionary<ulong, int> _fileIndexCounts = new();
@@ -109,5 +109,10 @@ public class WindowsHardLinkFileService : IHardLinkFileService
         public uint NumberOfLinks;
         public uint FileIndexHigh;
         public uint FileIndexLow;
+    }
+    
+    public void Dispose()
+    {
+        _fileIndexCounts.Clear();
     }
 }

@@ -17,7 +17,9 @@ public static class MainDI
             .AddLogging(builder => builder.ClearProviders().AddConsole())
             .AddHttpClients(configuration)
             .AddConfiguration(configuration)
-            .AddMemoryCache()
+            .AddMemoryCache(options => {
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
+            })
             .AddServices()
             .AddQuartzServices(configuration)
             .AddNotifications(configuration)
