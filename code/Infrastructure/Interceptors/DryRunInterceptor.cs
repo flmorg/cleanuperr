@@ -37,7 +37,7 @@ public class DryRunInterceptor : IDryRunInterceptor
         if (IsDryRun(methodInfo))
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
-            return default!;
+            return Task.CompletedTask;
         }
 
         object? result = action.DynamicInvoke(parameters);
@@ -50,24 +50,24 @@ public class DryRunInterceptor : IDryRunInterceptor
         return Task.CompletedTask;
     }
     
-    public Task<T> InterceptAsync<T>(Delegate action, params object[] parameters)
+    public Task<T?> InterceptAsync<T>(Delegate action, params object[] parameters)
     {
         MethodInfo methodInfo = action.Method;
         
         if (IsDryRun(methodInfo))
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
-            return default!;
+            return Task.FromResult(default(T));
         }
 
         object? result = action.DynamicInvoke(parameters);
 
-        if (result is Task<T> task)
+        if (result is Task<T?> task)
         {
             return task;
         }
 
-        return Task.FromResult(default(T)!);
+        return Task.FromResult(default(T));
     }
     
     private bool IsDryRun(MethodInfo method)

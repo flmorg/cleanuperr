@@ -6,5 +6,5 @@ public interface IDryRunInterceptor
     
     Task InterceptAsync(Delegate action, params object[] parameters);
 
-    Task<T> InterceptAsync<T>(Delegate action, params object[] parameters);
+    Task<T?> InterceptAsync<T>(Delegate action, params object[] parameters);
 }
