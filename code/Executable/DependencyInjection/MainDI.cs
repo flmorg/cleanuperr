@@ -41,7 +41,6 @@ public static class MainDI
                     });
                 });
             });
-            // .AddDryRunInterceptor();
     
     private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
     {
