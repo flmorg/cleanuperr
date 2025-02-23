@@ -68,7 +68,7 @@ public class SonarrClient : ArrClient, ISonarrClient
 
             try
             {
-                using var _ = await ((SonarrClient)Proxy).SendRequestAsync(request);
+                using var _ = await SendRequestAsync(request);
 
                 _logger.LogInformation("{log}", GetSearchLog(command.SearchType, arrInstance.Url, command, true, logContext));
             }

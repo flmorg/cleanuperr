@@ -190,7 +190,7 @@ public class DelugeService : DownloadService, IDelugeService
             return result;
         }
 
-        await ((DelugeService)Proxy).ChangeFilesPriority(hash, sortedPriorities);
+        await ChangeFilesPriority(hash, sortedPriorities);
 
         return result;
     }
@@ -246,7 +246,7 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
             
-            await ((DelugeService)Proxy).DeleteDownload(download.Hash);
+            await DeleteDownload(download.Hash);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",

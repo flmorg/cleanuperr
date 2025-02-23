@@ -42,8 +42,8 @@ public static class MainDI
                         e.PrefetchCount = 1;
                     });
                 });
-            })
-            .AddDryRunInterceptor();
+            });
+            // .AddDryRunInterceptor();
     
     private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
     {

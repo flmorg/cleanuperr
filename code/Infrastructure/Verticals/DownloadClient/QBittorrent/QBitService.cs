@@ -200,7 +200,7 @@ public class QBitService : DownloadService, IQBitService
 
         foreach (int fileIndex in unwantedFiles)
         {
-            await ((QBitService)Proxy).SkipFile(hash, fileIndex);
+            await SkipFile(hash, fileIndex);
         }
         
         return result;
@@ -272,7 +272,7 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
 
-            await ((QBitService)Proxy).DeleteDownload(download.Hash);
+            await DeleteDownload(download.Hash);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",

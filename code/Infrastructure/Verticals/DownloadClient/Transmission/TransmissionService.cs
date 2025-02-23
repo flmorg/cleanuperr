@@ -175,7 +175,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         
         _logger.LogDebug("changing priorities | torrent {hash}", hash);
         
-        await ((TransmissionService)Proxy).SetUnwantedFiles(torrent.Id, unwantedFiles.ToArray());
+        await SetUnwantedFiles(torrent.Id, unwantedFiles.ToArray());
 
         return result;
     }
@@ -268,7 +268,7 @@ public class TransmissionService : DownloadService, ITransmissionService
                 continue;
             }
 
-            await ((TransmissionService)Proxy).RemoveDownloadAsync(download.Id);
+            await RemoveDownloadAsync(download.Id);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",

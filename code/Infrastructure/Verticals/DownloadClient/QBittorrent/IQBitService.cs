@@ -1,5 +1,5 @@
 ﻿namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
-public interface IQBitService : IDownloadService
+public interface IQBitService : IDownloadService, IDisposable
 {
 }

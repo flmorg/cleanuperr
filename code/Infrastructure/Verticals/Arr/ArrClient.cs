@@ -125,7 +125,7 @@ public abstract class ArrClient : InterceptedService, IArrClient, IDryRunService
             using HttpRequestMessage request = new(HttpMethod.Delete, uri);
             SetApiKey(request, arrInstance.ApiKey);
 
-            using var _ = await ((ArrClient)Proxy).SendRequestAsync(request);
+            using var _ = await SendRequestAsync(request);
             
             _logger.LogInformation(
                 removeFromClient
