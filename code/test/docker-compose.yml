@@ -175,6 +175,7 @@ services:
     image: ghcr.io/flmorg/cleanuperr:latest
     container_name: cleanuperr
     environment:
+      - TZ=Europe/Bucharest
       - DRY_RUN=false
 
       - LOGGING__LOGLEVEL=Debug

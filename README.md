@@ -140,6 +140,7 @@ services:
     volumes:
       - ./cleanuperr/logs:/var/logs
     environment:
+      - TZ=America/New_York
       - DRY_RUN=false
 
       - LOGGING__LOGLEVEL=Information

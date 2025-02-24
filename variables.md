@@ -12,6 +12,13 @@
 
 ### General settings
 
+**`TZ`**
+- The time zone to use.
+- Type: String.
+- Possible values: Any valid timezone.
+- Default: `UTC`.
+- Required: No.
+
 **`DRY_RUN`**
 - When enabled, simulates irreversible operations (like deletions and notifications) without making actual changes.
 - Type: Boolean.
