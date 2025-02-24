@@ -18,4 +18,6 @@ logger.LogInformation(
         : $"cleanuperr v{version.Major}.{version.Minor}.{version.Build}"
 );
 
+logger.LogInformation("timezone: {tz}", TimeZoneInfo.Local.Id);
+
 host.Run();
