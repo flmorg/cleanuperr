@@ -62,7 +62,7 @@ public static class MainDI
         services
             .AddHttpClient(nameof(DelugeService), x =>
             {
-                x.Timeout = TimeSpan.FromSeconds(5);
+                x.Timeout = TimeSpan.FromSeconds(config.Timeout);
             })
             .ConfigurePrimaryHttpMessageHandler(_ =>
             {
