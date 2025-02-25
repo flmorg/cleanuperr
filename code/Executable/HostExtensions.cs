@@ -16,7 +16,7 @@ public static class HostExtensions
                 : $"cleanuperr v{version.Major}.{version.Minor}.{version.Build}"
         );
         
-        logger.LogInformation("timezone: {tz}", TimeZoneInfo.Local.Id);
+        logger.LogInformation("timezone: {tz}", TimeZoneInfo.Local.DisplayName);
         
         return host;
     }
