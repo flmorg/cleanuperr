@@ -9,4 +9,6 @@ public interface INotificationPublisher
     Task NotifyQueueItemDeleted(bool removeFromClient, DeleteReason reason);
     
     Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason);
+
+    Task NotifyCategoryChanged(string oldCategory, string newCategory);
 }

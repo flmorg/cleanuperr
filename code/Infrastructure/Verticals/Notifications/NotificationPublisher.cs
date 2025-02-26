@@ -48,10 +48,10 @@ public class NotificationPublisher : INotificationPublisher
             switch (strikeType)
             {
                 case StrikeType.Stalled:
-                    await _dryRunInterceptor.InterceptAsync(Notify<StalledStrikeNotification>, notification.Adapt<StalledStrikeNotification>());
+                    await NotifyInternal(notification.Adapt<StalledStrikeNotification>());
                     break;
                 case StrikeType.ImportFailed:
-                    await _dryRunInterceptor.InterceptAsync(Notify<FailedImportStrikeNotification>, notification.Adapt<FailedImportStrikeNotification>());
+                    await NotifyInternal(notification.Adapt<FailedImportStrikeNotification>());
                     break;
             }
         }
@@ -79,7 +79,7 @@ public class NotificationPublisher : INotificationPublisher
             Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
         };
         
-        await _dryRunInterceptor.InterceptAsync(Notify<QueueItemDeletedNotification>, notification);
+        await NotifyInternal(notification);
     }
 
     public virtual async Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
@@ -98,15 +98,9 @@ public class NotificationPublisher : INotificationPublisher
             Level = NotificationLevel.Important
         };
 
-        await _dryRunInterceptor.InterceptAsync(Notify<DownloadCleanedNotification>, notification);
+        await NotifyInternal(notification);
     }
-
-    [DryRunSafeguard]
-    private Task Notify<T>(T message) where T: notnull
-    {
-        return _messageBus.Publish(message);
-    }
-
+    
     [DryRunSafeguard]
     public virtual async Task NotifyCategoryChanged(string oldCategory, string newCategory)
     {
@@ -124,6 +118,17 @@ public class NotificationPublisher : INotificationPublisher
         };
 
         await _messageBus.Publish(notification);
+    }
+    
+    private Task NotifyInternal<T>(T message) where T: notnull
+    {
+        return _dryRunInterceptor.InterceptAsync(Notify<T>, message);
+    }
+
+    [DryRunSafeguard]
+    private Task Notify<T>(T message) where T: notnull
+    {
+        return _messageBus.Publish(message);
     }
     
     private static Uri GetImageFromContext(QueueRecord record, InstanceType instanceType) =>

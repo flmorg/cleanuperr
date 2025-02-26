@@ -26,10 +26,10 @@ public class DummyDownloadService : DownloadService
         IStriker striker,
         NotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig,
-        cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardlinkFileService
+        cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
     }

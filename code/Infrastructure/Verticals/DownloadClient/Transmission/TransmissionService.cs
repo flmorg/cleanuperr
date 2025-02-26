@@ -40,10 +40,10 @@ public class TransmissionService : DownloadService, ITransmissionService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardlinkFileService
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
         _config = config.Value;

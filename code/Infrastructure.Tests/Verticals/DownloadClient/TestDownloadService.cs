@@ -27,10 +27,10 @@ public class TestDownloadService : DownloadService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardlinkFileService
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
     }

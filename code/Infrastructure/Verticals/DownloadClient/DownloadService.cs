@@ -32,7 +32,7 @@ public abstract class DownloadService : IDownloadService
     protected readonly MemoryCacheEntryOptions _cacheOptions;
     protected readonly INotificationPublisher _notifier;
     protected readonly IDryRunInterceptor _dryRunInterceptor;
-    protected readonly IHardlinkFileService _hardlinkFileService;
+    protected readonly IHardLinkFileService _hardLinkFileService;
 
     protected DownloadService(
         ILogger<DownloadService> logger,
@@ -44,7 +44,7 @@ public abstract class DownloadService : IDownloadService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     )
     {
         _logger = logger;
@@ -56,7 +56,7 @@ public abstract class DownloadService : IDownloadService
         _striker = striker;
         _notifier = notifier;
         _dryRunInterceptor = dryRunInterceptor;
-        _hardlinkFileService = hardlinkFileService;
+        _hardLinkFileService = hardLinkFileService;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }

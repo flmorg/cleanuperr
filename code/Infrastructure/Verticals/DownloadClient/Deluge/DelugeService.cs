@@ -35,10 +35,10 @@ public class DelugeService : DownloadService, IDelugeService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardlinkFileService
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
         config.Value.Validate();
@@ -252,7 +252,7 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
 
-            await _dryRunInterceptor.InterceptAsync(DeleteDownload, download.Hash);
+            await _dryRunInterceptor.InterceptAsync(DeleteDownloadAsync, download.Hash);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",

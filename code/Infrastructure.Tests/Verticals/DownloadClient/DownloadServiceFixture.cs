@@ -57,7 +57,7 @@ public class DownloadServiceFixture : IDisposable
         var filenameEvaluator = Substitute.For<IFilenameEvaluator>();
         var notifier = Substitute.For<INotificationPublisher>();
         var dryRunInterceptor = Substitute.For<IDryRunInterceptor>();
-        var hardlinkFileService = Substitute.For<IHardlinkFileService>();
+        var hardlinkFileService = Substitute.For<IHardLinkFileService>();
 
         return new TestDownloadService(
             Logger,

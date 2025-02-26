@@ -38,10 +38,10 @@ public class QBitService : DownloadService, IQBitService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardlinkFileService hardlinkFileService
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardlinkFileService
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
         _config = config.Value;
@@ -286,7 +286,7 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
 
-            await _dryRunInterceptor.InterceptAsync(DeleteDownload, download.Hash);
+            await _dryRunInterceptor.InterceptAsync(DeleteDownloadAsync, download.Hash);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",
@@ -404,7 +404,7 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
             
-            await ((QBitService)Proxy).ChangeCategory(download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
+            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
