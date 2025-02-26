@@ -209,31 +209,42 @@ public class QBitService : DownloadService, IQBitService
     }
     
     /// <inheritdoc/>
-    public override async Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories) =>
+    public override async Task<List<object>?> GetSeedingDownloads() =>
         (await _client.GetTorrentListAsync(new()
         {
             Filter = TorrentListFilter.Seeding
         }))
         ?.Where(x => !string.IsNullOrEmpty(x.Hash))
-        .Where(x => categories.Any(cat => cat.Name.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
         .Cast<object>()
         .ToList();
 
-    public override async Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories)
-    {
-        return (await _client.GetTorrentListAsync(new()
-            {
-                Filter = TorrentListFilter.Seeding
-            }))
-            ?.Where(x => !string.IsNullOrEmpty(x.Hash))
+    /// <inheritdoc/>
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) =>
+        downloads
+            ?.Cast<TorrentInfo>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Name.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
+
+    /// <inheritdoc/>
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) =>
+        downloads
+            ?.Cast<TorrentInfo>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
             .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
             .Cast<object>()
             .ToList();
-    }
 
     /// <inheritdoc/>
-    public override async Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
+        HashSet<string> excludedHashes)
     {
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
         foreach (TorrentInfo download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
@@ -286,7 +297,7 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
 
-            await _dryRunInterceptor.InterceptAsync(DeleteDownloadAsync, download.Hash);
+            await _dryRunInterceptor.InterceptAsync(DeleteDownload, download.Hash);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",
@@ -312,8 +323,13 @@ public class QBitService : DownloadService, IQBitService
         await _client.AddCategoryAsync(name);
     }
 
-    public override async Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
     {
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
         if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
         {
             downloads
@@ -405,6 +421,7 @@ public class QBitService : DownloadService, IQBitService
             }
             
             await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
+            download.Category = _downloadCleanerConfig.NoHardLinksCategory;
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
@@ -414,7 +431,7 @@ public class QBitService : DownloadService, IQBitService
     
     /// <inheritdoc/>
     [DryRunSafeguard]
-    public override async Task DeleteDownloadAsync(string hash)
+    public override async Task DeleteDownload(string hash)
     {
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
     }

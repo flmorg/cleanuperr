@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
@@ -76,19 +75,22 @@ public abstract class DownloadService : IDownloadService
     );
 
     /// <inheritdoc/>
-    public abstract Task DeleteDownloadAsync(string hash);
+    public abstract Task DeleteDownload(string hash);
 
     /// <inheritdoc/>
-    public abstract Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories);
+    public abstract Task<List<object>?> GetSeedingDownloads();
+    
+    /// <inheritdoc/>
+    public abstract List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories);
 
     /// <inheritdoc/>
-    public abstract Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories);
+    public abstract List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories);
 
     /// <inheritdoc/>
-    public abstract Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+    public abstract Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
 
     /// <inheritdoc/>
-    public abstract Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    public abstract Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes);
     
     /// <inheritdoc/>
     public abstract Task CreateCategoryAsync(string name);

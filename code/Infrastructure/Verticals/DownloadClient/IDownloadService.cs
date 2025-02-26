@@ -32,38 +32,46 @@ public interface IDownloadService : IDisposable
     );
 
     /// <summary>
-    /// Fetches all downloads that should be cleaned.
+    /// Fetches all seeding downloads.
     /// </summary>
-    /// <param name="categories">The categories by which to filter the downloads.</param>
-    /// <returns>A list of downloads for the provided categories.</returns>
-    Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories);
+    /// <returns>A list of downloads that are seeding.</returns>
+    Task<List<object>?> GetSeedingDownloads();
 
     /// <summary>
-    /// Fetches all downloads that should have their category changed.
+    /// Filters downloads that should be cleaned.
     /// </summary>
+    /// <param name="downloads">The downloads to filter.</param>
     /// <param name="categories">The categories by which to filter the downloads.</param>
     /// <returns>A list of downloads for the provided categories.</returns>
-    Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories);
-    
+    List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories);
+
+    /// <summary>
+    /// Filters downloads that should have their category changed.
+    /// </summary>
+    /// <param name="downloads">The downloads to filter.</param>
+    /// <param name="categories">The categories by which to filter the downloads.</param>
+    /// <returns>A list of downloads for the provided categories.</returns>
+    List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories);
+
     /// <summary>
     /// Cleans the downloads.
     /// </summary>
     /// <param name="downloads">The downloads to clean.</param>
     /// <param name="categoriesToClean">The categories that should be cleaned.</param>
     /// <param name="excludedHashes">The hashes that should not be cleaned.</param>
-    Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+    Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
 
     /// <summary>
     /// Changes the category for downloads that have no hardlinks.
     /// </summary>
     /// <param name="downloads">The downloads to change.</param>
     /// <param name="excludedHashes"></param>
-    Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes);
+    Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes);
     
     /// <summary>
     /// Deletes a download item.
     /// </summary>
-    public Task DeleteDownloadAsync(string hash);
+    public Task DeleteDownload(string hash);
 
     /// <summary>
     /// Creates a category.

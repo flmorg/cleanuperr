@@ -53,22 +53,22 @@ public class DummyDownloadService : DownloadService
         throw new NotImplementedException();
     }
 
-    public override Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories)
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
     {
         throw new NotImplementedException();
     }
 
-    public override Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories)
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories)
     {
         throw new NotImplementedException();
     }
 
-    public override Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
+    public override Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }
 
-    public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }
@@ -78,7 +78,7 @@ public class DummyDownloadService : DownloadService
         throw new NotImplementedException();
     }
 
-    public override Task DeleteDownloadAsync(string hash)
+    public override Task DeleteDownload(string hash)
     {
         throw new NotImplementedException();
     }

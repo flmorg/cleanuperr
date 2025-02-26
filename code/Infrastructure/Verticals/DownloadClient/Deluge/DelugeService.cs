@@ -196,7 +196,7 @@ public class DelugeService : DownloadService, IDelugeService
         return result;
     }
 
-    public override async Task<List<object>?> GetDownloadsToBeCleanedAsync(List<CleanCategory> categories)
+    public override async List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
     {
         return (await _client.GetStatusForAllTorrents())
             ?.Where(x => !string.IsNullOrEmpty(x.Hash))
@@ -206,13 +206,14 @@ public class DelugeService : DownloadService, IDelugeService
             .ToList();
     }
 
-    public override Task<List<object>?> GetDownloadsToChangeCategoryAsync(List<string> categories)
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc/>
-    public override async Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
+        HashSet<string> excludedHashes)
     {
         foreach (TorrentStatus download in downloads)
         {
@@ -252,7 +253,7 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
 
-            await _dryRunInterceptor.InterceptAsync(DeleteDownloadAsync, download.Hash);
+            await _dryRunInterceptor.InterceptAsync(DeleteDownload, download.Hash);
 
             _logger.LogInformation(
                 "download cleaned | {reason} reached | {name}",
@@ -271,14 +272,14 @@ public class DelugeService : DownloadService, IDelugeService
         throw new NotImplementedException();
     }
 
-    public override Task ChangeCategoryForNoHardLinksAsync(List<object> downloads, HashSet<string> excludedHashes)
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
     {
         throw new NotImplementedException();
     }
 
     /// <inheritdoc/>
     [DryRunSafeguard]
-    public override async Task DeleteDownloadAsync(string hash)
+    public override async Task DeleteDownload(string hash)
     {
         hash = hash.ToLowerInvariant();
         
