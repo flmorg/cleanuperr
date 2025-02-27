@@ -421,11 +421,12 @@ public class QBitService : DownloadService, IQBitService
             }
             
             await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
-            download.Category = _downloadCleanerConfig.NoHardLinksCategory;
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
             await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardLinksCategory);
+            
+            download.Category = _downloadCleanerConfig.NoHardLinksCategory;
         }
     }
     
