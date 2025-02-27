@@ -408,7 +408,7 @@ public class QBitService : DownloadService, IQBitService
                     break;
                 }
 
-                if (hardlinkCount > 1)
+                if (hardlinkCount > 0)
                 {
                     hasHardlinks = true;
                 }
