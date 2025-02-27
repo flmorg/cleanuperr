@@ -10,6 +10,7 @@ using Domain.Enums;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -38,10 +39,11 @@ public class TransmissionService : DownloadService, ITransmissionService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         INotificationPublisher notifier,
-        IDryRunInterceptor dryRunInterceptor
+        IDryRunInterceptor dryRunInterceptor,
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
         _config = config.Value;
@@ -179,9 +181,8 @@ public class TransmissionService : DownloadService, ITransmissionService
 
         return result;
     }
-
-    /// <inheritdoc/>
-    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    
+    public override async Task<List<object>?> GetSeedingDownloads()
     {
         string[] fields = [
             TorrentFields.FILES,
@@ -197,11 +198,21 @@ public class TransmissionService : DownloadService, ITransmissionService
             TorrentFields.SECONDS_SEEDING,
             TorrentFields.UPLOAD_RATIO
         ];
-            
+
         return (await _client.TorrentGetAsync(fields))
             ?.Torrents
             ?.Where(x => !string.IsNullOrEmpty(x.HashString))
             .Where(x => x.Status is 5 or 6)
+            .Cast<object>()
+            .ToList();
+    }
+
+    /// <inheritdoc/>
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
+    {
+        return downloads
+            ?
+            .Cast<TorrentInfo>()
             .Where(x => categories
                 .Any(cat =>
                 {
@@ -218,8 +229,14 @@ public class TransmissionService : DownloadService, ITransmissionService
             .ToList();
     }
 
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
+        HashSet<string> excludedHashes)
     {
         foreach (TorrentInfo download in downloads)
         {
@@ -228,7 +245,7 @@ public class TransmissionService : DownloadService, ITransmissionService
                 continue;
             }
             
-            Category? category = categoriesToClean
+            CleanCategory? category = categoriesToClean
                 .FirstOrDefault(x =>
                 {
                     if (download.DownloadDir is null)
@@ -282,6 +299,16 @@ public class TransmissionService : DownloadService, ITransmissionService
         }
     }
     
+    public override async Task CreateCategoryAsync(string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
+    {
+        throw new NotImplementedException();
+    }
+
     public override async Task DeleteDownload(string hash)
     {
         TorrentInfo? torrent = await GetTorrentAsync(hash);

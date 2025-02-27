@@ -10,6 +10,7 @@ using Domain.Models.Deluge.Response;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -33,10 +34,11 @@ public class DelugeService : DownloadService, IDelugeService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         INotificationPublisher notifier,
-        IDryRunInterceptor dryRunInterceptor
+        IDryRunInterceptor dryRunInterceptor,
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
         config.Value.Validate();
@@ -194,18 +196,32 @@ public class DelugeService : DownloadService, IDelugeService
         return result;
     }
 
-    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    public override async Task<List<object>?> GetSeedingDownloads()
     {
         return (await _client.GetStatusForAllTorrents())
             ?.Where(x => !string.IsNullOrEmpty(x.Hash))
             .Where(x => x.State?.Equals("seeding", StringComparison.InvariantCultureIgnoreCase) is true)
+            .Cast<object>()
+            .ToList();
+    }
+
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
+    {
+        return downloads
+            ?.Cast<TorrentStatus>()
             .Where(x => categories.Any(cat => cat.Name.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
             .Cast<object>()
             .ToList();
     }
 
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
+        HashSet<string> excludedHashes)
     {
         foreach (TorrentStatus download in downloads)
         {
@@ -214,7 +230,7 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
             
-            Category? category = categoriesToClean
+            CleanCategory? category = categoriesToClean
                 .FirstOrDefault(x => x.Name.Equals(download.Label, StringComparison.InvariantCultureIgnoreCase));
 
             if (category is null)
@@ -258,7 +274,17 @@ public class DelugeService : DownloadService, IDelugeService
             await _notifier.NotifyDownloadCleaned(download.Ratio, seedingTime, category.Name, result.Reason);
         }
     }
-    
+
+    public override async Task CreateCategoryAsync(string name)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
+    {
+        throw new NotImplementedException();
+    }
+
     /// <inheritdoc/>
     [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)

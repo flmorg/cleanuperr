@@ -5,18 +5,19 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.Exceptions;
 using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QBittorrent.Client;
-using Category = Common.Configuration.DownloadCleaner.Category;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
@@ -36,10 +37,11 @@ public class QBitService : DownloadService, IQBitService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         INotificationPublisher notifier,
-        IDryRunInterceptor dryRunInterceptor
+        IDryRunInterceptor dryRunInterceptor,
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
         _config = config.Value;
@@ -207,19 +209,42 @@ public class QBitService : DownloadService, IQBitService
     }
     
     /// <inheritdoc/>
-    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories) =>
+    public override async Task<List<object>?> GetSeedingDownloads() =>
         (await _client.GetTorrentListAsync(new()
         {
             Filter = TorrentListFilter.Seeding
         }))
         ?.Where(x => !string.IsNullOrEmpty(x.Hash))
-        .Where(x => categories.Any(cat => cat.Name.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
         .Cast<object>()
         .ToList();
 
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) =>
+        downloads
+            ?.Cast<TorrentInfo>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Name.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
+
+    /// <inheritdoc/>
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) =>
+        downloads
+            ?.Cast<TorrentInfo>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
+
+    /// <inheritdoc/>
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
+        HashSet<string> excludedHashes)
     {
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
         foreach (TorrentInfo download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
@@ -227,7 +252,7 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
             
-            Category? category = categoriesToClean
+            CleanCategory? category = categoriesToClean
                 .FirstOrDefault(x => download.Category.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase));
             
             if (category is null)
@@ -286,6 +311,124 @@ public class QBitService : DownloadService, IQBitService
         }
     }
 
+    public override async Task CreateCategoryAsync(string name)
+    {
+        IReadOnlyDictionary<string, Category>? existingCategories = await _client.GetCategoriesAsync();
+        
+        if (existingCategories.Any(x => x.Value.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return;
+        }
+        
+        await _client.AddCategoryAsync(name);
+    }
+
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
+    {
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
+        if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
+        {
+            downloads
+                .Cast<TorrentInfo>()
+                .Select(x =>
+                {
+                    string? firstDir = GetRootWithFirstDirectory(x.SavePath);
+
+                    if (string.IsNullOrEmpty(firstDir))
+                    {
+                        return string.Empty;
+                    }
+
+                    if (firstDir == Path.GetPathRoot(x.SavePath))
+                    {
+                        return string.Empty;
+                    }
+                    
+                    return firstDir;
+                })
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Distinct()
+                .ToList()
+                .ForEach(x =>
+                {
+                    _logger.LogTrace("populating file counts from {dir}", x);
+                    
+                    if (!Directory.Exists(x))
+                    {
+                        throw new ValidationException($"directory \"{x}\" does not exist");
+                    }
+                    
+                    _hardLinkFileService.PopulateFileCounts(x);
+                });
+        }
+        
+        foreach (TorrentInfo download in downloads)
+        {
+            IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(download.Hash);
+
+            if (files is null)
+            {
+                _logger.LogDebug("failed to find files for {name}", download.Name);
+                return;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+            bool hasHardlinks = false;
+            
+            foreach (TorrentContent file in files)
+            {
+                if (!file.Index.HasValue)
+                {
+                    _logger.LogDebug("skip | file index is null for {name}", download.Name);
+                    return;
+                }
+
+                string filePath = Path.Combine(Directory.Exists(download.ContentPath)
+                    ? download.ContentPath
+                    : download.SavePath, file.Name
+                );
+
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
+
+                if (hardlinkCount < 0)
+                {
+                    _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
+                    hasHardlinks = true;
+                    break;
+                }
+
+                if (hardlinkCount > 0)
+                {
+                    hasHardlinks = true;
+                }
+            }
+            
+            if (hasHardlinks)
+            {
+                _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
+                continue;
+            }
+            
+            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
+            download.Category = _downloadCleanerConfig.NoHardLinksCategory;
+            
+            _logger.LogInformation("category changed for {name}", download.Name);
+            
+            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardLinksCategory);
+        }
+    }
+    
     /// <inheritdoc/>
     [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)
@@ -297,6 +440,12 @@ public class QBitService : DownloadService, IQBitService
     protected virtual async Task SkipFile(string hash, int fileIndex)
     {
         await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
+    }
+
+    [DryRunSafeguard]
+    protected virtual async Task ChangeCategory(string hash, string newCategory)
+    {
+        await _client.SetTorrentCategoryAsync([hash], newCategory);
     }
 
     public override void Dispose()
