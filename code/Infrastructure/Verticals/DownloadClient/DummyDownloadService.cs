@@ -24,7 +24,7 @@ public class DummyDownloadService : DownloadService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        NotificationPublisher notifier,
+        INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService
     ) : base(
