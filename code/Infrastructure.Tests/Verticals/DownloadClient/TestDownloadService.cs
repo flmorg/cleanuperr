@@ -42,8 +42,9 @@ public class TestDownloadService : DownloadService
         ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes) => Task.FromResult(new BlockFilesResult());
     public override Task DeleteDownload(string hash) => Task.CompletedTask;
     public override Task CreateCategoryAsync(string name) => Task.CompletedTask;
-    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) => Task.FromResult<List<object>?>(null);
-    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) => Task.FromResult<List<object>?>(null);
+    public override Task<List<object>?> GetSeedingDownloads() => Task.FromResult<List<object>?>(null);
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) => null;
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) => null;
     public override Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes) => Task.CompletedTask;
     public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes) => Task.CompletedTask;
     

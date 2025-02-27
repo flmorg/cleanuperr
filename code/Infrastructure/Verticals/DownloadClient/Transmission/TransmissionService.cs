@@ -181,9 +181,8 @@ public class TransmissionService : DownloadService, ITransmissionService
 
         return result;
     }
-
-    /// <inheritdoc/>
-    public override async List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
+    
+    public override async Task<List<object>?> GetSeedingDownloads()
     {
         string[] fields = [
             TorrentFields.FILES,
@@ -199,11 +198,21 @@ public class TransmissionService : DownloadService, ITransmissionService
             TorrentFields.SECONDS_SEEDING,
             TorrentFields.UPLOAD_RATIO
         ];
-            
+
         return (await _client.TorrentGetAsync(fields))
             ?.Torrents
             ?.Where(x => !string.IsNullOrEmpty(x.HashString))
             .Where(x => x.Status is 5 or 6)
+            .Cast<object>()
+            .ToList();
+    }
+
+    /// <inheritdoc/>
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
+    {
+        return downloads
+            ?
+            .Cast<TorrentInfo>()
             .Where(x => categories
                 .Any(cat =>
                 {

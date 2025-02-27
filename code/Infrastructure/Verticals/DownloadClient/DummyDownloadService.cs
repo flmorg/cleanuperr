@@ -53,6 +53,11 @@ public class DummyDownloadService : DownloadService
         throw new NotImplementedException();
     }
 
+    public override Task<List<object>?> GetSeedingDownloads()
+    {
+        throw new NotImplementedException();
+    }
+
     public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
     {
         throw new NotImplementedException();

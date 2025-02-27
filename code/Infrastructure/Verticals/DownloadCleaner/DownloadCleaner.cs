@@ -89,6 +89,9 @@ public sealed class DownloadCleaner : GenericHandler
         
         List<object>? downloadsToClean = _downloadService.FilterDownloadsToBeCleanedAsync(downloads, _config.Categories);
         
+        // release unused objects
+        downloads = null;
+        
         _logger.LogTrace("looking for downloads clean");
         await _downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes);
     }

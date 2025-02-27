@@ -196,11 +196,19 @@ public class DelugeService : DownloadService, IDelugeService
         return result;
     }
 
-    public override async List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
+    public override async Task<List<object>?> GetSeedingDownloads()
     {
         return (await _client.GetStatusForAllTorrents())
             ?.Where(x => !string.IsNullOrEmpty(x.Hash))
             .Where(x => x.State?.Equals("seeding", StringComparison.InvariantCultureIgnoreCase) is true)
+            .Cast<object>()
+            .ToList();
+    }
+
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
+    {
+        return downloads
+            ?.Cast<TorrentStatus>()
             .Where(x => categories.Any(cat => cat.Name.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
             .Cast<object>()
             .ToList();
