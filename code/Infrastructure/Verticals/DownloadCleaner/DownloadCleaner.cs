@@ -74,7 +74,7 @@ public sealed class DownloadCleaner : GenericHandler
                 _hardLinkCategoryCreated = true;
             }
             
-            _downloadService.FilterDownloadsToChangeCategoryAsync(downloads, _config.NoHardLinksCategories);
+            downloadsToChangeCategory = _downloadService.FilterDownloadsToChangeCategoryAsync(downloads, _config.NoHardLinksCategories);
         }
 
         // wait for the downloads to appear in the arr queue
