@@ -32,7 +32,7 @@ public class NotificationPublisher : INotificationPublisher
             QueueRecord record = ContextProvider.Get<QueueRecord>(nameof(QueueRecord));
             InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
             Uri instanceUrl = ContextProvider.Get<Uri>(nameof(ArrInstance) + nameof(ArrInstance.Url));
-            Uri imageUrl = GetImageFromContext(record, instanceType);
+            Uri? imageUrl = GetImageFromContext(record, instanceType);
 
             ArrNotification notification = new()
             {
@@ -63,42 +63,59 @@ public class NotificationPublisher : INotificationPublisher
 
     public virtual async Task NotifyQueueItemDeleted(bool removeFromClient, DeleteReason reason)
     {
-        QueueRecord record = ContextProvider.Get<QueueRecord>(nameof(QueueRecord));
-        InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
-        Uri instanceUrl = ContextProvider.Get<Uri>(nameof(ArrInstance) + nameof(ArrInstance.Url));
-        Uri imageUrl = GetImageFromContext(record, instanceType);
-        
-        QueueItemDeletedNotification notification = new()
+        try
         {
-            InstanceType = instanceType,
-            InstanceUrl = instanceUrl,
-            Hash = record.DownloadId.ToLowerInvariant(),
-            Title = $"Deleting item from queue with reason: {reason}",
-            Description = record.Title,
-            Image = imageUrl,
-            Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
-        };
-        
-        await _dryRunInterceptor.InterceptAsync(Notify<QueueItemDeletedNotification>, notification);
+            QueueRecord record = ContextProvider.Get<QueueRecord>(nameof(QueueRecord));
+            InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
+            Uri instanceUrl = ContextProvider.Get<Uri>(nameof(ArrInstance) + nameof(ArrInstance.Url));
+            Uri? imageUrl = GetImageFromContext(record, instanceType);
+
+            QueueItemDeletedNotification notification = new()
+            {
+                InstanceType = instanceType,
+                InstanceUrl = instanceUrl,
+                Hash = record.DownloadId.ToLowerInvariant(),
+                Title = $"Deleting item from queue with reason: {reason}",
+                Description = record.Title,
+                Image = imageUrl,
+                Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
+            };
+
+            await _dryRunInterceptor.InterceptAsync(Notify<QueueItemDeletedNotification>, notification);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "failed to notify queue item deleted");
+        }
     }
 
     public virtual async Task NotifyDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
     {
-        DownloadCleanedNotification notification = new()
+        try
         {
-            Title = $"Cleaned item from download client with reason: {reason}",
-            Description = ContextProvider.Get<string>("downloadName"),
-            Fields =
-            [
-                new() { Title = "Hash", Text = ContextProvider.Get<string>("hash").ToLowerInvariant() },
-                new() { Title = "Category", Text = categoryName.ToLowerInvariant() },
-                new() { Title = "Ratio", Text = $"{ratio.ToString(CultureInfo.InvariantCulture)}%" },
-                new() { Title = "Seeding hours", Text = $"{Math.Round(seedingTime.TotalHours, 0).ToString(CultureInfo.InvariantCulture)}h" }
-            ],
-            Level = NotificationLevel.Important
-        };
+            DownloadCleanedNotification notification = new()
+            {
+                Title = $"Cleaned item from download client with reason: {reason}",
+                Description = ContextProvider.Get<string>("downloadName"),
+                Fields =
+                [
+                    new() { Title = "Hash", Text = ContextProvider.Get<string>("hash").ToLowerInvariant() },
+                    new() { Title = "Category", Text = categoryName.ToLowerInvariant() },
+                    new() { Title = "Ratio", Text = $"{ratio.ToString(CultureInfo.InvariantCulture)}%" },
+                    new()
+                    {
+                        Title = "Seeding hours", Text = $"{Math.Round(seedingTime.TotalHours, 0).ToString(CultureInfo.InvariantCulture)}h"
+                    }
+                ],
+                Level = NotificationLevel.Important
+            };
 
-        await _dryRunInterceptor.InterceptAsync(Notify<DownloadCleanedNotification>, notification);
+            await _dryRunInterceptor.InterceptAsync(Notify<DownloadCleanedNotification>, notification);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "failed to notify download cleaned");
+        }
     }
 
     [DryRunSafeguard]
@@ -107,12 +124,21 @@ public class NotificationPublisher : INotificationPublisher
         return _messageBus.Publish(message);
     }
     
-    private static Uri GetImageFromContext(QueueRecord record, InstanceType instanceType) =>
-        instanceType switch
+    private Uri? GetImageFromContext(QueueRecord record, InstanceType instanceType)
+    {
+        Uri? image = instanceType switch
         {
             InstanceType.Sonarr => record.Series!.Images.FirstOrDefault(x => x.CoverType == "poster")?.RemoteUrl,
             InstanceType.Radarr => record.Movie!.Images.FirstOrDefault(x => x.CoverType == "poster")?.RemoteUrl,
             InstanceType.Lidarr => record.Album!.Images.FirstOrDefault(x => x.CoverType == "cover")?.Url,
             _ => throw new ArgumentOutOfRangeException(nameof(instanceType))
-        } ?? throw new Exception("failed to get image url from context");
+        };
+
+        if (image is null)
+        {
+            _logger.LogWarning("no poster found for {title}", record.Title);
+        }
+        
+        return image;
+    }
 }
