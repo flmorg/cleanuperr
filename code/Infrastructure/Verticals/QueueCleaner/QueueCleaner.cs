@@ -4,6 +4,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
@@ -19,7 +20,8 @@ namespace Infrastructure.Verticals.QueueCleaner;
 public sealed class QueueCleaner : GenericHandler
 {
     private readonly QueueCleanerConfig _config;
-    
+    private readonly IgnoredDownloadsProvider<QueueCleanerConfig> _ignoredDownloadsProvider;
+
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
         IOptions<QueueCleanerConfig> config,
@@ -32,8 +34,8 @@ public sealed class QueueCleaner : GenericHandler
         LidarrClient lidarrClient,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        INotificationPublisher notifier
-    ) : base(
+        INotificationPublisher notifier,
+        IgnoredDownloadsProvider<QueueCleanerConfig> ignoredDownloadsProvider) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
         sonarrClient, radarrClient, lidarrClient,
@@ -42,6 +44,7 @@ public sealed class QueueCleaner : GenericHandler
     )
     {
         _config = config.Value;
+        _ignoredDownloadsProvider = ignoredDownloadsProvider;
     }
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
@@ -50,6 +53,7 @@ public sealed class QueueCleaner : GenericHandler
         
         HashSet<SearchItem> itemsToBeRefreshed = [];
         IArrClient arrClient = GetClient(instanceType);
+        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
         
         // push to context
         ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
@@ -75,6 +79,12 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
                 
+                if (ignoredDownloads.Contains(record.DownloadId, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    _logger.LogInformation("skip | {title} | ignored", record.Title);
+                    continue;
+                }
+                
                 // push record to context
                 ContextProvider.Set(nameof(QueueRecord), record);
 
@@ -83,7 +93,7 @@ public sealed class QueueCleaner : GenericHandler
                 if (_downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None && record.Protocol is "torrent")
                 {
                     // stalled download check
-                    stalledCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId);
+                    stalledCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
                 }
                 
                 // failed import check

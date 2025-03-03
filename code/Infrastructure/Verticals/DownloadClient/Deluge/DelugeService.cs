@@ -7,6 +7,7 @@ using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Deluge.Response;
+using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
@@ -49,18 +50,24 @@ public class DelugeService : DownloadService, IDelugeService
     }
 
     /// <inheritdoc/>
-    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
         hash = hash.ToLowerInvariant();
         
         DelugeContents? contents = null;
         StalledResult result = new();
 
-        TorrentStatus? status = await _client.GetTorrentStatus(hash);
+        TorrentStatus? download = await _client.GetTorrentStatus(hash);
         
-        if (status?.Hash is null)
+        if (download?.Hash is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
+            return result;
+        }
+        
+        if (download.ShouldIgnore(ignoredDownloads))
+        {
+            _logger.LogInformation("skip | download is ignored | {name}", download.Name);
             return result;
         }
 
@@ -88,8 +95,8 @@ public class DelugeService : DownloadService, IDelugeService
             result.DeleteReason = DeleteReason.AllFilesBlocked;
         }
         
-        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(status);
-        result.IsPrivate = status.Private;
+        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(download);
+        result.IsPrivate = download.Private;
 
         if (!shouldRemove && result.ShouldRemove)
         {
@@ -100,30 +107,34 @@ public class DelugeService : DownloadService, IDelugeService
     }
 
     /// <inheritdoc/>
-    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(
-        string hash,
+    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
-        ConcurrentBag<Regex> regexes
-    )
+        ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads)
     {
         hash = hash.ToLowerInvariant();
 
-        TorrentStatus? status = await _client.GetTorrentStatus(hash);
+        TorrentStatus? download = await _client.GetTorrentStatus(hash);
         BlockFilesResult result = new();
         
-        if (status?.Hash is null)
+        if (download?.Hash is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
-
-        result.IsPrivate = status.Private;
         
-        if (_contentBlockerConfig.IgnorePrivate && status.Private)
+        if (download.ShouldIgnore(ignoredDownloads))
+        {
+            _logger.LogInformation("skip | download is ignored | {name}", download.Name);
+            return result;
+        }
+
+        result.IsPrivate = download.Private;
+        
+        if (_contentBlockerConfig.IgnorePrivate && download.Private)
         {
             // ignore private trackers
-            _logger.LogDebug("skip files check | download is private | {name}", status.Name);
+            _logger.LogDebug("skip files check | download is private | {name}", download.Name);
             return result;
         }
         
@@ -205,12 +216,19 @@ public class DelugeService : DownloadService, IDelugeService
     }
 
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
+        IReadOnlyList<string> ignoredDownloads)
     {
         foreach (TorrentStatus download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
             {
+                continue;
+            }
+
+            if (download.ShouldIgnore(ignoredDownloads))
+            {
+                _logger.LogInformation("skip | download is ignored | {name}", download.Name);
                 continue;
             }
             

@@ -60,15 +60,13 @@ public abstract class DownloadService : IDownloadService
 
     public abstract Task LoginAsync();
 
-    public abstract Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash);
+    public abstract Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
-    public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(
-        string hash,
+    public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
-        ConcurrentBag<Regex> regexes
-    );
+        ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
     public abstract Task DeleteDownload(string hash);
@@ -77,7 +75,8 @@ public abstract class DownloadService : IDownloadService
     public abstract Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories);
 
     /// <inheritdoc/>
-    public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes);
+    public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
+        IReadOnlyList<string> ignoredDownloads);
 
     protected void ResetStrikesOnProgress(string hash, long downloaded)
     {
@@ -131,7 +130,7 @@ public abstract class DownloadService : IDownloadService
 
         return new();
     }
-    
+
     private bool DownloadReachedRatio(double ratio, TimeSpan seedingTime, Category category)
     {
         if (category.MaxRatio < 0)
