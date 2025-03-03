@@ -49,9 +49,9 @@ public sealed class BlocklistProvider
         
         try
         {
-            await LoadPatternsAndRegexesAsync(_sonarrConfig.Block.Type, _sonarrConfig.Block.Path, InstanceType.Sonarr);
-            await LoadPatternsAndRegexesAsync(_radarrConfig.Block.Type, _radarrConfig.Block.Path, InstanceType.Radarr);
-            await LoadPatternsAndRegexesAsync(_lidarrConfig.Block.Type, _lidarrConfig.Block.Path, InstanceType.Lidarr);
+            await LoadPatternsAndRegexesAsync(_sonarrConfig, InstanceType.Sonarr);
+            await LoadPatternsAndRegexesAsync(_radarrConfig, InstanceType.Radarr);
+            await LoadPatternsAndRegexesAsync(_lidarrConfig, InstanceType.Lidarr);
             
             _initialized = true;
         }
@@ -83,14 +83,19 @@ public sealed class BlocklistProvider
         return regexes ?? [];
     }
 
-    private async Task LoadPatternsAndRegexesAsync(BlocklistType blocklistType, string? blocklistPath, InstanceType instanceType)
+    private async Task LoadPatternsAndRegexesAsync(ArrConfig arrConfig, InstanceType instanceType)
     {
-        if (string.IsNullOrEmpty(blocklistPath))
+        if (!arrConfig.Enabled)
         {
             return;
         }
         
-        string[] filePatterns = await ReadContentAsync(blocklistPath);
+        if (string.IsNullOrEmpty(arrConfig.Block.Path))
+        {
+            return;
+        }
+        
+        string[] filePatterns = await ReadContentAsync(arrConfig.Block.Path);
         
         long startTime = Stopwatch.GetTimestamp();
         ParallelOptions options = new() { MaxDegreeOfParallelism = 5 };
@@ -121,13 +126,13 @@ public sealed class BlocklistProvider
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startTime);
 
-        _cache.Set(CacheKeys.BlocklistType(instanceType), blocklistType);
+        _cache.Set(CacheKeys.BlocklistType(instanceType), arrConfig.Block.Type);
         _cache.Set(CacheKeys.BlocklistPatterns(instanceType), patterns);
         _cache.Set(CacheKeys.BlocklistRegexes(instanceType), regexes);
         
         _logger.LogDebug("loaded {count} patterns", patterns.Count);
         _logger.LogDebug("loaded {count} regexes", regexes.Count);
-        _logger.LogDebug("blocklist loaded in {elapsed} ms | {path}", elapsed.TotalMilliseconds, blocklistPath);
+        _logger.LogDebug("blocklist loaded in {elapsed} ms | {path}", elapsed.TotalMilliseconds, arrConfig.Block.Path);
     }
     
     private async Task<string[]> ReadContentAsync(string path)
