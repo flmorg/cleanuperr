@@ -31,14 +31,22 @@ public sealed class IgnoredDownloadsProvider<T> : IDisposable
         {
             throw new FileNotFoundException("file not found", _config.IgnoredDownloadsPath);
         }
+
+        string directory = Path.GetDirectoryName(_config.IgnoredDownloadsPath) ?? "/";
+        string filter = Path.GetFileName(_config.IgnoredDownloadsPath);
+        _logger.LogTrace("watching file | directory: {directory} | filter: {filter}", directory, filter);
         
-        _watcher = new FileSystemWatcher(Path.GetDirectoryName(_config.IgnoredDownloadsPath)!)
+        _watcher = new FileSystemWatcher(directory)
         {
             Filter = Path.GetFileName(_config.IgnoredDownloadsPath),
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
         };
 
-        _watcher.Changed += async (s, e) => await LoadFile();
+        _watcher.Changed += async (s, e) =>
+        {
+            _logger.LogTrace("file change detected | {path}", e.FullPath);
+            await LoadFile();
+        };
         _watcher.EnableRaisingEvents = true;
     }
     
@@ -67,6 +75,12 @@ public sealed class IgnoredDownloadsProvider<T> : IDisposable
             }
             
             FileInfo fileInfo = new(_config.IgnoredDownloadsPath);
+            
+            _logger.LogTrace(
+                "latest change: {lastWriteTime} | last triggered change: {lastModified} ",
+                fileInfo.LastWriteTime,
+                _lastModified
+            );
             
             if (fileInfo.LastWriteTime > _lastModified)
             {
