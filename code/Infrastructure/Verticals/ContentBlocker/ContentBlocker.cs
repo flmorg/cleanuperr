@@ -39,7 +39,8 @@ public sealed class ContentBlocker : GenericHandler
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
-        IgnoredDownloadsProvider<ContentBlockerConfig> ignoredDownloadsProvider) : base(
+        IgnoredDownloadsProvider<ContentBlockerConfig> ignoredDownloadsProvider
+    ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
         sonarrClient, radarrClient, lidarrClient,
@@ -76,6 +77,8 @@ public sealed class ContentBlocker : GenericHandler
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
+        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
+        
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
 
         HashSet<SearchItem> itemsToBeRefreshed = [];
@@ -83,7 +86,6 @@ public sealed class ContentBlocker : GenericHandler
         BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
         ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
         ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
-        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
         
         // push to context
         ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);

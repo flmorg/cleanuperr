@@ -34,7 +34,8 @@ public sealed class DownloadCleaner : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
-        IgnoredDownloadsProvider<DownloadCleanerConfig> ignoredDownloadsProvider) : base(
+        IgnoredDownloadsProvider<DownloadCleanerConfig> ignoredDownloadsProvider
+    ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
         sonarrClient, radarrClient, lidarrClient,
