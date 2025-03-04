@@ -6,14 +6,13 @@ using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Providers;
 
-public sealed class IgnoredDownloadsProvider<T> : IDisposable
+public sealed class IgnoredDownloadsProvider<T>
     where T : IIgnoredDownloadsConfig
 {
     private readonly ILogger<IgnoredDownloadsProvider<T>> _logger;
     private IIgnoredDownloadsConfig _config;
     private readonly IMemoryCache _cache;
     private DateTime _lastModified = DateTime.MinValue;
-    private readonly FileSystemWatcher _watcher;
 
     public IgnoredDownloadsProvider(ILogger<IgnoredDownloadsProvider<T>> logger, IOptionsMonitor<T> config, IMemoryCache cache)
     {
@@ -31,25 +30,8 @@ public sealed class IgnoredDownloadsProvider<T> : IDisposable
         {
             throw new FileNotFoundException("file not found", _config.IgnoredDownloadsPath);
         }
-
-        string directory = Path.GetDirectoryName(_config.IgnoredDownloadsPath) ?? "/";
-        string filter = Path.GetFileName(_config.IgnoredDownloadsPath);
-        _logger.LogTrace("watching file | directory: {directory} | filter: {filter}", directory, filter);
-        
-        _watcher = new FileSystemWatcher(directory)
-        {
-            Filter = Path.GetFileName(_config.IgnoredDownloadsPath),
-            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size
-        };
-
-        _watcher.Changed += async (s, e) =>
-        {
-            _logger.LogTrace("file change detected | {path}", e.FullPath);
-            await LoadFile();
-        };
-        _watcher.EnableRaisingEvents = true;
     }
-    
+
     public async Task<IReadOnlyList<string>> GetIgnoredDownloads()
     {
         if (string.IsNullOrEmpty(_config.IgnoredDownloadsPath))
@@ -57,8 +39,13 @@ public sealed class IgnoredDownloadsProvider<T> : IDisposable
             return Array.Empty<string>();
         }
 
-        if (!_cache.TryGetValue(CacheKeys.IgnoredDownloads(typeof(T).Name), out IReadOnlyList<string>? ignoredDownloads))
+        FileInfo fileInfo = new(_config.IgnoredDownloadsPath);
+
+        if (fileInfo.LastWriteTime > _lastModified ||
+            !_cache.TryGetValue(CacheKeys.IgnoredDownloads(typeof(T).Name), out IReadOnlyList<string>? ignoredDownloads))
         {
+            _lastModified = fileInfo.LastWriteTime;
+
             return await LoadFile();
         }
 
@@ -73,40 +60,22 @@ public sealed class IgnoredDownloadsProvider<T> : IDisposable
             {
                 return Array.Empty<string>();
             }
-            
-            FileInfo fileInfo = new(_config.IgnoredDownloadsPath);
-            
-            _logger.LogTrace(
-                "latest change: {lastWriteTime} | last triggered change: {lastModified} ",
-                fileInfo.LastWriteTime,
-                _lastModified
-            );
-            
-            if (fileInfo.LastWriteTime > _lastModified)
-            {
-                string[] ignoredDownloads = (await File.ReadAllLinesAsync(_config.IgnoredDownloadsPath))
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .ToArray();
-                
-                _cache.Set(CacheKeys.IgnoredDownloads(typeof(T).Name), ignoredDownloads);
 
-                _lastModified = fileInfo.LastWriteTime;
+            string[] ignoredDownloads = (await File.ReadAllLinesAsync(_config.IgnoredDownloadsPath))
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToArray();
 
-                _logger.LogInformation("ignored downloads reloaded");
+            _cache.Set(CacheKeys.IgnoredDownloads(typeof(T).Name), ignoredDownloads);
 
-                return ignoredDownloads;
-            }
+            _logger.LogInformation("ignored downloads reloaded");
+
+            return ignoredDownloads;
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, $"error while reading ignored downloads file: {_config.IgnoredDownloadsPath}");
+            _logger.LogError(exception, "error while reading ignored downloads file | {file}", _config.IgnoredDownloadsPath);
         }
 
         return Array.Empty<string>();
-    }
-
-    public void Dispose()
-    {
-        _watcher.Dispose();
     }
 }
