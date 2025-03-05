@@ -35,12 +35,13 @@ public class TestDownloadService : DownloadService
 
     public override void Dispose() { }
     public override Task LoginAsync() => Task.CompletedTask;
-    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash) => Task.FromResult(new StalledResult());
-    public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, 
-        ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes) => Task.FromResult(new BlockFilesResult());
+    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new StalledResult());
+    public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType,
+        ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new BlockFilesResult());
     public override Task DeleteDownload(string hash) => Task.CompletedTask;
     public override Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories) => Task.FromResult<List<object>?>(null);
-    public override Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes) => Task.CompletedTask;
+    public override Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
+        IReadOnlyList<string> ignoredDownloads) => Task.CompletedTask;
 
     // Expose protected methods for testing
     public new void ResetStrikesOnProgress(string hash, long downloaded) => base.ResetStrikesOnProgress(hash, downloaded);

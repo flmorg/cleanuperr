@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadCleaner;
 
-public sealed record DownloadCleanerConfig : IJobConfig
+public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
 {
     public const string SectionName = "DownloadCleaner";
     
@@ -12,7 +12,10 @@ public sealed record DownloadCleanerConfig : IJobConfig
     public List<Category>? Categories { get; init; }
 
     [ConfigurationKeyName("DELETE_PRIVATE")]
-    public bool DeletePrivate { get; set; }
+    public bool DeletePrivate { get; init; }
+    
+    [ConfigurationKeyName("IGNORED_DOWNLOADS_PATH")]
+    public string? IgnoredDownloadsPath { get; init; }
 
     public void Validate()
     {

@@ -7,6 +7,7 @@ using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Domain.Enums;
+using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
@@ -26,6 +27,22 @@ public class TransmissionService : DownloadService, ITransmissionService
     private readonly TransmissionConfig _config;
     private readonly Client _client;
     private TorrentInfo[]? _torrentsCache;
+
+    private static readonly string[] Fields =
+    [
+        TorrentFields.FILES,
+        TorrentFields.FILE_STATS,
+        TorrentFields.HASH_STRING,
+        TorrentFields.ID,
+        TorrentFields.ETA,
+        TorrentFields.NAME,
+        TorrentFields.STATUS,
+        TorrentFields.IS_PRIVATE,
+        TorrentFields.DOWNLOADED_EVER,
+        TorrentFields.DOWNLOAD_DIR,
+        TorrentFields.SECONDS_SEEDING,
+        TorrentFields.UPLOAD_RATIO,
+    ];
 
     public TransmissionService(
         IHttpClientFactory httpClientFactory,
@@ -60,21 +77,27 @@ public class TransmissionService : DownloadService, ITransmissionService
     }
 
     /// <inheritdoc/>
-    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash)
+    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
         StalledResult result = new();
-        TorrentInfo? torrent = await GetTorrentAsync(hash);
+        TorrentInfo? download = await GetTorrentAsync(hash);
 
-        if (torrent is null)
+        if (download is null)
         {
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
         
-        bool shouldRemove = torrent.FileStats?.Length > 0;
-        result.IsPrivate = torrent.IsPrivate ?? false;
+        if (download.ShouldIgnore(ignoredDownloads))
+        {
+            _logger.LogDebug("skip | download is ignored | {name}", download.Name);
+            return result;
+        }
+        
+        bool shouldRemove = download.FileStats?.Length > 0;
+        result.IsPrivate = download.IsPrivate ?? false;
 
-        foreach (TransmissionTorrentFileStats? stats in torrent.FileStats ?? [])
+        foreach (TransmissionTorrentFileStats? stats in download.FileStats ?? [])
         {
             if (!stats.Wanted.HasValue)
             {
@@ -95,7 +118,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         }
 
         // remove if all files are unwanted or download is stuck
-        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(torrent);
+        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(download);
 
         if (!shouldRemove && result.ShouldRemove)
         {
@@ -106,28 +129,32 @@ public class TransmissionService : DownloadService, ITransmissionService
     }
 
     /// <inheritdoc/>
-    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(
-        string hash,
+    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
-        ConcurrentBag<Regex> regexes
-    )
+        ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads)
     {
-        TorrentInfo? torrent = await GetTorrentAsync(hash);
+        TorrentInfo? download = await GetTorrentAsync(hash);
         BlockFilesResult result = new();
 
-        if (torrent?.FileStats is null || torrent.Files is null)
+        if (download?.FileStats is null || download.Files is null)
         {
             return result;
         }
+        
+        if (download.ShouldIgnore(ignoredDownloads))
+        {
+            _logger.LogDebug("skip | download is ignored | {name}", download.Name);
+            return result;
+        }
 
-        bool isPrivate = torrent.IsPrivate ?? false;
+        bool isPrivate = download.IsPrivate ?? false;
         result.IsPrivate = isPrivate;
         
         if (_contentBlockerConfig.IgnorePrivate && isPrivate)
         {
             // ignore private trackers
-            _logger.LogDebug("skip files check | download is private | {name}", torrent.Name);
+            _logger.LogDebug("skip files check | download is private | {name}", download.Name);
             return result;
         }
 
@@ -135,27 +162,27 @@ public class TransmissionService : DownloadService, ITransmissionService
         long totalFiles = 0;
         long totalUnwantedFiles = 0;
         
-        for (int i = 0; i < torrent.Files.Length; i++)
+        for (int i = 0; i < download.Files.Length; i++)
         {
-            if (torrent.FileStats?[i].Wanted == null)
+            if (download.FileStats?[i].Wanted == null)
             {
                 continue;
             }
 
             totalFiles++;
             
-            if (!torrent.FileStats[i].Wanted.Value)
+            if (!download.FileStats[i].Wanted.Value)
             {
                 totalUnwantedFiles++;
                 continue;
             }
 
-            if (_filenameEvaluator.IsValid(torrent.Files[i].Name, blocklistType, patterns, regexes))
+            if (_filenameEvaluator.IsValid(download.Files[i].Name, blocklistType, patterns, regexes))
             {
                 continue;
             }
             
-            _logger.LogInformation("unwanted file found | {file}", torrent.Files[i].Name);
+            _logger.LogInformation("unwanted file found | {file}", download.Files[i].Name);
             unwantedFiles.Add(i);
             totalUnwantedFiles++;
         }
@@ -175,7 +202,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         
         _logger.LogDebug("changing priorities | torrent {hash}", hash);
 
-        await _dryRunInterceptor.InterceptAsync(SetUnwantedFiles, torrent.Id, unwantedFiles.ToArray());
+        await _dryRunInterceptor.InterceptAsync(SetUnwantedFiles, download.Id, unwantedFiles.ToArray());
 
         return result;
     }
@@ -183,22 +210,7 @@ public class TransmissionService : DownloadService, ITransmissionService
     /// <inheritdoc/>
     public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
     {
-        string[] fields = [
-            TorrentFields.FILES,
-            TorrentFields.FILE_STATS,
-            TorrentFields.HASH_STRING,
-            TorrentFields.ID,
-            TorrentFields.ETA,
-            TorrentFields.NAME,
-            TorrentFields.STATUS,
-            TorrentFields.IS_PRIVATE,
-            TorrentFields.DOWNLOADED_EVER,
-            TorrentFields.DOWNLOAD_DIR,
-            TorrentFields.SECONDS_SEEDING,
-            TorrentFields.UPLOAD_RATIO
-        ];
-            
-        return (await _client.TorrentGetAsync(fields))
+        return (await _client.TorrentGetAsync(Fields))
             ?.Torrents
             ?.Where(x => !string.IsNullOrEmpty(x.HashString))
             .Where(x => x.Status is 5 or 6)
@@ -219,12 +231,19 @@ public class TransmissionService : DownloadService, ITransmissionService
     }
 
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes)
+    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
+        IReadOnlyList<string> ignoredDownloads)
     {
         foreach (TorrentInfo download in downloads)
         {
             if (string.IsNullOrEmpty(download.HashString))
             {
+                continue;
+            }
+
+            if (download.ShouldIgnore(ignoredDownloads))
+            {
+                _logger.LogDebug("skip | download is ignored | {name}", download.Name);
                 continue;
             }
             
@@ -351,20 +370,8 @@ public class TransmissionService : DownloadService, ITransmissionService
         
         if (_torrentsCache is null || torrent is null)
         {
-            string[] fields = [
-                TorrentFields.FILES,
-                TorrentFields.FILE_STATS,
-                TorrentFields.HASH_STRING,
-                TorrentFields.ID,
-                TorrentFields.ETA,
-                TorrentFields.NAME,
-                TorrentFields.STATUS,
-                TorrentFields.IS_PRIVATE,
-                TorrentFields.DOWNLOADED_EVER
-            ];
-            
             // refresh cache
-            _torrentsCache = (await _client.TorrentGetAsync(fields))
+            _torrentsCache = (await _client.TorrentGetAsync(Fields))
                 ?.Torrents;
         }
         

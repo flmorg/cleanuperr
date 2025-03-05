@@ -2,7 +2,7 @@
 
 namespace Common.Configuration.ContentBlocker;
 
-public sealed record ContentBlockerConfig : IJobConfig
+public sealed record ContentBlockerConfig : IJobConfig, IIgnoredDownloadsConfig
 {
     public const string SectionName = "ContentBlocker";
     
@@ -13,6 +13,9 @@ public sealed record ContentBlockerConfig : IJobConfig
     
     [ConfigurationKeyName("DELETE_PRIVATE")]
     public bool DeletePrivate { get; init; }
+
+    [ConfigurationKeyName("IGNORED_DOWNLOADS_PATH")]
+    public string? IgnoredDownloadsPath { get; init; }
     
     public void Validate()
     {

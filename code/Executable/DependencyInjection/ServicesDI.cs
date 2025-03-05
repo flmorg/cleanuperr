@@ -1,4 +1,8 @@
-﻿using Infrastructure.Interceptors;
+﻿using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
+using Common.Configuration.QueueCleaner;
+using Infrastructure.Interceptors;
+using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;
@@ -30,5 +34,8 @@ public static class ServicesDI
             .AddTransient<ArrQueueIterator>()
             .AddTransient<DownloadServiceFactory>()
             .AddSingleton<BlocklistProvider>()
-            .AddSingleton<IStriker, Striker>();
+            .AddSingleton<IStriker, Striker>()
+            .AddSingleton<IgnoredDownloadsProvider<QueueCleanerConfig>>()
+            .AddSingleton<IgnoredDownloadsProvider<ContentBlockerConfig>>()
+            .AddSingleton<IgnoredDownloadsProvider<DownloadCleanerConfig>>();
 }
