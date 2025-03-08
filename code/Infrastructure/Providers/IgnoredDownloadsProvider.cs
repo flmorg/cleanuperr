@@ -42,14 +42,15 @@ public sealed class IgnoredDownloadsProvider<T>
         FileInfo fileInfo = new(_config.IgnoredDownloadsPath);
 
         if (fileInfo.LastWriteTime > _lastModified ||
-            !_cache.TryGetValue(CacheKeys.IgnoredDownloads(typeof(T).Name), out IReadOnlyList<string>? ignoredDownloads))
+            !_cache.TryGetValue(CacheKeys.IgnoredDownloads(typeof(T).Name), out IReadOnlyList<string>? ignoredDownloads) ||
+            ignoredDownloads is null)
         {
             _lastModified = fileInfo.LastWriteTime;
 
             return await LoadFile();
         }
-
-        return ignoredDownloads ?? Array.Empty<string>();
+        
+        return ignoredDownloads;
     }
 
     private async Task<IReadOnlyList<string>> LoadFile()
