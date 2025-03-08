@@ -191,6 +191,7 @@ services:
       - TRIGGERS__DOWNLOADCLEANER=0/30 * * * * ?
 
       - QUEUECLEANER__ENABLED=true
+      - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored
       - QUEUECLEANER__RUNSEQUENTIALLY=true
       - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
       - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=true
@@ -201,10 +202,12 @@ services:
       - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
 
       - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored
       - CONTENTBLOCKER__IGNORE_PRIVATE=true
       - CONTENTBLOCKER__DELETE_PRIVATE=false
 
       - DOWNLOADCLEANER__ENABLED=true
+      - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored
       - DOWNLOADCLEANER__DELETE_PRIVATE=false
       - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
       - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
@@ -256,6 +259,7 @@ services:
       # - NOTIFIARR__CHANNEL_ID=discord_channel_id
     volumes:
       - ./data/cleanuperr/logs:/var/logs
+      - ./data/cleanuperr/ignored_downloads:/ignored
     restart: unless-stopped
     depends_on:
       - qbittorrent
