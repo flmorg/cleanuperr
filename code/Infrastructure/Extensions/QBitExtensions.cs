@@ -12,6 +12,11 @@ public static class QBitExtensions
             {
                 return true;
             }
+            
+            if (download.Category.Equals(value, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;
+            }
 
             if (download.Tags.Contains(value, StringComparer.InvariantCultureIgnoreCase))
             {
