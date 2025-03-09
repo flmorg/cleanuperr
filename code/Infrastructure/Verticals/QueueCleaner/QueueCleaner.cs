@@ -92,8 +92,14 @@ public sealed class QueueCleaner : GenericHandler
 
                 StalledResult stalledCheckResult = new();
 
-                if (_downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.None && record.Protocol is "torrent")
+                if (record.Protocol is "torrent")
                 {
+                    if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None)
+                    {
+                        _logger.LogWarning("skip | download client is not configured | {title}", record.Title);
+                        continue;
+                    }
+                    
                     // stalled download check
                     stalledCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
                 }
