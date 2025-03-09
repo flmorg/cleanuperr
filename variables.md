@@ -76,6 +76,29 @@
 - Default: `true`
 - Required: No.
 
+**`QUEUECLEANER__IGNORED_DOWNLOADS_PATH`**
+- Local path to the file containing ignored downloads.
+- If the contents of the file are changed, they will be reloaded on the next job run.
+- Accepted values:
+  -  torrent hash
+  -  qBitTorrent tag or category
+  -  Deluge label
+  -  Transmission category (last directory from the save location)
+  -  torrent tracker domain
+- Each value needs to be on a new line.
+- Type: String.
+- Default: Empty.
+- Required: No.
+- Example: `/ignored.txt`.
+- Example of file contents:
+    ```
+    fa800a7d7c443a2c3561d1f8f393c089036dade1
+    tv-sonarr
+    qbit-tag
+    mytracker.com
+    ...
+    ```
+
 **`QUEUECLEANER__RUNSEQUENTIALLY`**
 - Controls whether queue cleaner runs after content blocker instead of in parallel.
 - When `true`, streamlines the cleaning process by running immediately after content blocker.
@@ -178,6 +201,29 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Default: `false`
 - Required: No.
 
+**`CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH`**
+- Local path to the file containing ignored downloads.
+- If the contents of the file are changed, they will be reloaded on the next job run.
+- Accepted values:
+  -  torrent hash
+  -  qBitTorrent tag or category
+  -  Deluge label
+  -  Transmission category (last directory from the save location)
+  -  torrent tracker domain
+- Each value needs to be on a new line.
+- Type: String.
+- Default: Empty.
+- Required: No.
+- Example: `/ignored.txt`.
+- Example of file contents:
+    ```
+    fa800a7d7c443a2c3561d1f8f393c089036dade1
+    tv-sonarr
+    qbit-tag
+    mytracker.com
+    ...
+    ```
+
 **`CONTENTBLOCKER__IGNORE_PRIVATE`**
 - Controls whether to ignore downloads from private trackers.
 - Type: Boolean
@@ -217,6 +263,29 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Default: `false`
 - Required: No.
 
+**`DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH`**
+- Local path to the file containing ignored downloads.
+- If the contents of the file are changed, they will be reloaded on the next job run.
+- Accepted values:
+  -  torrent hash
+  -  qBitTorrent tag or category
+  -  Deluge label
+  -  Transmission category (last directory from the save location)
+  -  torrent tracker domain
+- Each value needs to be on a new line.
+- Type: String.
+- Default: Empty.
+- Required: No.
+- Example: `/ignored.txt`.
+- Example of file contents:
+    ```
+    fa800a7d7c443a2c3561d1f8f393c089036dade1
+    tv-sonarr
+    qbit-tag
+    mytracker.com
+    ...
+    ```
+
 **`DOWNLOADCLEANER__DELETE_PRIVATE`**
 - Controls whether to delete private downloads.
 - Type: Boolean.
@@ -237,7 +306,7 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 > The category name must match the category that was set in the *arr.
 > For qBittorrent, the category name is the name of the download category.
 > For Deluge, the category name is the name of the label.
-> For Transmission, the category name is the name of the download location.
+> For Transmission, the category name is the last directory from the save location.
 
 **`DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO`**
 - Maximum ratio to reach before removing a download.

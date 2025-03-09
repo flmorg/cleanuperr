@@ -139,6 +139,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./cleanuperr/logs:/var/logs
+      - ./cleanuperr/ignored.txt:/ignored.txt
     environment:
       - TZ=America/New_York
       - DRY_RUN=false
@@ -153,6 +154,7 @@ services:
       - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
 
       - QUEUECLEANER__ENABLED=true
+      - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - QUEUECLEANER__RUNSEQUENTIALLY=true
       - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
       - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
@@ -165,10 +167,12 @@ services:
       - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
 
       - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - CONTENTBLOCKER__IGNORE_PRIVATE=false
       - CONTENTBLOCKER__DELETE_PRIVATE=false
 
       - DOWNLOADCLEANER__ENABLED=true
+      - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - DOWNLOADCLEANER__DELETE_PRIVATE=false
       - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
       - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
