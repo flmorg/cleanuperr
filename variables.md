@@ -98,6 +98,8 @@
     mytracker.com
     ...
     ```
+>[!IMPORTANT]
+> Some people have experienced problems using Docker where the mounted file would not update inside the container if it was modified on the host. This is a Docker configuration problem and can not be solved by cleanuperr.
 
 **`QUEUECLEANER__RUNSEQUENTIALLY`**
 - Controls whether queue cleaner runs after content blocker instead of in parallel.
@@ -223,6 +225,8 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
     mytracker.com
     ...
     ```
+>[!IMPORTANT]
+> Some people have experienced problems using Docker where the mounted file would not update inside the container if it was modified on the host. This is a Docker configuration problem and can not be solved by cleanuperr.
 
 **`CONTENTBLOCKER__IGNORE_PRIVATE`**
 - Controls whether to ignore downloads from private trackers.
@@ -285,6 +289,8 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
     mytracker.com
     ...
     ```
+>[!IMPORTANT]
+> Some people have experienced problems using Docker where the mounted file would not update inside the container if it was modified on the host. This is a Docker configuration problem and can not be solved by cleanuperr.
 
 **`DOWNLOADCLEANER__DELETE_PRIVATE`**
 - Controls whether to delete private downloads.
