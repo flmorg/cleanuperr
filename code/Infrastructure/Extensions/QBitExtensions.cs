@@ -21,4 +21,17 @@ public static class QBitExtensions
 
         return false;
     }
+
+    public static bool ShouldIgnore(this TorrentTracker tracker, IReadOnlyList<string> ignoredDownloads)
+    {
+        foreach (string value in ignoredDownloads)
+        {
+            if (tracker.Url.Host.EndsWith(value, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

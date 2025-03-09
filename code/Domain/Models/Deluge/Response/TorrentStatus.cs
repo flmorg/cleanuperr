@@ -23,4 +23,11 @@ public sealed record TorrentStatus
     public long SeedingTime { get; init; }
     
     public float Ratio { get; init; }
+    
+    public required IReadOnlyList<Tracker> Trackers { get; init; }
+}
+
+public sealed record Tracker
+{
+    public required Uri Url { get; init; }
 }

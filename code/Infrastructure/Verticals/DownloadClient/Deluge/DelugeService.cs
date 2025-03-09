@@ -65,7 +65,7 @@ public class DelugeService : DownloadService, IDelugeService
             return result;
         }
         
-        if (download.ShouldIgnore(ignoredDownloads))
+        if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogInformation("skip | download is ignored | {name}", download.Name);
             return result;
@@ -123,7 +123,10 @@ public class DelugeService : DownloadService, IDelugeService
             return result;
         }
         
-        if (download.ShouldIgnore(ignoredDownloads))
+        var ceva = await _client.GetTorrentExtended(hash);
+        
+        
+        if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogInformation("skip | download is ignored | {name}", download.Name);
             return result;
@@ -226,7 +229,7 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
 
-            if (download.ShouldIgnore(ignoredDownloads))
+            if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
             {
                 _logger.LogInformation("skip | download is ignored | {name}", download.Name);
                 continue;

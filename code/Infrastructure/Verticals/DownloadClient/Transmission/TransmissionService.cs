@@ -42,6 +42,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         TorrentFields.DOWNLOAD_DIR,
         TorrentFields.SECONDS_SEEDING,
         TorrentFields.UPLOAD_RATIO,
+        TorrentFields.TRACKERS
     ];
 
     public TransmissionService(
@@ -88,7 +89,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             return result;
         }
         
-        if (download.ShouldIgnore(ignoredDownloads))
+        if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogDebug("skip | download is ignored | {name}", download.Name);
             return result;
@@ -142,7 +143,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             return result;
         }
         
-        if (download.ShouldIgnore(ignoredDownloads))
+        if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogDebug("skip | download is ignored | {name}", download.Name);
             return result;
@@ -241,7 +242,7 @@ public class TransmissionService : DownloadService, ITransmissionService
                 continue;
             }
 
-            if (download.ShouldIgnore(ignoredDownloads))
+            if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
             {
                 _logger.LogDebug("skip | download is ignored | {name}", download.Name);
                 continue;

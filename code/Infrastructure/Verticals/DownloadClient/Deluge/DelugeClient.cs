@@ -16,6 +16,20 @@ public sealed class DelugeClient
     private readonly DelugeConfig _config;
     private readonly HttpClient _httpClient;
     
+    private static readonly IReadOnlyList<string> Fields =
+    [
+        "hash",
+        "state",
+        "name",
+        "eta",
+        "private",
+        "total_done",
+        "label",
+        "seeding_time",
+        "ratio",
+        "trackers"
+    ];
+    
     public DelugeClient(IOptions<DelugeConfig> config, IHttpClientFactory httpClientFactory)
     {
         _config = config.Value;
@@ -68,7 +82,7 @@ public sealed class DelugeClient
         return await SendRequest<TorrentStatus?>(
             "web.get_torrent_status",
             hash,
-            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
+            Fields
         );
     }
     
@@ -77,7 +91,7 @@ public sealed class DelugeClient
         Dictionary<string, TorrentStatus>? downloads = await SendRequest<Dictionary<string, TorrentStatus>?>(
             "core.get_torrents_status",
             "",
-            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
+            Fields
         );
         
         return downloads?.Values.ToList();

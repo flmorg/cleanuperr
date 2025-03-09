@@ -41,12 +41,6 @@ public sealed class IgnoredDownloadsProvider<T>
 
         FileInfo fileInfo = new(_config.IgnoredDownloadsPath);
         
-        _logger.LogTrace(
-            "ignored file last modified at: {lastModified} | file last reloaded at: {fileLastModified}",
-            fileInfo.LastWriteTime.ToString("O"),
-            _lastModified.ToString("O")
-        );
-
         if (fileInfo.LastWriteTime > _lastModified ||
             !_cache.TryGetValue(CacheKeys.IgnoredDownloads(typeof(T).Name), out IReadOnlyList<string>? ignoredDownloads) ||
             ignoredDownloads is null)

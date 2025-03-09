@@ -17,6 +17,14 @@ public static class TransmissionExtensions
             {
                 return true;
             }
+
+            bool? hasIgnoredTracker = download.Trackers?
+                .Any(x => new Uri(x.Announce!).Host.EndsWith(value, StringComparison.InvariantCultureIgnoreCase));
+            
+            if (hasIgnoredTracker is true)
+            {
+                return true;
+            }
         }
 
         return false;

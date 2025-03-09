@@ -17,6 +17,11 @@ public static class DelugeExtensions
             {
                 return true;
             }
+            
+            if (download.Trackers.Any(x => x.Url.Host.EndsWith(value, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                return true;
+            }
         }
 
         return false;

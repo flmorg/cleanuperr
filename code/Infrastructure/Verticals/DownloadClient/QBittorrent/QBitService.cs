@@ -70,8 +70,11 @@ public class QBitService : DownloadService, IQBitService
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
+
+        IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(hash);
         
-        if (download.ShouldIgnore(ignoredDownloads))
+        if (ignoredDownloads.Count > 0 &&
+            (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads)) is true))
         {
             _logger.LogInformation("skip | download is ignored | {name}", download.Name);
             return result;
@@ -135,7 +138,10 @@ public class QBitService : DownloadService, IQBitService
             return result;
         }
         
-        if (download.ShouldIgnore(ignoredDownloads))
+        IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(hash);
+        
+        if (ignoredDownloads.Count > 0 &&
+            (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads)) is true))
         {
             _logger.LogInformation("skip | download is ignored | {name}", download.Name);
             return result;
@@ -240,8 +246,11 @@ public class QBitService : DownloadService, IQBitService
             {
                 continue;
             }
+            
+            IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(download.Hash);
 
-            if (download.ShouldIgnore(ignoredDownloads))
+            if (ignoredDownloads.Count > 0 &&
+                (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads)) is true))
             {
                 _logger.LogInformation("skip | download is ignored | {name}", download.Name);
                 continue;
@@ -348,5 +357,12 @@ public class QBitService : DownloadService, IQBitService
         ResetStrikesOnProgress(torrent.Hash, torrent.Downloaded ?? 0);
 
         return await StrikeAndCheckLimit(torrent.Hash, torrent.Name);
+    }
+
+    private async Task<IReadOnlyList<TorrentTracker>> GetTrackersAsync(string hash)
+    {
+        return (await _client.GetTorrentTrackersAsync(hash))
+            .Where(x => !x.Url.ToString().Contains("**"))
+            .ToList();
     }
 }
