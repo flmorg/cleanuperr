@@ -16,6 +16,7 @@ cleanuperr was created primarily to address malicious files, such as `*.lnk` or 
 > - Trigger a search for downloads removed from the *arrs.
 > - Clean up downloads that have been seeding for a certain amount of time.
 > - Notify on strike or download removal.
+> - Ignore certain torrent hashes, categories, tags or trackers from processing.
 
 cleanuperr supports both qBittorrent's built-in exclusion features and its own blocklist-based system. Binaries for all platforms are provided, along with Docker images for easy deployment.
 
@@ -25,15 +26,21 @@ cleanuperr supports both qBittorrent's built-in exclusion features and its own b
 > https://discord.gg/sWggpnmGNY
 
 ## Table of contents:
-- [Naming choice](README.md#naming-choice)
-- [Quick Start](README.md#quick-start)
-- [How it works](README.md#how-it-works)
-- [Setup](README.md#setup)
-- [Usage](README.md#usage)
-  - [Docker Compose](README.md#docker-compose-yaml)
-  - [Environment Variables](README.md#environment-variables)
-  - [Binaries](README.md#binaries-if-youre-not-using-docker)
-- [Credits](README.md#credits)
+- [Naming choice](#naming-choice)
+- [Quick Start](#quick-start)
+- [How it works](#how-it-works)
+  - [Content blocker](#1-content-blocker-will)
+  - [Queue cleaner](#2-queue-cleaner-will)
+  - [Download cleaner](#3-download-cleaner-will)
+- [Setup](#setup-examples)
+- [Usage](#usage)
+  - [Docker](#docker)
+    - [Environment Variables](#environment-variables)
+    - [Docker Compose](#docker-compose-example)
+  - [Windows](#windows)
+  - [Linux](#linux)
+  - [MacOS](#macos)
+- [Credits](#credits)
 
 ## Naming choice
 
@@ -52,10 +59,10 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
 > Use the Unraid Community App.
 >
 > 3. **Manual Installation (if you're not using Docker)**  
-> More details [here](#binaries-if-youre-not-using-docker).
+> Go to [Windows](#windows), [Linux](#linux) or [MacOS](#macos).
 
 > [!TIP]
-> Refer to the [Environment variables](#Environment-variables) section for detailed configuration instructions and the [Setup](#Setup) section for an in-depth explanation of the cleanup process.
+> Refer to the [Environment variables](#environment-variables) section for detailed configuration instructions and the [Setup examples](#setup-examples) section for an in-depth explanation of the cleanup process.
 
 
 > [!IMPORTANT]
@@ -69,7 +76,7 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
 
 # How it works
 
-1. **Content blocker** will:
+#### 1. **Content blocker** will:
    - Run every 5 minutes (or configured cron).
    - Process all items in the *arr queue.
    - Find the corresponding item from the download client for each queue item.
@@ -80,7 +87,7 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
      - It will be removed from the *arr's queue and blocked.
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
-2. **Queue cleaner** will:
+#### 2. **Queue cleaner** will:
    - Run every 5 minutes (or configured cron, or right after `content blocker`).
    - Process all items in the *arr queue.
    - Check each queue item if it is **stalled (download speed is 0)**, **stuck in metadata downloading** or **failed to be imported**.
@@ -93,11 +100,11 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
      - It will be removed from the *arr's queue and blocked.
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
-3. **Download cleaner** will:
+#### 3. **Download cleaner** will:
    - Run every hour (or configured cron).
    - Automatically clean up downloads that have been seeding for a certain amount of time.
 
-# Setup
+# Setup examples
 
 ## Using qBittorrent's built-in feature (works only with qBittorrent)
 
@@ -129,7 +136,26 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
 
 ## Usage
 
-### Docker compose yaml
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/docker.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Docker</span>
+
+
+### **Environment variables**
+
+**Jump to:**
+- [General settings](variables.md#general-settings)
+- [Queue Cleaner settings](variables.md#queue-cleaner-settings)
+- [Content Blocker settings](variables.md#content-blocker-settings)
+- [Download Cleaner settings](variables.md#download-cleaner-settings)
+- [Download Client settings](variables.md#download-client-settings)
+- [Arr settings](variables.md#arr-settings)
+- [Notification settings](variables.md#notification-settings)
+- [Advanced settings](variables.md#advanced-settings)
+
+### Docker compose example
+
+> [!NOTE]
+> 
+> This example contains all settings and should be modified to fit your needs.
 
 ```
 version: "3.3"
@@ -232,27 +258,47 @@ services:
       - NOTIFIARR__CHANNEL_ID=discord_channel_id
 ```
 
-## Environment variables
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/windows.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Windows</span>
 
-Jump to:
-- [General settings](variables.md#general-settings)
-- [Queue Cleaner settings](variables.md#queue-cleaner-settings)
-- [Content Blocker settings](variables.md#content-blocker-settings)
-- [Download Cleaner settings](variables.md#download-cleaner-settings)
-- [Download Client settings](variables.md#download-client-settings)
-- [Arr settings](variables.md#arr-settings)
-- [Notification settings](variables.md#notification-settings)
-- [Advanced settings](variables.md#advanced-settings)
-
-### Binaries (if you're not using Docker)
-
-1. Download the binaries from [releases](https://github.com/flmorg/cleanuperr/releases).
-2. Extract them from the zip file.
-3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [above](#environment-variables).
+1. Download the zip file from [releases](https://github.com/flmorg/cleanuperr/releases).
+2. Extract the zip file into `C:\example\directory`.
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](#environment-variables).
+4. Execute `cleanuperr.exe`.
 
 > [!TIP]
 > ### Run as a Windows Service
 > Check out this stackoverflow answer on how to do it: https://stackoverflow.com/a/15719678
+
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/linux.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Linux</span>
+
+1. Download the zip file from [releases](https://github.com/flmorg/cleanuperr/releases).
+2. Extract the zip file into `/example/directory`.
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](#environment-variables).
+4. Open a terminal and execute these commands:
+    ```
+    cd /example/directory
+    chmod +x cleanuperr
+    ./cleanuperr
+    ```
+
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/apple.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">MacOS</span>
+
+1. Download the zip file from [releases](https://github.com/flmorg/cleanuperr/releases).
+2. Extract the zip file into `/example/directory`.
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](#environment-variables).
+4. Open a terminal and execute these commands:
+    ```
+    cd /example/directory
+    chmod +x cleanuperr
+    ./cleanuperr
+    ```
+
+> [!IMPORTANT]
+> Some people have experienced problems when trying to execute cleanuperr on MacOS because the system actively blocked the file for not being signed.
+> As per [this](), you may need to also execute this command:
+> ```
+> codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime /example/directory/cleanuperr
+> ```
 
 # Credits
 Special thanks for inspiration go to:
@@ -265,4 +311,3 @@ Special thanks for inspiration go to:
 If I made your life just a tiny bit easier, consider buying me a coffee!
 
 <a href="https://buymeacoffee.com/flaminel" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
-
