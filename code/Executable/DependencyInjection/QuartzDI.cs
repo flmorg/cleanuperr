@@ -55,7 +55,7 @@ public static class QuartzDI
         if (contentBlockerConfig?.Enabled is true && queueCleanerConfig is { Enabled: true, RunSequentially: true })
         {
             q.AddJob<QueueCleaner>(queueCleanerConfig, string.Empty);
-            q.AddJobListener(new JobChainingListener(nameof(QueueCleaner)));
+            q.AddJobListener(new JobChainingListener(nameof(ContentBlocker), nameof(QueueCleaner)));
         }
         else
         {

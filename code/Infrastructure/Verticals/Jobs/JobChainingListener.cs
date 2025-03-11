@@ -4,10 +4,12 @@ namespace Infrastructure.Verticals.Jobs;
 
 public class JobChainingListener : IJobListener
 {
+    private readonly string _firstJobName;
     private readonly string _nextJobName;
 
-    public JobChainingListener(string nextJobName)
+    public JobChainingListener(string firstJobName, string nextJobName)
     {
+        _firstJobName = firstJobName;
         _nextJobName = nextJobName;
     }
 
@@ -19,7 +21,7 @@ public class JobChainingListener : IJobListener
 
     public async Task JobWasExecuted(IJobExecutionContext context, JobExecutionException? jobException, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(_nextJobName) || context.JobDetail.Key.Name == _nextJobName)
+        if (string.IsNullOrEmpty(_nextJobName) || context.JobDetail.Key.Name == _nextJobName || context.JobDetail.Key.Name != _firstJobName)
         {
             return;
         }
