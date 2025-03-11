@@ -128,9 +128,9 @@ public class NotificationPublisher : INotificationPublisher
     {
         Uri? image = instanceType switch
         {
-            InstanceType.Sonarr => record.Series!.Images.FirstOrDefault(x => x.CoverType == "poster")?.RemoteUrl,
-            InstanceType.Radarr => record.Movie!.Images.FirstOrDefault(x => x.CoverType == "poster")?.RemoteUrl,
-            InstanceType.Lidarr => record.Album!.Images.FirstOrDefault(x => x.CoverType == "cover")?.Url,
+            InstanceType.Sonarr => record.Series?.Images?.FirstOrDefault(x => x.CoverType == "poster")?.RemoteUrl,
+            InstanceType.Radarr => record.Movie?.Images?.FirstOrDefault(x => x.CoverType == "poster")?.RemoteUrl,
+            InstanceType.Lidarr => record.Album?.Images?.FirstOrDefault(x => x.CoverType == "cover")?.Url,
             _ => throw new ArgumentOutOfRangeException(nameof(instanceType))
         };
 
