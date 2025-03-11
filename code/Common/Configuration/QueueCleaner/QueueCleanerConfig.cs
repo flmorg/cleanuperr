@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Common.Exceptions;
+using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.QueueCleaner;
 
@@ -39,5 +40,14 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
 
     public void Validate()
     {
+        if (ImportFailedMaxStrikes is > 0 and < 3)
+        {
+            throw new ValidationException("the minimum value for IMPORT_FAILED_MAX_STRIKES must be 3");
+        }
+
+        if (StalledMaxStrikes is > 0 and < 3)
+        {
+            throw new ValidationException("the minimum value for STALLED_MAX_STRIKES must be 3");
+        }
     }
 }

@@ -45,6 +45,7 @@ public sealed class QueueCleaner : GenericHandler
     )
     {
         _config = config.Value;
+        _config.Validate();
         _ignoredDownloadsProvider = ignoredDownloadsProvider;
     }
     

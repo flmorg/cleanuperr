@@ -114,7 +114,7 @@
 - Set to `0` to never remove failed imports.
 - A strike is given when an item is stalled, stuck in metadata downloading, or failed to be imported.
 - Type: Integer
-- Possible values: `0` or greater
+- Possible values: `0` or a number greater than `2`.
 - Default: `0`
 - Required: No.
 
@@ -153,7 +153,7 @@ QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1: "manual import required"
 - Set to `0` to never remove stalled downloads.
 - A strike is given when download speed is 0.
 - Type: Integer
-- Possible values: `0` or greater
+- Possible values: `0` or a number greater than `2`.
 - Default: `0`
 - Required: No.
 
