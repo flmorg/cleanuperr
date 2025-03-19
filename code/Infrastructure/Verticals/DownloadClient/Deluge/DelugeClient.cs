@@ -79,11 +79,24 @@ public sealed class DelugeClient
     
     public async Task<TorrentStatus?> GetTorrentStatus(string hash)
     {
-        return await SendRequest<TorrentStatus?>(
-            "web.get_torrent_status",
-            hash,
-            Fields
-        );
+        try
+        {
+            return await SendRequest<TorrentStatus?>(
+                "web.get_torrent_status",
+                hash,
+                Fields
+            );
+        }
+        catch (DelugeClientException e)
+        {
+            // Deluge returns an error when the torrent is not found
+            if (e.Message == "AttributeError: 'NoneType' object has no attribute 'call'")
+            {
+                return null;
+            }
+
+            throw;
+        }
     }
     
     public async Task<List<TorrentStatus>?> GetStatusForAllTorrents()
