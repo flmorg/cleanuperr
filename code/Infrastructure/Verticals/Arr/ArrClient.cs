@@ -43,9 +43,11 @@ public abstract class ArrClient : IArrClient
 
     public virtual async Task<QueueListResponse> GetQueueItemsAsync(ArrInstance arrInstance, int page)
     {
-        Uri uri = new(arrInstance.Url, GetQueueUrlPath(page));
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/{GetQueueUrlPath().TrimStart('/')}";
+        uriBuilder.Query = GetQueueUrlQuery(page);
 
-        using HttpRequestMessage request = new(HttpMethod.Get, uri);
+        using HttpRequestMessage request = new(HttpMethod.Get, uriBuilder.Uri);
         SetApiKey(request, arrInstance.ApiKey);
         
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -56,7 +58,7 @@ public abstract class ArrClient : IArrClient
         }
         catch
         {
-            _logger.LogError("queue list failed | {uri}", uri);
+            _logger.LogError("queue list failed | {uri}", uriBuilder.Uri);
             throw;
         }
         
@@ -65,7 +67,7 @@ public abstract class ArrClient : IArrClient
 
         if (queueResponse is null)
         {
-            throw new Exception($"unrecognized queue list response | {uri} | {responseBody}");
+            throw new Exception($"unrecognized queue list response | {uriBuilder.Uri} | {responseBody}");
         }
 
         return queueResponse;
@@ -114,11 +116,13 @@ public abstract class ArrClient : IArrClient
     
     public virtual async Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient)
     {
-        Uri uri = new(arrInstance.Url, GetQueueDeleteUrlPath(record.Id, removeFromClient));
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/{GetQueueDeleteUrlPath(record.Id).TrimStart('/')}";
+        uriBuilder.Query = GetQueueDeleteUrlQuery(removeFromClient);
 
         try
         {
-            using HttpRequestMessage request = new(HttpMethod.Delete, uri);
+            using HttpRequestMessage request = new(HttpMethod.Delete, uriBuilder.Uri);
             SetApiKey(request, arrInstance.ApiKey);
 
             HttpResponseMessage? response = await _dryRunInterceptor.InterceptAsync<HttpResponseMessage>(SendRequestAsync, request);
@@ -134,7 +138,7 @@ public abstract class ArrClient : IArrClient
         }
         catch
         {
-            _logger.LogError("queue delete failed | {uri} | {title}", uri, record.Title);
+            _logger.LogError("queue delete failed | {uri} | {title}", uriBuilder.Uri, record.Title);
             throw;
         }
     }
@@ -152,9 +156,13 @@ public abstract class ArrClient : IArrClient
         return true;
     }
     
-    protected abstract string GetQueueUrlPath(int page);
+    protected abstract string GetQueueUrlPath();
 
-    protected abstract string GetQueueDeleteUrlPath(long recordId, bool removeFromClient);
+    protected abstract string GetQueueUrlQuery(int page);
+
+    protected abstract string GetQueueDeleteUrlPath(long recordId);
+    
+    protected abstract string GetQueueDeleteUrlQuery(bool removeFromClient);
     
     protected virtual void SetApiKey(HttpRequestMessage request, string apiKey)
     {

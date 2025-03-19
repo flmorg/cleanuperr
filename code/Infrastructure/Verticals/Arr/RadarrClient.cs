@@ -27,18 +27,27 @@ public class RadarrClient : ArrClient, IRadarrClient
     {
     }
 
-    protected override string GetQueueUrlPath(int page)
+    protected override string GetQueueUrlPath()
     {
-        return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownMovieItems=true&includeMovie=true";
+        return "/api/v3/queue";
     }
 
-    protected override string GetQueueDeleteUrlPath(long recordId, bool removeFromClient)
+    protected override string GetQueueUrlQuery(int page)
     {
-        string path = $"/api/v3/queue/{recordId}?blocklist=true&skipRedownload=true&changeCategory=false";
-        
-        path += removeFromClient ? "&removeFromClient=true" : "&removeFromClient=false";
+        return $"page={page}&pageSize=200&includeUnknownMovieItems=true&includeMovie=true";
+    }
 
-        return path;
+    protected override string GetQueueDeleteUrlPath(long recordId)
+    {
+        return $"/api/v3/queue/{recordId}";
+    }
+
+    protected override string GetQueueDeleteUrlQuery(bool removeFromClient)
+    {
+        string query = "blocklist=true&skipRedownload=true&changeCategory=false";
+        query += removeFromClient ? "&removeFromClient=true" : "&removeFromClient=false";
+
+        return query;
     }
 
     public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
@@ -50,14 +59,16 @@ public class RadarrClient : ArrClient, IRadarrClient
 
         List<long> ids = items.Select(item => item.Id).ToList();
         
-        Uri uri = new(arrInstance.Url, "/api/v3/command");
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v3/command";
+        
         RadarrCommand command = new()
         {
             Name = "MoviesSearch",
             MovieIds = ids,
         };
         
-        using HttpRequestMessage request = new(HttpMethod.Post, uri);
+        using HttpRequestMessage request = new(HttpMethod.Post, uriBuilder.Uri);
         request.Content = new StringContent(
             JsonConvert.SerializeObject(command),
             Encoding.UTF8,
@@ -135,8 +146,10 @@ public class RadarrClient : ArrClient, IRadarrClient
 
     private async Task<Movie?> GetMovie(ArrInstance arrInstance, long movieId)
     {
-        Uri uri = new(arrInstance.Url, $"api/v3/movie/{movieId}");
-        using HttpRequestMessage request = new(HttpMethod.Get, uri);
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v3/movie/{movieId}";
+        
+        using HttpRequestMessage request = new(HttpMethod.Get, uriBuilder.Uri);
         SetApiKey(request, arrInstance.ApiKey);
 
         using HttpResponseMessage response = await _httpClient.SendAsync(request);

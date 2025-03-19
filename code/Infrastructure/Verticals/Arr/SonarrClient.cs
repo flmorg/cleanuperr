@@ -28,18 +28,27 @@ public class SonarrClient : ArrClient, ISonarrClient
     {
     }
     
-    protected override string GetQueueUrlPath(int page)
+    protected override string GetQueueUrlPath()
     {
-        return $"/api/v3/queue?page={page}&pageSize=200&includeUnknownSeriesItems=true&includeSeries=true&includeEpisode=true";
+        return "/api/v3/queue";
     }
-    
-    protected override string GetQueueDeleteUrlPath(long recordId, bool removeFromClient)
+
+    protected override string GetQueueUrlQuery(int page)
     {
-        string path = $"/api/v3/queue/{recordId}?blocklist=true&skipRedownload=true&changeCategory=false";
+        return $"page={page}&pageSize=200&includeUnknownSeriesItems=true&includeSeries=true&includeEpisode=true";
+    }
 
-        path += removeFromClient ? "&removeFromClient=true" : "&removeFromClient=false";
+    protected override string GetQueueDeleteUrlPath(long recordId)
+    {
+        return $"/api/v3/queue/{recordId}";
+    }
 
-        return path;
+    protected override string GetQueueDeleteUrlQuery(bool removeFromClient)
+    {
+        string query = "blocklist=true&skipRedownload=true&changeCategory=false";
+        query += removeFromClient ? "&removeFromClient=true" : "&removeFromClient=false";
+        
+        return query;
     }
 
     public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
@@ -49,11 +58,12 @@ public class SonarrClient : ArrClient, ISonarrClient
             return;
         }
 
-        Uri uri = new(arrInstance.Url, "/api/v3/command");
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v3/command";
         
         foreach (SonarrCommand command in GetSearchCommands(items.Cast<SonarrSearchItem>().ToHashSet()))
         {
-            using HttpRequestMessage request = new(HttpMethod.Post, uri);
+            using HttpRequestMessage request = new(HttpMethod.Post, uriBuilder.Uri);
             request.Content = new StringContent(
                 JsonConvert.SerializeObject(command, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
                 Encoding.UTF8,
@@ -199,8 +209,11 @@ public class SonarrClient : ArrClient, ISonarrClient
 
     private async Task<List<Episode>?> GetEpisodesAsync(ArrInstance arrInstance, List<long> episodeIds)
     {
-        Uri uri = new(arrInstance.Url, $"api/v3/episode?{string.Join('&', episodeIds.Select(x => $"episodeIds={x}"))}");
-        using HttpRequestMessage request = new(HttpMethod.Get, uri);
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v3/episode";
+        uriBuilder.Query = string.Join('&', episodeIds.Select(x => $"episodeIds={x}"));
+        
+        using HttpRequestMessage request = new(HttpMethod.Get, uriBuilder.Uri);
         SetApiKey(request, arrInstance.ApiKey);
 
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
@@ -212,8 +225,10 @@ public class SonarrClient : ArrClient, ISonarrClient
 
     private async Task<Series?> GetSeriesAsync(ArrInstance arrInstance, long seriesId)
     {
-        Uri uri = new(arrInstance.Url, $"api/v3/series/{seriesId}");
-        using HttpRequestMessage request = new(HttpMethod.Get, uri);
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v3/series/{seriesId}";
+        
+        using HttpRequestMessage request = new(HttpMethod.Get, uriBuilder.Uri);
         SetApiKey(request, arrInstance.ApiKey);
 
         using HttpResponseMessage response = await _httpClient.SendAsync(request);
