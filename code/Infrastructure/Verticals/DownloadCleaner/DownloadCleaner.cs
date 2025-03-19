@@ -50,9 +50,9 @@ public sealed class DownloadCleaner : GenericHandler
     
     public override async Task ExecuteAsync()
     {
-        if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None)
+        if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None or Common.Enums.DownloadClient.Disabled)
         {
-            _logger.LogWarning("download client is set to none");
+            _logger.LogWarning("download client is not set");
             return;
         }
         

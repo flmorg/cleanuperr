@@ -93,7 +93,7 @@ public sealed class QueueCleaner : GenericHandler
 
                 StalledResult stalledCheckResult = new();
 
-                if (record.Protocol is "torrent")
+                if (record.Protocol is "torrent" && _downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.Disabled)
                 {
                     if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None)
                     {

@@ -5,5 +5,6 @@ public enum DownloadClient
     QBittorrent,
     Deluge,
     Transmission,
-    None
+    None,
+    Disabled
 }

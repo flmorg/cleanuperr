@@ -135,7 +135,7 @@
 - Required: No.
 
 > [!WARNING]
-> Setting `QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+> Setting `QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
 
 #### **`QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS`**
 - Patterns to look for in failed import messages that should be ignored.
@@ -182,7 +182,7 @@
 - Required: No.
 
 > [!WARNING]
-> Setting `QUEUECLEANER__STALLED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+> Setting `QUEUECLEANER__STALLED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
 
 #
 
@@ -246,7 +246,7 @@
 - Required: No.
 
 > [!WARNING]
-> Setting `CONTENTBLOCKER__DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+> Setting `CONTENTBLOCKER__DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
 
 #
 
@@ -302,7 +302,7 @@
 - Required: No.
 
 > [!WARNING]
-> Setting `DOWNLOADCLEANER__DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your tracker account.
+> Setting `DOWNLOADCLEANER__DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
 
 #### **`DOWNLOADCLEANER__CATEGORIES__0__NAME`**
 - Name of the category to clean.
@@ -360,12 +360,17 @@
 #### **`DOWNLOAD_CLIENT`**
 - Specifies which download client is used by *arrs.
 - Type: String.
-- Possible values: `none`, `qbittorrent`, `deluge`, `transmission`.
+- Possible values: `none`, `qbittorrent`, `deluge`, `transmission`, `disabled`.
 - Default: `none`
 - Required: No.
 
 > [!NOTE]
 > Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of cleanuperr.
+
+> [!IMPORTANT]
+> When the download client is set to `disabled`, the queue cleaner will be able to remove items that are failed to be imported even if there is no download client configured. This means that all downloads, including private ones, will be completely removed.
+>
+> Setting `DOWNLOAD_CLIENT=disabled` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
 
 #### **`QBITTORRENT__URL`**
 - URL of the qBittorrent instance.
