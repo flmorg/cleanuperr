@@ -67,7 +67,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         UriBuilder uriBuilder = new(_config.Url);
         uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
             ? $"{uriBuilder.Path.TrimEnd('/')}/rpc"
-            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/')}/rpc";
+            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
         _client = new(
             httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
             uriBuilder.Uri.ToString(),

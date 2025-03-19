@@ -48,7 +48,7 @@ public class QBitService : DownloadService, IQBitService
         UriBuilder uriBuilder = new(_config.Url);
         uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
             ? uriBuilder.Path
-            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/')}/json";
+            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/')}";
         _client = new(httpClientFactory.CreateClient(Constants.HttpClientWithRetryName), uriBuilder.Uri);
     }
 

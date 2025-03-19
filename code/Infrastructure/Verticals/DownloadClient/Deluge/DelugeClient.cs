@@ -126,7 +126,7 @@ public sealed class DelugeClient
         UriBuilder uriBuilder = new(_config.Url);
         uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
             ? $"{uriBuilder.Path.TrimEnd('/')}/json"
-            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/')}/json";
+            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/').TrimEnd('/')}/json";
         var responseMessage = await _httpClient.PostAsync(uriBuilder.Uri, content);
         responseMessage.EnsureSuccessStatusCode();
 
