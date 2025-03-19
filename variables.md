@@ -378,8 +378,8 @@
 - Default: `http://localhost:8080`.
 - Required: No.
 
-#### **`QBITTORRENT__URL_BASE`
-- Adds a prefix to the qBittorrent url, such as `http://[QBITTORRENT__URL]/[QBITTORRENT__URL_BASE]/api`.
+#### **`QBITTORRENT__URL_BASE`**
+- Adds a prefix to the qBittorrent url, such as `[QBITTORRENT__URL]/[QBITTORRENT__URL_BASE]/api`.
 - Type: String.
 - Default: Empty.
 - Required: No.
@@ -402,8 +402,8 @@
 - Default: `http://localhost:8112`.
 - Required: No.
 
-#### **`DELUGE__URL_BASE`
-- Adds a prefix to the deluge json url, such as `http://[DELUGE__URL]/[DELUGE__URL_BASE]/json`.
+#### **`DELUGE__URL_BASE`**
+- Adds a prefix to the deluge json url, such as `[DELUGE__URL]/[DELUGE__URL_BASE]/json`.
 - Type: String.
 - Default: Empty.
 - Required: No.
@@ -420,10 +420,10 @@
 - Default: `http://localhost:9091`.
 - Required: No.
 
-#### **`TRANSMISSION__URL_BASE`
-- Adds a prefix to the Transmission rpc url, such as `http://[TRANSMISSION__URL]/[TRANSMISSION__URL_BASE]/rpc`.
+#### **`TRANSMISSION__URL_BASE`**
+- Adds a prefix to the Transmission rpc url, such as `[TRANSMISSION__URL]/[TRANSMISSION__URL_BASE]/rpc`.
 - Type: String.
-- Default: Empty.
+- Default: `transmission`.
 - Required: No.
 
 #### **`TRANSMISSION__USERNAME`**
