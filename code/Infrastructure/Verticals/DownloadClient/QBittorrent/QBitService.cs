@@ -96,20 +96,20 @@ public class QBitService : DownloadService, IQBitService
                            bool.TryParse(dictValue?.ToString(), out bool boolValue)
                            && boolValue;
 
-        // if all files were blocked by qBittorrent
-        if (download is { CompletionOn: not null, Downloaded: null or 0 })
-        {
-            result.ShouldRemove = true;
-            result.DeleteReason = DeleteReason.AllFilesSkippedByQBit;
-            return result;
-        }
-
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
         if (files?.Count is > 0 && files.All(x => x.Priority is TorrentContentPriority.Skip))
         {
-            // remove if all files are unwanted
             result.ShouldRemove = true;
+            
+            // if all files were blocked by qBittorrent
+            if (download is { CompletionOn: not null, Downloaded: null or 0 })
+            {
+                result.DeleteReason = DeleteReason.AllFilesSkippedByQBit;
+                return result;
+            }
+            
+            // remove if all files are unwanted
             result.DeleteReason = DeleteReason.AllFilesSkipped;
             return result;
         }
