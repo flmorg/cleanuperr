@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
+using Domain.Enums;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient;
@@ -45,6 +46,6 @@ public class TestDownloadService : DownloadService
 
     // Expose protected methods for testing
     public new void ResetStrikesOnProgress(string hash, long downloaded) => base.ResetStrikesOnProgress(hash, downloaded);
-    public new Task<bool> StrikeAndCheckLimit(string hash, string itemName) => base.StrikeAndCheckLimit(hash, itemName);
+    public new Task<bool> StrikeAndCheckLimit(string hash, string itemName, StrikeType strikeType) => base.StrikeAndCheckLimit(hash, itemName, strikeType);
     public new SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category) => base.ShouldCleanDownload(ratio, seedingTime, category);
 }

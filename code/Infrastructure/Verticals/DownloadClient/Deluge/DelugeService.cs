@@ -65,6 +65,8 @@ public class DelugeService : DownloadService, IDelugeService
             return result;
         }
         
+        result.IsPrivate = download.Private;
+        
         if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogInformation("skip | download is ignored | {name}", download.Name);
@@ -79,6 +81,7 @@ public class DelugeService : DownloadService, IDelugeService
         {
             _logger.LogDebug(exception, "failed to find torrent {hash} in the download client", hash);
         }
+        
 
         bool shouldRemove = contents?.Contents?.Count > 0;
         
@@ -92,17 +95,15 @@ public class DelugeService : DownloadService, IDelugeService
 
         if (shouldRemove)
         {
-            result.DeleteReason = DeleteReason.AllFilesBlocked;
+            // remove if all files are unwanted
+            result.ShouldRemove = true;
+            result.DeleteReason = DeleteReason.AllFilesSkipped;
+            return result;
         }
         
-        result.ShouldRemove = shouldRemove || await IsItemStuckAndShouldRemove(download);
-        result.IsPrivate = download.Private;
+        // remove if download is stuck
+        (result.ShouldRemove, result.DeleteReason) = await IsItemStuckAndShouldRemove(download);
 
-        if (!shouldRemove && result.ShouldRemove)
-        {
-            result.DeleteReason = DeleteReason.Stalled;
-        }
-        
         return result;
     }
 
@@ -295,33 +296,33 @@ public class DelugeService : DownloadService, IDelugeService
         await _client.ChangeFilesPriority(hash, sortedPriorities);
     }
     
-    private async Task<bool> IsItemStuckAndShouldRemove(TorrentStatus status)
+    private async Task<(bool, DeleteReason)> IsItemStuckAndShouldRemove(TorrentStatus status)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
-            return false;
+            return (false, default);
         }
         
         if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip stalled check | download is private | {name}", status.Name);
-            return false;
+            return (false, default);
         }
         
         if (status.State is null || !status.State.Equals("Downloading", StringComparison.InvariantCultureIgnoreCase))
         {
-            return false;
+            return (false, default);
         }
 
         if (status.Eta > 0)
         {
-            return false;
+            return (false, default);
         }
         
         ResetStrikesOnProgress(status.Hash!, status.TotalDone);
 
-        return await StrikeAndCheckLimit(status.Hash!, status.Name!);
+        return (await StrikeAndCheckLimit(status.Hash!, status.Name!, StrikeType.Stalled), DeleteReason.Stalled);
     }
     
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory>? contents, Action<string, DelugeFileOrDirectory> processFile)

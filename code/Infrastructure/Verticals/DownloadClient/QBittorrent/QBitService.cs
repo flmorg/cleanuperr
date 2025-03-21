@@ -100,26 +100,22 @@ public class QBitService : DownloadService, IQBitService
         if (download is { CompletionOn: not null, Downloaded: null or 0 })
         {
             result.ShouldRemove = true;
-            result.DeleteReason = DeleteReason.AllFilesBlocked;
+            result.DeleteReason = DeleteReason.AllFilesSkippedByQBit;
             return result;
         }
 
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
-        // if all files are marked as skip
         if (files?.Count is > 0 && files.All(x => x.Priority is TorrentContentPriority.Skip))
         {
+            // remove if all files are unwanted
             result.ShouldRemove = true;
-            result.DeleteReason = DeleteReason.AllFilesBlocked;
+            result.DeleteReason = DeleteReason.AllFilesSkipped;
             return result;
         }
 
-        result.ShouldRemove = await IsItemStuckAndShouldRemove(download, result.IsPrivate);
-
-        if (result.ShouldRemove)
-        {
-            result.DeleteReason = DeleteReason.Stalled;
-        }
+        // remove if download is stuck
+        (result.ShouldRemove, result.DeleteReason) = await IsItemStuckAndShouldRemove(download, result.IsPrivate);
 
         return result;
     }
@@ -337,30 +333,35 @@ public class QBitService : DownloadService, IQBitService
         _client.Dispose();
     }
 
-    private async Task<bool> IsItemStuckAndShouldRemove(TorrentInfo torrent, bool isPrivate)
+    private async Task<(bool, DeleteReason)> IsItemStuckAndShouldRemove(TorrentInfo torrent, bool isPrivate)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
-            return false;
+            return (false, default);
         }
         
         if (_queueCleanerConfig.StalledIgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip stalled check | download is private | {name}", torrent.Name);
-            return false;
+            return (false, default);
         }
         
         if (torrent.State is not TorrentState.StalledDownload and not TorrentState.FetchingMetadata
             and not TorrentState.ForcedFetchingMetadata)
         {
             // ignore other states
-            return false;
+            return (false, default);
         }
 
         ResetStrikesOnProgress(torrent.Hash, torrent.Downloaded ?? 0);
 
-        return await StrikeAndCheckLimit(torrent.Hash, torrent.Name);
+        if (torrent.State is TorrentState.StalledDownload)
+        {
+            return (await StrikeAndCheckLimit(torrent.Hash, torrent.Name, StrikeType.Stalled), DeleteReason.Stalled);
+        }
+
+        return (await StrikeAndCheckLimit(torrent.Hash, torrent.Name, StrikeType.DownloadingMetadata), DeleteReason.DownloadingMetadata);
     }
 
     private async Task<IReadOnlyList<TorrentTracker>> GetTrackersAsync(string hash)

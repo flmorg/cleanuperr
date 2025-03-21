@@ -114,7 +114,12 @@ public abstract class ArrClient : IArrClient
         return false;
     }
     
-    public virtual async Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient)
+    public virtual async Task DeleteQueueItemAsync(
+        ArrInstance arrInstance,
+        QueueRecord record,
+        bool removeFromClient,
+        DeleteReason deleteReason
+    )
     {
         UriBuilder uriBuilder = new(arrInstance.Url);
         uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/{GetQueueDeleteUrlPath(record.Id).TrimStart('/')}";
@@ -130,8 +135,9 @@ public abstract class ArrClient : IArrClient
             
             _logger.LogInformation(
                 removeFromClient
-                    ? "queue item deleted | {url} | {title}"
-                    : "queue item removed from arr | {url} | {title}",
+                    ? "queue item deleted with reason {reason} | {url} | {title}"
+                    : "queue item removed from arr with reason {reason} | {url} | {title}",
+                deleteReason.ToString(),
                 arrInstance.Url,
                 record.Title
             );

@@ -132,7 +132,7 @@ public sealed class QueueCleaner : GenericHandler
                     }
                 }
                 
-                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
+                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient, deleteReason);
                 await _notifier.NotifyQueueItemDeleted(removeFromClient, deleteReason);
             }
         });

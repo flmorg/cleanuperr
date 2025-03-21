@@ -11,7 +11,7 @@ public interface IArrClient
 
     Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload);
 
-    Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient);
+    Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient, DeleteReason deleteReason);
     
     Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items);
     

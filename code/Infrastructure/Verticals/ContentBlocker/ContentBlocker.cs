@@ -142,7 +142,7 @@ public sealed class ContentBlocker : GenericHandler
                     removeFromClient = false;
                 }
                 
-                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
+                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient, DeleteReason.AllFilesBlocked);
                 await _notifier.NotifyQueueItemDeleted(removeFromClient, DeleteReason.AllFilesBlocked);
             }
         });

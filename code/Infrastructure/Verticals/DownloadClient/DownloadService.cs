@@ -100,10 +100,11 @@ public abstract class DownloadService : IDownloadService
     /// </summary>
     /// <param name="hash">The torrent hash.</param>
     /// <param name="itemName">The name or title of the item.</param>
+    /// <param name="strikeType"></param>
     /// <returns>True if the limit has been reached; otherwise, false.</returns>
-    protected async Task<bool> StrikeAndCheckLimit(string hash, string itemName)
+    protected async Task<bool> StrikeAndCheckLimit(string hash, string itemName, StrikeType strikeType)
     {
-        return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled);
+        return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, strikeType);
     }
     
     protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)
