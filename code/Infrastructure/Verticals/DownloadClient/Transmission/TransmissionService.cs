@@ -5,6 +5,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.Exceptions;
 using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Interceptors;
@@ -304,9 +305,128 @@ public class TransmissionService : DownloadService, ITransmissionService
         throw new NotImplementedException();
     }
 
-    public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
     {
-        throw new NotImplementedException();
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
+        if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
+        {
+            downloads
+                .Cast<TorrentInfo>()
+                .Select(x =>
+                {
+                    if (x.DownloadDir == null)
+                    {
+                        return string.Empty;
+                    }
+                    
+                    string? firstDir = GetRootWithFirstDirectory(x.DownloadDir);
+
+                    if (string.IsNullOrEmpty(firstDir))
+                    {
+                        return string.Empty;
+                    }
+
+                    if (firstDir == Path.GetPathRoot(x.DownloadDir))
+                    {
+                        return string.Empty;
+                    }
+                    
+                    return firstDir;
+                })
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Distinct()
+                .ToList()
+                .ForEach(x =>
+                {
+                    _logger.LogTrace("populating file counts from {dir}", x);
+                    
+                    if (!Directory.Exists(x))
+                    {
+                        throw new ValidationException($"directory \"{x}\" does not exist");
+                    }
+                    
+                    _hardLinkFileService.PopulateFileCounts(x);
+                });
+        }
+        
+        foreach (TorrentInfo download in downloads.Cast<TorrentInfo>())
+        {
+            if (string.IsNullOrEmpty(download.HashString) || download.DownloadDir == null)
+            {
+                _logger.LogDebug("skip | download hash or download directory is null for {name}", download.Name);
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.HashString, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.HashString);
+            
+            bool hasHardlinks = false;
+            
+            if (download.Files != null)
+            {
+                foreach (TransmissionTorrentFiles file in download.Files)
+                {
+                    string filePath = Path.Combine(download.DownloadDir, file.Name);
+                    
+                    long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
+
+                    if (hardlinkCount < 0)
+                    {
+                        _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
+                        hasHardlinks = true;
+                        break;
+                    }
+
+                    if (hardlinkCount > 0)
+                    {
+                        hasHardlinks = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (hasHardlinks)
+            {
+                _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
+                continue;
+            }
+            
+            // Get the current category (directory name)
+            string currentCategory = Path.GetFileName(Path.TrimEndingDirectorySeparator(download.DownloadDir));
+            
+            // Create the new location path
+            string newLocation = Path.Combine(
+                Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(download.DownloadDir)) ?? string.Empty,
+                _downloadCleanerConfig.NoHardLinksCategory
+            );
+            
+            await _dryRunInterceptor.InterceptAsync(MoveDownload, download.Id, newLocation);
+            
+            _logger.LogInformation("category changed for {name}", download.Name);
+            
+            await _notifier.NotifyCategoryChanged(currentCategory, _downloadCleanerConfig.NoHardLinksCategory);
+        }
+    }
+
+    [DryRunSafeguard]
+    protected virtual async Task MoveDownload(long downloadId, string newLocation)
+    {
+        await _client.TorrentSetAsync(new TorrentSettings
+        {
+            Ids = [downloadId],
+            Location = newLocation,
+            // Move = true
+        });
     }
 
     public override async Task DeleteDownload(string hash)

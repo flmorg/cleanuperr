@@ -280,9 +280,110 @@ public class DelugeService : DownloadService, IDelugeService
         throw new NotImplementedException();
     }
 
-    public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
     {
-        throw new NotImplementedException();
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
+        if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
+        {
+            downloads
+                .Cast<TorrentStatus>()
+                .Select(x =>
+                {
+                    string? firstDir = GetRootWithFirstDirectory(x.DownloadPath);
+
+                    if (string.IsNullOrEmpty(firstDir))
+                    {
+                        return string.Empty;
+                    }
+
+                    if (firstDir == Path.GetPathRoot(x.DownloadPath))
+                    {
+                        return string.Empty;
+                    }
+                    
+                    return firstDir;
+                })
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Distinct()
+                .ToList()
+                .ForEach(x =>
+                {
+                    _logger.LogTrace("populating file counts from {dir}", x);
+                    
+                    if (!Directory.Exists(x))
+                    {
+                        throw new ValidationException($"directory \"{x}\" does not exist");
+                    }
+                    
+                    _hardLinkFileService.PopulateFileCounts(x);
+                });
+        }
+        
+        foreach (TorrentStatus download in downloads.Cast<TorrentStatus>())
+        {
+            if (string.IsNullOrEmpty(download.Hash))
+            {
+                _logger.LogDebug("skip | download hash is null for {name}", download.Name);
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+            
+            DelugeContents? contents = null;
+            try
+            {
+                contents = await _client.GetTorrentFiles(download.Hash);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogDebug(exception, "failed to find torrent files for {name}", download.Name);
+                continue;
+            }
+            
+            bool hasHardlinks = false;
+            
+            ProcessFiles(contents?.Contents, (name, file) =>
+            {
+                string filePath = Path.Combine(download.DownloadPath, file.Path);
+                
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
+
+                if (hardlinkCount < 0)
+                {
+                    _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
+                    hasHardlinks = true;
+                    return;
+                }
+
+                if (hardlinkCount > 0)
+                {
+                    hasHardlinks = true;
+                }
+            });
+            
+            if (hasHardlinks)
+            {
+                _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
+                continue;
+            }
+            
+            await _dryRunInterceptor.InterceptAsync(ChangeLabel, download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
+            
+            _logger.LogInformation("category changed for {name}", download.Name);
+            
+            await _notifier.NotifyCategoryChanged(download.Label, _downloadCleanerConfig.NoHardLinksCategory);
+        }
     }
 
     /// <inheritdoc/>
@@ -298,6 +399,12 @@ public class DelugeService : DownloadService, IDelugeService
     protected virtual async Task ChangeFilesPriority(string hash, List<int> sortedPriorities)
     {
         await _client.ChangeFilesPriority(hash, sortedPriorities);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task ChangeLabel(string hash, string newLabel)
+    {
+        await _client.SetTorrentLabel(hash, newLabel);
     }
     
     private async Task<bool> IsItemStuckAndShouldRemove(TorrentStatus status)
