@@ -119,9 +119,9 @@ public sealed class QueueCleaner : GenericHandler
 
                 bool removeFromClient = true;
 
-                if (stalledCheckResult.IsPrivate)
+                if (stalledCheckResult is { IsPrivate: true, DeleteReason: not DeleteReason.DownloadingMetadata })
                 {
-                    if (stalledCheckResult.ShouldRemove && !_config.StalledDeletePrivate)
+                    if (stalledCheckResult is { ShouldRemove: true, DeleteReason: DeleteReason.Stalled } && !_config.StalledDeletePrivate)
                     {
                         removeFromClient = false;
                     }

@@ -152,7 +152,7 @@
 #### **`QUEUECLEANER__STALLED_MAX_STRIKES`**
 - Number of strikes before removing a stalled download.
 - Set to `0` to never remove stalled downloads.
-- A strike is given when an item is stalled (not downloading) or stuck while downloading metadata.
+- A strike is given when an item is stalled (not downloading).
 - Type: Integer
 - Default: `0`
 - Required: No.
@@ -183,6 +183,19 @@
 
 > [!WARNING]
 > Setting `QUEUECLEANER__STALLED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
+
+#### **`QUEUECLEANER__DOWNLOADING_METADATA_MAX_STRIKES`**
+- Number of strikes before removing a download stuck while downloading metadata.
+- Set to `0` to never remove downloads stuck at `downloading metadata`.
+- A strike is given when an item is stuck while downloading metadata.
+- Type: Integer
+- Default: `0`
+- Required: No.
+> [!NOTE]
+> If not set to `0`, the minimum value is `3`.
+
+> [!IMPORTANT]
+> `QUEUECLEANER__DOWNLOADING_METADATA_MAX_STRIKES` works only for qBitTorrent.
 
 #
 
@@ -317,7 +330,7 @@
 >
 > For Deluge, the category name is the name of the label.
 >
-> For Transmission, the category name is the last directory from the save location.
+> For Transmission, the category name is the last directory from the save location (e.g. `myCategory` from `/downloads/path/myCategory`).
 
 #### **`DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO`**
 - Maximum ratio to reach before removing a download.
