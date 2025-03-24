@@ -64,15 +64,13 @@ public abstract class DownloadService : IDownloadService
 
     public abstract Task LoginAsync();
 
-    public abstract Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash);
+    public abstract Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
-    public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(
-        string hash,
+    public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
-        ConcurrentBag<Regex> regexes
-    );
+        ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
     public abstract Task DeleteDownload(string hash);
@@ -87,7 +85,7 @@ public abstract class DownloadService : IDownloadService
     public abstract List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories);
 
     /// <inheritdoc/>
-    public abstract Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+    public abstract Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
     public abstract Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes);
@@ -117,10 +115,11 @@ public abstract class DownloadService : IDownloadService
     /// </summary>
     /// <param name="hash">The torrent hash.</param>
     /// <param name="itemName">The name or title of the item.</param>
+    /// <param name="strikeType"></param>
     /// <returns>True if the limit has been reached; otherwise, false.</returns>
-    protected async Task<bool> StrikeAndCheckLimit(string hash, string itemName)
+    protected async Task<bool> StrikeAndCheckLimit(string hash, string itemName, StrikeType strikeType)
     {
-        return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled);
+        return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, strikeType);
     }
     
     protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, CleanCategory category)

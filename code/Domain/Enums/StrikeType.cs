@@ -3,5 +3,6 @@
 public enum StrikeType
 {
     Stalled,
+    DownloadingMetadata,
     ImportFailed
 }

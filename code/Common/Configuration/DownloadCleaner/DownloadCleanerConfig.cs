@@ -1,9 +1,9 @@
-﻿using Common.Exceptions;
+using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadCleaner;
 
-public sealed record DownloadCleanerConfig : IJobConfig
+public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
 {
     public const string SectionName = "DownloadCleaner";
     
@@ -13,6 +13,9 @@ public sealed record DownloadCleanerConfig : IJobConfig
 
     [ConfigurationKeyName("DELETE_PRIVATE")]
     public bool DeletePrivate { get; init; }
+    
+    [ConfigurationKeyName("IGNORED_DOWNLOADS_PATH")]
+    public string? IgnoredDownloadsPath { get; init; }
 
     [ConfigurationKeyName("NO_HL_CATEGORY")]
     public string NoHardLinksCategory { get; init; } = "";

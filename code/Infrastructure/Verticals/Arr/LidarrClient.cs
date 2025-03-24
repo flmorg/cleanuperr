@@ -27,29 +27,42 @@ public class LidarrClient : ArrClient, ILidarrClient
     {
     }
 
-    protected override string GetQueueUrlPath(int page)
+    protected override string GetQueueUrlPath()
     {
-        return $"/api/v1/queue?page={page}&pageSize=200&includeUnknownArtistItems=true&includeArtist=true&includeAlbum=true";
+        return "/api/v1/queue";
     }
 
-    protected override string GetQueueDeleteUrlPath(long recordId, bool removeFromClient)
+    protected override string GetQueueUrlQuery(int page)
     {
-        string path = $"/api/v1/queue/{recordId}?blocklist=true&skipRedownload=true&changeCategory=false";
+        return $"page={page}&pageSize=200&includeUnknownArtistItems=true&includeArtist=true&includeAlbum=true";
+    }
 
-        path += removeFromClient ? "&removeFromClient=true" : "&removeFromClient=false";
+    protected override string GetQueueDeleteUrlPath(long recordId)
+    {
+        return $"/api/v1/queue/{recordId}";
+    }
 
-        return path;
+    protected override string GetQueueDeleteUrlQuery(bool removeFromClient)
+    {
+        string query = "blocklist=true&skipRedownload=true&changeCategory=false";
+        query += removeFromClient ? "&removeFromClient=true" : "&removeFromClient=false";
+
+        return query;
     }
 
     public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
     {
-        if (items?.Count is null or 0) return;
+        if (items?.Count is null or 0)
+        {
+            return;
+        }
 
-        Uri uri = new(arrInstance.Url, "/api/v1/command");
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v1/command";
 
         foreach (var command in GetSearchCommands(items))
         {
-            using HttpRequestMessage request = new(HttpMethod.Post, uri);
+            using HttpRequestMessage request = new(HttpMethod.Post, uriBuilder.Uri);
             request.Content = new StringContent(
                 JsonConvert.SerializeObject(command, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
                 Encoding.UTF8,
@@ -132,8 +145,11 @@ public class LidarrClient : ArrClient, ILidarrClient
 
     private async Task<List<Album>?> GetAlbumsAsync(ArrInstance arrInstance, List<long> albumIds)
     {
-        Uri uri = new(arrInstance.Url, $"api/v1/album?{string.Join('&', albumIds.Select(x => $"albumIds={x}"))}");
-        using HttpRequestMessage request = new(HttpMethod.Get, uri);
+        UriBuilder uriBuilder = new(arrInstance.Url);
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v1/album";
+        uriBuilder.Query = string.Join('&', albumIds.Select(x => $"albumIds={x}"));
+        
+        using HttpRequestMessage request = new(HttpMethod.Get, uriBuilder.Uri);
         SetApiKey(request, arrInstance.ApiKey);
 
         using var response = await _httpClient.SendAsync(request);

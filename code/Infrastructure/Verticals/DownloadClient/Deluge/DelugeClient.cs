@@ -16,9 +16,24 @@ public sealed class DelugeClient
     private readonly DelugeConfig _config;
     private readonly HttpClient _httpClient;
     
+    private static readonly IReadOnlyList<string> Fields =
+    [
+        "hash",
+        "state",
+        "name",
+        "eta",
+        "private",
+        "total_done",
+        "label",
+        "seeding_time",
+        "ratio",
+        "trackers"
+    ];
+    
     public DelugeClient(IOptions<DelugeConfig> config, IHttpClientFactory httpClientFactory)
     {
         _config = config.Value;
+        _config.Validate();
         _httpClient = httpClientFactory.CreateClient(nameof(DelugeService));
     }
     
@@ -65,11 +80,24 @@ public sealed class DelugeClient
     
     public async Task<TorrentStatus?> GetTorrentStatus(string hash)
     {
-        return await SendRequest<TorrentStatus?>(
-            "web.get_torrent_status",
-            hash,
-            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
-        );
+        try
+        {
+            return await SendRequest<TorrentStatus?>(
+                "web.get_torrent_status",
+                hash,
+                Fields
+            );
+        }
+        catch (DelugeClientException e)
+        {
+            // Deluge returns an error when the torrent is not found
+            if (e.Message == "AttributeError: 'NoneType' object has no attribute 'call'")
+            {
+                return null;
+            }
+
+            throw;
+        }
     }
     
     public async Task<List<TorrentStatus>?> GetStatusForAllTorrents()
@@ -77,7 +105,7 @@ public sealed class DelugeClient
         Dictionary<string, TorrentStatus>? downloads = await SendRequest<Dictionary<string, TorrentStatus>?>(
             "core.get_torrents_status",
             "",
-            new[] { "hash", "state", "name", "eta", "private", "total_done", "label", "seeding_time", "ratio" }
+            Fields
         );
         
         return downloads?.Values.ToList();
@@ -107,8 +135,12 @@ public sealed class DelugeClient
     {
         StringContent content = new StringContent(json);
         content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
-
-        var responseMessage = await _httpClient.PostAsync(new Uri(_config.Url, "/json"), content);
+        
+        UriBuilder uriBuilder = new(_config.Url);
+        uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
+            ? $"{uriBuilder.Path.TrimEnd('/')}/json"
+            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/').TrimEnd('/')}/json";
+        var responseMessage = await _httpClient.PostAsync(uriBuilder.Uri, content);
         responseMessage.EnsureSuccessStatusCode();
 
         var responseJson = await responseMessage.Content.ReadAsStringAsync();

@@ -14,7 +14,8 @@ public interface IDownloadService : IDisposable
     /// Checks whether the download should be removed from the *arr queue.
     /// </summary>
     /// <param name="hash">The download hash.</param>
-    public Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash);
+    /// <param name="ignoredDownloads">Downloads to ignore from processing.</param>
+    public Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
 
     /// <summary>
     /// Blocks unwanted files from being fully downloaded.
@@ -23,12 +24,13 @@ public interface IDownloadService : IDisposable
     /// <param name="blocklistType">The <see cref="BlocklistType"/>.</param>
     /// <param name="patterns">The patterns to test the files against.</param>
     /// <param name="regexes">The regexes to test the files against.</param>
+    /// <param name="ignoredDownloads">Downloads to ignore from processing.</param>
     /// <returns>True if all files have been blocked; otherwise false.</returns>
-    public Task<BlockFilesResult> BlockUnwantedFilesAsync(
-        string hash,
+    public Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
-        ConcurrentBag<Regex> regexes
+        ConcurrentBag<Regex> regexes,
+        IReadOnlyList<string> ignoredDownloads
     );
 
     /// <summary>
@@ -59,7 +61,7 @@ public interface IDownloadService : IDisposable
     /// <param name="downloads">The downloads to clean.</param>
     /// <param name="categoriesToClean">The categories that should be cleaned.</param>
     /// <param name="excludedHashes">The hashes that should not be cleaned.</param>
-    Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes);
+    Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads);
 
     /// <summary>
     /// Changes the category for downloads that have no hardlinks.

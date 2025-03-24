@@ -43,12 +43,13 @@ public class DummyDownloadService : DownloadService
         return Task.CompletedTask;
     }
 
-    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash)
+    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
         throw new NotImplementedException();
     }
 
-    public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes)
+    public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType, ConcurrentBag<string> patterns,
+        ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads)
     {
         throw new NotImplementedException();
     }
@@ -68,7 +69,7 @@ public class DummyDownloadService : DownloadService
         throw new NotImplementedException();
     }
 
-    public override Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes)
+    public override Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
     {
         throw new NotImplementedException();
     }

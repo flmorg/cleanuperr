@@ -16,6 +16,7 @@ cleanuperr was created primarily to address malicious files, such as `*.lnk` or 
 > - Trigger a search for downloads removed from the *arrs.
 > - Clean up downloads that have been seeding for a certain amount of time.
 > - Notify on strike or download removal.
+> - Ignore certain torrent hashes, categories, tags or trackers from processing.
 
 cleanuperr supports both qBittorrent's built-in exclusion features and its own blocklist-based system. Binaries for all platforms are provided, along with Docker images for easy deployment.
 
@@ -25,15 +26,22 @@ cleanuperr supports both qBittorrent's built-in exclusion features and its own b
 > https://discord.gg/sWggpnmGNY
 
 ## Table of contents:
-- [Naming choice](README.md#naming-choice)
-- [Quick Start](README.md#quick-start)
-- [How it works](README.md#how-it-works)
-- [Setup](README.md#setup)
-- [Usage](README.md#usage)
-  - [Docker Compose](README.md#docker-compose-yaml)
-  - [Environment Variables](README.md#environment-variables)
-  - [Binaries](README.md#binaries-if-youre-not-using-docker)
-- [Credits](README.md#credits)
+- [Naming choice](#naming-choice)
+- [Quick Start](#quick-start)
+- [How it works](#how-it-works)
+  - [Content blocker](#1-content-blocker-will)
+  - [Queue cleaner](#2-queue-cleaner-will)
+  - [Download cleaner](#3-download-cleaner-will)
+- [Setup](#setup-examples)
+- [Usage](#usage)
+  - [Docker](#docker)
+    - [Environment Variables](#environment-variables)
+    - [Docker Compose](#docker-compose-example)
+  - [Windows](#windows)
+  - [Linux](#linux)
+  - [MacOS](#macos)
+  - [FreeBSD](#freebsd)
+- [Credits](#credits)
 
 ## Naming choice
 
@@ -52,10 +60,10 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
 > Use the Unraid Community App.
 >
 > 3. **Manual Installation (if you're not using Docker)**  
-> More details [here](#binaries-if-youre-not-using-docker).
+> Go to [Windows](#windows), [Linux](#linux) or [MacOS](#macos).
 
 > [!TIP]
-> Refer to the [Environment variables](#Environment-variables) section for detailed configuration instructions and the [Setup](#Setup) section for an in-depth explanation of the cleanup process.
+> Refer to the [Environment variables](#environment-variables) section for detailed configuration instructions and the [Setup examples](#setup-examples) section for an in-depth explanation of the cleanup process.
 
 
 > [!IMPORTANT]
@@ -69,7 +77,7 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
 
 # How it works
 
-1. **Content blocker** will:
+#### 1. **Content blocker** will:
    - Run every 5 minutes (or configured cron).
    - Process all items in the *arr queue.
    - Find the corresponding item from the download client for each queue item.
@@ -80,7 +88,7 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
      - It will be removed from the *arr's queue and blocked.
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
-2. **Queue cleaner** will:
+#### 2. **Queue cleaner** will:
    - Run every 5 minutes (or configured cron, or right after `content blocker`).
    - Process all items in the *arr queue.
    - Check each queue item if it is **stalled (download speed is 0)**, **stuck in metadata downloading** or **failed to be imported**.
@@ -93,11 +101,11 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
      - It will be removed from the *arr's queue and blocked.
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
-3. **Download cleaner** will:
+#### 3. **Download cleaner** will:
    - Run every hour (or configured cron).
    - Automatically clean up downloads that have been seeding for a certain amount of time.
 
-# Setup
+# Setup examples
 
 ## Using qBittorrent's built-in feature (works only with qBittorrent)
 
@@ -112,7 +120,7 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
 ## Using cleanuperr's blocklist (works with all supported download clients)
 
 1. Set both `QUEUECLEANER__ENABLED` and `CONTENTBLOCKER__ENABLED` to `true` in your environment variables.
-2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Arr variables](#Arr-variables) section.
+2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Arr variables](variables.md#Arr-settings) section.
 3. Once configured, cleanuperr will perform the following tasks:
    - Execute the **content blocker** job, as explained in the [How it works](#how-it-works) section.
    - Execute the **queue cleaner** job, as explained in the [How it works](#how-it-works) section.
@@ -129,7 +137,26 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
 
 ## Usage
 
-### Docker compose yaml
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/docker.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Docker</span>
+
+
+### **Environment variables**
+
+**Jump to:**
+- [General settings](variables.md#general-settings)
+- [Queue Cleaner settings](variables.md#queue-cleaner-settings)
+- [Content Blocker settings](variables.md#content-blocker-settings)
+- [Download Cleaner settings](variables.md#download-cleaner-settings)
+- [Download Client settings](variables.md#download-client-settings)
+- [Arr settings](variables.md#arr-settings)
+- [Notification settings](variables.md#notification-settings)
+- [Advanced settings](variables.md#advanced-settings)
+
+### Docker compose example
+
+> [!NOTE]
+> 
+> This example contains all settings and should be modified to fit your needs.
 
 ```
 version: "3.3"
@@ -139,6 +166,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./cleanuperr/logs:/var/logs
+      - ./cleanuperr/ignored.txt:/ignored.txt
     environment:
       - TZ=America/New_York
       - DRY_RUN=false
@@ -153,6 +181,7 @@ services:
       - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
 
       - QUEUECLEANER__ENABLED=true
+      - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - QUEUECLEANER__RUNSEQUENTIALLY=true
       - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
       - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
@@ -165,10 +194,12 @@ services:
       - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
 
       - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - CONTENTBLOCKER__IGNORE_PRIVATE=false
       - CONTENTBLOCKER__DELETE_PRIVATE=false
 
       - DOWNLOADCLEANER__ENABLED=true
+      - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - DOWNLOADCLEANER__DELETE_PRIVATE=false
       - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
       - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
@@ -183,15 +214,18 @@ services:
       # OR
       # - DOWNLOAD_CLIENT=qBittorrent
       # - QBITTORRENT__URL=http://localhost:8080
+      # - QBITTORRENT__URL_BASE=myCustomPath
       # - QBITTORRENT__USERNAME=user
       # - QBITTORRENT__PASSWORD=pass
       # OR
       # - DOWNLOAD_CLIENT=deluge
+      # - DELUGE__URL_BASE=myCustomPath
       # - DELUGE__URL=http://localhost:8112
       # - DELUGE__PASSWORD=testing
       # OR
       # - DOWNLOAD_CLIENT=transmission
       # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__URL_BASE=myCustomPath
       # - TRANSMISSION__USERNAME=test
       # - TRANSMISSION__PASSWORD=testing
 
@@ -228,27 +262,95 @@ services:
       - NOTIFIARR__CHANNEL_ID=discord_channel_id
 ```
 
-## Environment variables
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/windows.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Windows</span>
 
-Jump to:
-- [General settings](variables.md#general-settings)
-- [Queue Cleaner settings](variables.md#queue-cleaner-settings)
-- [Content Blocker settings](variables.md#content-blocker-settings)
-- [Download Cleaner settings](variables.md#download-cleaner-settings)
-- [Download Client settings](variables.md#download-client-settings)
-- [Arr settings](variables.md#arr-settings)
-- [Notification settings](variables.md#notification-settings)
-- [Advanced settings](variables.md#advanced-settings)
-
-### Binaries (if you're not using Docker)
-
-1. Download the binaries from [releases](https://github.com/flmorg/cleanuperr/releases).
-2. Extract them from the zip file.
-3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [above](#environment-variables).
+1. Download the zip file from [releases](https://github.com/flmorg/cleanuperr/releases).
+2. Extract the zip file into `C:\example\directory`.
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](#environment-variables).
+4. Execute `cleanuperr.exe`.
 
 > [!TIP]
 > ### Run as a Windows Service
 > Check out this stackoverflow answer on how to do it: https://stackoverflow.com/a/15719678
+
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/linux.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Linux</span>
+
+1. Download the zip file from [releases](https://github.com/flmorg/cleanuperr/releases).
+2. Extract the zip file into `/example/directory`.
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](#environment-variables).
+4. Open a terminal and execute these commands:
+    ```
+    cd /example/directory
+    chmod +x cleanuperr
+    ./cleanuperr
+    ```
+
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/apple.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">MacOS</span>
+
+1. Download the zip file from [releases](https://github.com/flmorg/cleanuperr/releases).
+2. Extract the zip file into `/example/directory`.
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](#environment-variables).
+4. Open a terminal and execute these commands:
+    ```
+    cd /example/directory
+    chmod +x cleanuperr
+    ./cleanuperr
+    ```
+
+> [!IMPORTANT]
+> Some people have experienced problems when trying to execute cleanuperr on MacOS because the system actively blocked the file for not being signed.
+> As per [this](), you may need to also execute this command:
+> ```
+> codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime /example/directory/cleanuperr
+> ```
+
+### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/freebsd.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">FreeBSD</span>
+
+1. Installation:
+    ```
+    # install dependencies
+    pkg install -y git icu libinotify libunwind wget
+
+    # set up the dotnet SDK
+    cd ~
+    wget -q https://github.com/Thefrank/dotnet-freebsd-crossbuild/releases/download/v9.0.104-amd64-freebsd-14/dotnet-sdk-9.0.104-freebsd-x64.tar.gz
+    export DOTNET_ROOT=$(pwd)/.dotnet
+    mkdir -p "$DOTNET_ROOT" && tar zxf dotnet-sdk-9.0.104-freebsd-x64.tar.gz -C "$DOTNET_ROOT"
+    export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+
+    # download NuGet dependencies
+    mkdir -p /tmp/nuget
+    wget -q -P /tmp/nuget/ https://github.com/Thefrank/dotnet-freebsd-crossbuild/releases/download/v9.0.104-amd64-freebsd-14/Microsoft.AspNetCore.App.Runtime.freebsd-x64.9.0.3.nupkg
+    wget -q -P /tmp/nuget/ https://github.com/Thefrank/dotnet-freebsd-crossbuild/releases/download/v9.0.104-amd64-freebsd-14/Microsoft.NETCore.App.Host.freebsd-x64.9.0.3.nupkg
+    wget -q -P /tmp/nuget/ https://github.com/Thefrank/dotnet-freebsd-crossbuild/releases/download/v9.0.104-amd64-freebsd-14/Microsoft.NETCore.App.Runtime.freebsd-x64.9.0.3.nupkg
+
+    # add NuGet source
+    dotnet nuget add source /tmp/nuget --name tmp
+
+    # add GitHub NuGet source
+    # a PAT (Personal Access Token) can be generated here https://github.com/settings/tokens
+    dotnet nuget add source --username <YOUR_USERNAME> --password <YOUR_PERSONAL_ACCESS_TOKEN> --store-password-in-clear-text --name flmorg https://nuget.pkg.github.com/flmorg/index.json
+    ```
+2. Building:
+    ```
+    # clone the project
+    git clone https://github.com/flmorg/cleanuperr.git
+    cd cleanuperr
+
+    # build and publish the app
+    dotnet publish code/Executable/Executable.csproj -c Release --self-contained -o artifacts /p:PublishSingleFile=true
+
+    # move the files to permanent destination
+    mv artifacts/cleanuperr /example/directory/
+    mv artifacts/appsettings.json /example/directory/
+    ```
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](#environment-variables).
+4. Run the app:
+    ```
+    cd /example/directory
+    chmod +x cleanuperr
+    ./cleanuperr
+    ```
 
 # Credits
 Special thanks for inspiration go to:
@@ -261,4 +363,3 @@ Special thanks for inspiration go to:
 If I made your life just a tiny bit easier, consider buying me a coffee!
 
 <a href="https://buymeacoffee.com/flaminel" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
-

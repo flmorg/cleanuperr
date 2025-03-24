@@ -105,13 +105,14 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
             // Arrange
             const string hash = "test-hash";
             const string itemName = "test-item";
-            _fixture.Striker.StrikeAndCheckLimit(hash, itemName, 3, StrikeType.Stalled)
+            StrikeType strikeType = StrikeType.Stalled;
+            _fixture.Striker.StrikeAndCheckLimit(hash, itemName, 3, strikeType)
                 .Returns(true);
             
             TestDownloadService sut = _fixture.CreateSut();
 
             // Act
-            bool result = await sut.StrikeAndCheckLimit(hash, itemName);
+            bool result = await sut.StrikeAndCheckLimit(hash, itemName, strikeType);
 
             // Assert
             result.ShouldBeTrue();

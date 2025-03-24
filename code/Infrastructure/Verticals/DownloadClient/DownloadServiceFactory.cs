@@ -25,6 +25,7 @@ public sealed class DownloadServiceFactory
             Common.Enums.DownloadClient.Deluge => _serviceProvider.GetRequiredService<DelugeService>(),
             Common.Enums.DownloadClient.Transmission => _serviceProvider.GetRequiredService<TransmissionService>(),
             Common.Enums.DownloadClient.None => _serviceProvider.GetRequiredService<DummyDownloadService>(),
+            Common.Enums.DownloadClient.Disabled => _serviceProvider.GetRequiredService<DummyDownloadService>(),
             _ => throw new ArgumentOutOfRangeException()
         };
 }

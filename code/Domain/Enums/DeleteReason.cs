@@ -2,7 +2,11 @@
 
 public enum DeleteReason
 {
+    None,
     Stalled,
     ImportFailed,
-    AllFilesBlocked
+    DownloadingMetadata,
+    AllFilesSkipped,
+    AllFilesSkippedByQBit,
+    AllFilesBlocked,
 }

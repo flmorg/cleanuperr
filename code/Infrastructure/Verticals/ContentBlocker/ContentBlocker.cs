@@ -6,6 +6,7 @@ using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
@@ -22,7 +23,8 @@ public sealed class ContentBlocker : GenericHandler
 {
     private readonly ContentBlockerConfig _config;
     private readonly BlocklistProvider _blocklistProvider;
-    
+    private readonly IgnoredDownloadsProvider<ContentBlockerConfig> _ignoredDownloadsProvider;
+
     public ContentBlocker(
         ILogger<ContentBlocker> logger,
         IOptions<ContentBlockerConfig> config,
@@ -36,7 +38,8 @@ public sealed class ContentBlocker : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory,
-        INotificationPublisher notifier
+        INotificationPublisher notifier,
+        IgnoredDownloadsProvider<ContentBlockerConfig> ignoredDownloadsProvider
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
@@ -47,13 +50,14 @@ public sealed class ContentBlocker : GenericHandler
     {
         _config = config.Value;
         _blocklistProvider = blocklistProvider;
+        _ignoredDownloadsProvider = ignoredDownloadsProvider;
     }
 
     public override async Task ExecuteAsync()
     {
-        if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None)
+        if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None or Common.Enums.DownloadClient.Disabled)
         {
-            _logger.LogWarning("download client is set to none");
+            _logger.LogWarning("download client is not set");
             return;
         }
         
@@ -73,6 +77,8 @@ public sealed class ContentBlocker : GenericHandler
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
+        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
+        
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
 
         HashSet<SearchItem> itemsToBeRefreshed = [];
@@ -106,13 +112,19 @@ public sealed class ContentBlocker : GenericHandler
                     continue;
                 }
                 
+                if (ignoredDownloads.Contains(record.DownloadId, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    _logger.LogInformation("skip | {title} | ignored", record.Title);
+                    continue;
+                }
+                
                 // push record to context
                 ContextProvider.Set(nameof(QueueRecord), record);
                 
                 _logger.LogDebug("searching unwanted files for {title}", record.Title);
 
                 BlockFilesResult result = await _downloadService
-                    .BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes);
+                    .BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes, ignoredDownloads);
                 
                 if (!result.ShouldRemove)
                 {
@@ -130,7 +142,7 @@ public sealed class ContentBlocker : GenericHandler
                     removeFromClient = false;
                 }
                 
-                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient);
+                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient, DeleteReason.AllFilesBlocked);
                 await _notifier.NotifyQueueItemDeleted(removeFromClient, DeleteReason.AllFilesBlocked);
             }
         });
