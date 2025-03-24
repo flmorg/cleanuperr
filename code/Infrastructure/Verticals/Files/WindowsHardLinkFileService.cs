@@ -57,15 +57,10 @@ public class WindowsHardLinkFileService : IHardLinkFileService, IDisposable
     {
         try
         {
-            // Traverse all files and directories in the ignored path
-            foreach (var file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
+            // traverse all files in the ignored path and subdirectories
+            foreach (string file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
             {
                 AddFileIndexToCount(file);
-            }
-
-            foreach (var dir in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories))
-            {
-                AddFileIndexToCount(dir);
             }
         }
         catch (Exception ex)

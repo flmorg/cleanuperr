@@ -271,10 +271,16 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
             
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+            
             IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(download.Hash);
 
             if (ignoredDownloads.Count > 0 &&
-                (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads)) is true))
+                (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads))))
             {
                 _logger.LogInformation("skip | download is ignored | {name}", download.Name);
                 continue;
@@ -285,12 +291,6 @@ public class QBitService : DownloadService, IQBitService
             
             if (category is null)
             {
-                continue;
-            }
-            
-            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
             
@@ -351,62 +351,45 @@ public class QBitService : DownloadService, IQBitService
         await _client.AddCategoryAsync(name);
     }
 
-    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes)
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
     {
         if (downloads?.Count is null or 0)
         {
             return;
         }
         
-        if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
+        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
         {
-            downloads
-                .Cast<TorrentInfo>()
-                .Select(x =>
-                {
-                    string? firstDir = GetRootWithFirstDirectory(x.SavePath);
-
-                    if (string.IsNullOrEmpty(firstDir))
-                    {
-                        return string.Empty;
-                    }
-
-                    if (firstDir == Path.GetPathRoot(x.SavePath))
-                    {
-                        return string.Empty;
-                    }
-                    
-                    return firstDir;
-                })
-                .Where(x => !string.IsNullOrEmpty(x))
-                .Distinct()
-                .ToList()
-                .ForEach(x =>
-                {
-                    _logger.LogTrace("populating file counts from {dir}", x);
-                    
-                    if (!Directory.Exists(x))
-                    {
-                        throw new ValidationException($"directory \"{x}\" does not exist");
-                    }
-                    
-                    _hardLinkFileService.PopulateFileCounts(x);
-                });
+            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
         }
         
         foreach (TorrentInfo download in downloads)
         {
-            IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(download.Hash);
-
-            if (files is null)
+            if (string.IsNullOrEmpty(download.Hash))
             {
-                _logger.LogDebug("failed to find files for {name}", download.Name);
-                return;
+                continue;
             }
             
             if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
             {
                 _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+            
+            IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(download.Hash);
+            
+            if (ignoredDownloads.Count > 0 &&
+                (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads))))
+            {
+                _logger.LogInformation("skip | download is ignored | {name}", download.Name);
+                continue;
+            }
+            
+            IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(download.Hash);
+
+            if (files is null)
+            {
+                _logger.LogDebug("failed to find files for {name}", download.Name);
                 continue;
             }
 
@@ -419,20 +402,17 @@ public class QBitService : DownloadService, IQBitService
                 if (!file.Index.HasValue)
                 {
                     _logger.LogDebug("skip | file index is null for {name}", download.Name);
-                    return;
+                    hasHardlinks = true;
+                    break;
                 }
 
-                var ceva = Path.Combine(download.ContentPath, file.Name);
-                var ceva2 = Path.Combine(download.SavePath, file.Name);
+                // string filePath = Path.Combine(Directory.Exists(download.ContentPath)
+                //     ? download.ContentPath
+                //     : download.SavePath, file.Name
+                // );
+                string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.SavePath, file.Name).Split(['\\', '/'])); // TODO
 
-                string filePath = Path.Combine(Directory.Exists(download.ContentPath)
-                    ? download.ContentPath
-                    : download.SavePath, file.Name
-                );
-                filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.SavePath, file.Name).Split(['\\', '/'])); // TODO
-
-                // TODO add config for root directory
-                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
 
                 if (hardlinkCount < 0)
                 {
@@ -444,6 +424,7 @@ public class QBitService : DownloadService, IQBitService
                 if (hardlinkCount > 0)
                 {
                     hasHardlinks = true;
+                    break;
                 }
             }
             
@@ -453,13 +434,13 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
             
-            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
+            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
-            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.NoHardLinksCategory);
+            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory);
             
-            download.Category = _downloadCleanerConfig.NoHardLinksCategory;
+            download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
         }
     }
     

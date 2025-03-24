@@ -193,4 +193,10 @@ public sealed class DelugeClient
 
         return webResponse.Result;
     }
+
+    public async Task SetTorrentLabel(string hash, string newLabel)
+    {
+        // TODO
+        throw new NotImplementedException();
+    }
 }

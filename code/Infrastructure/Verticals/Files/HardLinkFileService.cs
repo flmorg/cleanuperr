@@ -22,6 +22,8 @@ public class HardLinkFileService : IHardLinkFileService
 
     public void PopulateFileCounts(string directoryPath)
     {
+        _logger.LogTrace("populating file counts from {dir}", directoryPath);
+        
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             _windowsHardLinkFileService.PopulateFileCounts(directoryPath);

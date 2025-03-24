@@ -70,17 +70,17 @@ public sealed class DownloadCleaner : GenericHandler
         List<object>? downloads = await _downloadService.GetSeedingDownloads();
         List<object>? downloadsToChangeCategory = null;
         
-        if (!string.IsNullOrEmpty(_config.NoHardLinksCategory) && _config.NoHardLinksCategories?.Count > 0)
+        if (!string.IsNullOrEmpty(_config.UnlinkedTargetCategory) && _config.UnlinkedCategories?.Count > 0)
         {
             if (!_hardLinkCategoryCreated)
             {
-                _logger.LogDebug("creating category {cat}", _config.NoHardLinksCategory);
+                _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
 
-                await _downloadService.CreateCategoryAsync(_config.NoHardLinksCategory);
+                await _downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
                 _hardLinkCategoryCreated = true;
             }
             
-            downloadsToChangeCategory = _downloadService.FilterDownloadsToChangeCategoryAsync(downloads, _config.NoHardLinksCategories);
+            downloadsToChangeCategory = _downloadService.FilterDownloadsToChangeCategoryAsync(downloads, _config.UnlinkedCategories);
         }
 
         // wait for the downloads to appear in the arr queue
@@ -91,7 +91,7 @@ public sealed class DownloadCleaner : GenericHandler
         await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
         
         _logger.LogTrace("looking for downloads to change category");
-        await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes);
+        await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes, ignoredDownloads);
         
         List<object>? downloadsToClean = _downloadService.FilterDownloadsToBeCleanedAsync(downloads, _config.Categories);
         
@@ -99,7 +99,7 @@ public sealed class DownloadCleaner : GenericHandler
         downloads = null;
         
         _logger.LogTrace("looking for downloads to clean");
-        await _downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes);
+        await _downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes, ignoredDownloads);
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)

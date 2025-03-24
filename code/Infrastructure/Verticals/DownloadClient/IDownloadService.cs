@@ -61,14 +61,16 @@ public interface IDownloadService : IDisposable
     /// <param name="downloads">The downloads to clean.</param>
     /// <param name="categoriesToClean">The categories that should be cleaned.</param>
     /// <param name="excludedHashes">The hashes that should not be cleaned.</param>
+    /// <param name="ignoredDownloads">The downloads to ignore from processing.</param>
     Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads);
 
     /// <summary>
     /// Changes the category for downloads that have no hardlinks.
     /// </summary>
     /// <param name="downloads">The downloads to change.</param>
-    /// <param name="excludedHashes"></param>
-    Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes);
+    /// <param name="excludedHashes">The hashes that should not be cleaned.</param>
+    /// <param name="ignoredDownloads">The downloads to ignore from processing.</param>
+    Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads);
     
     /// <summary>
     /// Deletes a download item.

@@ -88,7 +88,7 @@ public abstract class DownloadService : IDownloadService
     public abstract Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
-    public abstract Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes);
+    public abstract Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads);
     
     /// <inheritdoc/>
     public abstract Task CreateCategoryAsync(string name);

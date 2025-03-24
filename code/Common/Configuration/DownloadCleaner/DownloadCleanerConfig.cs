@@ -1,4 +1,4 @@
-using Common.Exceptions;
+﻿using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadCleaner;
@@ -17,14 +17,14 @@ public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     [ConfigurationKeyName("IGNORED_DOWNLOADS_PATH")]
     public string? IgnoredDownloadsPath { get; init; }
 
-    [ConfigurationKeyName("NO_HL_CATEGORY")]
-    public string NoHardLinksCategory { get; init; } = "";
+    [ConfigurationKeyName("UNLINKED_TARGET_CATEGORY")]
+    public string UnlinkedTargetCategory { get; init; } = "cleanuperr-unlinked";
+
+    [ConfigurationKeyName("UNLINKED_IGNORED_ROOT_DIR")]
+    public string UnlinkedIgnoredRootDir { get; init; } = string.Empty;
     
-    [ConfigurationKeyName("NO_HL_IGNORE_ROOT_DIR")]
-    public bool NoHardLinksIgnoreRootDir { get; init; }
-    
-    [ConfigurationKeyName("NO_HL_CATEGORIES")]
-    public List<string>? NoHardLinksCategories { get; init; }
+    [ConfigurationKeyName("UNLINKED_CATEGORIES")]
+    public List<string>? UnlinkedCategories { get; init; }
 
     public void Validate()
     {
@@ -45,24 +45,29 @@ public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
         
         Categories?.ForEach(x => x.Validate());
         
-        if (string.IsNullOrEmpty(NoHardLinksCategory))
+        if (string.IsNullOrEmpty(UnlinkedTargetCategory))
         {
             return;
         }
 
-        if (NoHardLinksCategories?.Count is null or 0)
+        if (UnlinkedCategories?.Count is null or 0)
         {
-            throw new ValidationException("no categories configured");
+            throw new ValidationException("no unlinked categories configured");
         }
 
-        if (NoHardLinksCategories.Contains(NoHardLinksCategory))
+        if (UnlinkedCategories.Contains(UnlinkedTargetCategory))
         {
-            throw new ValidationException("NO_HARDLINKS_CATEGORY is present in NO_HARDLINKS_CATEGORIES");
+            throw new ValidationException($"{SectionName.ToUpperInvariant()}__UNLINKED_TARGET_CATEGORY should not be present in {SectionName.ToUpperInvariant()}__UNLINKED_CATEGORIES");
         }
 
-        if (NoHardLinksCategories.Any(string.IsNullOrEmpty))
+        if (UnlinkedCategories.Any(string.IsNullOrEmpty))
         {
-            throw new ValidationException("empty hardlink filter category found");
+            throw new ValidationException("empty unlinked category filter found");
+        }
+
+        if (!string.IsNullOrEmpty(UnlinkedIgnoredRootDir) && !Directory.Exists(UnlinkedIgnoredRootDir))
+        {
+            throw new ValidationException($"{UnlinkedIgnoredRootDir} root directory does not exist");
         }
     }
 }

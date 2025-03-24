@@ -51,14 +51,10 @@ public class UnixHardLinkFileService : IHardLinkFileService, IDisposable
     {
         try
         {
-            foreach (var file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
+            // traverse all files in the ignored path and subdirectories
+            foreach (string file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
             {
                 AddInodeToCount(file);
-            }
-
-            foreach (var dir in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories))
-            {
-                AddInodeToCount(dir);
             }
         }
         catch (Exception ex)
