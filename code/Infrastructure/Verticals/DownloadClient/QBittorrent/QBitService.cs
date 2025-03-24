@@ -394,11 +394,16 @@ public class QBitService : DownloadService, IQBitService
                     return;
                 }
 
+                var ceva = Path.Combine(download.ContentPath, file.Name);
+                var ceva2 = Path.Combine(download.SavePath, file.Name);
+
                 string filePath = Path.Combine(Directory.Exists(download.ContentPath)
                     ? download.ContentPath
                     : download.SavePath, file.Name
                 );
+                filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.SavePath, file.Name).Split(['\\', '/'])); // TODO
 
+                // TODO add config for root directory
                 long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
 
                 if (hardlinkCount < 0)
