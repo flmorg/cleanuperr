@@ -37,12 +37,12 @@ public class WindowsHardLinkFileService : IHardLinkFileService, IDisposable
             // Get unique file ID (combination of high and low indices)
             ulong fileIndex = ((ulong)file.FileIndexHigh << 32) | file.FileIndexLow;
             
-            // Adjusted case: Check if there are links outside the ignored directory
+            // get the number of hardlinks in the same root directory
             int linksInIgnoredDir = _fileIndexCounts.TryGetValue(fileIndex, out int count)
                 ? count
-                : 1; // Default to 1 if not found
+                : 1; // default to 1 if not found
 
-            _logger.LogDebug("stat file {file} | links: {links} | ignored: {ignored}", filePath, file.NumberOfLinks, linksInIgnoredDir);
+            _logger.LogDebug("stat file | hardlinks: {links} | ignored: {ignored} | {file}", file.NumberOfLinks, linksInIgnoredDir, filePath);
             return file.NumberOfLinks - linksInIgnoredDir;
         }
         catch (Exception exception)

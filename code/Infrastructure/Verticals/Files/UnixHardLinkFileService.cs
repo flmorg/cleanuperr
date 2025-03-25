@@ -31,7 +31,7 @@ public class UnixHardLinkFileService : IHardLinkFileService, IDisposable
                 return (long)stat.st_nlink == 1 ? 0 : 1;
             }
 
-            // subtract the number of hardlinks in the same root directory
+            // get the number of hardlinks in the same root directory
             int linksInIgnoredDir = _inodeCounts.TryGetValue(stat.st_ino, out int count) 
                 ? count
                 : 1; // default to 1 if not found
