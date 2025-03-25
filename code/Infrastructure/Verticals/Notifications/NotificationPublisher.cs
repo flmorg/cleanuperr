@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Common.Attributes;
 using Common.Configuration.Arr;
 using Domain.Enums;
@@ -118,7 +118,6 @@ public class NotificationPublisher : INotificationPublisher
         }
     }
     
-    [DryRunSafeguard]
     public virtual async Task NotifyCategoryChanged(string oldCategory, string newCategory)
     {
         CategoryChangedNotification notification = new()
@@ -134,7 +133,7 @@ public class NotificationPublisher : INotificationPublisher
             Level = NotificationLevel.Important
         };
 
-        await _messageBus.Publish(notification);
+        await NotifyInternal(notification);
     }
     
     private Task NotifyInternal<T>(T message) where T: notnull
