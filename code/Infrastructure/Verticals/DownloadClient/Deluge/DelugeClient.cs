@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Common.Configuration;
 using Common.Configuration.DownloadClient;
@@ -206,7 +206,6 @@ public sealed class DelugeClient
 
     public async Task SetTorrentLabel(string hash, string newLabel)
     {
-        // TODO
-        throw new NotImplementedException();
+        await SendRequest<DelugeResponse<object>>("label.set_torrent", hash, newLabel);
     }
 }
