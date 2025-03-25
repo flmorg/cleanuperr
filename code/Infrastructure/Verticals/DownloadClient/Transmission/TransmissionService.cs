@@ -26,7 +26,6 @@ public class TransmissionService : DownloadService, ITransmissionService
 {
     private readonly TransmissionConfig _config;
     private readonly Client _client;
-    private TorrentInfo[]? _torrentsCache;
 
     private static readonly string[] Fields =
     [
@@ -366,30 +365,8 @@ public class TransmissionService : DownloadService, ITransmissionService
         return (await StrikeAndCheckLimit(torrent.HashString!, torrent.Name!, StrikeType.Stalled), DeleteReason.Stalled);
     }
 
-    private async Task<TorrentInfo?> GetTorrentAsync(string hash)
-    {
-        TorrentInfo? torrent = _torrentsCache?
-            .FirstOrDefault(x => x.HashString.Equals(hash, StringComparison.InvariantCultureIgnoreCase));
-        
-        if (_torrentsCache is null || torrent is null)
-        {
-            // refresh cache
-            _torrentsCache = (await _client.TorrentGetAsync(Fields))
-                ?.Torrents;
-        }
-        
-        if (_torrentsCache?.Length is null or 0)
-        {
-            _logger.LogDebug("could not list torrents | {url}", _config.Url);
-        }
-        
-        torrent = _torrentsCache?.FirstOrDefault(x => x.HashString.Equals(hash, StringComparison.InvariantCultureIgnoreCase));
-
-        if (torrent is null)
-        {
-            _logger.LogDebug("could not find torrent | {hash} | {url}", hash, _config.Url);
-        }
-
-        return torrent;
-    }
+    private async Task<TorrentInfo?> GetTorrentAsync(string hash) =>
+        (await _client.TorrentGetAsync(Fields, hash))
+        ?.Torrents
+        ?.FirstOrDefault();
 }
