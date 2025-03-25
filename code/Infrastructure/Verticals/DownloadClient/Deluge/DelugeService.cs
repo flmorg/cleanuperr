@@ -217,28 +217,40 @@ public class DelugeService : DownloadService, IDelugeService
             .ToList();
     }
 
-    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
-    {
-        return downloads
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) =>
+        downloads
             ?.Cast<TorrentStatus>()
             .Where(x => categories.Any(cat => cat.Name.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
             .Cast<object>()
             .ToList();
-    }
 
-    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories)
-    {
-        throw new NotImplementedException();
-    }
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) =>
+        downloads
+            ?.Cast<TorrentStatus>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
 
     /// <inheritdoc/>
-    public override async Task CleanDownloadsAsync(List<object> downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes,
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes,
         IReadOnlyList<string> ignoredDownloads)
     {
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
         foreach (TorrentStatus download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
             {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
 
@@ -253,12 +265,6 @@ public class DelugeService : DownloadService, IDelugeService
 
             if (category is null)
             {
-                continue;
-            }
-            
-            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
 
@@ -312,105 +318,77 @@ public class DelugeService : DownloadService, IDelugeService
             return;
         }
 
-        throw new NotImplementedException();
+        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+        {
+            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+        }
+        
+        foreach (TorrentStatus download in downloads.Cast<TorrentStatus>())
+        {
+            if (string.IsNullOrEmpty(download.Hash) || string.IsNullOrEmpty(download.Name) || string.IsNullOrEmpty(download.Label))
+            {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
 
-        // if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
-        // {
-        //     downloads
-        //         .Cast<TorrentStatus>()
-        //         .Select(x =>
-        //         {
-        //             string? firstDir = GetRootWithFirstDirectory(x.DownloadPath);
-        //
-        //             if (string.IsNullOrEmpty(firstDir))
-        //             {
-        //                 return string.Empty;
-        //             }
-        //
-        //             if (firstDir == Path.GetPathRoot(x.DownloadPath))
-        //             {
-        //                 return string.Empty;
-        //             }
-        //             
-        //             return firstDir;
-        //         })
-        //         .Where(x => !string.IsNullOrEmpty(x))
-        //         .Distinct()
-        //         .ToList()
-        //         .ForEach(x =>
-        //         {
-        //             _logger.LogTrace("populating file counts from {dir}", x);
-        //             
-        //             if (!Directory.Exists(x))
-        //             {
-        //                 throw new ValidationException($"directory \"{x}\" does not exist");
-        //             }
-        //             
-        //             _hardLinkFileService.PopulateFileCounts(x);
-        //         });
-        // }
-        //
-        // foreach (TorrentStatus download in downloads.Cast<TorrentStatus>())
-        // {
-        //     if (string.IsNullOrEmpty(download.Hash))
-        //     {
-        //         _logger.LogDebug("skip | download hash is null for {name}", download.Name);
-        //         continue;
-        //     }
-        //     
-        //     if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
-        //     {
-        //         _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
-        //         continue;
-        //     }
-        //
-        //     ContextProvider.Set("downloadName", download.Name);
-        //     ContextProvider.Set("hash", download.Hash);
-        //     
-        //     DelugeContents? contents = null;
-        //     try
-        //     {
-        //         contents = await _client.GetTorrentFiles(download.Hash);
-        //     }
-        //     catch (Exception exception)
-        //     {
-        //         _logger.LogDebug(exception, "failed to find torrent files for {name}", download.Name);
-        //         continue;
-        //     }
-        //     
-        //     bool hasHardlinks = false;
-        //     
-        //     ProcessFiles(contents?.Contents, (name, file) =>
-        //     {
-        //         string filePath = Path.Combine(download.DownloadPath, file.Path);
-        //         
-        //         long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
-        //
-        //         if (hardlinkCount < 0)
-        //         {
-        //             _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
-        //             hasHardlinks = true;
-        //             return;
-        //         }
-        //
-        //         if (hardlinkCount > 0)
-        //         {
-        //             hasHardlinks = true;
-        //         }
-        //     });
-        //     
-        //     if (hasHardlinks)
-        //     {
-        //         _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
-        //         continue;
-        //     }
-        //     
-        //     await _dryRunInterceptor.InterceptAsync(ChangeLabel, download.Hash, _downloadCleanerConfig.NoHardLinksCategory);
-        //     
-        //     _logger.LogInformation("category changed for {name}", download.Name);
-        //     
-        //     await _notifier.NotifyCategoryChanged(download.Label, _downloadCleanerConfig.NoHardLinksCategory);
-        // }
+            if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
+            {
+                _logger.LogInformation("skip | download is ignored | {name}", download.Name);
+                continue;
+            }
+        
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+            
+            DelugeContents? contents = null;
+            try
+            {
+                contents = await _client.GetTorrentFiles(download.Hash);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogDebug(exception, "failed to find torrent files for {name}", download.Name);
+                continue;
+            }
+            
+            bool hasHardlinks = false;
+            
+            ProcessFiles(contents?.Contents, (_, file) =>
+            {
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(file.Path, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+        
+                if (hardlinkCount < 0)
+                {
+                    _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
+                    hasHardlinks = true;
+                    return;
+                }
+        
+                if (hardlinkCount > 0)
+                {
+                    hasHardlinks = true;
+                }
+            });
+            
+            if (hasHardlinks)
+            {
+                _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
+                continue;
+            }
+            
+            await _dryRunInterceptor.InterceptAsync(ChangeLabel, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
+            
+            _logger.LogInformation("category changed for {name}", download.Name);
+            
+            await _notifier.NotifyCategoryChanged(download.Label, _downloadCleanerConfig.UnlinkedTargetCategory);
+            
+            download.Label = _downloadCleanerConfig.UnlinkedTargetCategory;
+        }
     }
 
     /// <inheritdoc/>
