@@ -406,11 +406,7 @@ public class QBitService : DownloadService, IQBitService
                     break;
                 }
 
-                // string filePath = Path.Combine(Directory.Exists(download.ContentPath)
-                //     ? download.ContentPath
-                //     : download.SavePath, file.Name
-                // );
-                string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.SavePath, file.Name).Split(['\\', '/'])); // TODO
+                string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.SavePath, file.Name).Split(['\\', '/']));
 
                 long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
 

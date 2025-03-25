@@ -126,9 +126,6 @@ public class DelugeService : DownloadService, IDelugeService
             return result;
         }
         
-        var ceva = await _client.GetTorrentExtended(hash);
-        
-        
         if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogInformation("skip | download is ignored | {name}", download.Name);

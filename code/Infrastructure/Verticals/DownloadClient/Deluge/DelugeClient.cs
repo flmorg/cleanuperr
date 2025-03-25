@@ -147,7 +147,7 @@ public sealed class DelugeClient
         return responseJson;
     }
 
-    private DelugeRequest CreateRequest(string method, params object[] parameters)
+    private static DelugeRequest CreateRequest(string method, params object[] parameters)
     {
         if (String.IsNullOrWhiteSpace(method))
         {
