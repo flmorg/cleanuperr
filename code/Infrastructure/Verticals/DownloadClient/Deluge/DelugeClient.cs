@@ -196,7 +196,7 @@ public sealed class DelugeClient
 
     public async Task<IReadOnlyList<string>> GetLabels()
     {
-        return await SendRequest<IReadOnlyList<string>>("label.label.get_labels");
+        return await SendRequest<IReadOnlyList<string>>("label.get_labels");
     }
     
     public async Task CreateLabel(string label)
