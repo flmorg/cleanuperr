@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Common.Configuration;
 using Common.Configuration.DownloadClient;
@@ -192,6 +192,16 @@ public sealed class DelugeClient
         }
 
         return webResponse.Result;
+    }
+
+    public async Task<IReadOnlyList<string>> GetLabels()
+    {
+        return await SendRequest<IReadOnlyList<string>>("label.label.get_labels");
+    }
+    
+    public async Task CreateLabel(string label)
+    {
+        await SendRequest<DelugeResponse<object>>("label.add", label);
     }
 
     public async Task SetTorrentLabel(string hash, string newLabel)

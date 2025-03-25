@@ -298,7 +298,14 @@ public class DelugeService : DownloadService, IDelugeService
 
     public override async Task CreateCategoryAsync(string name)
     {
-        throw new NotImplementedException();
+        IReadOnlyList<string> existingLabels = await _client.GetLabels();
+
+        if (existingLabels.Contains(name, StringComparer.InvariantCultureIgnoreCase))
+        {
+            return;
+        }
+        
+        await _client.CreateLabel(name);
     }
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
