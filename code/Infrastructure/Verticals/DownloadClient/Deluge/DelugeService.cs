@@ -5,6 +5,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.Exceptions;
 using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Extensions;
@@ -49,7 +50,11 @@ public class DelugeService : DownloadService, IDelugeService
     public override async Task LoginAsync()
     {
         await _client.LoginAsync();
-        await _client.ListMethodsAsync();
+
+        if (!await _client.IsConnected() && !await _client.Connect())
+        {
+            throw new FatalException("Deluge WebUI is not connected to the daemon");
+        }
     }
 
     /// <inheritdoc/>

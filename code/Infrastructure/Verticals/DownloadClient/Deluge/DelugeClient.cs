@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Common.Configuration;
 using Common.Configuration.DownloadClient;
+using Common.Exceptions;
 using Domain.Models.Deluge.Exceptions;
 using Domain.Models.Deluge.Request;
 using Domain.Models.Deluge.Response;
@@ -43,14 +44,40 @@ public sealed class DelugeClient
         return await SendRequest<bool>("auth.login", _config.Password);
     }
 
-    public async Task ListMethodsAsync()
+    public async Task<bool> IsConnected()
     {
-        await SendRequest<object>("system.listMethods");
+        return await SendRequest<bool>("web.connected");
+    }
+
+    public async Task<bool> Connect()
+    {
+        string? firstHost = await GetHost();
+
+        if (string.IsNullOrEmpty(firstHost))
+        {
+            return false;
+        }
+
+        var result = await SendRequest<List<string>?>("web.connect", firstHost);
+        
+        return result?.Count > 0;
     }
 
     public async Task<bool> Logout()
     {
         return await SendRequest<bool>("auth.delete_session");
+    }
+
+    public async Task<string?> GetHost()
+    {
+        var hosts = await SendRequest<List<List<string>?>?>("web.get_hosts");
+
+        if (hosts?.Count > 1)
+        {
+            throw new FatalException("multiple Deluge hosts found - please connect to only one host");
+        }
+        
+        return hosts?.FirstOrDefault()?.FirstOrDefault();
     }
 
     public async Task<List<DelugeTorrent>> ListTorrents(Dictionary<string, string>? filters = null)
