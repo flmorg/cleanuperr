@@ -408,6 +408,12 @@ public class QBitService : DownloadService, IQBitService
 
                 string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.SavePath, file.Name).Split(['\\', '/']));
 
+                if (file.Priority is TorrentContentPriority.Skip)
+                {
+                    _logger.LogDebug("skip | file is not downloaded | {file}", filePath);
+                    continue;
+                }
+                
                 long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
 
                 if (hardlinkCount < 0)
