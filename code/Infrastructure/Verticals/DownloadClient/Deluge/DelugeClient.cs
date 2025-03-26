@@ -43,6 +43,11 @@ public sealed class DelugeClient
         return await SendRequest<bool>("auth.login", _config.Password);
     }
 
+    public async Task ListMethodsAsync()
+    {
+        await SendRequest<object>("system.listMethods");
+    }
+
     public async Task<bool> Logout()
     {
         return await SendRequest<bool>("auth.delete_session");

@@ -49,6 +49,7 @@ public class DelugeService : DownloadService, IDelugeService
     public override async Task LoginAsync()
     {
         await _client.LoginAsync();
+        await _client.ListMethodsAsync();
     }
 
     /// <inheritdoc/>
@@ -366,7 +367,7 @@ public class DelugeService : DownloadService, IDelugeService
         
                 if (hardlinkCount < 0)
                 {
-                    _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
+                    _logger.LogDebug("skip | could not get file properties | {file}", filePath);
                     hasHardlinks = true;
                     return;
                 }

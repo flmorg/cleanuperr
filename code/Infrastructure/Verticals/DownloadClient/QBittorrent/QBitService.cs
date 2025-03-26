@@ -412,7 +412,7 @@ public class QBitService : DownloadService, IQBitService
 
                 if (hardlinkCount < 0)
                 {
-                    _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
+                    _logger.LogDebug("skip | could not get file properties | {file}", filePath);
                     hasHardlinks = true;
                     break;
                 }
