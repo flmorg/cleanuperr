@@ -309,7 +309,7 @@ public class DelugeService : DownloadService, IDelugeService
             return;
         }
         
-        await _client.CreateLabel(name);
+        await _dryRunInterceptor.InterceptAsync(CreateLabel, name);
     }
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
@@ -401,6 +401,12 @@ public class DelugeService : DownloadService, IDelugeService
         hash = hash.ToLowerInvariant();
         
         await _client.DeleteTorrents([hash]);
+    }
+
+    [DryRunSafeguard]
+    protected async Task CreateLabel(string name)
+    {
+        await _client.CreateLabel(name);
     }
     
     [DryRunSafeguard]

@@ -348,7 +348,7 @@ public class QBitService : DownloadService, IQBitService
             return;
         }
         
-        await _client.AddCategoryAsync(name);
+        await _dryRunInterceptor.InterceptAsync(CreateCategory, name);
     }
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
@@ -445,6 +445,12 @@ public class QBitService : DownloadService, IQBitService
     public override async Task DeleteDownload(string hash)
     {
         await _client.DeleteAsync(hash, deleteDownloadedData: true);
+    }
+
+    [DryRunSafeguard]
+    protected async Task CreateCategory(string name)
+    {
+        await _client.AddCategoryAsync(name);
     }
     
     [DryRunSafeguard]
