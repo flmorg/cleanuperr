@@ -25,6 +25,9 @@ public sealed record TorrentStatus
     public float Ratio { get; init; }
     
     public required IReadOnlyList<Tracker> Trackers { get; init; }
+    
+    [JsonProperty("download_location")]
+    public required string DownloadLocation { get; init; }
 }
 
 public sealed record Tracker

@@ -27,7 +27,8 @@ public sealed class DelugeClient
         "label",
         "seeding_time",
         "ratio",
-        "trackers"
+        "trackers",
+        "download_location"
     ];
     
     public DelugeClient(IOptions<DelugeConfig> config, IHttpClientFactory httpClientFactory)

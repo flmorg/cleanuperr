@@ -360,7 +360,9 @@ public class DelugeService : DownloadService, IDelugeService
             
             ProcessFiles(contents?.Contents, (_, file) =>
             {
-                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(file.Path, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+                string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.DownloadLocation, file.Path).Split(['\\', '/']));
+                
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
         
                 if (hardlinkCount < 0)
                 {
