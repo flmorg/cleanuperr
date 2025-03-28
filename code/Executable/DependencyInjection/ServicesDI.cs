@@ -37,8 +37,8 @@ public static class ServicesDI
             .AddTransient<TransmissionService>()
             .AddTransient<ArrQueueIterator>()
             .AddTransient<DownloadServiceFactory>()
+            .AddTransient<IStriker, Striker>()
             .AddSingleton<BlocklistProvider>()
-            .AddSingleton<IStriker, Striker>()
             .AddSingleton<IgnoredDownloadsProvider<QueueCleanerConfig>>()
             .AddSingleton<IgnoredDownloadsProvider<ContentBlockerConfig>>()
             .AddSingleton<IgnoredDownloadsProvider<DownloadCleanerConfig>>();
