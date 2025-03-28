@@ -43,7 +43,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         TorrentFields.DOWNLOAD_DIR,
         TorrentFields.SECONDS_SEEDING,
         TorrentFields.UPLOAD_RATIO,
-        TorrentFields.TRACKERS
+        TorrentFields.TRACKERS,
     ];
 
     public TransmissionService(
@@ -212,30 +212,13 @@ public class TransmissionService : DownloadService, ITransmissionService
         return result;
     }
     
-    public override async Task<List<object>?> GetSeedingDownloads()
-    {
-        string[] fields = [
-            TorrentFields.FILES,
-            TorrentFields.FILE_STATS,
-            TorrentFields.HASH_STRING,
-            TorrentFields.ID,
-            TorrentFields.ETA,
-            TorrentFields.NAME,
-            TorrentFields.STATUS,
-            TorrentFields.IS_PRIVATE,
-            TorrentFields.DOWNLOADED_EVER,
-            TorrentFields.DOWNLOAD_DIR,
-            TorrentFields.SECONDS_SEEDING,
-            TorrentFields.UPLOAD_RATIO
-        ];
-
-        return (await _client.TorrentGetAsync(fields))
-            ?.Torrents
-            ?.Where(x => !string.IsNullOrEmpty(x.HashString))
-            .Where(x => x.Status is 5 or 6)
-            .Cast<object>()
-            .ToList();
-    }
+    public override async Task<List<object>?> GetSeedingDownloads() =>
+        (await _client.TorrentGetAsync(Fields))
+        ?.Torrents
+        ?.Where(x => !string.IsNullOrEmpty(x.HashString))
+        .Where(x => x.Status is 5 or 6)
+        .Cast<object>()
+        .ToList();
 
     /// <inheritdoc/>
     public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories)
@@ -244,16 +227,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             ?
             .Cast<TorrentInfo>()
             .Where(x => categories
-                .Any(cat =>
-                {
-                    if (x.DownloadDir is null)
-                    {
-                        return false;
-                    }
-                    
-                    return Path.GetFileName(Path.TrimEndingDirectorySeparator(x.DownloadDir))
-                        .Equals(cat.Name, StringComparison.InvariantCultureIgnoreCase);
-                })
+                .Any(cat => cat.Name.Equals(x.GetCategory(), StringComparison.InvariantCultureIgnoreCase))
             )
             .Cast<object>()
             .ToList();
@@ -261,7 +235,12 @@ public class TransmissionService : DownloadService, ITransmissionService
 
     public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories)
     {
-        throw new NotImplementedException();
+        return downloads
+            ?.Cast<TorrentInfo>()
+            .Where(x => !string.IsNullOrEmpty(x.HashString))
+            .Where(x => categories.Any(cat => cat.Equals(x.GetCategory(), StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
     }
 
     /// <inheritdoc/>
@@ -277,6 +256,12 @@ public class TransmissionService : DownloadService, ITransmissionService
         {
             if (string.IsNullOrEmpty(download.HashString))
             {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.HashString, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
 
@@ -300,12 +285,6 @@ public class TransmissionService : DownloadService, ITransmissionService
             
             if (category is null)
             {
-                continue;
-            }
-
-            if (excludedHashes.Any(x => x.Equals(download.HashString, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
 
@@ -342,7 +321,7 @@ public class TransmissionService : DownloadService, ITransmissionService
     
     public override async Task CreateCategoryAsync(string name)
     {
-        throw new NotImplementedException();
+        await Task.CompletedTask;
     }
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
@@ -352,124 +331,92 @@ public class TransmissionService : DownloadService, ITransmissionService
             return;
         }
         
-        // TODO ignored downloads
-        throw new NotImplementedException();
+        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+        {
+            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+        }
         
-        // if (_downloadCleanerConfig.NoHardLinksIgnoreRootDir)
-        // {
-        //     downloads
-        //         .Cast<TorrentInfo>()
-        //         .Select(x =>
-        //         {
-        //             if (x.DownloadDir == null)
-        //             {
-        //                 return string.Empty;
-        //             }
-        //             
-        //             string? firstDir = GetRootWithFirstDirectory(x.DownloadDir);
-        //
-        //             if (string.IsNullOrEmpty(firstDir))
-        //             {
-        //                 return string.Empty;
-        //             }
-        //
-        //             if (firstDir == Path.GetPathRoot(x.DownloadDir))
-        //             {
-        //                 return string.Empty;
-        //             }
-        //             
-        //             return firstDir;
-        //         })
-        //         .Where(x => !string.IsNullOrEmpty(x))
-        //         .Distinct()
-        //         .ToList()
-        //         .ForEach(x =>
-        //         {
-        //             _logger.LogTrace("populating file counts from {dir}", x);
-        //             
-        //             if (!Directory.Exists(x))
-        //             {
-        //                 throw new ValidationException($"directory \"{x}\" does not exist");
-        //             }
-        //             
-        //             _hardLinkFileService.PopulateFileCounts(x);
-        //         });
-        // }
-        //
-        // foreach (TorrentInfo download in downloads.Cast<TorrentInfo>())
-        // {
-        //     if (string.IsNullOrEmpty(download.HashString) || download.DownloadDir == null)
-        //     {
-        //         _logger.LogDebug("skip | download hash or download directory is null for {name}", download.Name);
-        //         continue;
-        //     }
-        //     
-        //     if (excludedHashes.Any(x => x.Equals(download.HashString, StringComparison.InvariantCultureIgnoreCase)))
-        //     {
-        //         _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
-        //         continue;
-        //     }
-        //
-        //     ContextProvider.Set("downloadName", download.Name);
-        //     ContextProvider.Set("hash", download.HashString);
-        //     
-        //     bool hasHardlinks = false;
-        //     
-        //     if (download.Files != null)
-        //     {
-        //         foreach (TransmissionTorrentFiles file in download.Files)
-        //         {
-        //             string filePath = Path.Combine(download.DownloadDir, file.Name);
-        //             
-        //             long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, _downloadCleanerConfig.NoHardLinksIgnoreRootDir);
-        //
-        //             if (hardlinkCount < 0)
-        //             {
-        //                 _logger.LogDebug("skip | could not get file properties | {name}", download.Name);
-        //                 hasHardlinks = true;
-        //                 break;
-        //             }
-        //
-        //             if (hardlinkCount > 0)
-        //             {
-        //                 hasHardlinks = true;
-        //                 break;
-        //             }
-        //         }
-        //     }
-        //     
-        //     if (hasHardlinks)
-        //     {
-        //         _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
-        //         continue;
-        //     }
-        //     
-        //     // Get the current category (directory name)
-        //     string currentCategory = Path.GetFileName(Path.TrimEndingDirectorySeparator(download.DownloadDir));
-        //     
-        //     // Create the new location path
-        //     string newLocation = Path.Combine(
-        //         Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(download.DownloadDir)) ?? string.Empty,
-        //         _downloadCleanerConfig.NoHardLinksCategory
-        //     );
-        //     
-        //     await _dryRunInterceptor.InterceptAsync(MoveDownload, download.Id, newLocation);
-        //     
-        //     _logger.LogInformation("category changed for {name}", download.Name);
-        //     
-        //     await _notifier.NotifyCategoryChanged(currentCategory, _downloadCleanerConfig.NoHardLinksCategory);
-        // }
+        foreach (TorrentInfo download in downloads.Cast<TorrentInfo>())
+        {
+            if (string.IsNullOrEmpty(download.HashString) || string.IsNullOrEmpty(download.Name) || download.DownloadDir == null)
+            {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.HashString, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+            
+            if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
+            {
+                _logger.LogDebug("skip | download is ignored | {name}", download.Name);
+                continue;
+            }
+        
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.HashString);
+            
+            bool hasHardlinks = false;
+            
+            if (download.Files is null || download.FileStats is null)
+            {
+                _logger.LogDebug("skip | download has no files | {name}", download.Name);
+                continue;
+            }
+
+            for (int i = 0; i < download.Files.Length; i++)
+            {
+                TransmissionTorrentFiles file = download.Files[i];
+                TransmissionTorrentFileStats stats = download.FileStats[i];
+                
+                if (stats.Wanted is null or false || string.IsNullOrEmpty(file.Name))
+                {
+                    continue;
+                }
+
+                string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.DownloadDir, file.Name).Split(['\\', '/']));
+                
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+                
+                if (hardlinkCount < 0)
+                {
+                    _logger.LogDebug("skip | could not get file properties | {file}", filePath);
+                    hasHardlinks = true;
+                    break;
+                }
+
+                if (hardlinkCount > 0)
+                {
+                    hasHardlinks = true;
+                    break;
+                }
+            }
+
+            if (hasHardlinks)
+            {
+                _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
+                continue;
+            }
+            
+            string currentCategory = download.GetCategory();
+            string newLocation = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.DownloadDir, _downloadCleanerConfig.UnlinkedTargetCategory).Split(['\\', '/']));
+            
+            await _dryRunInterceptor.InterceptAsync(ChangeDownloadLocation, download.Id, newLocation);
+            
+            _logger.LogInformation("category changed for {name}", download.Name);
+            
+            await _notifier.NotifyCategoryChanged(currentCategory, _downloadCleanerConfig.UnlinkedTargetCategory);
+
+            download.DownloadDir = newLocation;
+        }
     }
 
     [DryRunSafeguard]
-    protected virtual async Task MoveDownload(long downloadId, string newLocation)
+    protected virtual async Task ChangeDownloadLocation(long downloadId, string newLocation)
     {
-        await _client.TorrentSetAsync(new TorrentSettings
-        {
-            Ids = [downloadId],
-            Location = newLocation,
-            // Move = true
-        });
+        await _client.TorrentSetLocationAsync([downloadId], newLocation, true);
     }
 
     public override async Task DeleteDownload(string hash)
