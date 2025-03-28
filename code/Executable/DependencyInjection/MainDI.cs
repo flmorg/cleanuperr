@@ -12,7 +12,7 @@ namespace Executable.DependencyInjection;
 
 public static class MainDI
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration) =>
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfigurationManager configuration) =>
         services
             .AddLogging(builder => builder.ClearProviders().AddConsole())
             .AddHttpClients(configuration)
