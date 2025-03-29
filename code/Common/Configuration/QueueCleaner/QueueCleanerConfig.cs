@@ -24,7 +24,7 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     public bool ImportFailedDeletePrivate { get; init; }
     
     [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PATTERNS")]
-    public List<string>? ImportFailedIgnorePatterns { get; init; }
+    public IReadOnlyList<string>? ImportFailedIgnorePatterns { get; init; }
     
     [ConfigurationKeyName("STALLED_MAX_STRIKES")]
     public ushort StalledMaxStrikes { get; init; }
@@ -38,16 +38,24 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     [ConfigurationKeyName("STALLED_DELETE_PRIVATE")]
     public bool StalledDeletePrivate { get; init; }
 
+    [ConfigurationKeyName("DOWNLOADING_METADATA_MAX_STRIKES")]
+    public ushort DownloadingMetadataMaxStrikes { get; init; }
+    
     public void Validate()
     {
         if (ImportFailedMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException("the minimum value for IMPORT_FAILED_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__IMPORT_FAILED_MAX_STRIKES must be 3");
         }
 
         if (StalledMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException("the minimum value for STALLED_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__STALLED_MAX_STRIKES must be 3");
+        }
+        
+        if (DownloadingMetadataMaxStrikes is > 0 and < 3)
+        {
+            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__DOWNLOADING_METADATA_MAX_STRIKES must be 3");
         }
     }
 }
