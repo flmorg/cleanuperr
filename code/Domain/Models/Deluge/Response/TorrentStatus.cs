@@ -17,7 +17,7 @@ public sealed record TorrentStatus
     [JsonProperty("total_done")]
     public long TotalDone { get; init; }
     
-    public string? Label { get; init; }
+    public string? Label { get; set; }
     
     [JsonProperty("seeding_time")]
     public long SeedingTime { get; init; }
@@ -25,6 +25,9 @@ public sealed record TorrentStatus
     public float Ratio { get; init; }
     
     public required IReadOnlyList<Tracker> Trackers { get; init; }
+    
+    [JsonProperty("download_location")]
+    public required string DownloadLocation { get; init; }
 }
 
 public sealed record Tracker
