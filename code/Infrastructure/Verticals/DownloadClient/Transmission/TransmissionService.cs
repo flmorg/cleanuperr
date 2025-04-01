@@ -360,7 +360,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             return (false, default);
         }
         
-        ResetStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
+        ResetStalledStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
         
         return (await _striker.StrikeAndCheckLimit(torrent.HashString!, torrent.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }

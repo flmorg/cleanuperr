@@ -78,21 +78,58 @@ public abstract class DownloadService : IDownloadService
     public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
         IReadOnlyList<string> ignoredDownloads);
 
-    protected void ResetStrikesOnProgress(string hash, long downloaded)
+    protected void ResetStalledStrikesOnProgress(string hash, long downloaded)
     {
         if (!_queueCleanerConfig.StalledResetStrikesOnProgress)
         {
             return;
         }
-        
-        if (_cache.TryGetValue(CacheKeys.Item(hash), out CacheItem? cachedItem) && cachedItem is not null && downloaded > cachedItem.Downloaded)
+
+        if (_cache.TryGetValue(CacheKeys.StrikeItem(hash, StrikeType.Stalled), out StalledCacheItem? cachedItem) &&
+            cachedItem is not null && downloaded > cachedItem.Downloaded)
         {
             // cache item found
             _cache.Remove(CacheKeys.Strike(StrikeType.Stalled, hash));
-            _logger.LogDebug("resetting strikes for {hash} due to progress", hash);
+            _logger.LogDebug("resetting stalled strikes for {hash} due to progress", hash);
         }
         
-        _cache.Set(CacheKeys.Item(hash), new CacheItem { Downloaded = downloaded }, _cacheOptions);
+        _cache.Set(CacheKeys.StrikeItem(hash, StrikeType.Stalled), new StalledCacheItem { Downloaded = downloaded }, _cacheOptions);
+    }
+    
+    protected void ResetSlowSpeedStrikesOnProgress(string hash)
+    {
+        if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
+        {
+            return;
+        }
+
+        string key = CacheKeys.Strike(StrikeType.SlowSpeed, hash);
+
+        if (!_cache.TryGetValue(key, out object? value) || value is null)
+        {
+            return;
+        }
+        
+        _cache.Remove(key);
+        _logger.LogDebug("resetting slow speed strikes for {hash} due to progress", hash);
+    }
+    
+    protected void ResetSlowTimeStrikesOnProgress(string hash)
+    {
+        if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
+        {
+            return;
+        }
+
+        string key = CacheKeys.Strike(StrikeType.SlowTime, hash);
+
+        if (!_cache.TryGetValue(key, out object? value) || value is null)
+        {
+            return;
+        }
+        
+        _cache.Remove(key);
+        _logger.LogDebug("resetting slow time strikes for {hash} due to progress", hash);
     }
     
     protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)

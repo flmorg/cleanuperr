@@ -45,7 +45,6 @@ public class TestDownloadService : DownloadService
         IReadOnlyList<string> ignoredDownloads) => Task.CompletedTask;
 
     // Expose protected methods for testing
-    public new void ResetStrikesOnProgress(string hash, long downloaded) => base.ResetStrikesOnProgress(hash, downloaded);
-    public new Task<bool> StrikeAndCheckLimit(string hash, string itemName, StrikeType strikeType) => base.StrikeAndCheckLimit(hash, itemName, strikeType);
+    public new void ResetStalledStrikesOnProgress(string hash, long downloaded) => base.ResetStalledStrikesOnProgress(hash, downloaded);
     public new SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category) => base.ShouldCleanDownload(ratio, seedingTime, category);
 }

@@ -41,6 +41,9 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     
     [ConfigurationKeyName("SLOW_MAX_STRIKES")]
     public ushort SlowMaxStrikes { get; init; }
+    
+    [ConfigurationKeyName("SLOW_RESET_STRIKES_ON_PROGRESS")]
+    public bool SlowResetStrikesOnProgress { get; init; }
 
     [ConfigurationKeyName("SLOW_IGNORE_PRIVATE")]
     public bool SlowIgnorePrivate { get; init; }

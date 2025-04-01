@@ -320,7 +320,7 @@ public class DelugeService : DownloadService, IDelugeService
             return (false, default);
         }
         
-        ResetStrikesOnProgress(status.Hash!, status.TotalDone);
+        ResetStalledStrikesOnProgress(status.Hash!, status.TotalDone);
         
         return (await _striker.StrikeAndCheckLimit(status.Hash!, status.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }

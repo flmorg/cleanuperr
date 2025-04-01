@@ -358,6 +358,11 @@ public class QBitService : DownloadService, IQBitService
             return (false, DeleteReason.None);
         }
         
+        if (torrent.DownloadSpeed <= 0)
+        {
+            return (false, DeleteReason.None);
+        }
+        
         if (_queueCleanerConfig.SlowIgnorePrivate && isPrivate)
         {
             // ignore private trackers
@@ -372,8 +377,8 @@ public class QBitService : DownloadService, IQBitService
         }
         
         double minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize?.Bytes ?? double.MinValue;
-
-        if (minSpeed > 0 && torrent.DownloadSpeed > 0 && torrent.DownloadSpeed < minSpeed)
+        
+        if (minSpeed > 0 && torrent.DownloadSpeed < minSpeed)
         {
             _logger.LogTrace("slow speed | {speed} | {name}", torrent.DownloadSpeed.Bytes().Humanize("#.##"), torrent.Name);
             
@@ -385,7 +390,11 @@ public class QBitService : DownloadService, IQBitService
                 return (true, DeleteReason.SlowSpeed);
             }
         }
-
+        else
+        {
+            ResetSlowSpeedStrikesOnProgress(torrent.Hash);
+        }
+        
         TimeSpan maxTime = TimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
 
         if (maxTime > TimeSpan.Zero && torrent.EstimatedTime > maxTime)
@@ -393,12 +402,16 @@ public class QBitService : DownloadService, IQBitService
             _logger.LogTrace("slow estimated time | {time} | {name}", torrent.EstimatedTime?.Humanize(precision: 2), torrent.Name);
             
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.ExceededEstimatedTime);
+                .StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
 
             if (shouldRemove)
             {
-                return (true, DeleteReason.ExceededEstimatedTime);
+                return (true, DeleteReason.SlowTime);
             }
+        }
+        else
+        {
+            ResetSlowTimeStrikesOnProgress(torrent.Hash);
         }
         
         return (false, DeleteReason.None);
@@ -424,12 +437,12 @@ public class QBitService : DownloadService, IQBitService
             _logger.LogDebug("skip stalled check | download is private | {name}", torrent.Name);
             return (false, DeleteReason.None);
         }
-
-        ResetStrikesOnProgress(torrent.Hash, torrent.Downloaded ?? 0);
-
+        
         if (torrent.State is TorrentState.StalledDownload)
         {
             _logger.LogTrace("stalled download | {name}", torrent.Name);
+            
+            ResetStalledStrikesOnProgress(torrent.Hash, torrent.Downloaded ?? 0);
             
             return (await _striker.StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
         }

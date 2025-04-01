@@ -7,7 +7,7 @@ public enum DeleteReason
     ImportFailed,
     DownloadingMetadata,
     SlowSpeed,
-    ExceededEstimatedTime,
+    SlowTime,
     AllFilesSkipped,
     AllFilesSkippedByQBit,
     AllFilesBlocked,

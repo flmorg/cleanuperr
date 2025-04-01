@@ -6,5 +6,5 @@ public enum StrikeType
     DownloadingMetadata,
     ImportFailed,
     SlowSpeed,
-    ExceededEstimatedTime,
+    SlowTime,
 }
