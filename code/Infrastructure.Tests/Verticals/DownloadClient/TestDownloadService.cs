@@ -36,7 +36,7 @@ public class TestDownloadService : DownloadService
 
     public override void Dispose() { }
     public override Task LoginAsync() => Task.CompletedTask;
-    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new StalledResult());
+    public override Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new DownloadCheckResult());
     public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType,
         ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new BlockFilesResult());
     public override Task DeleteDownload(string hash) => Task.CompletedTask;

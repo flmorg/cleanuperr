@@ -50,12 +50,12 @@ public class DelugeService : DownloadService, IDelugeService
     }
 
     /// <inheritdoc/>
-    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
+    public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
         hash = hash.ToLowerInvariant();
         
         DelugeContents? contents = null;
-        StalledResult result = new();
+        DownloadCheckResult result = new();
 
         TorrentStatus? download = await _client.GetTorrentStatus(hash);
         
@@ -321,8 +321,8 @@ public class DelugeService : DownloadService, IDelugeService
         }
         
         ResetStrikesOnProgress(status.Hash!, status.TotalDone);
-
-        return (await StrikeAndCheckLimit(status.Hash!, status.Name!, StrikeType.Stalled), DeleteReason.Stalled);
+        
+        return (await _striker.StrikeAndCheckLimit(status.Hash!, status.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
     
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory>? contents, Action<string, DelugeFileOrDirectory> processFile)

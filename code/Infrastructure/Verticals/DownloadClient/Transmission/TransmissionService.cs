@@ -81,9 +81,9 @@ public class TransmissionService : DownloadService, ITransmissionService
     }
 
     /// <inheritdoc/>
-    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
+    public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
-        StalledResult result = new();
+        DownloadCheckResult result = new();
         TorrentInfo? download = await GetTorrentAsync(hash);
 
         if (download is null)
@@ -361,8 +361,8 @@ public class TransmissionService : DownloadService, ITransmissionService
         }
         
         ResetStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
-
-        return (await StrikeAndCheckLimit(torrent.HashString!, torrent.Name!, StrikeType.Stalled), DeleteReason.Stalled);
+        
+        return (await _striker.StrikeAndCheckLimit(torrent.HashString!, torrent.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
 
     private async Task<TorrentInfo?> GetTorrentAsync(string hash) =>

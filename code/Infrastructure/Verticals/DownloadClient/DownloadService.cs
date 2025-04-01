@@ -60,7 +60,7 @@ public abstract class DownloadService : IDownloadService
 
     public abstract Task LoginAsync();
 
-    public abstract Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
+    public abstract Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
     public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
@@ -93,18 +93,6 @@ public abstract class DownloadService : IDownloadService
         }
         
         _cache.Set(CacheKeys.Item(hash), new CacheItem { Downloaded = downloaded }, _cacheOptions);
-    }
-
-    /// <summary>
-    /// Strikes an item and checks if the limit has been reached.
-    /// </summary>
-    /// <param name="hash">The torrent hash.</param>
-    /// <param name="itemName">The name or title of the item.</param>
-    /// <param name="strikeType"></param>
-    /// <returns>True if the limit has been reached; otherwise, false.</returns>
-    protected async Task<bool> StrikeAndCheckLimit(string hash, string itemName, StrikeType strikeType)
-    {
-        return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, strikeType);
     }
     
     protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)
