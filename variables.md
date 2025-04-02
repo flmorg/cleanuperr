@@ -160,7 +160,7 @@
 > If not set to `0`, the minimum value is `3`.
 
 #### **`QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS`**
-- Controls whether to remove strikes if any download progress was made since last checked.
+- Controls whether to remove the given strikes if any download progress was made since last checked.
 - Type: Boolean
 - Possible values: `true`, `false`
 - Default: `false`
@@ -174,7 +174,7 @@
 - Required: No.
 
 #### **`QUEUECLEANER__STALLED_DELETE_PRIVATE`**
-- Controls whether to delete stalled private downloads from the download client.
+- Controls whether stalled downloads from private trackers should be removed from the download client.
 - Has no effect if `QUEUECLEANER__STALLED_IGNORE_PRIVATE` is `true`.
 - Type: Boolean
 - Possible values: `true`, `false`
@@ -183,6 +183,65 @@
 
 > [!WARNING]
 > Setting `QUEUECLEANER__STALLED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
+
+#### **`QUEUECLEANER__SLOW_MAX_STRIKES`**
+- Number of strikes before removing a slow download.
+- Set to `0` to never remove slow downloads.
+- A strike is given when an item is slow.
+- Type: Integer
+- Default: `0`
+- Required: No.
+> [!NOTE]
+> If not set to `0`, the minimum value is `3`.
+
+#### **`QUEUECLEANER__SLOW_RESET_STRIKES_ON_PROGRESS`**
+- Controls whether to remove the given strikes if the download speed or estimated time are not slow anymore.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`QUEUECLEANER__SLOW_IGNORE_PRIVATE`**
+- Controls whether to ignore slow downloads from private trackers.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`QUEUECLEANER__SLOW_DELETE_PRIVATE`**
+- Controls whether slow downloads from private trackers should be removed from the download client.
+- Has no effect if `QUEUECLEANER__SLOW_IGNORE_PRIVATE` is `true`.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+> [!WARNING]
+> Setting `QUEUECLEANER__SLOW_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
+
+#### **`QUEUECLEANER__SLOW_MIN_SPEED`**
+- The minimum speed a download should have.
+- Downloads receive strikes if their speed falls bellow this value.
+- If not specified, downloads will not receive strikes for slow download speed.
+- Type: String.
+- Default: Empty.
+- Required: No.
+- Value examples: `1.5KB`, `400KB`, `2MB`
+
+#### **`QUEUECLEANER__SLOW_MAX_TIME`**
+- The maximum estimated hours a download should take to finish.
+- Downloads receive strikes if their estimated finish time is above this value.
+- If not specified (or `0`), downloads will not receive strikes for slow estimated finish time.
+- Type: Integer.
+- Default: `0`.
+- Required: No.
+
+#### **`QUEUECLEANER__SLOW_IGNORE_ABOVE_SIZE`**
+- Downloads above this size will not be removed for being slow.
+- Type: String.
+- Default: Empty.
+- Required: No.
+- Value examples: `10KB`, `200MB`, `3GB`.
 
 #
 
