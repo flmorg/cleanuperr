@@ -81,28 +81,31 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
             throw new ValidationException($"the minimum value for {SectionName}__SLOW_MAX_STRIKES must be 3");
         }
 
-        bool isSlowSpeedSet = !string.IsNullOrEmpty(SlowMinSpeed);
-
-        if (isSlowSpeedSet && ByteSize.TryParse(SlowMinSpeed, out _) is false)
+        if (SlowMaxStrikes > 0)
         {
-            throw new ValidationException($"invalid value for {SectionName}__SLOW_MIN_SPEED");
-        }
+            bool isSlowSpeedSet = !string.IsNullOrEmpty(SlowMinSpeed);
 
-        if (SlowMaxTime < 0)
-        {
-            throw new ValidationException($"invalid value for {SectionName}__SLOW_MAX_TIME");
-        }
+            if (isSlowSpeedSet && ByteSize.TryParse(SlowMinSpeed, out _) is false)
+            {
+                throw new ValidationException($"invalid value for {SectionName}__SLOW_MIN_SPEED");
+            }
 
-        if (!isSlowSpeedSet && SlowMaxTime is 0)
-        {
-            throw new ValidationException($"either {SectionName}__SLOW_MIN_SPEED or {SectionName}__SLOW_MAX_STRIKES must be set");
-        }
+            if (SlowMaxTime < 0)
+            {
+                throw new ValidationException($"invalid value for {SectionName}__SLOW_MAX_TIME");
+            }
+
+            if (!isSlowSpeedSet && SlowMaxTime is 0)
+            {
+                throw new ValidationException($"either {SectionName}__SLOW_MIN_SPEED or {SectionName}__SLOW_MAX_STRIKES must be set");
+            }
         
-        bool isSlowIgnoreAboveSizeSet = !string.IsNullOrEmpty(SlowIgnoreAboveSize);
+            bool isSlowIgnoreAboveSizeSet = !string.IsNullOrEmpty(SlowIgnoreAboveSize);
         
-        if (isSlowIgnoreAboveSizeSet && ByteSize.TryParse(SlowIgnoreAboveSize, out _) is false)
-        {
-            throw new ValidationException($"invalid value for {SectionName}__SLOW_IGNORE_ABOVE_SIZE");
+            if (isSlowIgnoreAboveSizeSet && ByteSize.TryParse(SlowIgnoreAboveSize, out _) is false)
+            {
+                throw new ValidationException($"invalid value for {SectionName}__SLOW_IGNORE_ABOVE_SIZE");
+            }
         }
     }
 }
