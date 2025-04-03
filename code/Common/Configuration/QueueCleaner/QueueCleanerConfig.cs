@@ -1,5 +1,5 @@
-﻿using Common.Exceptions;
-using Humanizer.Bytes;
+﻿using Common.CustomDataTypes;
+using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.QueueCleaner;
@@ -54,7 +54,7 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     [ConfigurationKeyName("SLOW_MIN_SPEED")]
     public string SlowMinSpeed { get; init; } = string.Empty;
     
-    public ByteSize? SlowMinSpeedByteSize => string.IsNullOrEmpty(SlowMinSpeed) ? null : ByteSize.Parse(SlowMinSpeed);
+    public ByteSize SlowMinSpeedByteSize => string.IsNullOrEmpty(SlowMinSpeed) ? new ByteSize(0) : ByteSize.Parse(SlowMinSpeed);
     
     [ConfigurationKeyName("SLOW_MAX_TIME")]
     public double SlowMaxTime { get; init; }

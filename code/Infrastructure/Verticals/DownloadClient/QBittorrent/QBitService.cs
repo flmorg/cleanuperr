@@ -1,15 +1,13 @@
 using System.Collections.Concurrent;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Common.Attributes;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.CustomDataTypes;
 using Common.Helpers;
 using Domain.Enums;
-using Humanizer;
-using Humanizer.Bytes;
 using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
@@ -377,13 +375,14 @@ public class QBitService : DownloadService, IQBitService
             return (false, DeleteReason.None);
         }
         
-        double minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize?.Bytes ?? double.MinValue;
+        ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
+        ByteSize currentSpeed = new ByteSize(torrent.DownloadSpeed);
         
-        if (minSpeed > 0 && torrent.DownloadSpeed < minSpeed)
+        if (minSpeed.Bytes > 0 && currentSpeed < minSpeed)
         {
             _logger.LogTrace(
-                "slow speed | {speed} | {name}",
-                torrent.DownloadSpeed.Bytes().Humanize("#.##", CultureInfo.InvariantCulture),
+                "slow speed | {speed}/s | {name}",
+                currentSpeed.ToString(),
                 torrent.Name
             );
             
@@ -400,13 +399,14 @@ public class QBitService : DownloadService, IQBitService
             ResetSlowSpeedStrikesOnProgress(torrent.Hash);
         }
         
-        TimeSpan maxTime = TimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan currentTime = new SmartTimeSpan(torrent.EstimatedTime ?? TimeSpan.Zero);
 
-        if (maxTime > TimeSpan.Zero && torrent.EstimatedTime > maxTime)
+        if (maxTime.Time > TimeSpan.Zero && currentTime > maxTime)
         {
             _logger.LogTrace(
                 "slow estimated time | {time} | {name}",
-                torrent.EstimatedTime?.Humanize(precision: 2, CultureInfo.InvariantCulture),
+                currentTime.ToString(),
                 torrent.Name
             );
             
