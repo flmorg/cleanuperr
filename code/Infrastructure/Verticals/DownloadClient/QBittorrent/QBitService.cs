@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Common.Attributes;
 using Common.Configuration.ContentBlocker;
@@ -380,7 +381,11 @@ public class QBitService : DownloadService, IQBitService
         
         if (minSpeed > 0 && torrent.DownloadSpeed < minSpeed)
         {
-            _logger.LogTrace("slow speed | {speed} | {name}", torrent.DownloadSpeed.Bytes().Humanize("#.##"), torrent.Name);
+            _logger.LogTrace(
+                "slow speed | {speed} | {name}",
+                torrent.DownloadSpeed.Bytes().Humanize("#.##", CultureInfo.InvariantCulture),
+                torrent.Name
+            );
             
             bool shouldRemove = await _striker
                 .StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
@@ -399,7 +404,11 @@ public class QBitService : DownloadService, IQBitService
 
         if (maxTime > TimeSpan.Zero && torrent.EstimatedTime > maxTime)
         {
-            _logger.LogTrace("slow estimated time | {time} | {name}", torrent.EstimatedTime?.Humanize(precision: 2), torrent.Name);
+            _logger.LogTrace(
+                "slow estimated time | {time} | {name}",
+                torrent.EstimatedTime?.Humanize(precision: 2, CultureInfo.InvariantCulture),
+                torrent.Name
+            );
             
             bool shouldRemove = await _striker
                 .StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
