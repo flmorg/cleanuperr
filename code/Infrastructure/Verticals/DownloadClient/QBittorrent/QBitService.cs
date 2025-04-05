@@ -345,19 +345,19 @@ public class QBitService : DownloadService, IQBitService
         return await CheckIfStuck(torrent, isPrivate);
     }
 
-    private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(TorrentInfo torrent, bool isPrivate)
+    private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(TorrentInfo download, bool isPrivate)
     {
         if (_queueCleanerConfig.SlowMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
         
-        if (torrent.State is not (TorrentState.Downloading or TorrentState.ForcedDownload))
+        if (download.State is not (TorrentState.Downloading or TorrentState.ForcedDownload))
         {
             return (false, DeleteReason.None);
         }
         
-        if (torrent.DownloadSpeed <= 0)
+        if (download.DownloadSpeed <= 0)
         {
             return (false, DeleteReason.None);
         }
@@ -365,29 +365,25 @@ public class QBitService : DownloadService, IQBitService
         if (_queueCleanerConfig.SlowIgnorePrivate && isPrivate)
         {
             // ignore private trackers
-            _logger.LogDebug("skip slow check | download is private | {name}", torrent.Name);
+            _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
             return (false, DeleteReason.None);
         }
 
-        if (torrent.Size > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        if (download.Size > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
         {
-            _logger.LogDebug("skip slow check | download is too large | {name}", torrent.Name);
+            _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
         ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
-        ByteSize currentSpeed = new ByteSize(torrent.DownloadSpeed);
+        ByteSize currentSpeed = new ByteSize(download.DownloadSpeed);
         
         if (minSpeed.Bytes > 0 && currentSpeed < minSpeed)
         {
-            _logger.LogTrace(
-                "slow speed | {speed}/s | {name}",
-                currentSpeed.ToString(),
-                torrent.Name
-            );
+            _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), download.Name);
             
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
+                .StrikeAndCheckLimit(download.Hash, download.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
 
             if (shouldRemove)
             {
@@ -396,22 +392,18 @@ public class QBitService : DownloadService, IQBitService
         }
         else
         {
-            ResetSlowSpeedStrikesOnProgress(torrent.Hash);
+            ResetSlowSpeedStrikesOnProgress(download.Name, download.Hash);
         }
         
         SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
-        SmartTimeSpan currentTime = new SmartTimeSpan(torrent.EstimatedTime ?? TimeSpan.Zero);
+        SmartTimeSpan currentTime = new SmartTimeSpan(download.EstimatedTime ?? TimeSpan.Zero);
 
         if (maxTime.Time > TimeSpan.Zero && currentTime > maxTime)
         {
-            _logger.LogTrace(
-                "slow estimated time | {time} | {name}",
-                currentTime.ToString(),
-                torrent.Name
-            );
+            _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), download.Name);
             
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
+                .StrikeAndCheckLimit(download.Hash, download.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
 
             if (shouldRemove)
             {
@@ -420,7 +412,7 @@ public class QBitService : DownloadService, IQBitService
         }
         else
         {
-            ResetSlowTimeStrikesOnProgress(torrent.Hash);
+            ResetSlowTimeStrikesOnProgress(download.Name, download.Hash);
         }
         
         return (false, DeleteReason.None);

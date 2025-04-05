@@ -96,7 +96,7 @@ public abstract class DownloadService : IDownloadService
         _cache.Set(CacheKeys.StrikeItem(hash, StrikeType.Stalled), new StalledCacheItem { Downloaded = downloaded }, _cacheOptions);
     }
     
-    protected void ResetSlowSpeedStrikesOnProgress(string hash)
+    protected void ResetSlowSpeedStrikesOnProgress(string downloadName, string hash)
     {
         if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
         {
@@ -111,10 +111,10 @@ public abstract class DownloadService : IDownloadService
         }
         
         _cache.Remove(key);
-        _logger.LogDebug("resetting slow speed strikes for {hash} due to progress", hash);
+        _logger.LogDebug("resetting slow speed strikes due to progress | {name}", downloadName);
     }
     
-    protected void ResetSlowTimeStrikesOnProgress(string hash)
+    protected void ResetSlowTimeStrikesOnProgress(string downloadName, string hash)
     {
         if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
         {
@@ -129,7 +129,7 @@ public abstract class DownloadService : IDownloadService
         }
         
         _cache.Remove(key);
-        _logger.LogDebug("resetting slow time strikes for {hash} due to progress", hash);
+        _logger.LogDebug("resetting slow time strikes due to progress | {name}", downloadName);
     }
     
     protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)

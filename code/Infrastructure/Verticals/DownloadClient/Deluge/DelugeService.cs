@@ -1,10 +1,12 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Common.Attributes;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.CustomDataTypes;
 using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Extensions;
@@ -57,7 +59,7 @@ public class DelugeService : DownloadService, IDelugeService
         DelugeContents? contents = null;
         DownloadCheckResult result = new();
 
-        TorrentStatus? download = await _client.GetTorrentStatus(hash);
+        DownloadStatus? download = await _client.GetTorrentStatus(hash);
         
         if (download?.Hash is null)
         {
@@ -102,7 +104,7 @@ public class DelugeService : DownloadService, IDelugeService
         }
         
         // remove if download is stuck
-        (result.ShouldRemove, result.DeleteReason) = await IsItemStuckAndShouldRemove(download);
+        (result.ShouldRemove, result.DeleteReason) = await EvaluateDownloadRemoval(download);
 
         return result;
     }
@@ -115,7 +117,7 @@ public class DelugeService : DownloadService, IDelugeService
     {
         hash = hash.ToLowerInvariant();
 
-        TorrentStatus? download = await _client.GetTorrentStatus(hash);
+        DownloadStatus? download = await _client.GetTorrentStatus(hash);
         BlockFilesResult result = new();
         
         if (download?.Hash is null)
@@ -123,9 +125,6 @@ public class DelugeService : DownloadService, IDelugeService
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
-        
-        var ceva = await _client.GetTorrentExtended(hash);
-        
         
         if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
@@ -223,7 +222,7 @@ public class DelugeService : DownloadService, IDelugeService
     public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
         IReadOnlyList<string> ignoredDownloads)
     {
-        foreach (TorrentStatus download in downloads)
+        foreach (DownloadStatus download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
             {
@@ -296,28 +295,113 @@ public class DelugeService : DownloadService, IDelugeService
         await _client.ChangeFilesPriority(hash, sortedPriorities);
     }
     
-    private async Task<(bool, DeleteReason)> IsItemStuckAndShouldRemove(TorrentStatus status)
+    private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(DownloadStatus status)
+    {
+        (bool ShouldRemove, DeleteReason Reason) result = await CheckIfSlow(status);
+
+        if (result.ShouldRemove)
+        {
+            return result;
+        }
+
+        return await CheckIfStuck(status);
+    }
+    
+    private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(DownloadStatus download)
+    {
+        if (_queueCleanerConfig.SlowMaxStrikes is 0)
+        {
+            return (false, DeleteReason.None);
+        }
+        
+        if (download.State is null || !download.State.Equals("Downloading", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return (false, DeleteReason.None);
+        }
+        
+        if (download.DownloadSpeed <= 0)
+        {
+            return (false, DeleteReason.None);
+        }
+        
+        if (_queueCleanerConfig.SlowIgnorePrivate && download.Private)
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
+            return (false, DeleteReason.None);
+        }
+        
+        if (download.Size > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        {
+            _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
+            return (false, DeleteReason.None);
+        }
+        
+        ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
+        ByteSize currentSpeed = new ByteSize(download.DownloadSpeed);
+        
+        if (minSpeed.Bytes > 0 && currentSpeed < minSpeed)
+        {
+            _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), download.Name);
+            
+            bool shouldRemove = await _striker
+                .StrikeAndCheckLimit(download.Hash, download.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
+        
+            if (shouldRemove)
+            {
+                return (true, DeleteReason.SlowSpeed);
+            }
+        }
+        else
+        {
+            ResetSlowSpeedStrikesOnProgress(download.Name, download.Hash);
+        }
+        
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan currentTime = SmartTimeSpan.FromSeconds(download.Eta);
+        
+        if (maxTime.Time > TimeSpan.Zero && currentTime > maxTime)
+        {
+            _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), download.Name);
+            
+            bool shouldRemove = await _striker
+                .StrikeAndCheckLimit(download.Hash, download.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
+        
+            if (shouldRemove)
+            {
+                return (true, DeleteReason.SlowTime);
+            }
+        }
+        else
+        {
+            ResetSlowTimeStrikesOnProgress(download.Name, download.Hash);
+        }
+        
+        return (false, DeleteReason.None);
+    }
+    
+    private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(DownloadStatus status)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
-            return (false, default);
+            return (false, DeleteReason.None);
         }
         
         if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip stalled check | download is private | {name}", status.Name);
-            return (false, default);
+            return (false, DeleteReason.None);
         }
         
         if (status.State is null || !status.State.Equals("Downloading", StringComparison.InvariantCultureIgnoreCase))
         {
-            return (false, default);
+            return (false, DeleteReason.None);
         }
 
         if (status.Eta > 0)
         {
-            return (false, default);
+            return (false, DeleteReason.None);
         }
         
         ResetStalledStrikesOnProgress(status.Hash!, status.TotalDone);

@@ -4,7 +4,7 @@ namespace Infrastructure.Extensions;
 
 public static class DelugeExtensions
 {
-    public static bool ShouldIgnore(this TorrentStatus download, IReadOnlyList<string> ignoredDownloads)
+    public static bool ShouldIgnore(this DownloadStatus download, IReadOnlyList<string> ignoredDownloads)
     {
         foreach (string value in ignoredDownloads)
         {
