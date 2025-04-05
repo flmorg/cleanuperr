@@ -14,7 +14,7 @@ deployment:
           value: "false"
 
         - name: LOGGING__LOGLEVEL
-          value: Debug
+          value: Verbose
         - name: LOGGING__FILE__ENABLED
           value: "true"
         - name: LOGGING__FILE__PATH
