@@ -339,45 +339,17 @@ public class DelugeService : DownloadService, IDelugeService
         
         ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
         ByteSize currentSpeed = new ByteSize(download.DownloadSpeed);
-        
-        if (minSpeed.Bytes > 0 && currentSpeed < minSpeed)
-        {
-            _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), download.Name);
-            
-            bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(download.Hash, download.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
-        
-            if (shouldRemove)
-            {
-                return (true, DeleteReason.SlowSpeed);
-            }
-        }
-        else
-        {
-            ResetSlowSpeedStrikesOnProgress(download.Name, download.Hash);
-        }
-        
         SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
         SmartTimeSpan currentTime = SmartTimeSpan.FromSeconds(download.Eta);
-        
-        if (maxTime.Time > TimeSpan.Zero && currentTime > maxTime)
-        {
-            _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), download.Name);
-            
-            bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(download.Hash, download.Name, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
-        
-            if (shouldRemove)
-            {
-                return (true, DeleteReason.SlowTime);
-            }
-        }
-        else
-        {
-            ResetSlowTimeStrikesOnProgress(download.Name, download.Hash);
-        }
-        
-        return (false, DeleteReason.None);
+
+        return await CheckIfSlow(
+            download.Hash!,
+            download.Name!,
+            minSpeed,
+            currentSpeed,
+            maxTime,
+            currentTime
+        );
     }
     
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(DownloadStatus status)

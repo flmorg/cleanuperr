@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
+using Common.CustomDataTypes;
 using Common.Helpers;
 using Domain.Enums;
 using Domain.Models.Cache;
@@ -130,6 +131,52 @@ public abstract class DownloadService : IDownloadService
         
         _cache.Remove(key);
         _logger.LogDebug("resetting slow time strikes due to progress | {name}", downloadName);
+    }
+
+    protected async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(
+        string downloadHash,
+        string downloadName,
+        ByteSize minSpeed,
+        ByteSize currentSpeed,
+        SmartTimeSpan maxTime,
+        SmartTimeSpan currentTime
+    )
+    {
+        if (minSpeed.Bytes > 0 && currentSpeed < minSpeed)
+        {
+            _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), downloadName);
+            
+            bool shouldRemove = await _striker
+                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
+
+            if (shouldRemove)
+            {
+                return (true, DeleteReason.SlowSpeed);
+            }
+        }
+        else
+        {
+            ResetSlowSpeedStrikesOnProgress(downloadName, downloadHash);
+        }
+        
+        if (maxTime.Time > TimeSpan.Zero && currentTime > maxTime)
+        {
+            _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), downloadName);
+            
+            bool shouldRemove = await _striker
+                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
+
+            if (shouldRemove)
+            {
+                return (true, DeleteReason.SlowTime);
+            }
+        }
+        else
+        {
+            ResetSlowTimeStrikesOnProgress(downloadName, downloadHash);
+        }
+        
+        return (false, DeleteReason.None);
     }
     
     protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)
