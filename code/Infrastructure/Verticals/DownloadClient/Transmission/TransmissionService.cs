@@ -338,36 +338,6 @@ public class TransmissionService : DownloadService, ITransmissionService
         });
     }
     
-    private async Task<(bool, DeleteReason)> IsItemStuckAndShouldRemove(TorrentInfo torrent)
-    {
-        if (_queueCleanerConfig.StalledMaxStrikes is 0)
-        {
-            return (false, default);
-        }
-        
-        if (_queueCleanerConfig.StalledIgnorePrivate && (torrent.IsPrivate ?? false))
-        {
-            // ignore private trackers
-            _logger.LogDebug("skip stalled check | download is private | {name}", torrent.Name);
-            return (false, default);
-        }
-        
-        if (torrent.Status is not 4)
-        {
-            // not in downloading state
-            return (false, default);
-        }
-
-        if (torrent.Eta > 0)
-        {
-            return (false, default);
-        }
-        
-        ResetStalledStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
-        
-        return (await _striker.StrikeAndCheckLimit(torrent.HashString!, torrent.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
-    }
-    
     private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(TorrentInfo torrent)
     {
         (bool ShouldRemove, DeleteReason Reason) result = await CheckIfSlow(torrent);
@@ -439,7 +409,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             return (false, DeleteReason.None);
         }
         
-        if (download.Eta > 0)
+        if (download.RateDownload > 0 || download.Eta > 0)
         {
             return (false, DeleteReason.None);
         }
