@@ -77,6 +77,8 @@ public sealed class QueueCleaner : GenericHandler
                 
                 QueueRecord record = group.First();
                 
+                _logger.LogTrace("processing | {title} | {id}", record.Title, record.DownloadId);
+                
                 if (!arrClient.IsRecordValid(record))
                 {
                     continue;
