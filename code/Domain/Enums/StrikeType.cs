@@ -4,5 +4,7 @@ public enum StrikeType
 {
     Stalled,
     DownloadingMetadata,
-    ImportFailed
+    ImportFailed,
+    SlowSpeed,
+    SlowTime,
 }

@@ -39,7 +39,7 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
             });
 
             // Act
-            sut.ResetStrikesOnProgress("test-hash", 100);
+            sut.ResetStalledStrikesOnProgress("test-hash", 100);
 
             // Assert
             _fixture.Cache.ReceivedCalls().ShouldBeEmpty();
@@ -50,19 +50,19 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
         {
             // Arrange
             const string hash = "test-hash";
-            CacheItem cacheItem = new CacheItem { Downloaded = 100 };
+            StalledCacheItem stalledCacheItem = new StalledCacheItem { Downloaded = 100 };
             
             _fixture.Cache.TryGetValue(Arg.Any<object>(), out Arg.Any<object?>())
                 .Returns(x =>
                 {
-                    x[1] = cacheItem;
+                    x[1] = stalledCacheItem;
                     return true;
                 });
             
             TestDownloadService sut = _fixture.CreateSut();
 
             // Act
-            sut.ResetStrikesOnProgress(hash, 200);
+            sut.ResetStalledStrikesOnProgress(hash, 200);
 
             // Assert
             _fixture.Cache.Received(1).Remove(CacheKeys.Strike(StrikeType.Stalled, hash));
@@ -73,20 +73,20 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
         {
             // Arrange
             const string hash = "test-hash";
-            CacheItem cacheItem = new CacheItem { Downloaded = 200 };
+            StalledCacheItem stalledCacheItem = new StalledCacheItem { Downloaded = 200 };
             
             _fixture.Cache
                 .TryGetValue(Arg.Any<object>(), out Arg.Any<object?>())
                 .Returns(x =>
                 {
-                    x[1] = cacheItem;
+                    x[1] = stalledCacheItem;
                     return true;
                 });
             
             TestDownloadService sut = _fixture.CreateSut();
 
             // Act
-            sut.ResetStrikesOnProgress(hash, 100);
+            sut.ResetStalledStrikesOnProgress(hash, 100);
 
             // Assert
             _fixture.Cache.DidNotReceive().Remove(Arg.Any<object>());
@@ -97,28 +97,6 @@ public class DownloadServiceTests : IClassFixture<DownloadServiceFixture>
     {
         public StrikeAndCheckLimitTests(DownloadServiceFixture fixture) : base(fixture)
         {
-        }
-
-        [Fact]
-        public async Task ShouldDelegateCallToStriker()
-        {
-            // Arrange
-            const string hash = "test-hash";
-            const string itemName = "test-item";
-            StrikeType strikeType = StrikeType.Stalled;
-            _fixture.Striker.StrikeAndCheckLimit(hash, itemName, 3, strikeType)
-                .Returns(true);
-            
-            TestDownloadService sut = _fixture.CreateSut();
-
-            // Act
-            bool result = await sut.StrikeAndCheckLimit(hash, itemName, strikeType);
-
-            // Assert
-            result.ShouldBeTrue();
-            await _fixture.Striker
-                .Received(1)
-                .StrikeAndCheckLimit(hash, itemName, 3, StrikeType.Stalled);
         }
     }
 

@@ -29,6 +29,8 @@ public sealed class DelugeClient
         "seeding_time",
         "ratio",
         "trackers",
+        "download_payload_rate",
+        "total_size",
         "download_location"
     ];
     
@@ -111,11 +113,11 @@ public sealed class DelugeClient
         return torrents.FirstOrDefault();
     }
     
-    public async Task<TorrentStatus?> GetTorrentStatus(string hash)
+    public async Task<DownloadStatus?> GetTorrentStatus(string hash)
     {
         try
         {
-            return await SendRequest<TorrentStatus?>(
+            return await SendRequest<DownloadStatus?>(
                 "web.get_torrent_status",
                 hash,
                 Fields
@@ -133,9 +135,9 @@ public sealed class DelugeClient
         }
     }
     
-    public async Task<List<TorrentStatus>?> GetStatusForAllTorrents()
+    public async Task<List<DownloadStatus>?> GetStatusForAllTorrents()
     {
-        Dictionary<string, TorrentStatus>? downloads = await SendRequest<Dictionary<string, TorrentStatus>?>(
+        Dictionary<string, DownloadStatus>? downloads = await SendRequest<Dictionary<string, DownloadStatus>?>(
             "core.get_torrents_status",
             "",
             Fields

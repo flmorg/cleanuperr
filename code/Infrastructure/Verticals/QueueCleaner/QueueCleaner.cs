@@ -77,6 +77,8 @@ public sealed class QueueCleaner : GenericHandler
                 
                 QueueRecord record = group.First();
                 
+                _logger.LogTrace("processing | {title} | {id}", record.Title, record.DownloadId);
+                
                 if (!arrClient.IsRecordValid(record))
                 {
                     continue;
@@ -91,7 +93,7 @@ public sealed class QueueCleaner : GenericHandler
                 // push record to context
                 ContextProvider.Set(nameof(QueueRecord), record);
 
-                StalledResult stalledCheckResult = new();
+                DownloadCheckResult downloadCheckResult = new();
 
                 if (record.Protocol is "torrent" && _downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.Disabled)
                 {
@@ -102,14 +104,14 @@ public sealed class QueueCleaner : GenericHandler
                     }
                     
                     // stalled download check
-                    stalledCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
+                    downloadCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
                 }
                 
                 // failed import check
-                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, stalledCheckResult.IsPrivate);
-                DeleteReason deleteReason = stalledCheckResult.ShouldRemove ? stalledCheckResult.DeleteReason : DeleteReason.ImportFailed;
+                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate);
+                DeleteReason deleteReason = downloadCheckResult.ShouldRemove ? downloadCheckResult.DeleteReason : DeleteReason.ImportFailed;
 
-                if (!shouldRemoveFromArr && !stalledCheckResult.ShouldRemove)
+                if (!shouldRemoveFromArr && !downloadCheckResult.ShouldRemove)
                 {
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;
@@ -119,14 +121,20 @@ public sealed class QueueCleaner : GenericHandler
 
                 bool removeFromClient = true;
 
-                if (stalledCheckResult.IsPrivate)
+                if (downloadCheckResult.IsPrivate)
                 {
-                    if (stalledCheckResult.ShouldRemove && !_config.StalledDeletePrivate)
-                    {
-                        removeFromClient = false;
-                    }
+                    bool isStalledWithoutPruneFlag = 
+                        downloadCheckResult.DeleteReason is DeleteReason.Stalled && 
+                        !_config.StalledDeletePrivate;
+    
+                    bool isSlowWithoutPruneFlag = 
+                        downloadCheckResult.DeleteReason is DeleteReason.SlowSpeed or DeleteReason.SlowTime && 
+                        !_config.SlowDeletePrivate;
+    
+                    bool shouldKeepDueToDeleteRules = downloadCheckResult.ShouldRemove && (isStalledWithoutPruneFlag || isSlowWithoutPruneFlag);
+                    bool shouldKeepDueToImportRules = shouldRemoveFromArr && !_config.ImportFailedDeletePrivate;
 
-                    if (shouldRemoveFromArr && !_config.ImportFailedDeletePrivate)
+                    if (shouldKeepDueToDeleteRules || shouldKeepDueToImportRules)
                     {
                         removeFromClient = false;
                     }

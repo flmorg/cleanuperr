@@ -2,7 +2,7 @@
 
 namespace Domain.Models.Deluge.Response;
 
-public sealed record TorrentStatus
+public sealed record DownloadStatus
 {
     public string? Hash { get; init; }
     
@@ -12,7 +12,13 @@ public sealed record TorrentStatus
     
     public ulong Eta { get; init; }
     
+    [JsonProperty("download_payload_rate")]
+    public long DownloadSpeed { get; init; }
+    
     public bool Private { get; init; }
+    
+    [JsonProperty("total_size")]
+    public long Size { get; init; }
     
     [JsonProperty("total_done")]
     public long TotalDone { get; init; }

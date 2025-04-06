@@ -6,6 +6,8 @@ public enum DeleteReason
     Stalled,
     ImportFailed,
     DownloadingMetadata,
+    SlowSpeed,
+    SlowTime,
     AllFilesSkipped,
     AllFilesSkippedByQBit,
     AllFilesBlocked,

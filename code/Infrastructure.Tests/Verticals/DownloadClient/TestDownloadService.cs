@@ -38,7 +38,7 @@ public class TestDownloadService : DownloadService
 
     public override void Dispose() { }
     public override Task LoginAsync() => Task.CompletedTask;
-    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new StalledResult());
+    public override Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new DownloadCheckResult());
     public override Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, BlocklistType blocklistType,
         ConcurrentBag<string> patterns, ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads) => Task.FromResult(new BlockFilesResult());
     public override Task DeleteDownload(string hash) => Task.CompletedTask;
@@ -49,7 +49,6 @@ public class TestDownloadService : DownloadService
     public override Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads) => Task.CompletedTask;
     public override Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads) => Task.CompletedTask;
     // Expose protected methods for testing
-    public new void ResetStrikesOnProgress(string hash, long downloaded) => base.ResetStrikesOnProgress(hash, downloaded);
-    public new Task<bool> StrikeAndCheckLimit(string hash, string itemName, StrikeType strikeType) => base.StrikeAndCheckLimit(hash, itemName, strikeType);
+    public new void ResetStalledStrikesOnProgress(string hash, long downloaded) => base.ResetStalledStrikesOnProgress(hash, downloaded);
     public new SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, CleanCategory category) => base.ShouldCleanDownload(ratio, seedingTime, category);
 }
