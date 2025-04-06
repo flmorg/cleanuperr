@@ -412,6 +412,35 @@
 > DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_SEED_TIME
 > ```
 
+#### **`DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY`**
+> [!IMPORTANT]
+> If you are using Docker, make sure to mount the downloads directory the same way it is mounted for the download client.
+> If your download client's download directory is `/downloads`, it should be the same for cleanuperr.
+
+- The category to set on downloads that do not have hardlinks.
+- Type: String.
+- Default: `cleanuperr-unlinked`.
+- Required: No.
+
+#### **`DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR`**
+- This is useful if you are using [cross-seed](https://www.cross-seed.org/).
+- The downloads root directory where the original and cross-seed hardlinks reside. All other hardlinks from this directory will be treated as if they do not exist (e.g. if you have a download with the original file and a cross-seed hardlink, it will be deleted).
+- Type: String.
+- Default: Empty.
+- Required: No.
+
+#### **`DOWNLOADCLEANER__UNLINKED_CATEGORIES__0`**
+> [!NOTE]
+> Multiple categories can be specified using this format, where `<NUMBER>` starts from 0:
+> ```yaml
+> DOWNLOADCLEANER__UNLINKED_CATEGORIES__<NUMBER>
+> ```
+
+- The categories of downloads to check for available hardlinks.
+- Type: String.
+- Default: Empty.
+- Required: No.
+
 #
 
 ### Download Client settings

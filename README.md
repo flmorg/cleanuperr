@@ -14,7 +14,8 @@ cleanuperr was created primarily to address malicious files, such as `*.lnk` or 
 > - Remove and block downloads that reached a maximum number of strikes.
 > - Remove downloads blocked by qBittorrent or by cleanuperr's **content blocker**.
 > - Trigger a search for downloads removed from the *arrs.
-> - Clean up downloads that have been seeding for a certain amount of time.
+> - Remove downloads that have been seeding for a certain amount of time.
+> - Remove downloads that have no hardlinks (have been upgraded by the *arrs).
 > - Notify on strike or download removal.
 > - Ignore certain torrent hashes, categories, tags or trackers from processing.
 
@@ -176,31 +177,41 @@ services:
       - LOGGING__FILE__PATH=/var/logs/
       - LOGGING__ENHANCED=true
 
+      # triggers
       - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
       - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
       - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
 
+      # queue cleaner
       - QUEUECLEANER__ENABLED=true
       - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - QUEUECLEANER__RUNSEQUENTIALLY=true
+
+      # failed imports
       - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
       - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
       - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
       # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
       # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
+
+      # stalled downloads
       - QUEUECLEANER__STALLED_MAX_STRIKES=5
       - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=false
       - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
       - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
 
+      # content blocker
       - CONTENTBLOCKER__ENABLED=true
       - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - CONTENTBLOCKER__IGNORE_PRIVATE=false
       - CONTENTBLOCKER__DELETE_PRIVATE=false
 
+      # download cleaner
       - DOWNLOADCLEANER__ENABLED=true
       - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
       - DOWNLOADCLEANER__DELETE_PRIVATE=false
+
+      # remove seeding downloads
       - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
       - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
       - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
@@ -209,6 +220,17 @@ services:
       - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
       - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
       - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=240
+      # remove downloads with no hardlinks
+      - DOWNLOADCLEANER__CATEGORIES__2__NAME=cleanuperr-unlinked
+      - DOWNLOADCLEANER__CATEGORIES__2__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__2__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__2__MAX_SEED_TIME=0
+
+      # change category for downloads with no hardlinks
+      - DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY=cleanuperr-unlinked
+      - DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR=/downloads
+      - DOWNLOADCLEANER__UNLINKED_CATEGORIES__0=tv-sonarr
+      - DOWNLOADCLEANER__UNLINKED_CATEGORIES__1=radarr
 
       - DOWNLOAD_CLIENT=none
       # OR
