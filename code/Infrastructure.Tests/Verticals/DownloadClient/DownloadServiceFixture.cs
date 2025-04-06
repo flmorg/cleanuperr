@@ -1,9 +1,10 @@
-﻿using Common.Configuration.ContentBlocker;
+using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -56,6 +57,7 @@ public class DownloadServiceFixture : IDisposable
         var filenameEvaluator = Substitute.For<IFilenameEvaluator>();
         var notifier = Substitute.For<INotificationPublisher>();
         var dryRunInterceptor = Substitute.For<IDryRunInterceptor>();
+        var hardlinkFileService = Substitute.For<IHardLinkFileService>();
 
         return new TestDownloadService(
             Logger,
@@ -66,7 +68,8 @@ public class DownloadServiceFixture : IDisposable
             filenameEvaluator,
             Striker,
             notifier,
-            dryRunInterceptor
+            dryRunInterceptor,
+            hardlinkFileService
         );
     }
 

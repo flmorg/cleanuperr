@@ -15,14 +15,12 @@ public sealed class Striker : IStriker
     private readonly IMemoryCache _cache;
     private readonly MemoryCacheEntryOptions _cacheOptions;
     private readonly INotificationPublisher _notifier;
-    private readonly IDryRunInterceptor _dryRunInterceptor;
 
-    public Striker(ILogger<Striker> logger, IMemoryCache cache, INotificationPublisher notifier, IDryRunInterceptor dryRunInterceptor)
+    public Striker(ILogger<Striker> logger, IMemoryCache cache, INotificationPublisher notifier)
     {
         _logger = logger;
         _cache = cache;
         _notifier = notifier;
-        _dryRunInterceptor = dryRunInterceptor;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
     }
