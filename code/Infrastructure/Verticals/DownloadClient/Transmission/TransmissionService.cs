@@ -5,6 +5,7 @@ using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
+using Common.CustomDataTypes;
 using Common.Helpers;
 using Domain.Enums;
 using Infrastructure.Extensions;
@@ -26,7 +27,6 @@ public class TransmissionService : DownloadService, ITransmissionService
 {
     private readonly TransmissionConfig _config;
     private readonly Client _client;
-    private TorrentInfo[]? _torrentsCache;
 
     private static readonly string[] Fields =
     [
@@ -42,7 +42,9 @@ public class TransmissionService : DownloadService, ITransmissionService
         TorrentFields.DOWNLOAD_DIR,
         TorrentFields.SECONDS_SEEDING,
         TorrentFields.UPLOAD_RATIO,
-        TorrentFields.TRACKERS
+        TorrentFields.TRACKERS,
+        TorrentFields.RATE_DOWNLOAD,
+        TorrentFields.TOTAL_SIZE
     ];
 
     public TransmissionService(
@@ -82,9 +84,9 @@ public class TransmissionService : DownloadService, ITransmissionService
     }
 
     /// <inheritdoc/>
-    public override async Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
+    public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
-        StalledResult result = new();
+        DownloadCheckResult result = new();
         TorrentInfo? download = await GetTorrentAsync(hash);
 
         if (download is null)
@@ -126,7 +128,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         }
 
         // remove if download is stuck
-        (result.ShouldRemove, result.DeleteReason) = await IsItemStuckAndShouldRemove(download);
+        (result.ShouldRemove, result.DeleteReason) = await EvaluateDownloadRemoval(download);
 
         return result;
     }
@@ -336,60 +338,96 @@ public class TransmissionService : DownloadService, ITransmissionService
         });
     }
     
-    private async Task<(bool, DeleteReason)> IsItemStuckAndShouldRemove(TorrentInfo torrent)
+    private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(TorrentInfo torrent)
+    {
+        (bool ShouldRemove, DeleteReason Reason) result = await CheckIfSlow(torrent);
+
+        if (result.ShouldRemove)
+        {
+            return result;
+        }
+
+        return await CheckIfStuck(torrent);
+    }
+
+    private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(TorrentInfo download)
+    {
+        if (_queueCleanerConfig.SlowMaxStrikes is 0)
+        {
+            return (false, DeleteReason.None);
+        }
+        
+        if (download.Status is not 4)
+        {
+            // not in downloading state
+            return (false, DeleteReason.None);
+        }
+        
+        if (download.RateDownload <= 0)
+        {
+            return (false, DeleteReason.None);
+        }
+        
+        if (_queueCleanerConfig.SlowIgnorePrivate && download.IsPrivate is true)
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
+            return (false, DeleteReason.None);
+        }
+
+        if (download.TotalSize > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        {
+            _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
+            return (false, DeleteReason.None);
+        }
+        
+        ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
+        ByteSize currentSpeed = new ByteSize(download.RateDownload ?? long.MaxValue);
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan currentTime = SmartTimeSpan.FromSeconds(download.Eta ?? 0);
+
+        return await CheckIfSlow(
+            download.HashString!,
+            download.Name!,
+            minSpeed,
+            currentSpeed,
+            maxTime,
+            currentTime
+        );
+    }
+
+    private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(TorrentInfo download)
     {
         if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
-            return (false, default);
+            return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.StalledIgnorePrivate && (torrent.IsPrivate ?? false))
-        {
-            // ignore private trackers
-            _logger.LogDebug("skip stalled check | download is private | {name}", torrent.Name);
-            return (false, default);
-        }
-        
-        if (torrent.Status is not 4)
+        if (download.Status is not 4)
         {
             // not in downloading state
-            return (false, default);
-        }
-
-        if (torrent.Eta > 0)
-        {
-            return (false, default);
+            return (false, DeleteReason.None);
         }
         
-        ResetStrikesOnProgress(torrent.HashString!, torrent.DownloadedEver ?? 0);
-
-        return (await StrikeAndCheckLimit(torrent.HashString!, torrent.Name!, StrikeType.Stalled), DeleteReason.Stalled);
+        if (download.RateDownload > 0 || download.Eta > 0)
+        {
+            return (false, DeleteReason.None);
+        }
+        
+        if (_queueCleanerConfig.StalledIgnorePrivate && (download.IsPrivate ?? false))
+        {
+            // ignore private trackers
+            _logger.LogDebug("skip stalled check | download is private | {name}", download.Name);
+            return (false, DeleteReason.None);
+        }
+        
+        ResetStalledStrikesOnProgress(download.HashString!, download.DownloadedEver ?? 0);
+        
+        return (await _striker.StrikeAndCheckLimit(download.HashString!, download.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
 
-    private async Task<TorrentInfo?> GetTorrentAsync(string hash)
-    {
-        TorrentInfo? torrent = _torrentsCache?
-            .FirstOrDefault(x => x.HashString.Equals(hash, StringComparison.InvariantCultureIgnoreCase));
-        
-        if (_torrentsCache is null || torrent is null)
-        {
-            // refresh cache
-            _torrentsCache = (await _client.TorrentGetAsync(Fields))
-                ?.Torrents;
-        }
-        
-        if (_torrentsCache?.Length is null or 0)
-        {
-            _logger.LogDebug("could not list torrents | {url}", _config.Url);
-        }
-        
-        torrent = _torrentsCache?.FirstOrDefault(x => x.HashString.Equals(hash, StringComparison.InvariantCultureIgnoreCase));
-
-        if (torrent is null)
-        {
-            _logger.LogDebug("could not find torrent | {hash} | {url}", hash, _config.Url);
-        }
-
-        return torrent;
-    }
+    private async Task<TorrentInfo?> GetTorrentAsync(string hash) =>
+        (await _client.TorrentGetAsync(Fields, hash))
+        ?.Torrents
+        ?.FirstOrDefault();
 }

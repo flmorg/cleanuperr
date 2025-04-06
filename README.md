@@ -95,7 +95,7 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
      - If it is, the item receives a **strike** and will continue to accumulate strikes every time it meets any of these conditions.
    - Check each queue item if it meets one of the following condition in the download client:
      - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
-     - All associated files of are marked as **unwanted/skipped**.
+     - All associated files are marked as **unwanted/skipped/do not download**.
    - If the item **DOES NOT** match the above criteria, it will be skipped.
    - If the item **DOES** match the criteria or has received the **maximum number of strikes**:
      - It will be removed from the *arr's queue and blocked.
@@ -272,7 +272,21 @@ services:
 
 > [!TIP]
 > ### Run as a Windows Service
-> Check out this stackoverflow answer on how to do it: https://stackoverflow.com/a/15719678
+> 1. Download latest nssm build from `https://nssm.cc/builds`.
+> 2. Unzip `nssm.exe` in `C:\example\directory`.
+> 3. Open a terminal with Administrator rights and execute these commands:
+> ```
+> nssm.exe install Cleanuperr "C:\example\directory\cleanuperr.exe"
+> nssm.exe set Cleanuperr AppDirectory "C:\example\directory\"
+> nssm.exe set Cleanuperr AppStdout "C:\example\directory\cleanuperr.log"
+> nssm.exe set Cleanuperr AppStderr "C:\example\directory\cleanuperr.crash.log"
+> nssm.exe set Cleanuperr AppRotateFiles 1
+> nssm.exe set Cleanuperr AppRotateOnline 1
+> nssm.exe set Cleanuperr AppRotateBytes 10485760
+> nssm.exe set Cleanuperr AppRotateFiles 10
+> nssm.exe set Cleanuperr Start SERVICE_AUTO_START
+> nssm.exe start Cleanuperr
+> ```
 
 ### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/linux.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Linux</span>
 
@@ -300,7 +314,7 @@ services:
 
 > [!IMPORTANT]
 > Some people have experienced problems when trying to execute cleanuperr on MacOS because the system actively blocked the file for not being signed.
-> As per [this](), you may need to also execute this command:
+> As per [this comment](https://stackoverflow.com/a/77907937), you may need to also execute this command:
 > ```
 > codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime /example/directory/cleanuperr
 > ```

@@ -18,7 +18,7 @@ body:
           required: true
         - label: Ensured I am using the latest version.
           required: true
-        - label: Enabled debug logging.
+        - label: Enabled verbose logging.
           required: true
   - type: textarea
     id: description

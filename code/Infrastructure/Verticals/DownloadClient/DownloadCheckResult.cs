@@ -2,7 +2,7 @@
 
 namespace Infrastructure.Verticals.DownloadClient;
 
-public sealed record StalledResult
+public sealed record DownloadCheckResult
 {
     /// <summary>
     /// True if the download should be removed; otherwise false.

@@ -28,7 +28,7 @@ public class DummyDownloadService : DownloadService
         return Task.CompletedTask;
     }
 
-    public override Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
+    public override Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
         throw new NotImplementedException();
     }

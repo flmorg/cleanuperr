@@ -15,7 +15,7 @@ public interface IDownloadService : IDisposable
     /// </summary>
     /// <param name="hash">The download hash.</param>
     /// <param name="ignoredDownloads">Downloads to ignore from processing.</param>
-    public Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
+    public Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
 
     /// <summary>
     /// Blocks unwanted files from being fully downloaded.

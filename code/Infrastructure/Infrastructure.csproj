@@ -13,7 +13,7 @@
 
     <ItemGroup>
       <PackageReference Include="FLM.QBittorrent" Version="1.0.0" />
-      <PackageReference Include="FLM.Transmission" Version="1.0.2" />
+      <PackageReference Include="FLM.Transmission" Version="1.0.3" />
       <PackageReference Include="Mapster" Version="7.4.0" />
       <PackageReference Include="MassTransit" Version="8.3.6" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />

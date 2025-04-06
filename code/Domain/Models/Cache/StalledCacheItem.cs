@@ -1,6 +1,6 @@
 ﻿namespace Domain.Models.Cache;
 
-public sealed record CacheItem
+public sealed record StalledCacheItem
 {
     /// <summary>
     /// The amount of bytes that have been downloaded.

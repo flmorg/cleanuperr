@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
+using Common.CustomDataTypes;
 using Common.Helpers;
 using Domain.Enums;
 using Domain.Models.Cache;
@@ -60,7 +61,7 @@ public abstract class DownloadService : IDownloadService
 
     public abstract Task LoginAsync();
 
-    public abstract Task<StalledResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
+    public abstract Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
     public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
@@ -78,33 +79,104 @@ public abstract class DownloadService : IDownloadService
     public abstract Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
         IReadOnlyList<string> ignoredDownloads);
 
-    protected void ResetStrikesOnProgress(string hash, long downloaded)
+    protected void ResetStalledStrikesOnProgress(string hash, long downloaded)
     {
         if (!_queueCleanerConfig.StalledResetStrikesOnProgress)
         {
             return;
         }
-        
-        if (_cache.TryGetValue(CacheKeys.Item(hash), out CacheItem? cachedItem) && cachedItem is not null && downloaded > cachedItem.Downloaded)
+
+        if (_cache.TryGetValue(CacheKeys.StrikeItem(hash, StrikeType.Stalled), out StalledCacheItem? cachedItem) &&
+            cachedItem is not null && downloaded > cachedItem.Downloaded)
         {
             // cache item found
             _cache.Remove(CacheKeys.Strike(StrikeType.Stalled, hash));
-            _logger.LogDebug("resetting strikes for {hash} due to progress", hash);
+            _logger.LogDebug("resetting stalled strikes for {hash} due to progress", hash);
         }
         
-        _cache.Set(CacheKeys.Item(hash), new CacheItem { Downloaded = downloaded }, _cacheOptions);
+        _cache.Set(CacheKeys.StrikeItem(hash, StrikeType.Stalled), new StalledCacheItem { Downloaded = downloaded }, _cacheOptions);
+    }
+    
+    protected void ResetSlowSpeedStrikesOnProgress(string downloadName, string hash)
+    {
+        if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
+        {
+            return;
+        }
+
+        string key = CacheKeys.Strike(StrikeType.SlowSpeed, hash);
+
+        if (!_cache.TryGetValue(key, out object? value) || value is null)
+        {
+            return;
+        }
+        
+        _cache.Remove(key);
+        _logger.LogDebug("resetting slow speed strikes due to progress | {name}", downloadName);
+    }
+    
+    protected void ResetSlowTimeStrikesOnProgress(string downloadName, string hash)
+    {
+        if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
+        {
+            return;
+        }
+
+        string key = CacheKeys.Strike(StrikeType.SlowTime, hash);
+
+        if (!_cache.TryGetValue(key, out object? value) || value is null)
+        {
+            return;
+        }
+        
+        _cache.Remove(key);
+        _logger.LogDebug("resetting slow time strikes due to progress | {name}", downloadName);
     }
 
-    /// <summary>
-    /// Strikes an item and checks if the limit has been reached.
-    /// </summary>
-    /// <param name="hash">The torrent hash.</param>
-    /// <param name="itemName">The name or title of the item.</param>
-    /// <param name="strikeType"></param>
-    /// <returns>True if the limit has been reached; otherwise, false.</returns>
-    protected async Task<bool> StrikeAndCheckLimit(string hash, string itemName, StrikeType strikeType)
+    protected async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(
+        string downloadHash,
+        string downloadName,
+        ByteSize minSpeed,
+        ByteSize currentSpeed,
+        SmartTimeSpan maxTime,
+        SmartTimeSpan currentTime
+    )
     {
-        return await _striker.StrikeAndCheckLimit(hash, itemName, _queueCleanerConfig.StalledMaxStrikes, strikeType);
+        if (minSpeed.Bytes > 0 && currentSpeed < minSpeed)
+        {
+            _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), downloadName);
+            
+            bool shouldRemove = await _striker
+                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
+
+            if (shouldRemove)
+            {
+                return (true, DeleteReason.SlowSpeed);
+            }
+        }
+        else
+        {
+            ResetSlowSpeedStrikesOnProgress(downloadName, downloadHash);
+        }
+        
+        if (maxTime.Time > TimeSpan.Zero && currentTime > maxTime)
+        {
+            _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), downloadName);
+            
+            bool shouldRemove = await _striker
+                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
+
+            if (shouldRemove)
+            {
+                return (true, DeleteReason.SlowTime);
+            }
+        }
+        else
+        {
+            ResetSlowTimeStrikesOnProgress(downloadName, downloadHash);
+        }
+        
+        return (false, DeleteReason.None);
     }
     
     protected SeedingCheckResult ShouldCleanDownload(double ratio, TimeSpan seedingTime, Category category)
