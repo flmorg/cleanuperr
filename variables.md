@@ -185,17 +185,16 @@
 > Setting `QUEUECLEANER__STALLED_DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
 
 #### **`QUEUECLEANER__DOWNLOADING_METADATA_MAX_STRIKES`**
+> [!IMPORTANT]
+> `QUEUECLEANER__DOWNLOADING_METADATA_MAX_STRIKES` works only for qBitTorrent.
+
 - Number of strikes before removing a download stuck while downloading metadata.
 - Set to `0` to never remove downloads stuck at `downloading metadata`.
-- A strike is given when an item is stuck while downloading metadata.
 - Type: Integer
 - Default: `0`
 - Required: No.
 > [!NOTE]
 > If not set to `0`, the minimum value is `3`.
-
-> [!IMPORTANT]
-> `QUEUECLEANER__DOWNLOADING_METADATA_MAX_STRIKES` works only for qBitTorrent.
 
 #
 
