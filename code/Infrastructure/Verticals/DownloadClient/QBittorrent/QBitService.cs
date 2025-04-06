@@ -419,9 +419,9 @@ public class QBitService : DownloadService, IQBitService
             }
         }
 
-        if (_queueCleanerConfig.DownloadingMetadataMaxStrikes > 0)
+        if (_queueCleanerConfig.DownloadingMetadataMaxStrikes > 0 && torrent.State is not TorrentState.StalledDownload)
         {
-            return (await _striker.StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.StalledMaxStrikes, StrikeType.DownloadingMetadata), DeleteReason.DownloadingMetadata);
+            return (await _striker.StrikeAndCheckLimit(torrent.Hash, torrent.Name, _queueCleanerConfig.DownloadingMetadataMaxStrikes, StrikeType.DownloadingMetadata), DeleteReason.DownloadingMetadata);
         }
 
         return (false, DeleteReason.None);
