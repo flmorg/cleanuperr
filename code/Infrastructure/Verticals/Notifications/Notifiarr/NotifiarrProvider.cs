@@ -32,6 +32,11 @@ public class NotifiarrProvider : NotificationProvider
         await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
     }
     
+    public override async Task OnSlowStrike(SlowStrikeNotification notification)
+    {
+        await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
+    }
+    
     public override async Task OnQueueItemDeleted(QueueItemDeletedNotification notification)
     {
         await _proxy.SendNotification(BuildPayload(notification, ImportantColor), _config);

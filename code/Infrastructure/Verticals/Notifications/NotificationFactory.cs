@@ -24,6 +24,11 @@ public class NotificationFactory : INotificationFactory
         ActiveProviders()
             .Where(n => n.Config.OnStalledStrike)
             .ToList();
+    
+    public List<INotificationProvider> OnSlowStrikeEnabled() =>
+        ActiveProviders()
+            .Where(n => n.Config.OnSlowStrike)
+            .ToList();
 
     public List<INotificationProvider> OnQueueItemDeletedEnabled() =>
         ActiveProviders()

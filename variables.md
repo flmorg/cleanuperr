@@ -675,7 +675,14 @@
 - Required: No.
 
 #### **`NOTIFIARR__ON_STALLED_STRIKE`**
-- Controls whether to notify when an item receives a stalled download strike.
+- Controls whether to notify when an item receives a stalled download strike. This includes strikes for being stuck while downloading metadata.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`NOTIFIARR__ON_SLOW_STRIKE`**
+- Controls whether to notify when an item receives a slow download strike. This includes strikes for having a low download speed or slow estimated finish time.
 - Type: Boolean
 - Possible values: `true`, `false`
 - Default: `false`

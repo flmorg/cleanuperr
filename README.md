@@ -282,6 +282,7 @@ services:
 
       - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
       - NOTIFIARR__ON_STALLED_STRIKE=true
+      - NOTIFIARR__ON_SLOW_STRIKE=true
       - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
       - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
       - NOTIFIARR__API_KEY=notifiarr_secret

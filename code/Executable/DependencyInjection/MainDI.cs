@@ -25,6 +25,7 @@ public static class MainDI
             {
                 config.AddConsumer<NotificationConsumer<FailedImportStrikeNotification>>();
                 config.AddConsumer<NotificationConsumer<StalledStrikeNotification>>();
+                config.AddConsumer<NotificationConsumer<SlowStrikeNotification>>();
                 config.AddConsumer<NotificationConsumer<QueueItemDeletedNotification>>();
                 config.AddConsumer<NotificationConsumer<DownloadCleanedNotification>>();
 
@@ -34,6 +35,7 @@ public static class MainDI
                     {
                         e.ConfigureConsumer<NotificationConsumer<FailedImportStrikeNotification>>(context);
                         e.ConfigureConsumer<NotificationConsumer<StalledStrikeNotification>>(context);
+                        e.ConfigureConsumer<NotificationConsumer<SlowStrikeNotification>>(context);
                         e.ConfigureConsumer<NotificationConsumer<QueueItemDeletedNotification>>(context);
                         e.ConfigureConsumer<NotificationConsumer<DownloadCleanedNotification>>(context);
                         e.ConcurrentMessageLimit = 1;
