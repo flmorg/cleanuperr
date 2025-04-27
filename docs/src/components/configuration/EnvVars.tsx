@@ -79,7 +79,7 @@ function EnvVar({ env }: { env: EnvVarProps }) {
             {content.title && <strong>{content.title}</strong>}
             <br />
             <pre key={index}>
-              <code>{content.content}</code>
+              {content.content}
             </pre>
           </section>
         );
