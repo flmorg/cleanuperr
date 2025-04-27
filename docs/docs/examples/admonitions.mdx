@@ -1,0 +1,53 @@
+---
+sidebar_position: 1
+---
+
+import { Note, Warning, Important } from '@site/src/components/Admonition';
+
+# Using Admonitions in MDX
+
+This page demonstrates how to use the Admonition components directly in MDX files.
+
+## Basic Usage
+
+You can use the `Note`, `Warning`, and `Important` components directly in your MDX files:
+
+<Note>
+  This is a note admonition created directly in MDX.
+</Note>
+
+<Warning>
+  This is a warning admonition created directly in MDX.
+</Warning>
+
+<Important>
+  This is an important admonition created directly in MDX.
+</Important>
+
+## With Multiple Paragraphs
+
+You can include multiple paragraphs in your admonitions:
+
+<Note>
+  This is the first paragraph of a note.
+  
+  This is the second paragraph of the same note.
+</Note>
+
+## With Markdown Content
+
+You can include markdown content inside your admonitions:
+
+<Important>
+  **Bold text** and *italic text* work inside admonitions.
+  
+  - List items
+  - Also work
+  - Inside admonitions
+  
+  ```js
+  // Code blocks also work
+  const example = "This is a code block inside an admonition";
+  console.log(example);
+  ```
+</Important> 

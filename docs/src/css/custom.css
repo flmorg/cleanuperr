@@ -1,0 +1,104 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='dark'] code {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #f8f8f2;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.95em;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.env-var-highlight {
+  background-color: #fff3cd;
+  color: #000;
+  border-radius: 1rem;
+  padding: 0.5rem;
+  transition:
+    background-color 1s ease-in-out,
+    color 1s ease-in-out,
+    border-radius 1s ease-in-out,
+    padding 1s ease-in-out;
+}
+
+.highlight-removing {
+  background-color: transparent;
+  color: #fff;
+  border-radius: 0;
+  padding: inherit;
+  transition:
+    background-color color 1s ease-in-out,
+    color 1s ease-in-out,
+    border-radius 1s ease-in-out,
+    padding 1s ease-in-out;
+}
+
+.admonition {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border-left: 4px solid;
+}
+
+.admonition-heading {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.admonition-heading h5 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.admonition-content {
+  margin-bottom: 0.5rem;
+}
+
+.admonition-important {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left-color: #dc3545;
+}
+
+.admonition-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-left-color: #ffc107;
+}
+
+.admonition-note {
+  background-color: rgba(0, 123, 255, 0.1);
+  border-left-color: #007bff;
+}
+
+html {
+  scroll-behavior: smooth;
+}

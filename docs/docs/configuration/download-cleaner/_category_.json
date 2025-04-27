@@ -1,0 +1,8 @@
+{
+  "label": "Download Cleaner",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Configure the Download Cleaner to automatically clean up downloads that have been seeding for a certain amount of time."
+  }
+} 
