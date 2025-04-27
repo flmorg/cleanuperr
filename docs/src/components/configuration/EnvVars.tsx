@@ -67,12 +67,12 @@ function EnvVar({ env }: { env: EnvVarProps }) {
     index: number
   ) => {
     if (typeof content === "string") {
-      return <ReactMarkdown>{content}</ReactMarkdown>;
+      return <ReactMarkdown components={{ p: ({ children }) => <>{children}</> }}>{content}</ReactMarkdown>;
     }
 
     switch (content.type) {
       case "text":
-        return <ReactMarkdown>{content.content}</ReactMarkdown>;
+        return <ReactMarkdown components={{ p: ({ children }) => <>{children}</> }}>{content.content}</ReactMarkdown>;
       case "code":
         return (
           <section>
@@ -108,7 +108,7 @@ function EnvVar({ env }: { env: EnvVarProps }) {
 
     return (
       <Admonition type={type}>
-        <ReactMarkdown>
+        <ReactMarkdown components={{ p: ({ children }) => <>{children}</> }}>
           {items.join("\n\n")}
         </ReactMarkdown>
       </Admonition>
