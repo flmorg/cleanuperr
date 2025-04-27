@@ -5,7 +5,7 @@ const settings: EnvVarProps[] = [
   {
     name: "DOWNLOADCLEANER__ENABLED",
     description: [
-      "Enables or disables the download cleaner functionality.",
+      "Enables or disables the Download Cleaner functionality.",
       "When enabled, automatically cleans up downloads that have been seeding for a certain amount of time."
     ],
     type: "boolean",
@@ -16,13 +16,13 @@ const settings: EnvVarProps[] = [
   {
     name: "TRIGGERS__DOWNLOADCLEANER",
     description: [
-      "Cron schedule for the download cleaner job."
+      "Cron schedule for the Download Cleaner job."
     ],
     type: "text",
     reference: "https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html",
     defaultValue: "0 0 * * * ?",
+    defaultValueComment: "every hour",
     required: false,
-    examples: ["0 0 * * * ?", "0 0 0/1 * * ?", "0 0 0/6 * * ?"],
     notes: [
       "Maximum interval is 6 hours."
     ]

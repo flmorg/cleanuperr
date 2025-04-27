@@ -17,7 +17,8 @@ export interface EnvVarProps {
   type: string;
   reference?: string;
   required?: boolean | string;
-  defaultValue?: string;
+  defaultValue: string;
+  defaultValueComment?: string;
   examples?: string[];
   children?: React.ReactNode;
   notes?: string[];
@@ -129,23 +130,34 @@ function EnvVar({ env }: { env: EnvVarProps }) {
       {env.description.map((desc, index) =>
         renderDescriptionContent(desc, index)
       )}
-      <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-        {env.required !== undefined && (
-          <li>
-            <strong>Required:</strong>{" "}
-            {typeof env.required === "boolean"
-              ? env.required
-                ? "Yes"
-                : "No"
-              : env.required}
-          </li>
-        )}
-        {env.defaultValue !== undefined && (
-          <li>
-            <strong>Default:</strong> <code>{env.defaultValue}</code>
-          </li>
-        )}
-      </ul>
+      {env.required !== undefined && (
+        <section>
+          <strong>Required: </strong>
+          {typeof env.required === "boolean"
+            ? env.required
+              ? "Yes"
+              : "No"
+            : env.required}
+        </section>
+      )}
+      {env.defaultValue !== undefined && (
+        <section>
+          <strong>Default value: </strong>
+          <code>{env.defaultValue}</code> {env.defaultValueComment !== undefined && (`(${env.defaultValueComment})`)}
+        </section>
+      )}
+      {env.reference !== undefined && (
+        <section>
+          <strong>Reference: </strong>
+          <ReactMarkdown
+            components={{
+              p: ({ children }) => <>{children}</>, // No wrapping <p> tag
+            }}
+          >
+            {`[Quartz.NET](${env.reference})`}
+          </ReactMarkdown>
+        </section>
+      )}
       {env.examples && env.examples.length > 0 && (
         <section>
           <strong>Examples:</strong>

@@ -5,7 +5,7 @@ const settings: EnvVarProps[] = [
   {
     name: "CONTENTBLOCKER__ENABLED",
     description: [
-      "Enables or disables the content blocker functionality.",
+      "Enables or disables the Content Blocker functionality.",
       "When enabled, processes all items in the *arr queue and marks unwanted files."
     ],
     type: "boolean",
@@ -16,11 +16,12 @@ const settings: EnvVarProps[] = [
   {
     name: "TRIGGERS__CONTENTBLOCKER",
     description: [
-      "Cron schedule for the content blocker job."
+      "Cron schedule for the Content Blocker job."
     ],
     type: "text",
     reference: "https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html",
     defaultValue: "0 0/5 * * * ?",
+    defaultValueComment: "every 5 minutes",
     required: "Only required if CONTENTBLOCKER__ENABLED is true",
     examples: ["0 0/5 * * * ?", "0 0 * * * ?", "0 0 0/1 * * ?"],
     notes: [

@@ -15,11 +15,12 @@ const settings: EnvVarProps[] = [
   {
     name: "TRIGGERS__QUEUECLEANER",
     description: [
-      "Cron schedule for the queue cleaner job."
+      "Cron schedule for the Queue Cleaner job."
     ],
     type: "text",
     reference: "https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html",
     defaultValue: "0 0/5 * * * ?",
+    defaultValueComment: "every 5 minutes",
     required: "Only required if QUEUECLEANER__ENABLED is true",
     examples: ["0 0/5 * * * ?", "0 0 * * * ?", "0 0 0/1 * * ?"],
     notes: [
@@ -65,7 +66,7 @@ mytracker.com
   {
     name: "QUEUECLEANER__RUNSEQUENTIALLY",
     description: [
-      "Controls whether queue cleaner runs after content blocker instead of in parallel. When true, streamlines the cleaning process by running immediately after content blocker."
+      "Controls whether Queue Cleaner runs after Content Blocker instead of in parallel. When true, streamlines the cleaning process by running immediately after Content Blocker."
     ],
     type: "boolean",
     defaultValue: "true",
