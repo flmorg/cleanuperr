@@ -108,9 +108,15 @@ function EnvVar({ env }: { env: EnvVarProps }) {
 
     return (
       <Admonition type={type}>
-        <ReactMarkdown components={{ p: ({ children }) => <>{children}</> }}>
-          {items.join("\n\n")}
-        </ReactMarkdown>
+        <ul>
+          {items.map((item, idx) => (
+            <li key={idx}>
+              <ReactMarkdown components={{ p: ({ children }) => <>{children}</> }}>
+                {item}
+              </ReactMarkdown>
+            </li>
+          ))}
+        </ul>
       </Admonition>
     );
   };
