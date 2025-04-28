@@ -428,7 +428,7 @@ public class QBitService : DownloadService, IQBitService
     private async Task<IReadOnlyList<TorrentTracker>> GetTrackersAsync(string hash)
     {
         return (await _client.GetTorrentTrackersAsync(hash))
-            .Where(x => !x.Url.ToString().Contains("**"))
+            .Where(x => x.Url.Contains("**"))
             .ToList();
     }
 }

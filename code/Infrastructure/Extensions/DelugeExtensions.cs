@@ -1,4 +1,5 @@
 ﻿using Domain.Models.Deluge.Response;
+using Infrastructure.Helpers;
 
 namespace Infrastructure.Extensions;
 
@@ -18,7 +19,7 @@ public static class DelugeExtensions
                 return true;
             }
             
-            if (download.Trackers.Any(x => x.Url.Host.EndsWith(value, StringComparison.InvariantCultureIgnoreCase)))
+            if (download.Trackers.Any(x => UriService.GetDomain(x.Url)?.EndsWith(value, StringComparison.InvariantCultureIgnoreCase) ?? false))
             {
                 return true;
             }
