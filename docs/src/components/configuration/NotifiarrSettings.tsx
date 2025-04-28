@@ -6,7 +6,7 @@ const settings: EnvVarProps[] = [
     name: "NOTIFIARR__API_KEY",
     description: [
       "Notifiarr API key for sending notifications.",
-      "Requires Notifiarr's [`Passthrough`](https://notifiarr.wiki/pages/integrations/passthrough/) integration to work."
+      "Requires Notifiarr's [Passthrough](https://notifiarr.wiki/pages/integrations/passthrough/) integration to work."
     ],
     type: "text",
     defaultValue: "Empty",

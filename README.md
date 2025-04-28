@@ -90,7 +90,7 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
      - It will be deleted from the download client.
      - A new search will be triggered for the *arr item.
 #### 2. **Queue cleaner** will:
-   - Run every 5 minutes (or configured cron, or right after `content blocker`).
+   - Run every 5 minutes (or configured cron, or right after `Content Blocker`).
    - Process all items in the *arr queue.
    - Check each queue item if it is **stalled (download speed is 0)**, **stuck in metadata downloading**, **failed to be imported** or **slow**.
      - If it is, the item receives a **strike** and will continue to accumulate strikes every time it meets any of these conditions.
@@ -116,15 +116,15 @@ I've seen a few discussions on this type of naming and I've decided that I didn'
    - create your own
 2. qBittorrent will block files from being downloaded. In the case of malicious content, **nothing is downloaded and the torrent is marked as complete**.
 3. Start **cleanuperr** with `QUEUECLEANER__ENABLED` set to `true`.
-4. The **queue cleaner** will perform a cleanup process as described in the [How it works](#how-it-works) section.
+4. The **Queue Cleaner** will perform a cleanup process as described in the [How it works](#how-it-works) section.
 
 ## Using cleanuperr's blocklist (works with all supported download clients)
 
 1. Set both `QUEUECLEANER__ENABLED` and `CONTENTBLOCKER__ENABLED` to `true` in your environment variables.
 2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Arr variables](variables.md#Arr-settings) section.
 3. Once configured, cleanuperr will perform the following tasks:
-   - Execute the **content blocker** job, as explained in the [How it works](#how-it-works) section.
-   - Execute the **queue cleaner** job, as explained in the [How it works](#how-it-works) section.
+   - Execute the **Content Blocker** job, as explained in the [How it works](#how-it-works) section.
+   - Execute the **Queue Cleaner** job, as explained in the [How it works](#how-it-works) section.
 
 ## Using cleanuperr just for failed *arr imports (works for Usenet users as well)
 
