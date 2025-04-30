@@ -6,7 +6,7 @@ import Admonition from "../Admonition";
 export type DescriptionContent =
   | string
   | {
-    type: "text" | "code" | "list";
+    type: "code" | "list";
     title: string;
     content: string | string[];
   };
@@ -69,12 +69,10 @@ function EnvVar({ env }: { env: EnvVarProps }) {
     index: number
   ) => {
     if (typeof content === "string") {
-      return <ReactMarkdown components={{ p: ({ children }) => <>{children}</> }}>{content}</ReactMarkdown>;
+      return <ReactMarkdown components={{ p: ({ children }) => <div>{children}</div> }}>{content}</ReactMarkdown>;
     }
 
     switch (content.type) {
-      case "text":
-        return <ReactMarkdown components={{ p: ({ children }) => <>{children}</> }}>{content.content}</ReactMarkdown>;
       case "code":
         return (
           <section>
