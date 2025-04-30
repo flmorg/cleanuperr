@@ -20,6 +20,7 @@ export interface EnvVarProps {
   defaultValue: string;
   defaultValueComment?: string;
   examples?: string[];
+  acceptedValues?: string[];
   children?: React.ReactNode;
   notes?: string[];
   important?: string[];
@@ -140,6 +141,12 @@ function EnvVar({ env }: { env: EnvVarProps }) {
             : env.required}
         </section>
       )}
+      {env.type !== undefined && (
+        <section>
+          <strong>Type: </strong>
+          {env.type}
+        </section>
+      )}
       {env.defaultValue !== undefined && (
         <section>
           <strong>Default value: </strong>
@@ -156,6 +163,18 @@ function EnvVar({ env }: { env: EnvVarProps }) {
           >
             {`[Quartz.NET](${env.reference})`}
           </ReactMarkdown>
+        </section>
+      )}
+      {env.acceptedValues && env.acceptedValues.length > 0 && (
+        <section>
+          <strong>Accepted values:</strong>
+          <ul>
+            {env.acceptedValues.map((example, index) => (
+              <li key={index}>
+                <code>{example}</code>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
       {env.examples && env.examples.length > 0 && (

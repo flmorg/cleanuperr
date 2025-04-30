@@ -72,7 +72,7 @@ mytracker.com
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "CONTENTBLOCKER__DELETE_PRIVATE",
@@ -83,7 +83,7 @@ mytracker.com
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
     important: [
       "Setting CONTENTBLOCKER__DELETE_PRIVATE=true means you don't care about seeding, ratio, H&R and potentially losing your private tracker account."
     ]

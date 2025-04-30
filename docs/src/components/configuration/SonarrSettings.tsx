@@ -10,7 +10,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "SONARR__BLOCK__TYPE",
@@ -20,7 +20,7 @@ const settings: EnvVarProps[] = [
     type: "text",
     defaultValue: "blacklist",
     required: false,
-    examples: ["blacklist", "whitelist"],
+    acceptedValues: ["blacklist", "whitelist"],
   },
   {
     name: "SONARR__BLOCK__PATH",
@@ -53,7 +53,7 @@ regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line wi
     type: "text",
     defaultValue: "Episode",
     required: false,
-    examples: ["Episode", "Season", "Series"],
+    acceptedValues: ["Episode", "Season", "Series"],
   },
   {
     name: "SONARR__INSTANCES__0__URL",
@@ -72,8 +72,7 @@ regex:<ANY_REGEX>   // regex that needs to be marked at the start of the line wi
     ],
     type: "text",
     defaultValue: "Empty",
-    required: false,
-    examples: ["abcdef1234567890abcdef1234567890"],
+    required: false
   }
 ];
 

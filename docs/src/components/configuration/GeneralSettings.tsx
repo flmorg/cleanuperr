@@ -20,7 +20,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "LOGGING__LOGLEVEL",
@@ -30,7 +30,7 @@ const settings: EnvVarProps[] = [
     type: "text",
     defaultValue: "Information",
     required: false,
-    examples: ["Verbose", "Debug", "Information", "Warning", "Error", "Fatal"],
+    acceptedValues: ["Verbose", "Debug", "Information", "Warning", "Error", "Fatal"],
   },
   {
     name: "LOGGING__FILE__ENABLED",
@@ -40,7 +40,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "LOGGING__FILE__PATH",
@@ -60,7 +60,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "true",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "HTTP_MAX_RETRIES",

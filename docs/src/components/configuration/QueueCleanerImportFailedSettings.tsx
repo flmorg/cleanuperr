@@ -24,7 +24,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE",
@@ -35,7 +35,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
     important: [
       "Setting this to true means you don't care about seeding, ratio, H&R and potentially losing your private tracker account."
     ]

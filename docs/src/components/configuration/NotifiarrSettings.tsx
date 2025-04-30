@@ -29,7 +29,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "NOTIFIARR__ON_STALLED_STRIKE",
@@ -39,7 +39,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "NOTIFIARR__ON_SLOW_STRIKE",
@@ -49,7 +49,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "NOTIFIARR__ON_QUEUE_ITEM_DELETED",
@@ -59,7 +59,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "NOTIFIARR__ON_DOWNLOAD_CLEANED",
@@ -69,7 +69,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   }
 ];
 

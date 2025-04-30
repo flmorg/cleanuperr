@@ -10,7 +10,7 @@ const settings: EnvVarProps[] = [
     type: "boolean",
     defaultValue: "false",
     required: false,
-    examples: ["true", "false"],
+    acceptedValues: ["true", "false"],
   },
   {
     name: "TRIGGERS__QUEUECLEANER",
@@ -71,7 +71,7 @@ mytracker.com
     type: "boolean",
     defaultValue: "true",
     required: false,
-    examples: ["true", "false"]
+    acceptedValues: ["true", "false"]
   }
 ];
 

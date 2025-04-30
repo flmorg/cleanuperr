@@ -10,7 +10,7 @@ const settings: EnvVarProps[] = [
     type: "text",
     defaultValue: "none",
     required: false,
-    examples: ["none", "qbittorrent", "deluge", "transmission", "disabled"],
+    acceptedValues: ["none", "qbittorrent", "deluge", "transmission", "disabled"],
     notes: [
       "Only one download client can be enabled at a time. If you have more than one download client, you should deploy multiple instances of Cleanuperr."
     ],
