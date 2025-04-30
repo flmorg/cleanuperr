@@ -42,6 +42,10 @@
   margin-bottom: 0;
 }
 
+.env-var-block {
+  scroll-margin-top: 80px;
+}
+
 .env-var-highlight {
   background-color: #fff3cd;
   color: #000;
