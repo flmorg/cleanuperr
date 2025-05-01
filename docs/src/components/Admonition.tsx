@@ -20,7 +20,6 @@ export default function Admonition({ type, children }: AdmonitionProps) {
   );
 }
 
-// Convenience components for each admonition type
 export function Important({ children }: { children: React.ReactNode }) {
   return <Admonition type="important">{children}</Admonition>;
 }

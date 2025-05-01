@@ -122,78 +122,80 @@ function EnvVar({ env }: { env: EnvVarProps }) {
   };
 
   return (
-    <div id={env.name} ref={ref} className="env-var-block">
-      <h3>
-        <code>{env.name}</code>
-      </h3>
-      {env.description.map((desc, index) =>
-        renderDescriptionContent(desc, index)
-      )}
-      {env.required !== undefined && (
-        <section>
-          <strong>Required: </strong>
-          {typeof env.required === "boolean"
-            ? env.required
-              ? "Yes"
-              : "No"
-            : env.required}
-        </section>
-      )}
-      {env.type !== undefined && (
-        <section>
-          <strong>Type: </strong>
-          {env.type}
-        </section>
-      )}
-      {env.defaultValue !== undefined && (
-        <section>
-          <strong>Default value: </strong>
-          <code>{env.defaultValue}</code> {env.defaultValueComment !== undefined && (`(${env.defaultValueComment})`)}
-        </section>
-      )}
-      {env.reference !== undefined && (
-        <section>
-          <strong>Reference: </strong>
-          <ReactMarkdown
-            components={{
-              p: ({ children }) => <>{children}</>, // No wrapping <p> tag
-            }}
-          >
-            {`[Quartz.NET](${env.reference})`}
-          </ReactMarkdown>
-        </section>
-      )}
-      {env.acceptedValues && env.acceptedValues.length > 0 && (
-        <section>
-          <strong>Accepted values:</strong>
-          <ul>
-            {env.acceptedValues.map((example, index) => (
-              <li key={index}>
-                <code>{example}</code>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {env.examples && env.examples.length > 0 && (
-        <section>
-          <strong>Examples:</strong>
-          <ul>
-            {env.examples.map((example, index) => (
-              <li key={index}>
-                <code>{example}</code>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+    <>
+      <div id={env.name} ref={ref} className="env-var-block">
+        <h3>
+          <code>{env.name}</code>
+        </h3>
+        {env.description.map((desc, index) =>
+          renderDescriptionContent(desc, index)
+        )}
+        {env.required !== undefined && (
+          <section>
+            <strong>Required: </strong>
+            {typeof env.required === "boolean"
+              ? env.required
+                ? "Yes"
+                : "No"
+              : env.required}
+          </section>
+        )}
+        {env.type !== undefined && (
+          <section>
+            <strong>Type: </strong>
+            {env.type}
+          </section>
+        )}
+        {env.defaultValue !== undefined && (
+          <section>
+            <strong>Default value: </strong>
+            <code>{env.defaultValue}</code> {env.defaultValueComment !== undefined && (`(${env.defaultValueComment})`)}
+          </section>
+        )}
+        {env.reference !== undefined && (
+          <section>
+            <strong>Reference: </strong>
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <>{children}</>, // No wrapping <p> tag
+              }}
+            >
+              {`[Quartz.NET](${env.reference})`}
+            </ReactMarkdown>
+          </section>
+        )}
+        {env.acceptedValues && env.acceptedValues.length > 0 && (
+          <section>
+            <strong>Accepted values:</strong>
+            <ul>
+              {env.acceptedValues.map((example, index) => (
+                <li key={index}>
+                  <code>{example}</code>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {env.examples && env.examples.length > 0 && (
+          <section>
+            <strong>Examples:</strong>
+            <ul>
+              {env.examples.map((example, index) => (
+                <li key={index}>
+                  <code>{example}</code>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-      {env.notes && renderAdmonition("note", env.notes)}
-      {env.important && renderAdmonition("important", env.important)}
-      {env.warnings && renderAdmonition("warning", env.warnings)}
+        {env.notes && renderAdmonition("note", env.notes)}
+        {env.important && renderAdmonition("important", env.important)}
+        {env.warnings && renderAdmonition("warning", env.warnings)}
 
-      <div style={{ marginTop: "0.5rem" }}>{env.children}</div>
+        <div style={{ marginTop: "0.5rem" }}>{env.children}</div>
+      </div>
       <hr />
-    </div>
+    </>
   );
 }
