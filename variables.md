@@ -6,6 +6,8 @@
 - [Download Client settings](#download-client-settings)
 - [Arr settings](#arr-settings)
 - [Notification settings](#notification-settings)
+  - [Notifiarr settings](#notifiarr__api_key)
+  - [Apprise settings](#apprise__url)
 - [Advanced settings](#advanced-settings)
 
 #
@@ -696,6 +698,53 @@
 - Required: No.
 
 #### **`NOTIFIARR__ON_DOWNLOAD_CLEANED`**
+- Controls whether to notify when a download is cleaned.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`APPRISE__URL`**
+- [Apprise url](https://github.com/caronc/apprise-api) where to send notifications.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+#### **`APPRISE__KEY`**
+- [Apprise configuration key](https://github.com/caronc/apprise-api?tab=readme-ov-file#screenshots) containing all 3rd party notification providers which Cleanuperr would notify.
+- Type: String
+- Default: Empty.
+- Required: No.
+
+#### **`APPRISE__ON_IMPORT_FAILED_STRIKE`**
+- Controls whether to notify when an item receives a failed import strike.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`APPRISE__ON_STALLED_STRIKE`**
+- Controls whether to notify when an item receives a stalled download strike. This includes strikes for being stuck while downloading metadata.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`APPRISE__ON_SLOW_STRIKE`**
+- Controls whether to notify when an item receives a slow download strike. This includes strikes for having a low download speed or slow estimated finish time.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`APPRISE__ON_QUEUE_ITEM_DELETED`**
+- Controls whether to notify when a queue item is deleted.
+- Type: Boolean
+- Possible values: `true`, `false`
+- Default: `false`
+- Required: No.
+
+#### **`APPRISE__ON_DOWNLOAD_CLEANED`**
 - Controls whether to notify when a download is cleaned.
 - Type: Boolean
 - Possible values: `true`, `false`
