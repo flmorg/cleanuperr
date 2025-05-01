@@ -291,6 +291,14 @@ services:
       - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
       - NOTIFIARR__API_KEY=notifiarr_secret
       - NOTIFIARR__CHANNEL_ID=discord_channel_id
+
+      - APPRISE__ON_IMPORT_FAILED_STRIKE=true
+      - APPRISE__ON_STALLED_STRIKE=true
+      - APPRISE__ON_SLOW_STRIKE=true
+      - APPRISE__ON_QUEUE_ITEM_DELETED=true
+      - APPRISE__ON_DOWNLOAD_CLEANED=true
+      - APPRISE__URL=http://apprise:8000
+      - APPRISE__KEY=myConfigKey
 ```
 
 ### <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/brands/windows.svg" height="20" style="vertical-align: middle;"> <span style="vertical-align: middle;">Windows</span>

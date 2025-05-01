@@ -12,6 +12,8 @@ public class NotifiarrProvider : NotificationProvider
     private const string WarningColor = "f0ad4e";
     private const string ImportantColor = "bb2124";
     private const string Logo = "https://github.com/flmorg/cleanuperr/blob/main/Logo/48.png?raw=true";
+    
+    public override string Name => "Notifiarr";
 
     public NotifiarrProvider(IOptions<NotifiarrConfig> config, INotifiarrProxy proxy)
         : base(config)
@@ -19,8 +21,6 @@ public class NotifiarrProvider : NotificationProvider
         _config = config.Value;
         _proxy = proxy;
     }
-
-    public override string Name => "Notifiarr";
 
     public override async Task OnFailedImportStrike(FailedImportStrikeNotification notification)
     {
