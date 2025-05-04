@@ -59,12 +59,27 @@
 .env-var-highlight {
   background-color: #fff3cd;
   color: #000;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   transition:
     background-color 1s ease-in-out,
     color 1s ease-in-out,
     border-radius 1s ease-in-out,
     padding 1s ease-in-out;
+}
+
+.env-var-highlight code {
+  background-color: #fff3cd;
+  color: #000;
+  border-radius: 0.25rem;
+  transition:
+    background-color 1s ease-in-out,
+    color 1s ease-in-out,
+    border-radius 1s ease-in-out,
+    padding 1s ease-in-out;
+}
+
+.env-var-highlight > * {
+  color: initial;
 }
 
 .highlight-removing {
