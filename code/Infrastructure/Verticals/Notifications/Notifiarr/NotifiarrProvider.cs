@@ -46,6 +46,11 @@ public class NotifiarrProvider : NotificationProvider
     {
         await _proxy.SendNotification(BuildPayload(notification), _config);
     }
+    
+    public override async Task OnCategoryChanged(CategoryChangedNotification notification)
+    {
+        await _proxy.SendNotification(BuildPayload(notification), _config);
+    }
 
     private NotifiarrPayload BuildPayload(ArrNotification notification, string color)
     {
@@ -90,6 +95,34 @@ public class NotifiarrProvider : NotificationProvider
             Discord = new()
             {
                 Color = ImportantColor,
+                Text = new()
+                {
+                    Title = notification.Title,
+                    Icon = Logo,
+                    Description = notification.Description,
+                    Fields = notification.Fields?.Adapt<List<Field>>() ?? []
+                },
+                Ids = new Ids
+                {
+                    Channel = _config.ChannelId
+                },
+                Images = new()
+                {
+                    Thumbnail = new Uri(Logo)
+                }
+            }
+        };
+        
+        return payload;
+    }
+
+    private NotifiarrPayload BuildPayload(CategoryChangedNotification notification)
+    {
+        NotifiarrPayload payload = new()
+        {
+            Discord = new()
+            {
+                Color = WarningColor,
                 Text = new()
                 {
                     Title = notification.Title,

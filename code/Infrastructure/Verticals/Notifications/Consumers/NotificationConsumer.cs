@@ -36,6 +36,9 @@ public sealed class NotificationConsumer<T> : IConsumer<T> where T : Notificatio
                 case DownloadCleanedNotification downloadCleanedNotification:
                     await _notificationService.Notify(downloadCleanedNotification);
                     break;
+                case CategoryChangedNotification categoryChangedNotification:
+                    await _notificationService.Notify(categoryChangedNotification);
+                    break;
                 default:
                     throw new NotImplementedException();
             }

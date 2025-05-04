@@ -17,7 +17,9 @@ public static class MainDI
             .AddLogging(builder => builder.ClearProviders().AddConsole())
             .AddHttpClients(configuration)
             .AddConfiguration(configuration)
-            .AddMemoryCache()
+            .AddMemoryCache(options => {
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
+            })
             .AddServices()
             .AddQuartzServices(configuration)
             .AddNotifications(configuration)
@@ -28,6 +30,7 @@ public static class MainDI
                 config.AddConsumer<NotificationConsumer<SlowStrikeNotification>>();
                 config.AddConsumer<NotificationConsumer<QueueItemDeletedNotification>>();
                 config.AddConsumer<NotificationConsumer<DownloadCleanedNotification>>();
+                config.AddConsumer<NotificationConsumer<CategoryChangedNotification>>();
 
                 config.UsingInMemory((context, cfg) =>
                 {
@@ -38,6 +41,7 @@ public static class MainDI
                         e.ConfigureConsumer<NotificationConsumer<SlowStrikeNotification>>(context);
                         e.ConfigureConsumer<NotificationConsumer<QueueItemDeletedNotification>>(context);
                         e.ConfigureConsumer<NotificationConsumer<DownloadCleanedNotification>>(context);
+                        e.ConfigureConsumer<NotificationConsumer<CategoryChangedNotification>>(context);
                         e.ConcurrentMessageLimit = 1;
                         e.PrefetchCount = 1;
                     });

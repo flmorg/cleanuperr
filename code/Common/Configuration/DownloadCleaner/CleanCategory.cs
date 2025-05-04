@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadCleaner;
 
-public sealed record Category : IConfig
+public sealed record CleanCategory : IConfig
 {
     public required string Name { get; init; }
 

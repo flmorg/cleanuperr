@@ -39,4 +39,9 @@ public class NotificationFactory : INotificationFactory
         ActiveProviders()
             .Where(n => n.Config.OnDownloadCleaned)
             .ToList();
+    
+    public List<INotificationProvider> OnCategoryChangedEnabled() =>
+        ActiveProviders()
+            .Where(n => n.Config.OnCategoryChanged)
+            .ToList();
 }

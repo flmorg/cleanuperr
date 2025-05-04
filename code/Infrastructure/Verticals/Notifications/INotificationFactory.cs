@@ -11,4 +11,6 @@ public interface INotificationFactory
     List<INotificationProvider> OnQueueItemDeletedEnabled();
 
     List<INotificationProvider> OnDownloadCleanedEnabled();
+    
+    List<INotificationProvider> OnCategoryChangedEnabled();
 }

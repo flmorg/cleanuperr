@@ -68,6 +68,16 @@ const settings: EnvVarProps[] = [
     required: false,
     acceptedValues: ["true", "false"],
   },
+  {
+    name: "APPRISE__ON_CATEGORY_CHANGED",
+    description: [
+      "Controls whether to notify when a download's category is changed."
+    ],
+    type: "boolean",
+    defaultValue: "false",
+    required: false,
+    acceptedValues: ["true", "false"],
+  }
 ];
 
 export default function AppriseSettings() {

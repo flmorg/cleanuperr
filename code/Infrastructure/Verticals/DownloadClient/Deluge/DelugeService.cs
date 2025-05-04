@@ -7,12 +7,14 @@ using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
+using Common.Exceptions;
 using Domain.Enums;
 using Domain.Models.Deluge.Response;
 using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
@@ -36,10 +38,11 @@ public class DelugeService : DownloadService, IDelugeService
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         INotificationPublisher notifier,
-        IDryRunInterceptor dryRunInterceptor
+        IDryRunInterceptor dryRunInterceptor,
+        IHardLinkFileService hardLinkFileService
     ) : base(
         logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
         config.Value.Validate();
@@ -49,6 +52,11 @@ public class DelugeService : DownloadService, IDelugeService
     public override async Task LoginAsync()
     {
         await _client.LoginAsync();
+
+        if (!await _client.IsConnected() && !await _client.Connect())
+        {
+            throw new FatalException("Deluge WebUI is not connected to the daemon");
+        }
     }
 
     /// <inheritdoc/>
@@ -208,24 +216,49 @@ public class DelugeService : DownloadService, IDelugeService
         return result;
     }
 
-    public override async Task<List<object>?> GetAllDownloadsToBeCleaned(List<Category> categories)
+    public override async Task<List<object>?> GetSeedingDownloads()
     {
         return (await _client.GetStatusForAllTorrents())
             ?.Where(x => !string.IsNullOrEmpty(x.Hash))
             .Where(x => x.State?.Equals("seeding", StringComparison.InvariantCultureIgnoreCase) is true)
-            .Where(x => categories.Any(cat => cat.Name.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
             .Cast<object>()
             .ToList();
     }
 
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) =>
+        downloads
+            ?.Cast<DownloadStatus>()
+            .Where(x => categories.Any(cat => cat.Name.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
+
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) =>
+        downloads
+            ?.Cast<DownloadStatus>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Equals(x.Label, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
+
     /// <inheritdoc/>
-    public override async Task CleanDownloads(List<object> downloads, List<Category> categoriesToClean, HashSet<string> excludedHashes,
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean, HashSet<string> excludedHashes,
         IReadOnlyList<string> ignoredDownloads)
     {
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+        
         foreach (DownloadStatus download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
             {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
 
@@ -235,17 +268,11 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
             
-            Category? category = categoriesToClean
+            CleanCategory? category = categoriesToClean
                 .FirstOrDefault(x => x.Name.Equals(download.Label, StringComparison.InvariantCultureIgnoreCase));
 
             if (category is null)
             {
-                continue;
-            }
-            
-            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
 
@@ -279,7 +306,107 @@ public class DelugeService : DownloadService, IDelugeService
             await _notifier.NotifyDownloadCleaned(download.Ratio, seedingTime, category.Name, result.Reason);
         }
     }
-    
+
+    public override async Task CreateCategoryAsync(string name)
+    {
+        IReadOnlyList<string> existingLabels = await _client.GetLabels();
+
+        if (existingLabels.Contains(name, StringComparer.InvariantCultureIgnoreCase))
+        {
+            return;
+        }
+        
+        await _dryRunInterceptor.InterceptAsync(CreateLabel, name);
+    }
+
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
+    {
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+        {
+            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+        }
+        
+        foreach (DownloadStatus download in downloads.Cast<DownloadStatus>())
+        {
+            if (string.IsNullOrEmpty(download.Hash) || string.IsNullOrEmpty(download.Name) || string.IsNullOrEmpty(download.Label))
+            {
+                continue;
+            }
+            
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
+            {
+                _logger.LogInformation("skip | download is ignored | {name}", download.Name);
+                continue;
+            }
+        
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+            
+            DelugeContents? contents = null;
+            try
+            {
+                contents = await _client.GetTorrentFiles(download.Hash);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogDebug(exception, "failed to find torrent files for {name}", download.Name);
+                continue;
+            }
+            
+            bool hasHardlinks = false;
+            
+            ProcessFiles(contents?.Contents, (_, file) =>
+            {
+                string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.DownloadLocation, file.Path).Split(['\\', '/']));
+
+                if (file.Priority <= 0)
+                {
+                    _logger.LogDebug("skip | file is not downloaded | {file}", filePath);
+                    return;
+                }
+                
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+        
+                if (hardlinkCount < 0)
+                {
+                    _logger.LogDebug("skip | could not get file properties | {file}", filePath);
+                    hasHardlinks = true;
+                    return;
+                }
+        
+                if (hardlinkCount > 0)
+                {
+                    hasHardlinks = true;
+                }
+            });
+            
+            if (hasHardlinks)
+            {
+                _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
+                continue;
+            }
+            
+            await _dryRunInterceptor.InterceptAsync(ChangeLabel, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
+            
+            _logger.LogInformation("category changed for {name}", download.Name);
+            
+            await _notifier.NotifyCategoryChanged(download.Label, _downloadCleanerConfig.UnlinkedTargetCategory);
+            
+            download.Label = _downloadCleanerConfig.UnlinkedTargetCategory;
+        }
+    }
+
     /// <inheritdoc/>
     [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)
@@ -288,11 +415,23 @@ public class DelugeService : DownloadService, IDelugeService
         
         await _client.DeleteTorrents([hash]);
     }
+
+    [DryRunSafeguard]
+    protected async Task CreateLabel(string name)
+    {
+        await _client.CreateLabel(name);
+    }
     
     [DryRunSafeguard]
     protected virtual async Task ChangeFilesPriority(string hash, List<int> sortedPriorities)
     {
         await _client.ChangeFilesPriority(hash, sortedPriorities);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task ChangeLabel(string hash, string newLabel)
+    {
+        await _client.SetTorrentLabel(hash, newLabel);
     }
     
     private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(DownloadStatus status)

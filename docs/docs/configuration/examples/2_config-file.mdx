@@ -69,7 +69,19 @@ import { Note } from '@site/src/components/Admonition';
         "MAX_RATIO": 1,
         "MIN_SEED_TIME": 0,
         "MAX_SEED_TIME": 240
+      },
+      {
+        "Name": "cleanuperr-unlinked",
+        "MAX_RATIO": 1,
+        "MIN_SEED_TIME": 0,
+        "MAX_SEED_TIME": 240
       }
+    ],
+    "UNLINKED_TARGET_CATEGORY": "cleanuperr-unlinked",
+    "UNLINKED_IGNORED_ROOT_DIR": "/downloads",
+    "UNLINKED_CATEGORIES": [
+      "tv-sonarr",
+      "radarr"
     ],
     "IGNORED_DOWNLOADS_PATH": "/ignored.txt"
   },
@@ -149,6 +161,7 @@ import { Note } from '@site/src/components/Admonition';
     "ON_SLOW_STRIKE": true,
     "ON_QUEUE_ITEM_DELETED": true,
     "ON_DOWNLOAD_CLEANED": true,
+    "ON_CATEGORY_CHANGED": true,
     "API_KEY": "notifiarr_secret",
     "CHANNEL_ID": "discord_channel_id"
   },
@@ -158,6 +171,7 @@ import { Note } from '@site/src/components/Admonition';
     "ON_SLOW_STRIKE": true,
     "ON_QUEUE_ITEM_DELETED": true,
     "ON_DOWNLOAD_CLEANED": true,
+    "ON_CATEGORY_CHANGED": true,
     "URL": "http://localhost:8000",
     "KEY": "myConfigKey"
   }

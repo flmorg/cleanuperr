@@ -43,7 +43,7 @@ public sealed class BlocklistProvider
     {
         if (_initialized)
         {
-            _logger.LogDebug("blocklists already loaded");
+            _logger.LogTrace("blocklists already loaded");
             return;
         }
         

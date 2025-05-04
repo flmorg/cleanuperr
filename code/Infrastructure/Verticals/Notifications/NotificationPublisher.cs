@@ -49,14 +49,14 @@ public class NotificationPublisher : INotificationPublisher
             {
                 case StrikeType.Stalled:
                 case StrikeType.DownloadingMetadata:
-                    await _dryRunInterceptor.InterceptAsync(Notify<StalledStrikeNotification>, notification.Adapt<StalledStrikeNotification>());
+                    await NotifyInternal(notification.Adapt<StalledStrikeNotification>());
                     break;
                 case StrikeType.ImportFailed:
-                    await _dryRunInterceptor.InterceptAsync(Notify<FailedImportStrikeNotification>, notification.Adapt<FailedImportStrikeNotification>());
+                    await NotifyInternal(notification.Adapt<FailedImportStrikeNotification>());
                     break;
                 case StrikeType.SlowSpeed:
                 case StrikeType.SlowTime:
-                    await _dryRunInterceptor.InterceptAsync(Notify<SlowStrikeNotification>, notification.Adapt<SlowStrikeNotification>());
+                    await NotifyInternal(notification.Adapt<SlowStrikeNotification>());
                     break;
             }
         }
@@ -86,7 +86,7 @@ public class NotificationPublisher : INotificationPublisher
                 Fields = [new() { Title = "Removed from download client?", Text = removeFromClient ? "Yes" : "No" }]
             };
 
-            await _dryRunInterceptor.InterceptAsync(Notify<QueueItemDeletedNotification>, notification);
+            await NotifyInternal(notification);
         }
         catch (Exception ex)
         {
@@ -115,12 +115,35 @@ public class NotificationPublisher : INotificationPublisher
                 Level = NotificationLevel.Important
             };
 
-            await _dryRunInterceptor.InterceptAsync(Notify<DownloadCleanedNotification>, notification);
+            await NotifyInternal(notification);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "failed to notify download cleaned");
         }
+    }
+    
+    public virtual async Task NotifyCategoryChanged(string oldCategory, string newCategory)
+    {
+        CategoryChangedNotification notification = new()
+        {
+            Title = "Category changed",
+            Description = ContextProvider.Get<string>("downloadName"),
+            Fields =
+            [
+                new() { Title = "Hash", Text = ContextProvider.Get<string>("hash").ToLowerInvariant() },
+                new() { Title = "Old category", Text = oldCategory },
+                new() { Title = "New category", Text = newCategory }
+            ],
+            Level = NotificationLevel.Important
+        };
+
+        await NotifyInternal(notification);
+    }
+    
+    private Task NotifyInternal<T>(T message) where T: notnull
+    {
+        return _dryRunInterceptor.InterceptAsync(Notify<T>, message);
     }
 
     [DryRunSafeguard]

@@ -1,0 +1,19 @@
+---
+sidebar_position: 3
+---
+
+import DownloadCleanerHardlinksSettings from '@site/src/components/configuration/download-cleaner/DownloadCleanerHardlinksSettings';
+import { Important } from '@site/src/components/Admonition';
+
+# Hardlinks Settings
+
+These settings control how the Download Cleaner handles downloads with no hardlinks remaining (they are not available in the arrs anymore).
+
+The Download Cleaner will change the category of a download that has no hardlinks and the new category can be cleaned based on the rules configured [here](/docs/configuration/download-cleaner/categories).
+
+<Important>
+    If you are using Docker, make sure to mount the downloads directory the same way it is mounted for the download client.
+    If your download client's download directory is `/downloads`, it should be the same for Cleanuperr.
+</Important>
+
+<DownloadCleanerHardlinksSettings/>

@@ -88,4 +88,19 @@ public class NotificationService
             }
         }
     }
+    
+    public async Task Notify(CategoryChangedNotification notification)
+    {
+        foreach (INotificationProvider provider in _notificationFactory.OnCategoryChangedEnabled())
+        {
+            try
+            {
+                await provider.OnCategoryChanged(notification);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "failed to send notification | provider {provider}", provider.Name);
+            }
+        }
+    }
 }

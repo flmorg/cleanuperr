@@ -24,4 +24,6 @@ public abstract class NotificationProvider : INotificationProvider
     public abstract Task OnQueueItemDeleted(QueueItemDeletedNotification notification);
 
     public abstract Task OnDownloadCleaned(DownloadCleanedNotification notification);
+    
+    public abstract Task OnCategoryChanged(CategoryChangedNotification notification);
 }

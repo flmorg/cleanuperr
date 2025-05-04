@@ -1,5 +1,6 @@
 using System.Text;
 using Common.Helpers;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -7,12 +8,14 @@ namespace Infrastructure.Verticals.Notifications.Notifiarr;
 
 public sealed class NotifiarrProxy : INotifiarrProxy
 {
+    private readonly ILogger<NotifiarrProxy> _logger;
     private readonly HttpClient _httpClient;
 
     private const string Url = "https://notifiarr.com/api/v1/notification/passthrough/";
 
-    public NotifiarrProxy(IHttpClientFactory httpClientFactory)
+    public NotifiarrProxy(ILogger<NotifiarrProxy> logger, IHttpClientFactory httpClientFactory)
     {
+        _logger = logger;
         _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
     }
 
@@ -24,6 +27,8 @@ public sealed class NotifiarrProxy : INotifiarrProxy
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             });
+            
+            _logger.LogTrace("sending notification to Notifiarr: {content}", content);
             
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{Url}{config.ApiKey}");
             request.Method = HttpMethod.Post;

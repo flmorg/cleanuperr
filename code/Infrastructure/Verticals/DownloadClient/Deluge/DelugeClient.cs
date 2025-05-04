@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using Common.Configuration;
 using Common.Configuration.DownloadClient;
+using Common.Exceptions;
 using Domain.Models.Deluge.Exceptions;
 using Domain.Models.Deluge.Request;
 using Domain.Models.Deluge.Response;
@@ -29,7 +30,8 @@ public sealed class DelugeClient
         "ratio",
         "trackers",
         "download_payload_rate",
-        "total_size"
+        "total_size",
+        "download_location"
     ];
     
     public DelugeClient(IOptions<DelugeConfig> config, IHttpClientFactory httpClientFactory)
@@ -44,9 +46,40 @@ public sealed class DelugeClient
         return await SendRequest<bool>("auth.login", _config.Password);
     }
 
+    public async Task<bool> IsConnected()
+    {
+        return await SendRequest<bool>("web.connected");
+    }
+
+    public async Task<bool> Connect()
+    {
+        string? firstHost = await GetHost();
+
+        if (string.IsNullOrEmpty(firstHost))
+        {
+            return false;
+        }
+
+        var result = await SendRequest<List<string>?>("web.connect", firstHost);
+        
+        return result?.Count > 0;
+    }
+
     public async Task<bool> Logout()
     {
         return await SendRequest<bool>("auth.delete_session");
+    }
+
+    public async Task<string?> GetHost()
+    {
+        var hosts = await SendRequest<List<List<string>?>?>("web.get_hosts");
+
+        if (hosts?.Count > 1)
+        {
+            throw new FatalException("multiple Deluge hosts found - please connect to only one host");
+        }
+        
+        return hosts?.FirstOrDefault()?.FirstOrDefault();
     }
 
     public async Task<List<DelugeTorrent>> ListTorrents(Dictionary<string, string>? filters = null)
@@ -149,7 +182,7 @@ public sealed class DelugeClient
         return responseJson;
     }
 
-    private DelugeRequest CreateRequest(string method, params object[] parameters)
+    private static DelugeRequest CreateRequest(string method, params object[] parameters)
     {
         if (String.IsNullOrWhiteSpace(method))
         {
@@ -194,5 +227,20 @@ public sealed class DelugeClient
         }
 
         return webResponse.Result;
+    }
+
+    public async Task<IReadOnlyList<string>> GetLabels()
+    {
+        return await SendRequest<IReadOnlyList<string>>("label.get_labels");
+    }
+    
+    public async Task CreateLabel(string label)
+    {
+        await SendRequest<DelugeResponse<object>>("label.add", label);
+    }
+
+    public async Task SetTorrentLabel(string hash, string newLabel)
+    {
+        await SendRequest<DelugeResponse<object>>("label.set_torrent", hash, newLabel);
     }
 }

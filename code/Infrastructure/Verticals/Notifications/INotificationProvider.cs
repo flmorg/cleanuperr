@@ -18,4 +18,6 @@ public interface INotificationProvider
     Task OnQueueItemDeleted(QueueItemDeletedNotification notification);
 
     Task OnDownloadCleaned(DownloadCleanedNotification notification);
+    
+    Task OnCategoryChanged(CategoryChangedNotification notification);
 }

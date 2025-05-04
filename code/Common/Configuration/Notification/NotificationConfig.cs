@@ -18,8 +18,17 @@ public abstract record NotificationConfig
     
     [ConfigurationKeyName("ON_DOWNLOAD_CLEANED")]
     public bool OnDownloadCleaned { get; init; }
+    
+    [ConfigurationKeyName("ON_CATEGORY_CHANGED")]
+    public bool OnCategoryChanged { get; init; }
 
-    public bool IsEnabled => OnImportFailedStrike || OnStalledStrike || OnSlowStrike || OnQueueItemDeleted || OnDownloadCleaned;
+    public bool IsEnabled =>
+        OnImportFailedStrike ||
+        OnStalledStrike ||
+        OnSlowStrike ||
+        OnQueueItemDeleted ||
+        OnDownloadCleaned ||
+        OnCategoryChanged;
 
     public abstract bool IsValid();
 }

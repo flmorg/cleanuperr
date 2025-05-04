@@ -70,6 +70,16 @@ const settings: EnvVarProps[] = [
     defaultValue: "false",
     required: false,
     acceptedValues: ["true", "false"],
+  },
+  {
+    name: "NOTIFIARR__ON_CATEGORY_CHANGED",
+    description: [
+      "Controls whether to notify when a download's category is changed."
+    ],
+    type: "boolean",
+    defaultValue: "false",
+    required: false,
+    acceptedValues: ["true", "false"],
   }
 ];
 

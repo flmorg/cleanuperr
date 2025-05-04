@@ -10,6 +10,7 @@ using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.DownloadClient.Transmission;
+using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.QueueCleaner;
 
@@ -27,14 +28,17 @@ public static class ServicesDI
             .AddTransient<ContentBlocker>()
             .AddTransient<DownloadCleaner>()
             .AddTransient<IFilenameEvaluator, FilenameEvaluator>()
+            .AddTransient<IHardLinkFileService, HardLinkFileService>()
+            .AddTransient<UnixHardLinkFileService>()
+            .AddTransient<WindowsHardLinkFileService>()
             .AddTransient<DummyDownloadService>()
             .AddTransient<QBitService>()
             .AddTransient<DelugeService>()
             .AddTransient<TransmissionService>()
             .AddTransient<ArrQueueIterator>()
             .AddTransient<DownloadServiceFactory>()
+            .AddTransient<IStriker, Striker>()
             .AddSingleton<BlocklistProvider>()
-            .AddSingleton<IStriker, Striker>()
             .AddSingleton<IgnoredDownloadsProvider<QueueCleanerConfig>>()
             .AddSingleton<IgnoredDownloadsProvider<ContentBlockerConfig>>()
             .AddSingleton<IgnoredDownloadsProvider<DownloadCleanerConfig>>();

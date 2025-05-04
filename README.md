@@ -15,7 +15,8 @@ Cleanuperr was created primarily to address malicious files, such as `*.lnk` or 
 > - Remove and block downloads that have a low download speed or high estimated completion time.
 > - Remove downloads blocked by qBittorrent or by Cleanuperr's **content blocker**.
 > - Trigger a search for downloads removed from the *arrs.
-> - Clean up downloads that have been seeding for a certain amount of time.
+> - Remove downloads that have been seeding for a certain amount of time.
+> - Remove downloads that have no hardlinks (have been upgraded by the *arrs).
 > - Notify on strike or download removal.
 > - Ignore certain torrent hashes, categories, tags or trackers from being processed by Cleanuperr.
 
