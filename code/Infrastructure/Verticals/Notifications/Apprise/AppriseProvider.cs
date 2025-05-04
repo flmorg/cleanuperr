@@ -43,6 +43,11 @@ public sealed class AppriseProvider : NotificationProvider
         await _proxy.SendNotification(BuildPayload(notification, NotificationType.Warning), _config);
     }
     
+    public override async Task OnCategoryChanged(CategoryChangedNotification notification)
+    {
+        await _proxy.SendNotification(BuildPayload(notification, NotificationType.Warning), _config);
+    }
+    
     private static ApprisePayload BuildPayload(ArrNotification notification, NotificationType notificationType)
     {
         StringBuilder body = new();
