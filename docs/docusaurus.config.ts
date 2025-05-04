@@ -7,11 +7,7 @@ const config: Config = {
   tagline: 'Cleaning arrs since \'24.',
   favicon: 'img/16.png',
 
-  // TODO
-  // Set the production url of your site here
   url: 'https://flmorg.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/cleanuperr/',
 
   organizationName: 'flmorg',
@@ -40,7 +36,6 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // image: 'img/docusaurus-social-card.jpg',
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: false,
