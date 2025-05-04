@@ -11,8 +11,8 @@ const settings: EnvVarProps[] = [
     type: "positive integer number",
     defaultValue: "0",
     required: false,
-    examples: ["0", "3", "10"],
     notes: [
+      "`0` means to never remove failed imports.",
       "If not set to `0`, the minimum value is `3`."
     ]
   },
