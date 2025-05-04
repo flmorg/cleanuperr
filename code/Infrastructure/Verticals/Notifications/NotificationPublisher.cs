@@ -48,10 +48,15 @@ public class NotificationPublisher : INotificationPublisher
             switch (strikeType)
             {
                 case StrikeType.Stalled:
+                case StrikeType.DownloadingMetadata:
                     await _dryRunInterceptor.InterceptAsync(Notify<StalledStrikeNotification>, notification.Adapt<StalledStrikeNotification>());
                     break;
                 case StrikeType.ImportFailed:
                     await _dryRunInterceptor.InterceptAsync(Notify<FailedImportStrikeNotification>, notification.Adapt<FailedImportStrikeNotification>());
+                    break;
+                case StrikeType.SlowSpeed:
+                case StrikeType.SlowTime:
+                    await _dryRunInterceptor.InterceptAsync(Notify<SlowStrikeNotification>, notification.Adapt<SlowStrikeNotification>());
                     break;
             }
         }

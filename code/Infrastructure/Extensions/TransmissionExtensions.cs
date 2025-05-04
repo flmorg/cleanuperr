@@ -1,4 +1,5 @@
-﻿using Transmission.API.RPC.Entity;
+﻿using Infrastructure.Helpers;
+using Transmission.API.RPC.Entity;
 
 namespace Infrastructure.Extensions;
 
@@ -19,7 +20,7 @@ public static class TransmissionExtensions
             }
 
             bool? hasIgnoredTracker = download.Trackers?
-                .Any(x => new Uri(x.Announce!).Host.EndsWith(value, StringComparison.InvariantCultureIgnoreCase));
+                .Any(x => UriService.GetDomain(x.Announce)?.EndsWith(value, StringComparison.InvariantCultureIgnoreCase) ?? false);
             
             if (hasIgnoredTracker is true)
             {

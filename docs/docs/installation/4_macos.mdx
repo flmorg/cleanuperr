@@ -1,0 +1,25 @@
+import { Important, Note } from '@site/src/components/Admonition'; 
+
+# MacOS
+
+<Note>
+    The preferred method of installation method is using Docker.
+</Note>
+
+1. Download the zip file from [releases](https://github.com/flmorg/cleanuperr/releases).
+2. Extract the zip file into `/example/directory`.
+3. Edit **appsettings.json**. The paths from this json file correspond with the docker env vars, as described [here](/docs/category/configuration).
+4. Open a terminal and execute these commands:
+    ```
+    cd /example/directory
+    chmod +x cleanuperr
+    ./cleanuperr
+    ```
+
+<Important>
+Some people have experienced problems when trying to execute cleanuperr on MacOS because the system actively blocked the file for not being signed.
+As per [this comment](https://stackoverflow.com/a/77907937), you may need to also execute this command:
+```
+codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime /example/directory/cleanuperr
+```
+</Important>

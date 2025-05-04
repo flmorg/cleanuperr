@@ -44,6 +44,21 @@ public class NotificationService
         }
     }
     
+    public async Task Notify(SlowStrikeNotification notification)
+    {
+        foreach (INotificationProvider provider in _notificationFactory.OnSlowStrikeEnabled())
+        {
+            try
+            {
+                await provider.OnSlowStrike(notification);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "failed to send notification | provider {provider}", provider.Name);
+            }
+        }
+    }
+    
     public async Task Notify(QueueItemDeletedNotification notification)
     {
         foreach (INotificationProvider provider in _notificationFactory.OnQueueItemDeletedEnabled())

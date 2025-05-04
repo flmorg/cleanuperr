@@ -1,4 +1,5 @@
-﻿using QBittorrent.Client;
+﻿using Infrastructure.Helpers;
+using QBittorrent.Client;
 
 namespace Infrastructure.Extensions;
 
@@ -29,9 +30,16 @@ public static class QBitExtensions
 
     public static bool ShouldIgnore(this TorrentTracker tracker, IReadOnlyList<string> ignoredDownloads)
     {
+        string? trackerUrl = UriService.GetDomain(tracker.Url);
+
+        if (trackerUrl is null)
+        {
+            return false;
+        }
+        
         foreach (string value in ignoredDownloads)
         {
-            if (tracker.Url.Host.EndsWith(value, StringComparison.InvariantCultureIgnoreCase))
+            if (trackerUrl.EndsWith(value, StringComparison.InvariantCultureIgnoreCase))
             {
                 return true;
             }

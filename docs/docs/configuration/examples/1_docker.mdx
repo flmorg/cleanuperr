@@ -1,0 +1,144 @@
+import { Note } from '@site/src/components/Admonition';
+
+# Docker compose
+
+<Note>
+    **This example contains all settings and should be modified to fit your needs.**
+</Note>
+
+```
+services:
+  cleanuperr:
+    image: ghcr.io/flmorg/cleanuperr:latest
+    restart: unless-stopped
+    volumes:
+      - ./cleanuperr/logs:/var/logs
+      - ./cleanuperr/ignored.txt:/ignored.txt
+    environment:
+      # general settings
+      - TZ=America/New_York
+      - DRY_RUN=false
+      - HTTP_MAX_RETRIES=0
+      - HTTP_TIMEOUT=100
+
+      # logging
+      - LOGGING__LOGLEVEL=Information
+      - LOGGING__FILE__ENABLED=false
+      - LOGGING__FILE__PATH=/var/logs/
+      - LOGGING__ENHANCED=true
+
+      # job triggers
+      - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
+      - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
+      - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
+
+      # queue cleaner
+      - QUEUECLEANER__ENABLED=true
+      - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
+      - QUEUECLEANER__RUNSEQUENTIALLY=true
+
+      # failed imports
+      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
+      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
+      - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
+      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
+      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
+
+      # stalled downloads
+      - QUEUECLEANER__STALLED_MAX_STRIKES=5
+      - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=false
+      - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
+      - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
+
+      # slow downloads
+      - QUEUECLEANER__SLOW_MAX_STRIKES=5
+      - QUEUECLEANER__SLOW_RESET_STRIKES_ON_PROGRESS=true
+      - QUEUECLEANER__SLOW_IGNORE_PRIVATE=false
+      - QUEUECLEANER__SLOW_DELETE_PRIVATE=false
+      - QUEUECLEANER__SLOW_MIN_SPEED=1MB
+      - QUEUECLEANER__SLOW_MAX_TIME=20
+      - QUEUECLEANER__SLOW_IGNORE_ABOVE_SIZE=60GB
+
+      # content blocker
+      - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored.txt
+      - CONTENTBLOCKER__IGNORE_PRIVATE=false
+      - CONTENTBLOCKER__DELETE_PRIVATE=false
+
+      # download cleaner
+      - DOWNLOADCLEANER__ENABLED=true
+      - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
+      - DOWNLOADCLEANER__DELETE_PRIVATE=false
+
+      # categories to seed until max ratio or min seed time has been reached
+      - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=240
+      - DOWNLOADCLEANER__CATEGORIES__1__NAME=radarr
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=240
+
+      - DOWNLOAD_CLIENT=none
+      # OR
+      # - DOWNLOAD_CLIENT=disabled
+      # OR
+      # - DOWNLOAD_CLIENT=qBittorrent
+      # - QBITTORRENT__URL=http://localhost:8080
+      # - QBITTORRENT__URL_BASE=myCustomPath
+      # - QBITTORRENT__USERNAME=user
+      # - QBITTORRENT__PASSWORD=pass
+      # OR
+      # - DOWNLOAD_CLIENT=deluge
+      # - DELUGE__URL_BASE=myCustomPath
+      # - DELUGE__URL=http://localhost:8112
+      # - DELUGE__PASSWORD=testing
+      # OR
+      # - DOWNLOAD_CLIENT=transmission
+      # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__URL_BASE=myCustomPath
+      # - TRANSMISSION__USERNAME=test
+      # - TRANSMISSION__PASSWORD=testing
+
+      - SONARR__ENABLED=true
+      - SONARR__SEARCHTYPE=Episode
+      - SONARR__BLOCK__TYPE=blacklist
+      - SONARR__BLOCK__PATH=https://example.com/path/to/file.txt
+      - SONARR__INSTANCES__0__URL=http://localhost:8989
+      - SONARR__INSTANCES__0__APIKEY=secret1
+      - SONARR__INSTANCES__1__URL=http://localhost:8990
+      - SONARR__INSTANCES__1__APIKEY=secret2
+
+      - RADARR__ENABLED=true
+      - RADARR__BLOCK__TYPE=blacklist
+      - RADARR__BLOCK__PATH=https://example.com/path/to/file.txt
+      - RADARR__INSTANCES__0__URL=http://localhost:7878
+      - RADARR__INSTANCES__0__APIKEY=secret3
+      - RADARR__INSTANCES__1__URL=http://localhost:7879
+      - RADARR__INSTANCES__1__APIKEY=secret4
+
+      - LIDARR__ENABLED=true
+      - LIDARR__BLOCK__TYPE=blacklist
+      - LIDARR__BLOCK__PATH=https://example.com/path/to/file.txt
+      - LIDARR__INSTANCES__0__URL=http://radarr:8686
+      - LIDARR__INSTANCES__0__APIKEY=secret5
+      - LIDARR__INSTANCES__1__URL=http://radarr:8687
+      - LIDARR__INSTANCES__1__APIKEY=secret6
+
+      - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
+      - NOTIFIARR__ON_STALLED_STRIKE=true
+      - NOTIFIARR__ON_SLOW_STRIKE=true
+      - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
+      - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
+      - NOTIFIARR__API_KEY=notifiarr_secret
+      - NOTIFIARR__CHANNEL_ID=discord_channel_id
+
+      - APPRISE__ON_IMPORT_FAILED_STRIKE=true
+      - APPRISE__ON_STALLED_STRIKE=true
+      - APPRISE__ON_SLOW_STRIKE=true
+      - APPRISE__ON_QUEUE_ITEM_DELETED=true
+      - APPRISE__ON_DOWNLOAD_CLEANED=true
+      - APPRISE__URL=http://apprise:8000
+      - APPRISE__KEY=myConfigKey
+```

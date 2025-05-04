@@ -35,5 +35,5 @@ public sealed record DownloadStatus
 
 public sealed record Tracker
 {
-    public required Uri Url { get; init; }
+    public required string Url { get; init; }
 }

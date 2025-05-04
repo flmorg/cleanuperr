@@ -18,6 +18,8 @@ public abstract class NotificationProvider : INotificationProvider
     public abstract Task OnFailedImportStrike(FailedImportStrikeNotification notification);
 
     public abstract Task OnStalledStrike(StalledStrikeNotification notification);
+    
+    public abstract Task OnSlowStrike(SlowStrikeNotification notification);
 
     public abstract Task OnQueueItemDeleted(QueueItemDeletedNotification notification);
 

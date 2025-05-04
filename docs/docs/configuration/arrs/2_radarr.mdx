@@ -1,0 +1,18 @@
+---
+sidebar_position: 2
+---
+
+import RadarrSettings from '@site/src/components/configuration/arrs/RadarrSettings';
+import { Note } from '@site/src/components/Admonition';
+
+# Radarr Settings
+
+<Note>
+  Multiple instances can be specified for each *arr using this format, where `<NUMBER>` starts from 0:
+```yaml
+<ARR>__INSTANCES__<NUMBER>__URL
+<ARR>__INSTANCES__<NUMBER>__APIKEY
+```
+</Note>
+
+<RadarrSettings/> 
