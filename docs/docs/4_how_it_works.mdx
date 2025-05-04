@@ -1,0 +1,35 @@
+---
+sidebar_position: 4
+---
+
+# How it works
+
+This is a detailed explanation of how the recurring cleanup jobs work.
+
+#### 1. **Content blocker** will:
+   - Run every 5 minutes (or configured cron).
+   - Process all items in the *arr queue.
+   - Find the corresponding item from the download client for each queue item.
+   - Mark the files that were found in the queue as **unwanted/skipped** if:
+     - They **are listed in the blacklist**, or
+     - They **are not included in the whitelist**.
+   - If **all files** of a download **are unwanted**:
+     - It will be removed from the *arr's queue and blocked.
+     - It will be deleted from the download client.
+     - A new search will be triggered for the *arr item.
+#### 2. **Queue cleaner** will:
+   - Run every 5 minutes (or configured cron, or right after `Content Blocker`).
+   - Process all items in the *arr queue.
+   - Check each queue item if it is **stalled (download speed is 0)**, **stuck in metadata downloading**, **failed to be imported** or **slow**.
+     - If it is, the item receives a **strike** and will continue to accumulate strikes every time it meets any of these conditions.
+   - Check each queue item if it meets one of the following condition in the download client:
+     - **Marked as completed, but 0 bytes have been downloaded** (due to files being blocked by qBittorrent or the **content blocker**).
+     - All associated files are marked as **unwanted/skipped/do not download**.
+   - If the item **DOES NOT** match the above criteria, it will be skipped.
+   - If the item **DOES** match the criteria or has received the **maximum number of strikes**:
+     - It will be removed from the *arr's queue and blocked.
+     - It will be deleted from the download client.
+     - A new search will be triggered for the *arr item.
+#### 3. **Download cleaner** will:
+   - Run every hour (or configured cron).
+   - Automatically clean up downloads that have been seeding for a certain amount of time.

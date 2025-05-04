@@ -1,0 +1,26 @@
+---
+sidebar_position: 2
+---
+
+import DownloadCleanerCleanupSettings from '@site/src/components/configuration/download-cleaner/DownloadCleanerCleanupSettings';
+import { Note } from '@site/src/components/Admonition';
+
+# Cleanup Settings
+
+These settings control how the Download Cleaner handles different categories of downloads that need to be removed.
+
+<Note>
+  A download is cleaned when both `MAX_RATIO` and `MIN_SEED_TIME` or just `MAX_SEED_TIME` is reached.
+</Note>
+
+<Note>
+  Multiple categories can be specified using this format, where `<NUMBER>` starts from `0`:
+  ```yaml
+  DOWNLOADCLEANER__CATEGORIES__<NUMBER>__NAME
+  DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_RATIO
+  DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MIN_SEED_TIME
+  DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_SEED_TIME
+  ```
+</Note>
+
+<DownloadCleanerCleanupSettings/> 
