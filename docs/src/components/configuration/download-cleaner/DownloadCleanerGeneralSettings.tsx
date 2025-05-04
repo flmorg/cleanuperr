@@ -1,11 +1,12 @@
 import React from "react";
-import EnvVars, { EnvVarProps } from "./EnvVars";
+import EnvVars, { EnvVarProps } from "../EnvVars";
 
 const settings: EnvVarProps[] = [
   {
-    name: "QUEUECLEANER__ENABLED",
+    name: "DOWNLOADCLEANER__ENABLED",
     description: [
-      "Enables or disables the queue cleaning functionality. When enabled, processes all items in the *arr queue."
+      "Enables or disables the Download Cleaner functionality.",
+      "When enabled, automatically cleans up downloads that have been seeding for a certain amount of time."
     ],
     type: "boolean",
     defaultValue: "false",
@@ -13,27 +14,24 @@ const settings: EnvVarProps[] = [
     acceptedValues: ["true", "false"],
   },
   {
-    name: "TRIGGERS__QUEUECLEANER",
+    name: "TRIGGERS__DOWNLOADCLEANER",
     description: [
-      "Cron schedule for the Queue Cleaner job."
+      "Cron schedule for the Download Cleaner job."
     ],
     type: "text",
     reference: "https://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html",
-    defaultValue: "0 0/5 * * * ?",
-    defaultValueComment: "every 5 minutes",
-    required: "Only required if QUEUECLEANER__ENABLED is true",
-    examples: ["0 0/5 * * * ?", "0 0 * * * ?", "0 0 0/1 * * ?"],
+    defaultValue: "0 0 * * * ?",
+    defaultValueComment: "every hour",
+    required: false,
     notes: [
-      "Maximum interval is 6 hours.",
-      "Is ignored if `QUEUECLEANER__RUNSEQUENTIALLY=true` and `CONTENTBLOCKER__ENABLED=true`."
+      "Maximum interval is 6 hours."
     ]
   },
   {
-    name: "QUEUECLEANER__IGNORED_DOWNLOADS_PATH",
+    name: "DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH",
     description: [
-      "Local path to the file containing downloads to be ignored from being processed by Cleanuperr.",
+      "Local path to the file containing ignored downloads.",
       "If the contents of the file are changed, they will be reloaded on the next job run.",
-      "This file is not automatically created, so you need to create it manually.",
       {
         type: "list",
         title: "Accepted values inside the file (each value needs to be on a new line):",
@@ -64,17 +62,20 @@ mytracker.com
     ]
   },
   {
-    name: "QUEUECLEANER__RUNSEQUENTIALLY",
+    name: "DOWNLOADCLEANER__DELETE_PRIVATE",
     description: [
-      "Controls whether Queue Cleaner runs after Content Blocker instead of in parallel. When true, streamlines the cleaning process by running immediately after Content Blocker."
+      "Controls whether to delete private downloads."
     ],
     type: "boolean",
-    defaultValue: "true",
+    defaultValue: "false",
     required: false,
-    acceptedValues: ["true", "false"]
+    acceptedValues: ["true", "false"],
+    important: [
+      "Setting `DOWNLOADCLEANER__DELETE_PRIVATE=true` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account."
+    ]
   }
 ];
 
-export default function QueueCleanerGeneralSettings() {
+export default function DownloadCleanerGeneralSettings() {
   return <EnvVars vars={settings} />;
 } 

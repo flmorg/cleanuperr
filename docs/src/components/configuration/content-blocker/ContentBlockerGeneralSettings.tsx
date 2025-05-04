@@ -1,5 +1,5 @@
 import React from "react";
-import EnvVars, { EnvVarProps } from "./EnvVars";
+import EnvVars, { EnvVarProps } from "../EnvVars";
 
 const settings: EnvVarProps[] = [
   {

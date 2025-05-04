@@ -1,0 +1,13 @@
+import { Note } from '@site/src/components/Admonition';
+
+# Using Cleanuperr's blocklist feature (torrent)
+
+1. Set both `QUEUECLEANER__ENABLED` and `CONTENTBLOCKER__ENABLED` to `true` in your environment variables.
+2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Arr settings](/docs/category/arrs-settings) section.
+3. Once configured, cleanuperr will perform the following tasks:
+   - Execute the **Content Blocker** job, as explained in the [How it works](/docs/how_it_works) section.
+   - Execute the **Queue Cleaner** job, as explained in the [How it works](/docs/how_it_works) section.
+
+<Note>
+    This scenario is an example for blocking malicious files. Other features can be included here by configuring the environment variables.
+</Note>
