@@ -124,11 +124,11 @@ public sealed class QueueCleaner : GenericHandler
                 if (downloadCheckResult.IsPrivate)
                 {
                     bool isStalledWithoutPruneFlag = 
-                        downloadCheckResult.DeleteReason is DeleteReason.Stalled && 
+                        downloadCheckResult.DeleteReason is DeleteReason.Stalled &&
                         !_config.StalledDeletePrivate;
     
                     bool isSlowWithoutPruneFlag = 
-                        downloadCheckResult.DeleteReason is DeleteReason.SlowSpeed or DeleteReason.SlowTime && 
+                        downloadCheckResult.DeleteReason is DeleteReason.SlowSpeed or DeleteReason.SlowTime &&
                         !_config.SlowDeletePrivate;
     
                     bool shouldKeepDueToDeleteRules = downloadCheckResult.ShouldRemove && (isStalledWithoutPruneFlag || isSlowWithoutPruneFlag);

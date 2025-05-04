@@ -13,7 +13,7 @@ const settings: EnvVarProps[] = [
     required: false,
     examples: ["0", "3", "10"],
     notes: [
-      "If not set to 0, the minimum value is 3."
+      "If not set to 0, the minimum value is `3`."
     ]
   },
   {

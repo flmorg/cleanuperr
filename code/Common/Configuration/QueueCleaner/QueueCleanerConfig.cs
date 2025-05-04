@@ -25,7 +25,7 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     public bool ImportFailedDeletePrivate { get; init; }
     
     [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PATTERNS")]
-    public List<string>? ImportFailedIgnorePatterns { get; init; }
+    public IReadOnlyList<string>? ImportFailedIgnorePatterns { get; init; }
     
     [ConfigurationKeyName("STALLED_MAX_STRIKES")]
     public ushort StalledMaxStrikes { get; init; }
@@ -38,6 +38,9 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     
     [ConfigurationKeyName("STALLED_DELETE_PRIVATE")]
     public bool StalledDeletePrivate { get; init; }
+    
+    [ConfigurationKeyName("DOWNLOADING_METADATA_MAX_STRIKES")]
+    public ushort DownloadingMetadataMaxStrikes { get; init; }
     
     [ConfigurationKeyName("SLOW_MAX_STRIKES")]
     public ushort SlowMaxStrikes { get; init; }
@@ -63,22 +66,27 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     public string SlowIgnoreAboveSize { get; init; } = string.Empty;
     
     public ByteSize? SlowIgnoreAboveSizeByteSize => string.IsNullOrEmpty(SlowIgnoreAboveSize) ? null : ByteSize.Parse(SlowIgnoreAboveSize);
-
+    
     public void Validate()
     {
         if (ImportFailedMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException($"the minimum value for {SectionName}__IMPORT_FAILED_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__IMPORT_FAILED_MAX_STRIKES must be 3");
         }
 
         if (StalledMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException($"the minimum value for {SectionName}__STALLED_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__STALLED_MAX_STRIKES must be 3");
+        }
+        
+        if (DownloadingMetadataMaxStrikes is > 0 and < 3)
+        {
+            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__DOWNLOADING_METADATA_MAX_STRIKES must be 3");
         }
         
         if (SlowMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException($"the minimum value for {SectionName}__SLOW_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__SLOW_MAX_STRIKES must be 3");
         }
 
         if (SlowMaxStrikes > 0)
@@ -87,24 +95,24 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
 
             if (isSlowSpeedSet && ByteSize.TryParse(SlowMinSpeed, out _) is false)
             {
-                throw new ValidationException($"invalid value for {SectionName}__SLOW_MIN_SPEED");
+                throw new ValidationException($"invalid value for {SectionName.ToUpperInvariant()}__SLOW_MIN_SPEED");
             }
 
             if (SlowMaxTime < 0)
             {
-                throw new ValidationException($"invalid value for {SectionName}__SLOW_MAX_TIME");
+                throw new ValidationException($"invalid value for {SectionName.ToUpperInvariant()}__SLOW_MAX_TIME");
             }
 
             if (!isSlowSpeedSet && SlowMaxTime is 0)
             {
-                throw new ValidationException($"either {SectionName}__SLOW_MIN_SPEED or {SectionName}__SLOW_MAX_STRIKES must be set");
+                throw new ValidationException($"either {SectionName.ToUpperInvariant()}__SLOW_MIN_SPEED or {SectionName.ToUpperInvariant()}__SLOW_MAX_STRIKES must be set");
             }
         
             bool isSlowIgnoreAboveSizeSet = !string.IsNullOrEmpty(SlowIgnoreAboveSize);
         
             if (isSlowIgnoreAboveSizeSet && ByteSize.TryParse(SlowIgnoreAboveSize, out _) is false)
             {
-                throw new ValidationException($"invalid value for {SectionName}__SLOW_IGNORE_ABOVE_SIZE");
+                throw new ValidationException($"invalid value for {SectionName.ToUpperInvariant()}__SLOW_IGNORE_ABOVE_SIZE");
             }
         }
     }
