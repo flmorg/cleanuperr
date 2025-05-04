@@ -12,6 +12,8 @@ public interface INotificationProvider
     Task OnFailedImportStrike(FailedImportStrikeNotification notification);
         
     Task OnStalledStrike(StalledStrikeNotification notification);
+    
+    Task OnSlowStrike(SlowStrikeNotification notification);
 
     Task OnQueueItemDeleted(QueueItemDeletedNotification notification);
 

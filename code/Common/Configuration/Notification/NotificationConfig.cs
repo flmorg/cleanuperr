@@ -10,6 +10,9 @@ public abstract record NotificationConfig
     [ConfigurationKeyName("ON_STALLED_STRIKE")]
     public bool OnStalledStrike { get; init; }
     
+    [ConfigurationKeyName("ON_SLOW_STRIKE")]
+    public bool OnSlowStrike { get; init; }
+    
     [ConfigurationKeyName("ON_QUEUE_ITEM_DELETED")]
     public bool OnQueueItemDeleted { get; init; }
     
@@ -22,6 +25,7 @@ public abstract record NotificationConfig
     public bool IsEnabled =>
         OnImportFailedStrike ||
         OnStalledStrike ||
+        OnSlowStrike ||
         OnQueueItemDeleted ||
         OnDownloadCleaned ||
         OnCategoryChanged;

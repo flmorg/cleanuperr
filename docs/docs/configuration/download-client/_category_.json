@@ -1,0 +1,8 @@
+{
+  "label": "Download Client",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Configure the download client settings for Cleanuperr."
+  }
+} 

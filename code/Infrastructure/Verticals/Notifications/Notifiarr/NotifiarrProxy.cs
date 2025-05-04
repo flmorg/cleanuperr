@@ -6,7 +6,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Infrastructure.Verticals.Notifications.Notifiarr;
 
-public class NotifiarrProxy : INotifiarrProxy
+public sealed class NotifiarrProxy : INotifiarrProxy
 {
     private readonly ILogger<NotifiarrProxy> _logger;
     private readonly HttpClient _httpClient;

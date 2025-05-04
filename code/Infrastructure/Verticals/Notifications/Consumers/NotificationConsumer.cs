@@ -27,6 +27,9 @@ public sealed class NotificationConsumer<T> : IConsumer<T> where T : Notificatio
                 case StalledStrikeNotification stalledMessage:
                     await _notificationService.Notify(stalledMessage);
                     break;
+                case SlowStrikeNotification slowMessage:
+                    await _notificationService.Notify(slowMessage);
+                    break;
                 case QueueItemDeletedNotification queueItemDeleteMessage:
                     await _notificationService.Notify(queueItemDeleteMessage);
                     break;

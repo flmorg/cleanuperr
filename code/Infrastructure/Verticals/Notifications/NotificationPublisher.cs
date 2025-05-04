@@ -48,10 +48,15 @@ public class NotificationPublisher : INotificationPublisher
             switch (strikeType)
             {
                 case StrikeType.Stalled:
+                case StrikeType.DownloadingMetadata:
                     await NotifyInternal(notification.Adapt<StalledStrikeNotification>());
                     break;
                 case StrikeType.ImportFailed:
                     await NotifyInternal(notification.Adapt<FailedImportStrikeNotification>());
+                    break;
+                case StrikeType.SlowSpeed:
+                case StrikeType.SlowTime:
+                    await NotifyInternal(notification.Adapt<SlowStrikeNotification>());
                     break;
             }
         }
