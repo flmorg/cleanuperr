@@ -15,12 +15,24 @@ Cleanuperr was created primarily to address malicious files, such as `*.lnk` or 
 > - Remove and block downloads that have a low download speed or high estimated completion time.
 > - Remove downloads blocked by qBittorrent or by Cleanuperr's **content blocker**.
 > - Trigger a search for downloads removed from the *arrs.
-> - Remove downloads that have been seeding for a certain amount of time.
-> - Remove downloads that have no hardlinks (have been upgraded by the *arrs).
+> - Clean up downloads that have been seeding for a certain amount of time.
 > - Notify on strike or download removal.
 > - Ignore certain torrent hashes, categories, tags or trackers from being processed by Cleanuperr.
 
 Cleanuperr supports both qBittorrent's built-in exclusion features and its own blocklist-based system. Binaries for all platforms are provided, along with Docker images for easy deployment.
+
+## Quick Start
+
+> [!NOTE]
+>
+> 1. **Docker (Recommended)**  
+> Pull the Docker image from `ghcr.io/flmorg/cleanuperr:latest`.
+>
+> 2. **Unraid (for Unraid users)**  
+> Use the Unraid Community App.
+>
+> 3. **Manual Installation (if you're not using Docker)**  
+> Go to [Windows](#windows), [Linux](#linux) or [MacOS](#macos).
 
 # Docs
 
