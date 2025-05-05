@@ -3,6 +3,7 @@ using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Interceptors;
 using Infrastructure.Providers;
+using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;
@@ -21,6 +22,7 @@ public static class ServicesDI
     public static IServiceCollection AddServices(this IServiceCollection services) =>
         services
             .AddTransient<IDryRunInterceptor, DryRunInterceptor>()
+            .AddTransient<CertificateValidationService>()
             .AddTransient<SonarrClient>()
             .AddTransient<RadarrClient>()
             .AddTransient<LidarrClient>()
