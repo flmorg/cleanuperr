@@ -1,4 +1,5 @@
-﻿using Common.Exceptions;
+﻿using Common.Enums;
+using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.General;
@@ -10,6 +11,9 @@ public sealed record HttpConfig : IConfig
     
     [ConfigurationKeyName("HTTP_TIMEOUT")]
     public ushort Timeout { get; init; } = 100;
+    
+    [ConfigurationKeyName("HTTP_VALIDATE_CERT")]
+    public CertificateValidationType CertificateValidation { get; init; } = CertificateValidationType.Enabled;
 
     public void Validate()
     {

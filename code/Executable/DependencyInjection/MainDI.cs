@@ -1,10 +1,12 @@
 ﻿using System.Net;
 using Common.Configuration.General;
 using Common.Helpers;
+using Infrastructure.Services;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.Notifications.Consumers;
 using Infrastructure.Verticals.Notifications.Models;
 using MassTransit;
+using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Extensions.Http;
 
@@ -61,6 +63,15 @@ public static class MainDI
             .AddHttpClient(Constants.HttpClientWithRetryName, x =>
             {
                 x.Timeout = TimeSpan.FromSeconds(config.Timeout);
+            })
+            .ConfigurePrimaryHttpMessageHandler(provider =>
+            {
+                CertificateValidationService service = provider.GetRequiredService<CertificateValidationService>();
+                
+                return new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = service.ShouldByPassValidationError
+                };
             })
             .AddRetryPolicyHandler(config);
 

@@ -81,6 +81,17 @@ const settings: EnvVarProps[] = [
     type: "positive integer number",
     defaultValue: "100",
     required: false,
+  },
+  {
+    name: "HTTP_VALIDATE_CERT",
+    description: [
+      "Controls whether to validate SSL certificates for HTTPS connections.",
+      "Set to `Disabled` to ignore SSL certificate errors."
+    ],
+    type: "text",
+    defaultValue: "Enabled",
+    required: false,
+    acceptedValues: ["Enabled", "DisabledForLocalAddresses", "Disabled"],
   }
 ];
 
