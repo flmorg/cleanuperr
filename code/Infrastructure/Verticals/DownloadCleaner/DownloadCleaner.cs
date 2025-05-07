@@ -85,7 +85,9 @@ public sealed class DownloadCleaner : GenericHandler
         await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
         
         _logger.LogTrace("looking for downloads to change category");
+        _logger.LogTrace("found {count} potential downloads to change category", downloadsToChangeCategory?.Count);
         await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes, ignoredDownloads);
+        _logger.LogTrace("finished changing category");
         
         if (_config.Categories?.Count is null or 0)
         {
@@ -98,7 +100,9 @@ public sealed class DownloadCleaner : GenericHandler
         downloads = null;
 
         _logger.LogTrace("looking for downloads to clean");
+        _logger.LogTrace("found {count} potential downloads to clean", downloadsToClean?.Count);
         await _downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes, ignoredDownloads);
+        _logger.LogTrace("finished cleaning downloads");
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
