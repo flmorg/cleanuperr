@@ -18,7 +18,7 @@
       <PackageReference Include="MassTransit" Version="8.3.6" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
-      <PackageReference Include="Mono.Posix.NETStandard" Version="1.0.0" />
+      <PackageReference Include="Mono.Unix" Version="7.1.0-final.1.21458.1" />
       <PackageReference Include="Quartz" Version="3.13.1" />
       <PackageReference Include="Scrutor" Version="6.0.1" />
     </ItemGroup>
