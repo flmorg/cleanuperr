@@ -33,11 +33,6 @@ public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
             return;
         }
         
-        if (Categories?.Count is null or 0)
-        {
-            throw new ValidationException("no categories configured");
-        }
-
         if (Categories?.GroupBy(x => x.Name).Any(x => x.Count() > 1) is true)
         {
             throw new ValidationException("duplicated clean categories found");
