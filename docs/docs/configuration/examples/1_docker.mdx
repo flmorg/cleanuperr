@@ -12,8 +12,12 @@ services:
     image: ghcr.io/flmorg/cleanuperr:latest
     restart: unless-stopped
     volumes:
+      # if you want persistent logs
       - ./cleanuperr/logs:/var/logs
+      # if you want to ignore certain downloads from being processed
       - ./cleanuperr/ignored.txt:/ignored.txt
+      # if you're using cross-seed and the hardlinks functionality
+      - ./downloads:/downloads
     environment:
       # general settings
       - TZ=America/New_York
