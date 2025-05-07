@@ -30,11 +30,17 @@ const settings: EnvVarProps[] = [
           title: "Multiple patterns can be specified using incrementing numbers starting from 0.",
           content: `DOWNLOADCLEANER__UNLINKED_CATEGORIES__0=tv-sonarr
 DOWNLOADCLEANER__UNLINKED_CATEGORIES__1=radarr`
-        }
+        },
       ],
       type: "text",
       defaultValue: "Empty",
       required: false,
+      notes: [
+        "The category name must match the category that was set in the *arr.",
+        "For qBittorrent, the category name is the name of the download category.",
+        "For Deluge, the category name is the name of the label.",
+        "For Transmission, the category name is the last directory from the save location.",
+      ],
     }
 ];
 

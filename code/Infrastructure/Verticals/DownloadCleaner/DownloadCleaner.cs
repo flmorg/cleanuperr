@@ -58,12 +58,6 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
         
-        if (_config.Categories?.Count is null or 0)
-        {
-            _logger.LogWarning("no categories configured");
-            return;
-        }
-        
         IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
         
         await _downloadService.LoginAsync();
@@ -93,11 +87,16 @@ public sealed class DownloadCleaner : GenericHandler
         _logger.LogTrace("looking for downloads to change category");
         await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes, ignoredDownloads);
         
+        if (_config.Categories?.Count is null or 0)
+        {
+            return;
+        }
+        
         List<object>? downloadsToClean = _downloadService.FilterDownloadsToBeCleanedAsync(downloads, _config.Categories);
         
         // release unused objects
         downloads = null;
-        
+
         _logger.LogTrace("looking for downloads to clean");
         await _downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes, ignoredDownloads);
     }
