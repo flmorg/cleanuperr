@@ -118,6 +118,7 @@ services:
       # - TRANSMISSION__PASSWORD=testing
 
       - SONARR__ENABLED=true
+      - SONARR__IMPORT_FAILED_MAX_STRIKES=-1
       - SONARR__SEARCHTYPE=Episode
       - SONARR__BLOCK__TYPE=blacklist
       - SONARR__BLOCK__PATH=https://example.com/path/to/file.txt
@@ -127,6 +128,7 @@ services:
       - SONARR__INSTANCES__1__APIKEY=secret2
 
       - RADARR__ENABLED=true
+      - RADARR__IMPORT_FAILED_MAX_STRIKES=-1
       - RADARR__BLOCK__TYPE=blacklist
       - RADARR__BLOCK__PATH=https://example.com/path/to/file.txt
       - RADARR__INSTANCES__0__URL=http://localhost:7878
@@ -135,6 +137,7 @@ services:
       - RADARR__INSTANCES__1__APIKEY=secret4
 
       - LIDARR__ENABLED=true
+      - LIDARR__IMPORT_FAILED_MAX_STRIKES=-1
       - LIDARR__BLOCK__TYPE=blacklist
       - LIDARR__BLOCK__PATH=https://example.com/path/to/file.txt
       - LIDARR__INSTANCES__0__URL=http://radarr:8686

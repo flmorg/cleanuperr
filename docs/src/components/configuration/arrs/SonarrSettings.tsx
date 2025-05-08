@@ -13,6 +13,24 @@ const settings: EnvVarProps[] = [
     acceptedValues: ["true", "false"],
   },
   {
+    name: "SONARR__IMPORT_FAILED_MAX_STRIKES",
+    description: [
+      "Number of strikes before removing a failed import. Set to `0` to never remove failed imports.",
+      "A strike is given when an item fails to be imported."
+    ],
+    type: "integer number",
+    defaultValue: "-1",
+    required: false,
+    notes: [
+      "If the value is a positive number, it overwrites the values of [QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES](/cleanuperr/docs/configuration/queue-cleaner/import-failed?QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES).",
+      "`0` means to never remove failed imports.",
+      "If not set to `0` or a negative number, the minimum value is `3`.",
+    ],
+    warnings: [
+      "The value is not restricted to be a certain positive number. Use a low value (e.g. `1`) at your own risk."
+    ]
+  },
+  {
     name: "SONARR__BLOCK__TYPE",
     description: [
       "Determines how file blocking works for Sonarr."

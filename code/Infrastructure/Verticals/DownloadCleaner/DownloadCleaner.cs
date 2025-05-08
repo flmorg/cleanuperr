@@ -127,7 +127,7 @@ public sealed class DownloadCleaner : GenericHandler
         _logger.LogTrace("finished cleaning downloads");
     }
 
-    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
     {
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
         
