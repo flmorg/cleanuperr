@@ -448,12 +448,12 @@ public class QBitService : DownloadService, IQBitService
 
             if (_downloadCleanerConfig.UnlinkedUseTag)
             {
-                _logger.LogInformation("category changed for {name}", download.Name);
-                download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
+                _logger.LogInformation("tag added for {name}", download.Name);
             }
             else
             {
-                _logger.LogInformation("tag added for {name}", download.Name);
+                _logger.LogInformation("category changed for {name}", download.Name);
+                download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
             }
             
             await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory, _downloadCleanerConfig.UnlinkedUseTag);
