@@ -49,7 +49,7 @@ public sealed class QueueCleaner : GenericHandler
         _ignoredDownloadsProvider = ignoredDownloadsProvider;
     }
     
-    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
     {
         IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
         
@@ -108,7 +108,7 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 // failed import check
-                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate);
+                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate, config.ImportFailedMaxStrikes);
                 DeleteReason deleteReason = downloadCheckResult.ShouldRemove ? downloadCheckResult.DeleteReason : DeleteReason.ImportFailed;
 
                 if (!shouldRemoveFromArr && !downloadCheckResult.ShouldRemove)

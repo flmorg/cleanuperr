@@ -67,7 +67,7 @@ public abstract class GenericHandler : IHandler, IDisposable
         _downloadService.Dispose();
     }
 
-    protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType);
+    protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config);
     
     protected async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType, bool throwOnFailure = false)
     {
@@ -80,7 +80,7 @@ public abstract class GenericHandler : IHandler, IDisposable
         {
             try
             {
-                await ProcessInstanceAsync(arrInstance, instanceType);
+                await ProcessInstanceAsync(arrInstance, instanceType, config);
             }
             catch (Exception exception)
             {

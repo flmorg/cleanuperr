@@ -9,7 +9,7 @@ public interface IArrClient
 {
     Task<QueueListResponse> GetQueueItemsAsync(ArrInstance arrInstance, int page);
 
-    Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload);
+    Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload, short arrMaxStrikes);
 
     Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient, DeleteReason deleteReason);
     

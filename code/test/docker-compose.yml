@@ -252,6 +252,7 @@ services:
       # - TRANSMISSION__PASSWORD=testing
 
       - SONARR__ENABLED=true
+      - SONARR__IMPORT_FAILED_MAX_STRIKES=-1
       - SONARR__SEARCHTYPE=Episode
       - SONARR__BLOCK__TYPE=blacklist
       - SONARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
@@ -259,12 +260,14 @@ services:
       - SONARR__INSTANCES__0__APIKEY=425d1e713f0c405cbbf359ac0502c1f4
 
       - RADARR__ENABLED=true
+      - RADARR__IMPORT_FAILED_MAX_STRIKES=-1
       - RADARR__BLOCK__TYPE=blacklist
       - RADARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
       - RADARR__INSTANCES__0__URL=http://radarr:7878
       - RADARR__INSTANCES__0__APIKEY=8b7454f668e54c5b8f44f56f93969761
 
       - LIDARR__ENABLED=true
+      - LIDARR__IMPORT_FAILED_MAX_STRIKES=-1
       - LIDARR__BLOCK__TYPE=blacklist
       - LIDARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist # TODO
       - LIDARR__INSTANCES__0__URL=http://lidarr:8686
