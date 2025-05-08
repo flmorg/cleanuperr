@@ -123,20 +123,28 @@ public class NotificationPublisher : INotificationPublisher
         }
     }
     
-    public virtual async Task NotifyCategoryChanged(string oldCategory, string newCategory)
+    public virtual async Task NotifyCategoryChanged(string oldCategory, string newCategory, bool isTag = false)
     {
         CategoryChangedNotification notification = new()
         {
-            Title = "Category changed",
+            Title = isTag? "Tag added" : "Category changed",
             Description = ContextProvider.Get<string>("downloadName"),
             Fields =
             [
-                new() { Title = "Hash", Text = ContextProvider.Get<string>("hash").ToLowerInvariant() },
-                new() { Title = "Old category", Text = oldCategory },
-                new() { Title = "New category", Text = newCategory }
+                new() { Title = "Hash", Text = ContextProvider.Get<string>("hash").ToLowerInvariant() }
             ],
             Level = NotificationLevel.Important
         };
+
+        if (isTag)
+        {
+            notification.Fields.Add(new() { Title = "Tag", Text = newCategory });
+        }
+        else
+        {
+            notification.Fields.Add(new() { Title = "Old category", Text = oldCategory });
+            notification.Fields.Add(new() { Title = "New category", Text = newCategory });
+        }
 
         await NotifyInternal(notification);
     }

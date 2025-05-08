@@ -251,6 +251,15 @@ public class QBitService : DownloadService, IQBitService
             ?.Cast<TorrentInfo>()
             .Where(x => !string.IsNullOrEmpty(x.Hash))
             .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+            .Where(x =>
+            {
+                if (_downloadCleanerConfig.UnlinkedUseTag)
+                {
+                    return !x.Tags.Any(tag => tag.Equals(_downloadCleanerConfig.UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
+                }
+
+                return true;
+            })
             .Cast<object>()
             .ToList();
 
@@ -436,12 +445,18 @@ public class QBitService : DownloadService, IQBitService
             }
             
             await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
+
+            if (_downloadCleanerConfig.UnlinkedUseTag)
+            {
+                _logger.LogInformation("category changed for {name}", download.Name);
+                download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
+            }
+            else
+            {
+                _logger.LogInformation("tag added for {name}", download.Name);
+            }
             
-            _logger.LogInformation("category changed for {name}", download.Name);
-            
-            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory);
-            
-            download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
+            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory, _downloadCleanerConfig.UnlinkedUseTag);
         }
     }
     
@@ -467,6 +482,12 @@ public class QBitService : DownloadService, IQBitService
     [DryRunSafeguard]
     protected virtual async Task ChangeCategory(string hash, string newCategory)
     {
+        if (_downloadCleanerConfig.UnlinkedUseTag)
+        {
+            await _client.AddTorrentTagAsync([hash], newCategory);
+            return;
+        }
+        
         await _client.SetTorrentCategoryAsync([hash], newCategory);
     }
 
