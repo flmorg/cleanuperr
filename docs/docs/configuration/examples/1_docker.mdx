@@ -91,6 +91,7 @@ services:
       
       # change category for downloads with no hardlinks
       - DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY=cleanuperr-unlinked
+      - DOWNLOADCLEANER__UNLINKED_USE_TAG=false
       - DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR=/downloads
       - DOWNLOADCLEANER__UNLINKED_CATEGORIES__0=tv-sonarr
       - DOWNLOADCLEANER__UNLINKED_CATEGORIES__1=radarr

@@ -86,9 +86,12 @@ public sealed class DownloadCleaner : GenericHandler
         {
             if (!_hardLinkCategoryCreated)
             {
-                _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
-
-                await _downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
+                if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.QBittorrent && !_config.UnlinkedUseTag)
+                {
+                    _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
+                    await _downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
+                }
+                
                 _hardLinkCategoryCreated = true;
             }
             

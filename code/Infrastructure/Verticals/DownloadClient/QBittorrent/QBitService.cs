@@ -467,6 +467,12 @@ public class QBitService : DownloadService, IQBitService
     [DryRunSafeguard]
     protected virtual async Task ChangeCategory(string hash, string newCategory)
     {
+        if (_downloadCleanerConfig.UnlinkedUseTag)
+        {
+            await _client.AddTorrentTagAsync([hash], newCategory);
+            return;
+        }
+        
         await _client.SetTorrentCategoryAsync([hash], newCategory);
     }
 
