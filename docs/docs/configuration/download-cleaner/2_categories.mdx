@@ -3,7 +3,8 @@ sidebar_position: 2
 ---
 
 import DownloadCleanerCleanupSettings from '@site/src/components/configuration/download-cleaner/DownloadCleanerCleanupSettings';
-import { Note } from '@site/src/components/Admonition';
+import { Note, Important } from '@site/src/components/Admonition';
+import Link from '@docusaurus/Link';
 
 # Cleanup Settings
 
@@ -22,5 +23,9 @@ These settings control how the Download Cleaner handles different categories of 
   DOWNLOADCLEANER__CATEGORIES__<NUMBER>__MAX_SEED_TIME
   ```
 </Note>
+
+<Important>
+    These settings need a <Link to="/docs/configuration/download-client/general?DOWNLOAD_CLIENT">download client</Link> to be configured.
+</Important>
 
 <DownloadCleanerCleanupSettings/> 
