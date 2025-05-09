@@ -73,7 +73,7 @@ public abstract class ArrClient : IArrClient
         return queueResponse;
     }
 
-    public virtual async Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload)
+    public virtual async Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload, short arrMaxStrikes)
     {
         if (_queueCleanerConfig.ImportFailedIgnorePrivate && isPrivateDownload)
         {
@@ -102,11 +102,19 @@ public abstract class ArrClient : IArrClient
                 _logger.LogDebug("skip failed import check | contains ignored pattern | {name}", record.Title);
                 return false;
             }
+
+            if (arrMaxStrikes is 0)
+            {
+                _logger.LogDebug("skip failed import check | arr max strikes is 0 | {name}", record.Title);
+                return false;
+            }
+            
+            ushort maxStrikes = arrMaxStrikes > 0 ? (ushort)arrMaxStrikes : _queueCleanerConfig.ImportFailedMaxStrikes;
             
             return await _striker.StrikeAndCheckLimit(
                 record.DownloadId,
                 record.Title,
-                _queueCleanerConfig.ImportFailedMaxStrikes,
+                maxStrikes,
                 StrikeType.ImportFailed
             );
         }

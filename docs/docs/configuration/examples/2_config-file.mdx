@@ -82,6 +82,7 @@ import { Note } from '@site/src/components/Admonition';
       }
     ],
     "UNLINKED_TARGET_CATEGORY": "cleanuperr-unlinked",
+    "DOWNLOADCLEANER__UNLINKED_USE_TAG": false,
     "UNLINKED_IGNORED_ROOT_DIR": "/downloads",
     "UNLINKED_CATEGORIES": [
       "tv-sonarr",
@@ -109,6 +110,7 @@ import { Note } from '@site/src/components/Admonition';
   },
   "Sonarr": {
     "Enabled": true,
+    "IMPORT_FAILED_MAX_STRIKES=-1
     "SearchType": "Episode",
     "Block": {
       "Type": "blacklist",
@@ -127,6 +129,7 @@ import { Note } from '@site/src/components/Admonition';
   },
   "Radarr": {
     "Enabled": true,
+    "IMPORT_FAILED_MAX_STRIKES": -1,
     "Block": {
       "Type": "blacklist",
       "Path": "https://example.com/path/to/file.txt"
@@ -144,6 +147,7 @@ import { Note } from '@site/src/components/Admonition';
   },
   "Lidarr": {
     "Enabled": true,
+    "IMPORT_FAILED_MAX_STRIKES": -1,
     "Block": {
       "Type": "blacklist",
       "Path": "https://example.com/path/to/file.txt"

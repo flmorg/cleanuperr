@@ -12,6 +12,20 @@ const settings: EnvVarProps[] = [
         required: false,
     },
     {
+      name: "DOWNLOADCLEANER__UNLINKED_USE_TAG",
+      description: [
+        "If set to true, a tag will be set instead of changing the category.",
+      ],
+      type: "boolean",
+      defaultValue: "false",
+      required: false,
+      acceptedValues: ["true", "false"],
+      notes: [
+        "Works only for qBittorrent.",
+      ],
+
+    },
+    {
       name: "DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR",
       description: [
         "This is useful if you are using [cross-seed](https://www.cross-seed.org/).",

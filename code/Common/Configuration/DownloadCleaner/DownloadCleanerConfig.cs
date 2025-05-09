@@ -20,6 +20,9 @@ public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     [ConfigurationKeyName("UNLINKED_TARGET_CATEGORY")]
     public string UnlinkedTargetCategory { get; init; } = "cleanuperr-unlinked";
 
+    [ConfigurationKeyName("UNLINKED_USE_TAG")]
+    public bool UnlinkedUseTag { get; init; }
+
     [ConfigurationKeyName("UNLINKED_IGNORED_ROOT_DIR")]
     public string UnlinkedIgnoredRootDir { get; init; } = string.Empty;
     

@@ -75,7 +75,7 @@ public sealed class ContentBlocker : GenericHandler
         await base.ExecuteAsync();
     }
 
-    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
     {
         IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
         
