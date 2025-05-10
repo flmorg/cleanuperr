@@ -1,6 +1,6 @@
 {
   "label": "Content Blocker",
-  "position": 2,
+  "position": 4,
   "link": {
     "type": "generated-index",
     "description": "Settings for the Content Blocker functionality."

@@ -1,0 +1,21 @@
+---
+sidebar_position: 2
+---
+
+import Link from '@docusaurus/Link';
+
+# Features
+
+<div style={{ fontSize: '1.2rem' }}>
+    - Strike system to mark bad downloads.
+    - Remove and block downloads that reached a maximum number of strikes.
+    - Remove and block downloads that are **failing to be imported** by the arrs. <Link to="/docs/configuration/queue-cleaner/import-failed">[configuration]</Link>
+    - Remove and block downloads that are **stalled** or in **metadata downloading** state. <Link to="/docs/configuration/queue-cleaner/stalled">[configuration]</Link>
+    - Remove and block downloads that have a **low download speed** or **high estimated completion time**. <Link to="/docs/configuration/queue-cleaner/slow">[configuration]</Link>
+    - Remove and block downloads blocked by qBittorrent or by Cleanuperr's **Content Blocker**. <Link to="/docs/configuration/content-blocker/general">[configuration]</Link>
+    - Automatically trigger a search for downloads removed from the arrs.
+    - Clean up downloads that have been **seeding** for a certain amount of time. <Link to="/docs/configuration/download-cleaner/seeding">[configuration]</Link>
+    - Remove downloads that are **orphaned**/have no **hardlinks**/are not referenced by the arrs anymore (with [cross-seed](https://www.cross-seed.org/) support). <Link to="/docs/configuration/download-cleaner/hardlinks">[configuration]</Link>
+    - Notify on strike or download removal. <Link to="/docs/category/notifications">[configuration]</Link>
+    - Ignore certain torrent hashes, categories, tags or trackers from being processed by Cleanuperr.
+</div>

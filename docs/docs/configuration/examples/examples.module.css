@@ -1,0 +1,11 @@
+[data-theme='light'] code a {
+    color: inherit;
+}
+
+[data-theme='dark'] code a {
+    color: inherit;
+}
+
+code a:hover {
+    text-decoration: none;
+}

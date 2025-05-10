@@ -1,165 +1,387 @@
 import { Note } from '@site/src/components/Admonition';
+import CodeBlock from '@theme/CodeBlock';
+import CodeBlockContainer from '@theme/CodeBlock/Container';
+import Link from '@docusaurus/Link';
+import styles from './examples.module.css';
 
 # Docker compose
 
 <Note>
-    **This example contains all settings and should be modified to fit your needs.**
+    This example contains all settings and should be modified to fit your needs.
+    Remove the variables that you do not need.
 </Note>
 
-```
-services:
-  cleanuperr:
-    image: ghcr.io/flmorg/cleanuperr:latest
-    restart: unless-stopped
-    volumes:
-      # if you want persistent logs
-      - ./cleanuperr/logs:/var/logs
-      # if you want to ignore certain downloads from being processed
-      - ./cleanuperr/ignored.txt:/ignored.txt
-      # if you're using cross-seed and the hardlinks functionality
-      - ./downloads:/downloads
-    environment:
-      # general settings
-      - TZ=America/New_York
-      - DRY_RUN=false
-      - HTTP_MAX_RETRIES=0
-      - HTTP_TIMEOUT=100
+<Note>
+    Click on an environment variable's name to go to its documentation.
+</Note>
 
-      # logging
-      - LOGGING__LOGLEVEL=Information
-      - LOGGING__FILE__ENABLED=false
-      - LOGGING__FILE__PATH=/var/logs/
-      - LOGGING__ENHANCED=true
-
-      # job triggers
-      - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
-      - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
-      - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
-
-      # queue cleaner
-      - QUEUECLEANER__ENABLED=true
-      - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
-      - QUEUECLEANER__RUNSEQUENTIALLY=true
-
-      # failed imports
-      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
-      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
-      - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
-      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
-      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
-
-      # stalled downloads
-      - QUEUECLEANER__STALLED_MAX_STRIKES=5
-      - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=false
-      - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
-      - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
-
-      # slow downloads
-      - QUEUECLEANER__SLOW_MAX_STRIKES=5
-      - QUEUECLEANER__SLOW_RESET_STRIKES_ON_PROGRESS=true
-      - QUEUECLEANER__SLOW_IGNORE_PRIVATE=false
-      - QUEUECLEANER__SLOW_DELETE_PRIVATE=false
-      - QUEUECLEANER__SLOW_MIN_SPEED=1MB
-      - QUEUECLEANER__SLOW_MAX_TIME=20
-      - QUEUECLEANER__SLOW_IGNORE_ABOVE_SIZE=60GB
-
-      # content blocker
-      - CONTENTBLOCKER__ENABLED=true
-      - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored.txt
-      - CONTENTBLOCKER__IGNORE_PRIVATE=false
-      - CONTENTBLOCKER__DELETE_PRIVATE=false
-
-      # download cleaner
-      - DOWNLOADCLEANER__ENABLED=true
-      - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored.txt
-      - DOWNLOADCLEANER__DELETE_PRIVATE=false
-
-      # categories to seed until max ratio or min seed time has been reached
-      - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
-      - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
-      - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
-      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=240
-      - DOWNLOADCLEANER__CATEGORIES__1__NAME=radarr
-      - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
-      - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
-      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=240
-      # remove downloads with no hardlinks
-      - DOWNLOADCLEANER__CATEGORIES__2__NAME=cleanuperr-unlinked
-      - DOWNLOADCLEANER__CATEGORIES__2__MAX_RATIO=-1
-      - DOWNLOADCLEANER__CATEGORIES__2__MIN_SEED_TIME=0
-      - DOWNLOADCLEANER__CATEGORIES__2__MAX_SEED_TIME=0
-      
-      # change category for downloads with no hardlinks
-      - DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY=cleanuperr-unlinked
-      - DOWNLOADCLEANER__UNLINKED_USE_TAG=false
-      - DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR=/downloads
-      - DOWNLOADCLEANER__UNLINKED_CATEGORIES__0=tv-sonarr
-      - DOWNLOADCLEANER__UNLINKED_CATEGORIES__1=radarr
-
-      - DOWNLOAD_CLIENT=none
-      # OR
-      # - DOWNLOAD_CLIENT=disabled
-      # OR
-      # - DOWNLOAD_CLIENT=qBittorrent
-      # - QBITTORRENT__URL=http://localhost:8080
-      # - QBITTORRENT__URL_BASE=myCustomPath
-      # - QBITTORRENT__USERNAME=user
-      # - QBITTORRENT__PASSWORD=pass
-      # OR
-      # - DOWNLOAD_CLIENT=deluge
-      # - DELUGE__URL_BASE=myCustomPath
-      # - DELUGE__URL=http://localhost:8112
-      # - DELUGE__PASSWORD=testing
-      # OR
-      # - DOWNLOAD_CLIENT=transmission
-      # - TRANSMISSION__URL=http://localhost:9091
-      # - TRANSMISSION__URL_BASE=myCustomPath
-      # - TRANSMISSION__USERNAME=test
-      # - TRANSMISSION__PASSWORD=testing
-
-      - SONARR__ENABLED=true
-      - SONARR__IMPORT_FAILED_MAX_STRIKES=-1
-      - SONARR__SEARCHTYPE=Episode
-      - SONARR__BLOCK__TYPE=blacklist
-      - SONARR__BLOCK__PATH=https://example.com/path/to/file.txt
-      - SONARR__INSTANCES__0__URL=http://localhost:8989
-      - SONARR__INSTANCES__0__APIKEY=secret1
-      - SONARR__INSTANCES__1__URL=http://localhost:8990
-      - SONARR__INSTANCES__1__APIKEY=secret2
-
-      - RADARR__ENABLED=true
-      - RADARR__IMPORT_FAILED_MAX_STRIKES=-1
-      - RADARR__BLOCK__TYPE=blacklist
-      - RADARR__BLOCK__PATH=https://example.com/path/to/file.txt
-      - RADARR__INSTANCES__0__URL=http://localhost:7878
-      - RADARR__INSTANCES__0__APIKEY=secret3
-      - RADARR__INSTANCES__1__URL=http://localhost:7879
-      - RADARR__INSTANCES__1__APIKEY=secret4
-
-      - LIDARR__ENABLED=true
-      - LIDARR__IMPORT_FAILED_MAX_STRIKES=-1
-      - LIDARR__BLOCK__TYPE=blacklist
-      - LIDARR__BLOCK__PATH=https://example.com/path/to/file.txt
-      - LIDARR__INSTANCES__0__URL=http://radarr:8686
-      - LIDARR__INSTANCES__0__APIKEY=secret5
-      - LIDARR__INSTANCES__1__URL=http://radarr:8687
-      - LIDARR__INSTANCES__1__APIKEY=secret6
-
-      - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
-      - NOTIFIARR__ON_STALLED_STRIKE=true
-      - NOTIFIARR__ON_SLOW_STRIKE=true
-      - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
-      - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
-      - NOTIFIARR__ON_CATEGORY_CHANGED=true
-      - NOTIFIARR__API_KEY=notifiarr_secret
-      - NOTIFIARR__CHANNEL_ID=discord_channel_id
-
-      - APPRISE__ON_IMPORT_FAILED_STRIKE=true
-      - APPRISE__ON_STALLED_STRIKE=true
-      - APPRISE__ON_SLOW_STRIKE=true
-      - APPRISE__ON_QUEUE_ITEM_DELETED=true
-      - APPRISE__ON_DOWNLOAD_CLEANED=true
-      - NOTIFIARR__ON_CATEGORY_CHANGED=true
-      - APPRISE__URL=http://apprise:8000
-      - APPRISE__KEY=myConfigKey
-```
+<CodeBlock language="text" title="Environment Variables" wrap={true}>
+  <div style={{ whiteSpace: 'pre' }}>
+    {`services:
+    cleanuperr:
+      image: ghcr.io/flmorg/cleanuperr:latest
+      restart: unless-stopped
+      volumes:
+        # if you want persistent logs
+        - ./cleanuperr/logs:/var/logs
+        # if you want to ignore certain downloads from being processed
+        - ./cleanuperr/ignored.txt:/ignored.txt
+        # if you're using cross-seed and the hardlinks functionality
+        - ./downloads:/downloads
+      environment:
+        - `}
+        <Link to="/docs/configuration/general?TZ">TZ</Link>
+        {`=America/New_York
+        - `}
+        <Link to="/docs/configuration/general?DRY_RUN">DRY_RUN</Link>
+        {`=false
+        - `}
+        <Link to="/docs/configuration/general?HTTP_MAX_RETRIES">HTTP_MAX_RETRIES</Link>
+        {`=0
+        - `}
+        <Link to="/docs/configuration/general?HTTP_TIMEOUT">HTTP_TIMEOUT</Link>
+        {`=100
+        - `}
+        <Link to="/docs/configuration/general?HTTP_VALIDATE_CERT">HTTP_VALIDATE_CERT</Link>
+        {`=Enabled
+        
+        - `}
+        <Link to="/docs/configuration/general?LOGGING__LOGLEVEL">LOGGING__LOGLEVEL</Link>
+        {`=Information
+        - `}
+        <Link to="/docs/configuration/general?LOGGING__FILE__ENABLED">LOGGING__FILE__ENABLED</Link>
+        {`=false
+        - `}
+        <Link to="/docs/configuration/general?LOGGING__FILE__PATH">LOGGING__FILE__PATH</Link>
+        {`=/var/logs/
+        - `}
+        <Link to="/docs/configuration/general?LOGGING__ENHANCED">LOGGING__ENHANCED</Link>
+        {`=true
+        
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/general?TRIGGERS__QUEUECLEANER">TRIGGERS__QUEUECLEANER</Link>
+        {`=0 0/5 * * * ?
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/general?QUEUECLEANER__ENABLED">QUEUECLEANER__ENABLED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/general?QUEUECLEANER__IGNORED_DOWNLOADS_PATH">QUEUECLEANER__IGNORED_DOWNLOADS_PATH</Link>
+        {`=/ignored.txt
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/general?QUEUECLEANER__RUNSEQUENTIALLY">QUEUECLEANER__RUNSEQUENTIALLY</Link>
+        {`=true
+        
+        - `}
+        <Link to="docs/configuration/queue-cleaner/import-failed?QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES">QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES</Link>
+        {`=5
+        - `}
+        <Link to="docs/configuration/queue-cleaner/import-failed?QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE">QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE</Link>
+        {`=false
+        - `}
+        <Link to="docs/configuration/queue-cleaner/import-failed?QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE">QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE</Link>
+        {`=false
+        - `}
+        <Link to="docs/configuration/queue-cleaner/import-failed?QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0">QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0</Link>
+        {`=title mismatch
+        - `}
+        <Link to="docs/configuration/queue-cleaner/import-failed?QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1">QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1</Link>
+        {`=manual import required
+        
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/stalled?QUEUECLEANER__STALLED_MAX_STRIKES">QUEUECLEANER__STALLED_MAX_STRIKES</Link>
+        {`=5
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/stalled?QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS">QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/stalled?QUEUECLEANER__STALLED_IGNORE_PRIVATE">QUEUECLEANER__STALLED_IGNORE_PRIVATE</Link>
+        {`=false
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/stalled?QUEUECLEANER__STALLED_DELETE_PRIVATE">QUEUECLEANER__STALLED_DELETE_PRIVATE</Link>
+        {`=false
+        
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/slow?QUEUECLEANER__SLOW_MAX_STRIKES">QUEUECLEANER__SLOW_MAX_STRIKES</Link>
+        {`=5
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/slow?QUEUECLEANER__SLOW_RESET_STRIKES_ON_PROGRESS">QUEUECLEANER__SLOW_RESET_STRIKES_ON_PROGRESS</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/slow?QUEUECLEANER__SLOW_IGNORE_PRIVATE">QUEUECLEANER__SLOW_IGNORE_PRIVATE</Link>
+        {`=false
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/slow?QUEUECLEANER__SLOW_DELETE_PRIVATE">QUEUECLEANER__SLOW_DELETE_PRIVATE</Link>
+        {`=false
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/slow?QUEUECLEANER__SLOW_MIN_SPEED">QUEUECLEANER__SLOW_MIN_SPEED</Link>
+        {`=1MB
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/slow?QUEUECLEANER__SLOW_MAX_TIME">QUEUECLEANER__SLOW_MAX_TIME</Link>
+        {`=20
+        - `}
+        <Link to="/docs/configuration/queue-cleaner/slow?QUEUECLEANER__SLOW_IGNORE_ABOVE_SIZE">QUEUECLEANER__SLOW_IGNORE_ABOVE_SIZE</Link>
+        {`=60GB
+        
+        - `}
+        <Link to="/docs/configuration/content-blocker/general?TRIGGERS__CONTENTBLOCKER">TRIGGERS__CONTENTBLOCKER</Link>
+        {`=0 0/5 * * * ?
+        - `}
+        <Link to="/docs/configuration/content-blocker/general?CONTENTBLOCKER__ENABLED">CONTENTBLOCKER__ENABLED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/content-blocker/general?CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH">CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH</Link>
+        {`=/ignored.txt
+        - `}
+        <Link to="/docs/configuration/content-blocker/general?CONTENTBLOCKER__IGNORE_PRIVATE">CONTENTBLOCKER__IGNORE_PRIVATE</Link>
+        {`=false
+        - `}
+        <Link to="/docs/configuration/content-blocker/general?CONTENTBLOCKER__DELETE_PRIVATE">CONTENTBLOCKER__DELETE_PRIVATE</Link>
+        {`=false
+        
+        - `}
+        <Link to="/docs/configuration/download-cleaner/general?TRIGGERS__DOWNLOADCLEANER">TRIGGERS__DOWNLOADCLEANER</Link>
+        {`=0 0 * * * ?
+        - `}
+        <Link to="/docs/configuration/download-cleaner/general?DOWNLOADCLEANER__ENABLED">DOWNLOADCLEANER__ENABLED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/download-cleaner/general?DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH">DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH</Link>
+        {`=/ignored.txt
+        - `}
+        <Link to="/docs/configuration/download-cleaner/general?DOWNLOADCLEANER__DELETE_PRIVATE">DOWNLOADCLEANER__DELETE_PRIVATE</Link>
+        {`=false
+        
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__NAME">DOWNLOADCLEANER__CATEGORIES__0__NAME</Link>
+        {`=tv-sonarr
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO">DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO</Link>
+        {`=1
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME">DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME</Link>
+        {`=0
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME">DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME</Link>
+        {`=240
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__NAME">DOWNLOADCLEANER__CATEGORIES__1__NAME</Link>
+        {`=radarr
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO">DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO</Link>
+        {`=1
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME">DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME</Link>
+        {`=0
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME">DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME</Link>
+        {`=240
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__NAME">DOWNLOADCLEANER__CATEGORIES__2__NAME</Link>
+        {`=cleanuperr-unlinked
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO">DOWNLOADCLEANER__CATEGORIES__2__MAX_RATIO</Link>
+        {`=1
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME">DOWNLOADCLEANER__CATEGORIES__2__MIN_SEED_TIME</Link>
+        {`=0
+        - `}
+        <Link to="/docs/configuration/download-cleaner/seeding?DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME">DOWNLOADCLEANER__CATEGORIES__2__MAX_SEED_TIME</Link>
+        {`=240
+        
+        - `}
+        <Link to="/docs/configuration/download-cleaner/hardlinks?DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY">DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY</Link>
+        {`=cleanuperr-unlinked
+        - `}
+        <Link to="/docs/configuration/download-cleaner/hardlinks?DOWNLOADCLEANER__UNLINKED_USE_TAG">DOWNLOADCLEANER__UNLINKED_USE_TAG</Link>
+        {`=false
+        - `}
+        <Link to="/docs/configuration/download-cleaner/hardlinks?DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR">DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR</Link>
+        {`=/downloads
+        - `}
+        <Link to="/docs/configuration/download-cleaner/hardlinks?DOWNLOADCLEANER__UNLINKED_CATEGORIES__0">DOWNLOADCLEANER__UNLINKED_CATEGORIES__0</Link>
+        {`=tv-sonarr
+        - `}
+        <Link to="/docs/configuration/download-cleaner/hardlinks?DOWNLOADCLEANER__UNLINKED_CATEGORIES__0">DOWNLOADCLEANER__UNLINKED_CATEGORIES__1</Link>
+        {`=radarr
+        
+        - `}
+        <Link to="/docs/configuration/download-client/general?DOWNLOAD_CLIENT">DOWNLOAD_CLIENT</Link>
+        {`=none
+        # OR
+        # - `}
+        <Link to="/docs/configuration/download-client/general?DOWNLOAD_CLIENT">DOWNLOAD_CLIENT</Link>
+        {`=disabled
+        # OR          
+        # - `}
+        <Link to="/docs/configuration/download-client/general?DOWNLOAD_CLIENT">DOWNLOAD_CLIENT</Link>
+        {`=qBittorrent
+        # - `}
+        <Link to="/docs/configuration/download-client/qbit?QBITTORRENT__URL">QBITTORRENT__URL</Link>
+        {`=http://localhost:8080
+        # - `}
+        <Link to="/docs/configuration/download-client/qbit?QBITTORRENT__URL_BASE">QBITTORRENT__URL_BASE</Link>
+        {`=myCustomPath
+        # - `}
+        <Link to="/docs/configuration/download-client/qbit?QBITTORRENT__USERNAME">QBITTORRENT__USERNAME</Link>
+        {`=user
+        # - `}
+        <Link to="/docs/configuration/download-client/qbit?QBITTORRENT__PASSWORD">QBITTORRENT__PASSWORD</Link>
+        {`=pass
+        # OR
+        # - `}
+        <Link to="/docs/configuration/download-client/general?DOWNLOAD_CLIENT">DOWNLOAD_CLIENT</Link>
+        {`=deluge
+        # - `}
+        <Link to="/docs/configuration/download-client/deluge?DELUGE__URL">DELUGE__URL</Link>
+        {`=http://localhost:8112
+        # - `}
+        <Link to="/docs/configuration/download-client/deluge?DELUGE__URL_BASE">DELUGE__URL_BASE</Link>
+        {`=myCustomPath
+        # - `}
+        <Link to="/docs/configuration/download-client/deluge?DELUGE__PASSWORD">DELUGE__PASSWORD</Link>
+        {`=pass
+        # OR
+        # - `}
+        <Link to="/docs/configuration/download-client/general?DOWNLOAD_CLIENT">DOWNLOAD_CLIENT</Link>
+        {`=transmission
+        # - `}
+        <Link to="/docs/configuration/download-client/transmission?TRANSMISSION__URL">TRANSMISSION__URL</Link>
+        {`=http://localhost:9091
+        # - `}
+        <Link to="/docs/configuration/download-client/transmission?TRANSMISSION__URL_BASE">TRANSMISSION__URL_BASE</Link>
+        {`=myCustomPath
+        # - `}
+        <Link to="/docs/configuration/download-client/transmission?TRANSMISSION__USERNAME">TRANSMISSION__USERNAME</Link>
+        {`=user
+        # - `}
+        <Link to="/docs/configuration/download-client/transmission?TRANSMISSION__PASSWORD">TRANSMISSION__PASSWORD</Link>
+        {`=pass
+        
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__ENABLED">SONARR__ENABLED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__IMPORT_FAILED_MAX_STRIKES">SONARR__IMPORT_FAILED_MAX_STRIKES</Link>
+        {`=-1
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__SEARCHTYPE">SONARR__SEARCHTYPE</Link>
+        {`=Episode
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__BLOCK__TYPE">SONARR__BLOCK__TYPE</Link>
+        {`=blacklist
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__BLOCK__PATH">SONARR__BLOCK__PATH</Link>
+        {`=https://example.com/path/to/file.txt
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__INSTANCES__0__URL">SONARR__INSTANCES__0__URL</Link>
+        {`=http://localhost:8989
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__INSTANCES__0__APIKEY">SONARR__INSTANCES__0__APIKEY</Link>
+        {`=sonarrSecret1
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__INSTANCES__0__URL">SONARR__INSTANCES__1__URL</Link>
+        {`=http://localhost:8990
+        - `}
+        <Link to="/docs/configuration/arrs/sonarr?SONARR__INSTANCES__0__APIKEY">SONARR__INSTANCES__1__APIKEY</Link>
+        {`=sonarrSecret2
+        
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__ENABLED">RADARR__ENABLED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__IMPORT_FAILED_MAX_STRIKES">RADARR__IMPORT_FAILED_MAX_STRIKES</Link>
+        {`=-1
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__BLOCK__TYPE">RADARR__BLOCK__TYPE</Link>
+        {`=blacklist
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__BLOCK__PATH">RADARR__BLOCK__PATH</Link>
+        {`=https://example.com/path/to/file.txt
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__INSTANCES__0__URL">RADARR__INSTANCES__0__URL</Link>
+        {`=http://localhost:7878
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__INSTANCES__0__APIKEY">RADARR__INSTANCES__0__APIKEY</Link>
+        {`=radarrSecret1
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__INSTANCES__0__URL">RADARR__INSTANCES__1__URL</Link>
+        {`=http://localhost:7879
+        - `}
+        <Link to="/docs/configuration/arrs/radarr?RADARR__INSTANCES__0__APIKEY">RADARR__INSTANCES__1__APIKEY</Link>
+        {`=radarrSecret2
+        
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__ENABLED">LIDARR__ENABLED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__IMPORT_FAILED_MAX_STRIKES">LIDARR__IMPORT_FAILED_MAX_STRIKES</Link>
+        {`=-1
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__BLOCK__TYPE">LIDARR__BLOCK__TYPE</Link>
+        {`=blacklist
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__BLOCK__PATH">LIDARR__BLOCK__PATH</Link>
+        {`=https://example.com/path/to/file.txt
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__INSTANCES__0__URL">LIDARR__INSTANCES__0__URL</Link>
+        {`=http://localhost:8686
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__INSTANCES__0__APIKEY">LIDARR__INSTANCES__0__APIKEY</Link>
+        {`=lidarrSecret1
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__INSTANCES__0__URL">LIDARR__INSTANCES__1__URL</Link>
+        {`=http://localhost:8687
+        - `}
+        <Link to="/docs/configuration/arrs/lidarr?LIDARR__INSTANCES__0__APIKEY">LIDARR__INSTANCES__1__APIKEY</Link>
+        {`=lidarrSecret2
+        
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__ON_IMPORT_FAILED_STRIKE">NOTIFIARR__ON_IMPORT_FAILED_STRIKE</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__ON_STALLED_STRIKE">NOTIFIARR__ON_STALLED_STRIKE</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__ON_SLOW_STRIKE">NOTIFIARR__ON_SLOW_STRIKE</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__ON_QUEUE_ITEM_DELETED">NOTIFIARR__ON_QUEUE_ITEM_DELETED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__ON_DOWNLOAD_CLEANED">NOTIFIARR__ON_DOWNLOAD_CLEANED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__ON_CATEGORY_CHANGED">NOTIFIARR__ON_CATEGORY_CHANGED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__API_KEY">NOTIFIARR__API_KEY</Link>
+        {`=notifiarrSecret
+        - `}
+        <Link to="/docs/configuration/notifications/notifiarr?NOTIFIARR__CHANNEL_ID">NOTIFIARR__CHANNEL_ID</Link>
+        {`=discordChannelId
+        
+        - `}
+        <Link to="/docs/configuration/notifications/apprise?APPRISE__ON_IMPORT_FAILED_STRIKE">APPRISE__ON_IMPORT_FAILED_STRIKE</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/apprise?APPRISE__ON_STALLED_STRIKE">APPRISE__ON_STALLED_STRIKE</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/apprise?APPRISE__ON_SLOW_STRIKE">APPRISE__ON_SLOW_STRIKE</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/apprise?APPRISE__ON_QUEUE_ITEM_DELETED">APPRISE__ON_QUEUE_ITEM_DELETED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/apprise?APPRISE__ON_DOWNLOAD_CLEANED">APPRISE__ON_DOWNLOAD_CLEANED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/apprise?APPRISE__ON_CATEGORY_CHANGED">APPRISE__ON_CATEGORY_CHANGED</Link>
+        {`=true
+        - `}
+        <Link to="/docs/configuration/notifications/apprise?APPRISE__URL">APPRISE__URL</Link>
+        {`=http://apprise:8000
+        - `}<Link to="/docs/configuration/notifications/apprise?NOTIFIARR__CHANNEL_ID">APPRISE__KEY</Link>
+        {`=myConfigKey`}
+  </div>
+</CodeBlock>
