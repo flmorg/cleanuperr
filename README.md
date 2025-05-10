@@ -10,14 +10,16 @@ Cleanuperr was created primarily to address malicious files, such as `*.lnk` or 
 
 > [!IMPORTANT]
 > **Features:**
-> - Strike system to mark stalled or downloads stuck in metadata downloading.
+> - Strike system to mark bad downloads.
 > - Remove and block downloads that reached a maximum number of strikes.
-> - Remove and block downloads that have a low download speed or high estimated completion time.
-> - Remove downloads blocked by qBittorrent or by Cleanuperr's **content blocker**.
-> - Trigger a search for downloads removed from the *arrs.
-> - Clean up downloads that have been seeding for a certain amount of time.
-> - Remove downloads that are orphaned/have no hardliknks/are not referenced by the arrs anymore (with [cross-seed](https://www.cross-seed.org/) support).
-> - Notify on strike or download removal.
+> - Remove and block downloads that are **failing to be imported** by the arrs. [configuration](https://flmorg.github.io/cleanuperr/docs/configuration/queue-cleaner/import-failed)
+> - Remove and block downloads that are **stalled** or in **metadata downloading** state. [configuration](https://flmorg.github.io/cleanuperr/docs/configuration/queue-cleaner/stalled)
+> - Remove and block downloads that have a **low download speed** or **high estimated completion time**. [configuration](https://flmorg.github.io/cleanuperr/docs/configuration/queue-cleaner/slow)
+> - Remove and block downloads blocked by qBittorrent or by Cleanuperr's **Content Blocker**. [configuration](https://flmorg.github.io/cleanuperr/docs/configuration/content-blocker/general)
+> - Automatically trigger a search for downloads removed from the arrs.
+> - Clean up downloads that have been **seeding** for a certain amount of time. [configuration](https://flmorg.github.io/cleanuperr/docs/configuration/download-cleaner/seeding)
+> - Remove downloads that are **orphaned**/have no **hardlinks**/are not referenced by the arrs anymore (with [cross-seed](https://www.cross-seed.org/) support). [configuration](https://flmorg.github.io/cleanuperr/docs/configuration/download-cleaner/hardlinks)
+> - Notify on strike or download removal. [configuration](https://flmorg.github.io/cleanuperr/docs/category/notifications)
 > - Ignore certain torrent hashes, categories, tags or trackers from being processed by Cleanuperr.
 
 Cleanuperr supports both qBittorrent's built-in exclusion features and its own blocklist-based system. Binaries for all platforms are provided, along with Docker images for easy deployment.
