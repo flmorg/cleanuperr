@@ -157,7 +157,7 @@ public abstract class ArrClient : IArrClient
         }
     }
 
-    public abstract Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items);
+    public abstract Task SearchItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items);
 
     public virtual bool IsRecordValid(QueueRecord record)
     {

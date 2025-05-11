@@ -13,4 +13,6 @@ public static class CacheKeys
     public static string StrikeItem(string hash, StrikeType strikeType) => $"item_{hash}_{strikeType.ToString()}";
     
     public static string IgnoredDownloads(string name) => $"{name}_ignored";
+    
+    public static string DownloadMarkedForRemoval(string hash, Uri url) => $"remove_{hash.ToLowerInvariant()}_{url}";
 }

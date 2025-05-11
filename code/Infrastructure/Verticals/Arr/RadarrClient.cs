@@ -50,7 +50,7 @@ public class RadarrClient : ArrClient, IRadarrClient
         return query;
     }
 
-    public override async Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
+    public override async Task SearchItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items)
     {
         if (items?.Count is null or 0)
         {

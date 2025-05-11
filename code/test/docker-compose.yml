@@ -186,6 +186,9 @@ services:
       - HTTP_MAX_RETRIES=0
       - HTTP_TIMEOUT=20
 
+      - SEARCH_ENABLED=true
+      - SEARCH_DELAY=5
+
       - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
       - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
       - TRIGGERS__DOWNLOADCLEANER=0/30 * * * * ?

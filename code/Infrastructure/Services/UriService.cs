@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Infrastructure.Helpers;
+namespace Infrastructure.Services;
 
 public static class UriService
 {

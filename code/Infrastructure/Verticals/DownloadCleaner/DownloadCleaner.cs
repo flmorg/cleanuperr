@@ -9,9 +9,11 @@ using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
+using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Serilog.Context;
+using LogContext = Serilog.Context.LogContext;
 
 namespace Infrastructure.Verticals.DownloadCleaner;
 
@@ -30,9 +32,9 @@ public sealed class DownloadCleaner : GenericHandler
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
         IOptions<LidarrConfig> lidarrConfig,
-        SonarrClient sonarrClient,
-        RadarrClient radarrClient,
-        LidarrClient lidarrClient,
+        IMemoryCache cache,
+        IBus messageBus,
+        ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
@@ -40,8 +42,7 @@ public sealed class DownloadCleaner : GenericHandler
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
-        sonarrClient, radarrClient, lidarrClient,
-        arrArrQueueIterator, downloadServiceFactory,
+        cache, messageBus, arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
         notifier
     )
     {
@@ -131,7 +132,7 @@ public sealed class DownloadCleaner : GenericHandler
     {
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
         
-        IArrClient arrClient = GetClient(instanceType);
+        IArrClient arrClient = _arrClientFactory.GetClient(instanceType);
         
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {

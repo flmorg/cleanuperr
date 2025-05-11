@@ -1,11 +1,14 @@
 ﻿using System.Net;
 using Common.Configuration.General;
 using Common.Helpers;
+using Domain.Models.Arr;
 using Infrastructure.Services;
 using Infrastructure.Verticals.DownloadClient.Deluge;
+using Infrastructure.Verticals.DownloadRemover.Consumers;
 using Infrastructure.Verticals.Notifications.Consumers;
 using Infrastructure.Verticals.Notifications.Models;
 using MassTransit;
+using MassTransit.Configuration;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Extensions.Http;
@@ -27,6 +30,9 @@ public static class MainDI
             .AddNotifications(configuration)
             .AddMassTransit(config =>
             {
+                config.AddConsumer<DownloadRemoverConsumer<SearchItem>>();
+                config.AddConsumer<DownloadRemoverConsumer<SonarrSearchItem>>();
+                
                 config.AddConsumer<NotificationConsumer<FailedImportStrikeNotification>>();
                 config.AddConsumer<NotificationConsumer<StalledStrikeNotification>>();
                 config.AddConsumer<NotificationConsumer<SlowStrikeNotification>>();
@@ -36,6 +42,14 @@ public static class MainDI
 
                 config.UsingInMemory((context, cfg) =>
                 {
+                    cfg.ReceiveEndpoint("download-remover-queue", e =>
+                    {
+                        e.ConfigureConsumer<DownloadRemoverConsumer<SearchItem>>(context);
+                        e.ConfigureConsumer<DownloadRemoverConsumer<SonarrSearchItem>>(context);
+                        e.ConcurrentMessageLimit = 1;
+                        e.PrefetchCount = 1;
+                    });
+                    
                     cfg.ReceiveEndpoint("notification-queue", e =>
                     {
                         e.ConfigureConsumer<NotificationConsumer<FailedImportStrikeNotification>>(context);
