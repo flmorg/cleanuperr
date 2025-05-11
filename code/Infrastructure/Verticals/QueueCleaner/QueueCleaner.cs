@@ -4,22 +4,27 @@ using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Helpers;
 using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.DownloadRemover.Models;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
+using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Serilog.Context;
+using LogContext = Serilog.Context.LogContext;
 
 namespace Infrastructure.Verticals.QueueCleaner;
 
 public sealed class QueueCleaner : GenericHandler
 {
     private readonly QueueCleanerConfig _config;
+    private readonly IMemoryCache _cache;
     private readonly IgnoredDownloadsProvider<QueueCleanerConfig> _ignoredDownloadsProvider;
 
     public QueueCleaner(
@@ -29,9 +34,9 @@ public sealed class QueueCleaner : GenericHandler
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
         IOptions<LidarrConfig> lidarrConfig,
-        SonarrClient sonarrClient,
-        RadarrClient radarrClient,
-        LidarrClient lidarrClient,
+        IMemoryCache cache,
+        IBus messageBus,
+        ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
@@ -39,13 +44,13 @@ public sealed class QueueCleaner : GenericHandler
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
-        sonarrClient, radarrClient, lidarrClient,
-        arrArrQueueIterator, downloadServiceFactory,
+        cache, messageBus, arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
         notifier
     )
     {
         _config = config.Value;
         _config.Validate();
+        _cache = cache;
         _ignoredDownloadsProvider = ignoredDownloadsProvider;
     }
     
@@ -55,8 +60,7 @@ public sealed class QueueCleaner : GenericHandler
         
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
         
-        HashSet<SearchItem> itemsToBeRefreshed = [];
-        IArrClient arrClient = GetClient(instanceType);
+        IArrClient arrClient = _arrClientFactory.GetClient(instanceType);
         
         // push to context
         ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
@@ -90,6 +94,14 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
                 
+                string downloadRemovalKey = CacheKeys.DownloadMarkedForRemoval(record.DownloadId, instance.Url);
+                
+                if (_cache.TryGetValue(downloadRemovalKey, out bool _))
+                {
+                    _logger.LogDebug("skip | already marked for removal | {title}", record.Title);
+                    continue;
+                }
+                
                 // push record to context
                 ContextProvider.Set(nameof(QueueRecord), record);
 
@@ -116,8 +128,6 @@ public sealed class QueueCleaner : GenericHandler
                     _logger.LogInformation("skip | {title}", record.Title);
                     continue;
                 }
-                
-                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
 
                 bool removeFromClient = true;
 
@@ -140,11 +150,16 @@ public sealed class QueueCleaner : GenericHandler
                     }
                 }
                 
-                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient, deleteReason);
-                await _notifier.NotifyQueueItemDeleted(removeFromClient, deleteReason);
+                await PublishQueueItemRemoveRequest(
+                    downloadRemovalKey,
+                    instanceType,
+                    instance,
+                    record,
+                    group.Count() > 1,
+                    removeFromClient,
+                    deleteReason
+                );
             }
         });
-        
-        await arrClient.RefreshItemsAsync(instance, itemsToBeRefreshed);
     }
 }

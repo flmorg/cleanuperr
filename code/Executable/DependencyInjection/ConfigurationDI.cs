@@ -13,6 +13,7 @@ public static class ConfigurationDI
     public static IServiceCollection AddConfiguration(this IServiceCollection services, IConfiguration configuration) =>
         services
             .Configure<DryRunConfig>(configuration)
+            .Configure<SearchConfig>(configuration)
             .Configure<QueueCleanerConfig>(configuration.GetSection(QueueCleanerConfig.SectionName))
             .Configure<ContentBlockerConfig>(configuration.GetSection(ContentBlockerConfig.SectionName))
             .Configure<DownloadCleanerConfig>(configuration.GetSection(DownloadCleanerConfig.SectionName))

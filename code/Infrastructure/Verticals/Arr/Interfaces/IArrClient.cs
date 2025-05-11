@@ -13,7 +13,7 @@ public interface IArrClient
 
     Task DeleteQueueItemAsync(ArrInstance arrInstance, QueueRecord record, bool removeFromClient, DeleteReason deleteReason);
     
-    Task RefreshItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items);
+    Task SearchItemsAsync(ArrInstance arrInstance, HashSet<SearchItem>? items);
     
     bool IsRecordValid(QueueRecord record);
 }

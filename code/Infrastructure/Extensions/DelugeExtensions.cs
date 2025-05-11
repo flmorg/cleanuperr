@@ -1,5 +1,6 @@
 ﻿using Domain.Models.Deluge.Response;
 using Infrastructure.Helpers;
+using Infrastructure.Services;
 
 namespace Infrastructure.Extensions;
 

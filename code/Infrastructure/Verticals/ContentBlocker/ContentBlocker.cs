@@ -6,16 +6,20 @@ using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Helpers;
 using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.DownloadRemover.Models;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
+using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Serilog.Context;
+using LogContext = Serilog.Context.LogContext;
 
 namespace Infrastructure.Verticals.ContentBlocker;
 
@@ -32,9 +36,9 @@ public sealed class ContentBlocker : GenericHandler
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
         IOptions<LidarrConfig> lidarrConfig,
-        SonarrClient sonarrClient,
-        RadarrClient radarrClient,
-        LidarrClient lidarrClient,
+        IMemoryCache cache,
+        IBus messageBus,
+        ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory,
@@ -43,8 +47,7 @@ public sealed class ContentBlocker : GenericHandler
     ) : base(
         logger, downloadClientConfig,
         sonarrConfig, radarrConfig, lidarrConfig,
-        sonarrClient, radarrClient, lidarrClient,
-        arrArrQueueIterator, downloadServiceFactory,
+        cache, messageBus, arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
         notifier
     )
     {
@@ -81,15 +84,10 @@ public sealed class ContentBlocker : GenericHandler
         
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
 
-        HashSet<SearchItem> itemsToBeRefreshed = [];
-        IArrClient arrClient = GetClient(instanceType);
+        IArrClient arrClient = _arrClientFactory.GetClient(instanceType);
         BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
         ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
         ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
-        
-        // push to context
-        ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
-        ContextProvider.Set(nameof(InstanceType), instanceType);
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
@@ -117,9 +115,14 @@ public sealed class ContentBlocker : GenericHandler
                     _logger.LogInformation("skip | {title} | ignored", record.Title);
                     continue;
                 }
+
+                string downloadRemovalKey = CacheKeys.DownloadMarkedForRemoval(record.DownloadId, instance.Url);
                 
-                // push record to context
-                ContextProvider.Set(nameof(QueueRecord), record);
+                if (_cache.TryGetValue(downloadRemovalKey, out bool _))
+                {
+                    _logger.LogDebug("skip | already marked for removal | {title}", record.Title);
+                    continue;
+                }
                 
                 _logger.LogDebug("searching unwanted files for {title}", record.Title);
 
@@ -133,8 +136,6 @@ public sealed class ContentBlocker : GenericHandler
                 
                 _logger.LogDebug("all files are marked as unwanted | {hash}", record.Title);
                 
-                itemsToBeRefreshed.Add(GetRecordSearchItem(instanceType, record, group.Count() > 1));
-
                 bool removeFromClient = true;
                 
                 if (result.IsPrivate && !_config.DeletePrivate)
@@ -142,11 +143,16 @@ public sealed class ContentBlocker : GenericHandler
                     removeFromClient = false;
                 }
                 
-                await arrClient.DeleteQueueItemAsync(instance, record, removeFromClient, DeleteReason.AllFilesBlocked);
-                await _notifier.NotifyQueueItemDeleted(removeFromClient, DeleteReason.AllFilesBlocked);
+                await PublishQueueItemRemoveRequest(
+                    downloadRemovalKey,
+                    instanceType,
+                    instance,
+                    record,
+                    group.Count() > 1,
+                    removeFromClient,
+                    DeleteReason.AllFilesBlocked
+                );
             }
         });
-        
-        await arrClient.RefreshItemsAsync(instance, itemsToBeRefreshed);
     }
 }

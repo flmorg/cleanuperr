@@ -11,6 +11,8 @@ using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.DownloadClient.Transmission;
+using Infrastructure.Verticals.DownloadRemover;
+using Infrastructure.Verticals.DownloadRemover.Interfaces;
 using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.QueueCleaner;
@@ -26,9 +28,11 @@ public static class ServicesDI
             .AddTransient<SonarrClient>()
             .AddTransient<RadarrClient>()
             .AddTransient<LidarrClient>()
+            .AddTransient<ArrClientFactory>()
             .AddTransient<QueueCleaner>()
             .AddTransient<ContentBlocker>()
             .AddTransient<DownloadCleaner>()
+            .AddTransient<IQueueItemRemover, QueueItemRemover>()
             .AddTransient<IFilenameEvaluator, FilenameEvaluator>()
             .AddTransient<IHardLinkFileService, HardLinkFileService>()
             .AddTransient<UnixHardLinkFileService>()

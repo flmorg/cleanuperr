@@ -4,9 +4,11 @@ using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr;
-using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.DownloadRemover.Models;
 using Infrastructure.Verticals.Notifications;
+using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -19,9 +21,9 @@ public abstract class GenericHandler : IHandler, IDisposable
     protected readonly SonarrConfig _sonarrConfig;
     protected readonly RadarrConfig _radarrConfig;
     protected readonly LidarrConfig _lidarrConfig;
-    protected readonly ISonarrClient _sonarrClient;
-    protected readonly IRadarrClient _radarrClient;
-    protected readonly ILidarrClient _lidarrClient;
+    protected readonly IMemoryCache _cache;
+    protected readonly IBus _messageBus;
+    protected readonly ArrClientFactory _arrClientFactory;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly IDownloadService _downloadService;
     protected readonly INotificationPublisher _notifier;
@@ -32,9 +34,9 @@ public abstract class GenericHandler : IHandler, IDisposable
         IOptions<SonarrConfig> sonarrConfig,
         IOptions<RadarrConfig> radarrConfig,
         IOptions<LidarrConfig> lidarrConfig,
-        ISonarrClient sonarrClient,
-        IRadarrClient radarrClient,
-        ILidarrClient lidarrClient,
+        IMemoryCache cache,
+        IBus messageBus,
+        ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier
@@ -45,9 +47,9 @@ public abstract class GenericHandler : IHandler, IDisposable
         _sonarrConfig = sonarrConfig.Value;
         _radarrConfig = radarrConfig.Value;
         _lidarrConfig = lidarrConfig.Value;
-        _sonarrClient = sonarrClient;
-        _radarrClient = radarrClient;
-        _lidarrClient = lidarrClient;
+        _cache = cache;
+        _messageBus = messageBus;
+        _arrClientFactory = arrClientFactory;
         _arrArrQueueIterator = arrArrQueueIterator;
         _downloadService = downloadServiceFactory.CreateDownloadClient();
         _notifier = notifier;
@@ -93,16 +95,50 @@ public abstract class GenericHandler : IHandler, IDisposable
             }
         }
     }
-    
-    protected IArrClient GetClient(InstanceType type) =>
-        type switch
-        {
-            InstanceType.Sonarr => _sonarrClient,
-            InstanceType.Radarr => _radarrClient,
-            InstanceType.Lidarr => _lidarrClient,
-            _ => throw new NotImplementedException($"instance type {type} is not yet supported")
-        };
 
+    protected async Task PublishQueueItemRemoveRequest(
+        string downloadRemovalKey,
+        InstanceType instanceType,
+        ArrInstance instance,
+        QueueRecord record,
+        bool isPack,
+        bool removeFromClient,
+        DeleteReason deleteReason
+    )
+    {
+        if (instanceType is InstanceType.Sonarr)
+        {
+            QueueItemRemoveRequest<SonarrSearchItem> removeRequest = new()
+            {
+                InstanceType = instanceType,
+                Instance = instance,
+                Record = record,
+                SearchItem = (SonarrSearchItem)GetRecordSearchItem(instanceType, record, isPack),
+                RemoveFromClient = removeFromClient,
+                DeleteReason = deleteReason
+            };
+
+            await _messageBus.Publish(removeRequest);
+        }
+        else
+        {
+            QueueItemRemoveRequest<SearchItem> removeRequest = new()
+            {
+                InstanceType = instanceType,
+                Instance = instance,
+                Record = record,
+                SearchItem = GetRecordSearchItem(instanceType, record, isPack),
+                RemoveFromClient = removeFromClient,
+                DeleteReason = deleteReason
+            };
+
+            await _messageBus.Publish(removeRequest);
+        }
+        
+        _cache.Set(downloadRemovalKey, true);
+        _logger.LogInformation("item marked for removal | {title} | {url}", record.Title, instance.Url);
+    }
+    
     protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record, bool isPack = false)
     {
         return type switch
