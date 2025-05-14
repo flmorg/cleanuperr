@@ -1,4 +1,4 @@
-﻿using Common.Configuration.ContentBlocker;
+using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Interceptors;
@@ -16,6 +16,7 @@ using Infrastructure.Verticals.DownloadRemover.Interfaces;
 using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.QueueCleaner;
+using Infrastructure.Services;
 
 namespace Executable.DependencyInjection;
 
@@ -23,6 +24,10 @@ public static class ServicesDI
 {
     public static IServiceCollection AddServices(this IServiceCollection services) =>
         services
+            // API services
+            .AddSingleton<IJobManagementService, JobManagementService>()
+            .AddSingleton<IConfigurationService, ConfigurationService>()
+            // Core services
             .AddTransient<IDryRunInterceptor, DryRunInterceptor>()
             .AddTransient<CertificateValidationService>()
             .AddTransient<SonarrClient>()

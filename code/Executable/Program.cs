@@ -1,12 +1,21 @@
 using Executable;
 using Executable.DependencyInjection;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddInfrastructure(builder.Configuration);
+// Add services to the container
+builder.Services
+    .AddInfrastructure(builder.Configuration)
+    .AddApiServices();
+
 builder.Logging.AddLogging(builder.Configuration);
 
-var host = builder.Build();
-host.Init();
+var app = builder.Build();
 
-host.Run();
+// Configure the HTTP request pipeline
+app.ConfigureApi();
+
+// Initialize the host
+((IHost)app).Init();
+
+app.Run();
