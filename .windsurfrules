@@ -1,0 +1,9 @@
+1. My application is written in .NET 9 with C#.
+2. My application is a console application at the moment, but we are trying to make it an API.
+3. My application strives to be more like Huntarr (https://github.com/plexguide/Huntarr.io).
+4. You should focus on the codebase insite the 'code' directory.
+5. You should strive to achieve the same level of quality as the rest of the codebase.
+6. You should use the same coding style as the rest of the codebase.
+7. You should use the same naming conventions as the rest of the codebase.
+8. If you are not sure about something, ask me.
+9. If you have any suggestions, let me know.
