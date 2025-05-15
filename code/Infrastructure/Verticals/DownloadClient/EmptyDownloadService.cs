@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
