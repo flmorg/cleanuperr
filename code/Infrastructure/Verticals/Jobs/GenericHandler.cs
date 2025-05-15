@@ -66,8 +66,16 @@ public abstract class GenericHandler : IHandler, IDisposable
             {
                 try
                 {
-                    _downloadServices.Add(_downloadServiceFactory.GetDownloadService(client.Id));
-                    _logger.LogDebug("Initialized download client: {name} ({id})", client.Name, client.Id);
+                    var service = _downloadServiceFactory.GetDownloadService(client.Id);
+                    if (service != null)
+                    {
+                        _downloadServices.Add(service);
+                        _logger.LogDebug("Initialized download client: {name} ({id})", client.Name, client.Id);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Download client service not available for: {id}", client.Id);
+                    }
                 }
                 catch (Exception ex)
                 {

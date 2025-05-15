@@ -89,6 +89,10 @@ public sealed class DownloadCleaner : GenericHandler
                     _downloadServices.Add(downloadService);
                     _logger.LogDebug("Added download client: {name} ({id})", client.Name, client.Id);
                 }
+                else
+                {
+                    _logger.LogWarning("Download client service not available for: {id}", client.Id);
+                }
             }
             catch (Exception ex)
             {
@@ -164,7 +168,7 @@ public sealed class DownloadCleaner : GenericHandler
             {
                 try
                 {
-                    if (_downloadClientConfig.Clients.Any(x => x.Id == Common.Enums.DownloadClient.QBittorrent) && !_config.UnlinkedUseTag)
+                    if (_downloadClientConfig.Clients.Any(x => x.Type == Common.Enums.DownloadClientType.QBittorrent) && !_config.UnlinkedUseTag)
                     {
                         _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
                         await downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);

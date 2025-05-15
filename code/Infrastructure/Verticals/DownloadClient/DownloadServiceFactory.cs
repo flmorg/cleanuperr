@@ -1,4 +1,4 @@
-﻿using Common.Configuration.DownloadClient;
+using Common.Configuration.DownloadClient;
 using Common.Enums;
 using Infrastructure.Configuration;
 using Infrastructure.Verticals.DownloadClient.Deluge;
@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
+/// <summary>
+/// Factory responsible for creating download client service instances
+/// </summary>
 public sealed class DownloadServiceFactory
 {
     private readonly IServiceProvider _serviceProvider;
@@ -29,29 +32,29 @@ public sealed class DownloadServiceFactory
     /// Creates a download service using the specified client ID
     /// </summary>
     /// <param name="clientId">The client ID to create a service for</param>
-    /// <returns>An implementation of IDownloadService</returns>
-    public IDownloadService GetDownloadService(string clientId)
+    /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
+    public IDownloadService? GetDownloadService(string clientId)
     {
         var config = _configManager.GetDownloadClientConfigAsync().GetAwaiter().GetResult();
         
         if (config == null)
         {
-            _logger.LogWarning("No download client configuration found, using empty service");
-            return _serviceProvider.GetRequiredService<EmptyDownloadService>();
+            _logger.LogWarning("No download client configuration found");
+            return null;
         }
         
         var clientConfig = config.GetClientConfig(clientId);
         
         if (clientConfig == null)
         {
-            _logger.LogWarning("No download client configuration found for ID {clientId}, using empty service", clientId);
-            return _serviceProvider.GetRequiredService<EmptyDownloadService>();
+            _logger.LogWarning("No download client configuration found for ID {clientId}", clientId);
+            return null;
         }
         
         if (!clientConfig.Enabled)
         {
-            _logger.LogWarning("Download client {clientId} is disabled, using empty service", clientId);
-            return _serviceProvider.GetRequiredService<EmptyDownloadService>();
+            _logger.LogWarning("Download client {clientId} is disabled", clientId);
+            return null;
         }
         
         return GetDownloadService(clientConfig);
@@ -61,29 +64,28 @@ public sealed class DownloadServiceFactory
     /// Creates a download service using the specified client configuration
     /// </summary>
     /// <param name="clientConfig">The client configuration to use</param>
-    /// <returns>An implementation of IDownloadService</returns>
-    public IDownloadService GetDownloadService(ClientConfig clientConfig)
+    /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
+    public IDownloadService? GetDownloadService(ClientConfig clientConfig)
     {
         if (clientConfig == null)
         {
-            _logger.LogWarning("Client configuration is null, using empty service");
-            return _serviceProvider.GetRequiredService<EmptyDownloadService>();
+            _logger.LogWarning("Client configuration is null");
+            return null;
         }
         
         if (!clientConfig.Enabled)
         {
-            _logger.LogWarning("Download client {clientId} is disabled, using empty service", clientConfig.Id);
-            return _serviceProvider.GetRequiredService<EmptyDownloadService>();
+            _logger.LogWarning("Download client {clientId} is disabled", clientConfig.Id);
+            return null;
         }
         
         return clientConfig.Type switch
         {
-            DownloadClient.QBittorrent => CreateClientService<QBitService>(clientConfig),
-            DownloadClient.Deluge => CreateClientService<DelugeService>(clientConfig),
-            DownloadClient.Transmission => CreateClientService<TransmissionService>(clientConfig),
-            DownloadClient.Usenet => _serviceProvider.GetRequiredService<EmptyDownloadService>(),
-            DownloadClient.Disabled => _serviceProvider.GetRequiredService<EmptyDownloadService>(),
-            _ => _serviceProvider.GetRequiredService<EmptyDownloadService>()
+            DownloadClientType.QBittorrent => CreateClientService<QBitService>(clientConfig),
+            DownloadClientType.Deluge => CreateClientService<DelugeService>(clientConfig),
+            DownloadClientType.Transmission => CreateClientService<TransmissionService>(clientConfig),
+            DownloadClientType.Usenet => null, // Usenet clients are handled elsewhere
+            _ => null
         };
     }
     

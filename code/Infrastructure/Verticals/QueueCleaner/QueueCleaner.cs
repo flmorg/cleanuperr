@@ -75,10 +75,25 @@ public sealed class QueueCleaner : GenericHandler
         // Initialize download services
         if (_downloadClientConfig.Clients.Count > 0)
         {
-            foreach (var clientConfig in _downloadClientConfig.Clients)
+            foreach (var client in _downloadClientConfig.GetEnabledClients())
             {
-                var downloadService = _downloadServiceFactory.GetDownloadService(clientConfig);
-                _downloadServices.Add(downloadService);
+                try
+                {
+                    var service = _downloadServiceFactory.GetDownloadService(client.Id);
+                    if (service != null)
+                    {
+                        _downloadServices.Add(service);
+                        _logger.LogDebug("Added download client: {name} ({id})", client.Name, client.Id);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Download client service not available for: {id}", client.Id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error initializing download client {id}: {message}", client.Id, ex.Message);
+                }
             }
         }
     }
@@ -138,10 +153,9 @@ public sealed class QueueCleaner : GenericHandler
 
                 if (record.Protocol is "torrent")
                 {
-                    if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None &&
-                        _downloadClientConfig.Clients.Count == 0)
+                    if (_downloadClientConfig.Clients.Count == 0)
                     {
-                        _logger.LogWarning("skip | download client is not configured | {title}", record.Title);
+                        _logger.LogWarning("skip | no download clients configured | {title}", record.Title);
                         continue;
                     }
                     

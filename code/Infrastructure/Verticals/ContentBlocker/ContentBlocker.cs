@@ -76,9 +76,9 @@ public sealed class ContentBlocker : GenericHandler
         // Refresh configurations before executing
         await InitializeConfigs();
         
-        if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None or Common.Enums.DownloadClient.Disabled)
+        if (_downloadClientConfig.Clients.Count == 0)
         {
-            _logger.LogWarning("download client is not set");
+            _logger.LogWarning("No download clients configured");
             return;
         }
         
