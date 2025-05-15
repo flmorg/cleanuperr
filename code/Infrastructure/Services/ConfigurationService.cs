@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Microsoft.Extensions.Hosting;
 
 namespace Infrastructure.Services;
 
@@ -22,7 +23,7 @@ public class ConfigurationService : IConfigurationService
     public ConfigurationService(
         ILogger<ConfigurationService> logger,
         IConfiguration configuration,
-        IWebHostEnvironment environment)
+        IHostEnvironment environment)
     {
         _logger = logger;
         _configuration = configuration;

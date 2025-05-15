@@ -1,9 +1,6 @@
-using Infrastructure.Configuration;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
+using IConfigurationManager = Infrastructure.Configuration.IConfigurationManager;
 
 namespace Executable.Controllers;
 

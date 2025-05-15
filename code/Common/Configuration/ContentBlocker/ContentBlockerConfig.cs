@@ -6,7 +6,7 @@ public sealed record ContentBlockerConfig : IJobConfig, IIgnoredDownloadsConfig
 {
     public const string SectionName = "ContentBlocker";
     
-    public required bool Enabled { get; init; }
+    public bool Enabled { get; init; }
     
     [ConfigurationKeyName("IGNORE_PRIVATE")]
     public bool IgnorePrivate { get; init; }

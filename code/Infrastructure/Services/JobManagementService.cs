@@ -3,6 +3,7 @@ using Infrastructure.Models;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Collections.Concurrent;
+using Quartz.Impl.Matchers;
 
 namespace Infrastructure.Services;
 
