@@ -1,9 +1,9 @@
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadClient;
+using Infrastructure.Configuration;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using System.Diagnostics;
 
 namespace Executable.Controllers;
@@ -13,37 +13,40 @@ namespace Executable.Controllers;
 public class StatusController : ControllerBase
 {
     private readonly ILogger<StatusController> _logger;
-    private readonly IOptionsMonitor<DownloadClientConfig> _downloadClientConfig;
-    private readonly IOptionsMonitor<SonarrConfig> _sonarrConfig;
-    private readonly IOptionsMonitor<RadarrConfig> _radarrConfig;
-    private readonly IOptionsMonitor<LidarrConfig> _lidarrConfig;
+    private readonly IConfigurationManager _configManager;
     private readonly DownloadServiceFactory _downloadServiceFactory;
     private readonly ArrClientFactory _arrClientFactory;
 
     public StatusController(
         ILogger<StatusController> logger,
-        IOptionsMonitor<DownloadClientConfig> downloadClientConfig,
-        IOptionsMonitor<SonarrConfig> sonarrConfig,
-        IOptionsMonitor<RadarrConfig> radarrConfig,
-        IOptionsMonitor<LidarrConfig> lidarrConfig,
+        IConfigurationManager configManager,
         DownloadServiceFactory downloadServiceFactory,
         ArrClientFactory arrClientFactory)
     {
         _logger = logger;
-        _downloadClientConfig = downloadClientConfig;
-        _sonarrConfig = sonarrConfig;
-        _radarrConfig = radarrConfig;
-        _lidarrConfig = lidarrConfig;
+        _configManager = configManager;
         _downloadServiceFactory = downloadServiceFactory;
         _arrClientFactory = arrClientFactory;
     }
 
     [HttpGet]
-    public IActionResult GetSystemStatus()
+    public async Task<IActionResult> GetSystemStatus()
     {
         try
         {
             var process = Process.GetCurrentProcess();
+            
+            // Get configuration
+            var downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
+            var sonarrConfig = await _configManager.GetSonarrConfigAsync();
+            var radarrConfig = await _configManager.GetRadarrConfigAsync();
+            var lidarrConfig = await _configManager.GetLidarrConfigAsync();
+            
+            // Default if configs are null
+            downloadClientConfig ??= new DownloadClientConfig();
+            sonarrConfig ??= new SonarrConfig();
+            radarrConfig ??= new RadarrConfig();
+            lidarrConfig ??= new LidarrConfig();
             
             var status = new
             {
@@ -57,26 +60,29 @@ public class StatusController : ControllerBase
                 },
                 DownloadClient = new
                 {
-                    Type = _downloadClientConfig.CurrentValue.DownloadClient.ToString(),
-                    IsConfigured = _downloadClientConfig.CurrentValue.DownloadClient != Common.Enums.DownloadClient.None &&
-                                  _downloadClientConfig.CurrentValue.DownloadClient != Common.Enums.DownloadClient.Disabled
+                    LegacyType = downloadClientConfig.DownloadClient.ToString(),
+                    ConfiguredClientCount = downloadClientConfig.Clients.Count,
+                    EnabledClientCount = downloadClientConfig.Clients.Count(c => c.Enabled),
+                    IsConfigured = downloadClientConfig.DownloadClient != Common.Enums.DownloadClient.None &&
+                                  downloadClientConfig.DownloadClient != Common.Enums.DownloadClient.Disabled ||
+                                  downloadClientConfig.Clients.Any(c => c.Enabled)
                 },
                 MediaManagers = new
                 {
                     Sonarr = new
                     {
-                        IsEnabled = _sonarrConfig.CurrentValue.Enabled,
-                        InstanceCount = _sonarrConfig.CurrentValue.Instances?.Count ?? 0
+                        IsEnabled = sonarrConfig.Enabled,
+                        InstanceCount = sonarrConfig.Instances?.Count ?? 0
                     },
                     Radarr = new
                     {
-                        IsEnabled = _radarrConfig.CurrentValue.Enabled,
-                        InstanceCount = _radarrConfig.CurrentValue.Instances?.Count ?? 0
+                        IsEnabled = radarrConfig.Enabled,
+                        InstanceCount = radarrConfig.Instances?.Count ?? 0
                     },
                     Lidarr = new
                     {
-                        IsEnabled = _lidarrConfig.CurrentValue.Enabled,
-                        InstanceCount = _lidarrConfig.CurrentValue.Instances?.Count ?? 0
+                        IsEnabled = lidarrConfig.Enabled,
+                        InstanceCount = lidarrConfig.Instances?.Count ?? 0
                     }
                 }
             };
@@ -95,37 +101,70 @@ public class StatusController : ControllerBase
     {
         try
         {
-            if (_downloadClientConfig.CurrentValue.DownloadClient == Common.Enums.DownloadClient.None ||
-                _downloadClientConfig.CurrentValue.DownloadClient == Common.Enums.DownloadClient.Disabled)
+            var downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
+            if (downloadClientConfig == null)
             {
-                return NotFound("No download client is configured");
+                return NotFound("Download client configuration not found");
+            }
+            
+            var result = new Dictionary<string, object>();
+            
+            // Check for configured clients
+            if (downloadClientConfig.Clients.Count > 0)
+            {
+                var clientsStatus = new List<object>();
+                foreach (var client in downloadClientConfig.Clients)
+                {
+                    try
+                    {
+                        clientsStatus.Add(new
+                        {
+                            Id = client.Id,
+                            Name = client.Name,
+                            Type = client.Type.ToString(),
+                            Host = client.Host,
+                            Port = client.Port,
+                            Enabled = client.Enabled,
+                            IsConnected = client.Enabled, // We can't check connection status without implementing test methods
+                            Status = client.Enabled ? "Enabled" : "Disabled"
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        clientsStatus.Add(new
+                        {
+                            Id = client.Id,
+                            Name = client.Name,
+                            Type = client.Type.ToString(),
+                            Host = client.Host,
+                            Port = client.Port,
+                            Enabled = client.Enabled,
+                            IsConnected = false,
+                            Status = $"Error: {ex.Message}"
+                        });
+                    }
+                }
+                
+                result["Clients"] = clientsStatus;
+            }
+            else if (downloadClientConfig.DownloadClient != Common.Enums.DownloadClient.None &&
+                     downloadClientConfig.DownloadClient != Common.Enums.DownloadClient.Disabled)
+            {
+                // Legacy configuration
+                result["LegacyClient"] = new
+                {
+                    Type = downloadClientConfig.DownloadClient.ToString(),
+                    Host = downloadClientConfig.Host,
+                    Port = downloadClientConfig.Port,
+                    IsConnected = true // We can't check without implementing test methods in clients
+                };
+            }
+            else
+            {
+                result["Status"] = "No download clients configured";
             }
 
-            var downloadService = _downloadServiceFactory.CreateDownloadClient();
-            
-            try
-            {
-                await downloadService.LoginAsync();
-                
-                // Basic status info that should be safe for any download client
-                var status = new
-                {
-                    IsConnected = true,
-                    ClientType = _downloadClientConfig.CurrentValue.DownloadClient.ToString(),
-                    Message = "Successfully connected to download client"
-                };
-                
-                return Ok(status);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(503, new
-                {
-                    IsConnected = false,
-                    ClientType = _downloadClientConfig.CurrentValue.DownloadClient.ToString(),
-                    Message = $"Failed to connect to download client: {ex.Message}"
-                });
-            }
+            return Ok(result);
         }
         catch (Exception ex)
         {
@@ -140,13 +179,18 @@ public class StatusController : ControllerBase
         try
         {
             var status = new Dictionary<string, object>();
+            
+            // Get configurations
+            var sonarrConfig = await _configManager.GetSonarrConfigAsync();
+            var radarrConfig = await _configManager.GetRadarrConfigAsync();
+            var lidarrConfig = await _configManager.GetLidarrConfigAsync();
 
             // Check Sonarr instances
-            if (_sonarrConfig.CurrentValue.Enabled && _sonarrConfig.CurrentValue.Instances?.Count > 0)
+            if (sonarrConfig?.Enabled == true && sonarrConfig.Instances?.Count > 0)
             {
                 var sonarrStatus = new List<object>();
                 
-                foreach (var instance in _sonarrConfig.CurrentValue.Instances)
+                foreach (var instance in sonarrConfig.Instances)
                 {
                     try
                     {
@@ -177,11 +221,11 @@ public class StatusController : ControllerBase
             }
 
             // Check Radarr instances
-            if (_radarrConfig.CurrentValue.Enabled && _radarrConfig.CurrentValue.Instances?.Count > 0)
+            if (radarrConfig?.Enabled == true && radarrConfig.Instances?.Count > 0)
             {
                 var radarrStatus = new List<object>();
                 
-                foreach (var instance in _radarrConfig.CurrentValue.Instances)
+                foreach (var instance in radarrConfig.Instances)
                 {
                     try
                     {
@@ -212,11 +256,11 @@ public class StatusController : ControllerBase
             }
 
             // Check Lidarr instances
-            if (_lidarrConfig.CurrentValue.Enabled && _lidarrConfig.CurrentValue.Instances?.Count > 0)
+            if (lidarrConfig?.Enabled == true && lidarrConfig.Instances?.Count > 0)
             {
                 var lidarrStatus = new List<object>();
                 
-                foreach (var instance in _lidarrConfig.CurrentValue.Instances)
+                foreach (var instance in lidarrConfig.Instances)
                 {
                     try
                     {

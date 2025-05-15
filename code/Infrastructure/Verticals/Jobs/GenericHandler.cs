@@ -25,8 +25,11 @@ public abstract class GenericHandler : IHandler, IDisposable
     protected readonly IBus _messageBus;
     protected readonly ArrClientFactory _arrClientFactory;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
-    protected readonly IDownloadService _downloadService;
+    protected readonly DownloadServiceFactory _downloadServiceFactory;
     protected readonly INotificationPublisher _notifier;
+    
+    // Collection of download services for use with multiple clients
+    protected readonly List<IDownloadService> _downloadServices = new();
 
     protected GenericHandler(
         ILogger<GenericHandler> logger,
@@ -43,13 +46,62 @@ public abstract class GenericHandler : IHandler, IDisposable
         _messageBus = messageBus;
         _arrClientFactory = arrClientFactory;
         _arrArrQueueIterator = arrArrQueueIterator;
-        _downloadService = downloadServiceFactory.CreateDownloadClient();
+        _downloadServiceFactory = downloadServiceFactory;
         _notifier = notifier;
+    }
+    
+    /// <summary>
+    /// Initialize download services based on configuration
+    /// </summary>
+    protected virtual void InitializeDownloadServices()
+    {
+        // Clear any existing services
+        DisposeDownloadServices();
+        _downloadServices.Clear();
+        
+        // Add all enabled clients
+        if (_downloadClientConfig.Clients.Count > 0)
+        {
+            foreach (var client in _downloadClientConfig.GetEnabledClients())
+            {
+                try
+                {
+                    _downloadServices.Add(_downloadServiceFactory.GetDownloadService(client.Id));
+                    _logger.LogDebug("Initialized download client: {name} ({id})", client.Name, client.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to initialize download client: {id}", client.Id);
+                }
+            }
+        }
+        
+        if (_downloadServices.Count == 0)
+        {
+            _logger.LogWarning("No enabled download clients found");
+        }
+        else
+        {
+            _logger.LogInformation("Initialized {count} download clients", _downloadServices.Count);
+        }
     }
 
     public virtual async Task ExecuteAsync()
     {
-        await _downloadService.LoginAsync();
+        // Initialize download services
+        InitializeDownloadServices();
+        
+        if (_downloadServices.Count == 0)
+        {
+            _logger.LogWarning("No download clients available, skipping execution");
+            return;
+        }
+        
+        // Login to all download services
+        foreach (var downloadService in _downloadServices)
+        {
+            await downloadService.LoginAsync();
+        }
 
         await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr);
         await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr);
@@ -58,7 +110,18 @@ public abstract class GenericHandler : IHandler, IDisposable
 
     public virtual void Dispose()
     {
-        _downloadService.Dispose();
+        DisposeDownloadServices();
+    }
+    
+    /// <summary>
+    /// Dispose all download services
+    /// </summary>
+    protected void DisposeDownloadServices()
+    {
+        foreach (var service in _downloadServices)
+        {
+            service.Dispose();
+        }
     }
 
     protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config);
@@ -78,7 +141,7 @@ public abstract class GenericHandler : IHandler, IDisposable
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, "failed to clean {type} instance | {url}", instanceType, arrInstance.Url);
+                _logger.LogError(exception, "failed to process {type} instance | {url}", instanceType, arrInstance.Url);
 
                 if (throwOnFailure)
                 {

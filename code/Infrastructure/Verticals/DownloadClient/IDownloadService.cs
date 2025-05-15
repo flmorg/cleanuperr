@@ -2,12 +2,19 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
+using Common.Configuration.DownloadClient;
 using Infrastructure.Interceptors;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
 public interface IDownloadService : IDisposable
 {
+    /// <summary>
+    /// Initializes the download service with client-specific configuration
+    /// </summary>
+    /// <param name="clientConfig">The client configuration</param>
+    public void Initialize(ClientConfig clientConfig);
+    
     public Task LoginAsync();
 
     /// <summary>

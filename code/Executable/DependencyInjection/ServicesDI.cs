@@ -37,7 +37,8 @@ public static class ServicesDI
             .AddTransient<IHardLinkFileService, HardLinkFileService>()
             .AddTransient<UnixHardLinkFileService>()
             .AddTransient<WindowsHardLinkFileService>()
-            .AddTransient<DummyDownloadService>()
+            // Download client services
+            .AddTransient<EmptyDownloadService>()
             .AddTransient<QBitService>()
             .AddTransient<DelugeService>()
             .AddTransient<TransmissionService>()

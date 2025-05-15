@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
+using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
@@ -33,6 +34,9 @@ public abstract class DownloadService : IDownloadService
     protected readonly INotificationPublisher _notifier;
     protected readonly IDryRunInterceptor _dryRunInterceptor;
     protected readonly IHardLinkFileService _hardLinkFileService;
+    
+    // Client-specific configuration
+    protected ClientConfig _clientConfig;
 
     protected DownloadService(
         ILogger<DownloadService> logger,
@@ -59,6 +63,17 @@ public abstract class DownloadService : IDownloadService
         _hardLinkFileService = hardLinkFileService;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
+        
+        // Initialize with default empty configuration
+        _clientConfig = new ClientConfig();
+    }
+    
+    /// <inheritdoc />
+    public virtual void Initialize(ClientConfig clientConfig)
+    {
+        _clientConfig = clientConfig;
+        _logger.LogDebug("Initialized download service for client {clientId} ({type})", 
+            clientConfig.Id, clientConfig.Type);
     }
 
     public abstract void Dispose();

@@ -178,6 +178,9 @@ public class ConfigurationController : ControllerBase
     {
         try
         {
+            // Validate the configuration
+            config.Validate();
+            
             // Persist the configuration
             var result = await _configService.UpdateDownloadClientConfigAsync(config);
             if (!result)
@@ -190,8 +193,8 @@ public class ConfigurationController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating DownloadClient configuration");
-            return StatusCode(500, "An error occurred while updating DownloadClient configuration");
+            _logger.LogError(ex, "Error updating DownloadClient configuration: {Message}", ex.Message);
+            return BadRequest(new { Error = ex.Message });
         }
     }
     

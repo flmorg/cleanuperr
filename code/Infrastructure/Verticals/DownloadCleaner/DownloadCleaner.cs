@@ -23,6 +23,7 @@ public sealed class DownloadCleaner : GenericHandler
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
     private readonly IConfigurationManager _configManager;
+    private readonly List<DownloadService> _downloadServices = new List<DownloadService>();
     
     private static bool _hardLinkCategoryCreated;
     
@@ -67,14 +68,52 @@ public sealed class DownloadCleaner : GenericHandler
         _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
     }
     
+    private void InitializeDownloadServices()
+    {
+        // Clear existing services
+        _downloadServices.Clear();
+        
+        if (_downloadClientConfig.Clients.Count == 0)
+        {
+            _logger.LogWarning("No download clients configured");
+            return;
+        }
+        
+        foreach (var client in _downloadClientConfig.GetEnabledClients())
+        {
+            try
+            {
+                var downloadService = _downloadServiceFactory.GetDownloadService(client.Id);
+                if (downloadService != null)
+                {
+                    _downloadServices.Add(downloadService);
+                    _logger.LogDebug("Added download client: {name} ({id})", client.Name, client.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error initializing download client {id}: {message}", client.Id, ex.Message);
+            }
+        }
+    }
+    
     public override async Task ExecuteAsync()
     {
         // Refresh configurations before executing
         await InitializeConfigs();
         
-        if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None or Common.Enums.DownloadClient.Disabled)
+        if (_downloadClientConfig.Clients.Count == 0)
         {
-            _logger.LogWarning("download client is not set");
+            _logger.LogWarning("No download clients configured");
+            return;
+        }
+        
+        // Initialize download services
+        InitializeDownloadServices();
+        
+        if (_downloadServices.Count == 0)
+        {
+            _logger.LogWarning("No enabled download clients available");
             return;
         }
         
@@ -89,33 +128,71 @@ public sealed class DownloadCleaner : GenericHandler
         
         IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
         
-        await _downloadService.LoginAsync();
-        List<object>? downloads = await _downloadService.GetSeedingDownloads();
+        // Process each client separately
+        var allDownloads = new List<object>();
+        foreach (var downloadService in _downloadServices)
+        {
+            try
+            {
+                await downloadService.LoginAsync();
+                var clientDownloads = await downloadService.GetSeedingDownloads();
+                if (clientDownloads?.Count > 0)
+                {
+                    allDownloads.AddRange(clientDownloads);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get seeding downloads from download client");
+            }
+        }
 
-        if (downloads?.Count is null or 0)
+        if (allDownloads.Count == 0)
         {
             _logger.LogDebug("no seeding downloads found");
             return;
         }
         
-        _logger.LogTrace("found {count} seeding downloads", downloads.Count);
+        _logger.LogTrace("found {count} seeding downloads", allDownloads.Count);
         
         List<object>? downloadsToChangeCategory = null;
 
         if (isUnlinkedEnabled)
         {
-            if (!_hardLinkCategoryCreated)
+            // Create category for all clients
+            foreach (var downloadService in _downloadServices)
             {
-                if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.QBittorrent && !_config.UnlinkedUseTag)
+                try
                 {
-                    _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
-                    await _downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
+                    if (_downloadClientConfig.Clients.Any(x => x.Id == Common.Enums.DownloadClient.QBittorrent) && !_config.UnlinkedUseTag)
+                    {
+                        _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
+                        await downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
+                    }
                 }
-                
-                _hardLinkCategoryCreated = true;
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create category for download client");
+                }
             }
             
-            downloadsToChangeCategory = _downloadService.FilterDownloadsToChangeCategoryAsync(downloads, _config.UnlinkedCategories);
+            // Get downloads to change category
+            downloadsToChangeCategory = new List<object>();
+            foreach (var downloadService in _downloadServices)
+            {
+                try
+                {
+                    var clientDownloads = downloadService.FilterDownloadsToChangeCategoryAsync(allDownloads, _config.UnlinkedCategories);
+                    if (clientDownloads?.Count > 0)
+                    {
+                        downloadsToChangeCategory.AddRange(clientDownloads);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to filter downloads for category change");
+                }
+            }
         }
 
         // wait for the downloads to appear in the arr queue
@@ -125,10 +202,23 @@ public sealed class DownloadCleaner : GenericHandler
         await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr, true);
         await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
 
-        if (isUnlinkedEnabled)
+        if (isUnlinkedEnabled && downloadsToChangeCategory?.Count > 0)
         {
-            _logger.LogTrace("found {count} potential downloads to change category", downloadsToChangeCategory?.Count);
-            await _downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes, ignoredDownloads);
+            _logger.LogTrace("found {count} potential downloads to change category", downloadsToChangeCategory.Count);
+            
+            // Process each client with its own filtered downloads
+            foreach (var downloadService in _downloadServices)
+            {
+                try
+                {
+                    await downloadService.ChangeCategoryForNoHardLinksAsync(downloadsToChangeCategory, _excludedHashes, ignoredDownloads);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to change category for downloads");
+                }
+            }
+            
             _logger.LogTrace("finished changing category");
         }
         
@@ -137,13 +227,42 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
         
-        List<object>? downloadsToClean = _downloadService.FilterDownloadsToBeCleanedAsync(downloads, _config.Categories);
+        // Get downloads to clean
+        List<object> downloadsToClean = new List<object>();
+        foreach (var downloadService in _downloadServices)
+        {
+            try
+            {
+                var clientDownloads = downloadService.FilterDownloadsToBeCleanedAsync(allDownloads, _config.Categories);
+                if (clientDownloads?.Count > 0)
+                {
+                    downloadsToClean.AddRange(clientDownloads);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to filter downloads for cleaning");
+            }
+        }
         
         // release unused objects
-        downloads = null;
+        allDownloads = null;
 
-        _logger.LogTrace("found {count} potential downloads to clean", downloadsToClean?.Count);
-        await _downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes, ignoredDownloads);
+        _logger.LogTrace("found {count} potential downloads to clean", downloadsToClean.Count);
+        
+        // Process cleaning for each client
+        foreach (var downloadService in _downloadServices)
+        {
+            try
+            {
+                await downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes, ignoredDownloads);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to clean downloads");
+            }
+        }
+        
         _logger.LogTrace("finished cleaning downloads");
     }
 
@@ -169,6 +288,9 @@ public sealed class DownloadCleaner : GenericHandler
     
     public override void Dispose()
     {
-        _downloadService.Dispose();
+        foreach (var downloadService in _downloadServices)
+        {
+            downloadService.Dispose();
+        }
     }
 }

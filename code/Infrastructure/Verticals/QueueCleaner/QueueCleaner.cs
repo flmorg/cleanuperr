@@ -18,6 +18,7 @@ using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using LogContext = Serilog.Context.LogContext;
+using System.Collections.Generic;
 
 namespace Infrastructure.Verticals.QueueCleaner;
 
@@ -27,6 +28,7 @@ public sealed class QueueCleaner : GenericHandler
     private readonly IMemoryCache _cache;
     private readonly IConfigurationManager _configManager;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
+    private readonly List<IDownloadService> _downloadServices;
 
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
@@ -47,6 +49,7 @@ public sealed class QueueCleaner : GenericHandler
         _configManager = configManager;
         _cache = cache;
         _ignoredDownloadsService = ignoredDownloadsService;
+        _downloadServices = new List<IDownloadService>();
         
         // Initialize the configuration
         var configTask = _configManager.GetQueueCleanerConfigAsync();
@@ -68,6 +71,16 @@ public sealed class QueueCleaner : GenericHandler
         _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
         _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
         _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
+        
+        // Initialize download services
+        if (_downloadClientConfig.Clients.Count > 0)
+        {
+            foreach (var clientConfig in _downloadClientConfig.Clients)
+            {
+                var downloadService = _downloadServiceFactory.GetDownloadService(clientConfig);
+                _downloadServices.Add(downloadService);
+            }
+        }
     }
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
@@ -123,16 +136,41 @@ public sealed class QueueCleaner : GenericHandler
 
                 DownloadCheckResult downloadCheckResult = new();
 
-                if (record.Protocol is "torrent" && _downloadClientConfig.DownloadClient is not Common.Enums.DownloadClient.Disabled)
+                if (record.Protocol is "torrent")
                 {
-                    if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None)
+                    if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None &&
+                        _downloadClientConfig.Clients.Count == 0)
                     {
                         _logger.LogWarning("skip | download client is not configured | {title}", record.Title);
                         continue;
                     }
                     
-                    // stalled download check
-                    downloadCheckResult = await _downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
+                    // Check each download client for the download item
+                    bool processed = false;
+                    foreach (var downloadService in _downloadServices)
+                    {
+                        try
+                        {
+                            // stalled download check
+                            var result = await downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
+                            if (result.Processed)
+                            {
+                                downloadCheckResult = result;
+                                processed = true;
+                                break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error checking download {id} with download client", record.DownloadId);
+                        }
+                    }
+                    
+                    if (!processed)
+                    {
+                        _logger.LogDebug("skip | no download client could process {title}", record.Title);
+                        continue;
+                    }
                 }
                 
                 // failed import check
