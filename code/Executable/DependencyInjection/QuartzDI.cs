@@ -1,10 +1,11 @@
-﻿using Common.Configuration;
+using Common.Configuration;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.General;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Executable.Jobs;
+using Infrastructure.Configuration;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.Jobs;
@@ -20,16 +21,27 @@ public static class QuartzDI
         services
             .AddQuartz(q =>
             {
-                TriggersConfig? config = configuration
-                    .GetRequiredSection(TriggersConfig.SectionName)
-                    .Get<TriggersConfig>();
+                // We'll configure triggers from a dedicated JSON file
+                var triggerConfigTask = services
+                    .BuildServiceProvider()
+                    .GetRequiredService<IConfigurationManager>()
+                    .GetConfigurationAsync<TriggersConfig>("triggers.json");
+                
+                triggerConfigTask.Wait();
+                TriggersConfig? config = triggerConfigTask.Result;
 
                 if (config is null)
                 {
-                    throw new NullReferenceException("triggers configuration is null");
+                    // Create a default if it doesn't exist
+                    config = new TriggersConfig
+                    {
+                        ContentBlocker = "0 */30 * ? * *", // Every 30 minutes
+                        QueueCleaner = "0 */15 * ? * *",   // Every 15 minutes
+                        DownloadCleaner = "0 */20 * ? * *" // Every 20 minutes
+                    };
                 }
 
-                q.AddJobs(configuration, config);
+                q.AddJobs(services.BuildServiceProvider(), config);
             })
             .AddQuartzHostedService(opt =>
             {
@@ -38,19 +50,22 @@ public static class QuartzDI
 
     private static void AddJobs(
         this IServiceCollectionQuartzConfigurator q,
-        IConfiguration configuration,
+        IServiceProvider serviceProvider,
         TriggersConfig triggersConfig
     )
     {
-        ContentBlockerConfig? contentBlockerConfig = configuration
-            .GetRequiredSection(ContentBlockerConfig.SectionName)
-            .Get<ContentBlockerConfig>();
+        var configManager = serviceProvider.GetRequiredService<IConfigurationManager>();
+        
+        // Get configurations from JSON files
+        var contentBlockerConfigTask = configManager.GetContentBlockerConfigAsync();
+        contentBlockerConfigTask.Wait();
+        ContentBlockerConfig? contentBlockerConfig = contentBlockerConfigTask.Result;
         
         q.AddJob<ContentBlocker>(contentBlockerConfig, triggersConfig.ContentBlocker);
         
-        QueueCleanerConfig? queueCleanerConfig = configuration
-            .GetRequiredSection(QueueCleanerConfig.SectionName)
-            .Get<QueueCleanerConfig>();
+        var queueCleanerConfigTask = configManager.GetQueueCleanerConfigAsync();
+        queueCleanerConfigTask.Wait();
+        QueueCleanerConfig? queueCleanerConfig = queueCleanerConfigTask.Result;
 
         if (contentBlockerConfig?.Enabled is true && queueCleanerConfig is { Enabled: true, RunSequentially: true })
         {
@@ -62,9 +77,9 @@ public static class QuartzDI
             q.AddJob<QueueCleaner>(queueCleanerConfig, triggersConfig.QueueCleaner);
         }
         
-        DownloadCleanerConfig? downloadCleanerConfig = configuration
-            .GetRequiredSection(DownloadCleanerConfig.SectionName)
-            .Get<DownloadCleanerConfig>();
+        var downloadCleanerConfigTask = configManager.GetDownloadCleanerConfigAsync();
+        downloadCleanerConfigTask.Wait();
+        DownloadCleanerConfig? downloadCleanerConfig = downloadCleanerConfigTask.Result;
 
         q.AddJob<DownloadCleaner>(downloadCleanerConfig, triggersConfig.DownloadCleaner);
     }

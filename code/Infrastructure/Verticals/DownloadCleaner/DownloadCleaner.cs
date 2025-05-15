@@ -3,6 +3,7 @@ using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Configuration;
 using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
@@ -12,7 +13,6 @@ using Infrastructure.Verticals.Notifications;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using LogContext = Serilog.Context.LogContext;
 
 namespace Infrastructure.Verticals.DownloadCleaner;
@@ -22,16 +22,13 @@ public sealed class DownloadCleaner : GenericHandler
     private readonly DownloadCleanerConfig _config;
     private readonly IgnoredDownloadsProvider<DownloadCleanerConfig> _ignoredDownloadsProvider;
     private readonly HashSet<string> _excludedHashes = [];
+    private readonly IConfigurationManager _configManager;
     
     private static bool _hardLinkCategoryCreated;
     
     public DownloadCleaner(
         ILogger<DownloadCleaner> logger,
-        IOptions<DownloadCleanerConfig> config,
-        IOptions<DownloadClientConfig> downloadClientConfig,
-        IOptions<SonarrConfig> sonarrConfig,
-        IOptions<RadarrConfig> radarrConfig,
-        IOptions<LidarrConfig> lidarrConfig,
+        IConfigurationManager configManager,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
@@ -40,19 +37,41 @@ public sealed class DownloadCleaner : GenericHandler
         INotificationPublisher notifier,
         IgnoredDownloadsProvider<DownloadCleanerConfig> ignoredDownloadsProvider
     ) : base(
-        logger, downloadClientConfig,
-        sonarrConfig, radarrConfig, lidarrConfig,
-        cache, messageBus, arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
+        logger, cache, messageBus,
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
         notifier
     )
     {
-        _config = config.Value;
-        _config.Validate();
+        _configManager = configManager;
         _ignoredDownloadsProvider = ignoredDownloadsProvider;
+        
+        // Initialize the configuration
+        var configTask = _configManager.GetDownloadCleanerConfigAsync();
+        configTask.Wait();
+        _config = configTask.Result ?? new DownloadCleanerConfig();
+        if (_config != null)
+        {
+            _config.Validate();
+        }
+        
+        // Initialize base class configs
+        InitializeConfigs().Wait();
+    }
+    
+    private async Task InitializeConfigs()
+    {
+        // Get configurations from the configuration manager
+        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync() ?? new DownloadClientConfig();
+        _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
+        _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
+        _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
     }
     
     public override async Task ExecuteAsync()
     {
+        // Refresh configurations before executing
+        await InitializeConfigs();
+        
         if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None or Common.Enums.DownloadClient.Disabled)
         {
             _logger.LogWarning("download client is not set");

@@ -4,6 +4,7 @@ using Common.Configuration.QueueCleaner;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Configuration;
 using Infrastructure.Helpers;
 using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
@@ -16,7 +17,6 @@ using Infrastructure.Verticals.Notifications;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using LogContext = Serilog.Context.LogContext;
 
 namespace Infrastructure.Verticals.QueueCleaner;
@@ -25,15 +25,12 @@ public sealed class QueueCleaner : GenericHandler
 {
     private readonly QueueCleanerConfig _config;
     private readonly IMemoryCache _cache;
+    private readonly IConfigurationManager _configManager;
     private readonly IgnoredDownloadsProvider<QueueCleanerConfig> _ignoredDownloadsProvider;
 
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
-        IOptions<QueueCleanerConfig> config,
-        IOptions<DownloadClientConfig> downloadClientConfig,
-        IOptions<SonarrConfig> sonarrConfig,
-        IOptions<RadarrConfig> radarrConfig,
-        IOptions<LidarrConfig> lidarrConfig,
+        IConfigurationManager configManager,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
@@ -42,16 +39,35 @@ public sealed class QueueCleaner : GenericHandler
         INotificationPublisher notifier,
         IgnoredDownloadsProvider<QueueCleanerConfig> ignoredDownloadsProvider
     ) : base(
-        logger, downloadClientConfig,
-        sonarrConfig, radarrConfig, lidarrConfig,
-        cache, messageBus, arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
+        logger, cache, messageBus,
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
         notifier
     )
     {
-        _config = config.Value;
-        _config.Validate();
+        _configManager = configManager;
         _cache = cache;
         _ignoredDownloadsProvider = ignoredDownloadsProvider;
+        
+        // Initialize the configuration
+        var configTask = _configManager.GetQueueCleanerConfigAsync();
+        configTask.Wait();
+        _config = configTask.Result ?? new QueueCleanerConfig();
+        if (_config != null)
+        {
+            _config.Validate();
+        }
+        
+        // Initialize base class configs
+        InitializeConfigs().Wait();
+    }
+    
+    private async Task InitializeConfigs()
+    {
+        // Get configurations from the configuration manager
+        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync() ?? new DownloadClientConfig();
+        _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
+        _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
+        _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
     }
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)

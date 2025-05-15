@@ -3,6 +3,7 @@ using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Configuration;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadRemover.Models;
@@ -10,17 +11,16 @@ using Infrastructure.Verticals.Notifications;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.Jobs;
 
 public abstract class GenericHandler : IHandler, IDisposable
 {
     protected readonly ILogger<GenericHandler> _logger;
-    protected readonly DownloadClientConfig _downloadClientConfig;
-    protected readonly SonarrConfig _sonarrConfig;
-    protected readonly RadarrConfig _radarrConfig;
-    protected readonly LidarrConfig _lidarrConfig;
+    protected DownloadClientConfig _downloadClientConfig = new();
+    protected SonarrConfig _sonarrConfig = new();
+    protected RadarrConfig _radarrConfig = new();
+    protected LidarrConfig _lidarrConfig = new();
     protected readonly IMemoryCache _cache;
     protected readonly IBus _messageBus;
     protected readonly ArrClientFactory _arrClientFactory;
@@ -30,10 +30,6 @@ public abstract class GenericHandler : IHandler, IDisposable
 
     protected GenericHandler(
         ILogger<GenericHandler> logger,
-        IOptions<DownloadClientConfig> downloadClientConfig,
-        IOptions<SonarrConfig> sonarrConfig,
-        IOptions<RadarrConfig> radarrConfig,
-        IOptions<LidarrConfig> lidarrConfig,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
@@ -43,10 +39,6 @@ public abstract class GenericHandler : IHandler, IDisposable
     )
     {
         _logger = logger;
-        _downloadClientConfig = downloadClientConfig.Value;
-        _sonarrConfig = sonarrConfig.Value;
-        _radarrConfig = radarrConfig.Value;
-        _lidarrConfig = lidarrConfig.Value;
         _cache = cache;
         _messageBus = messageBus;
         _arrClientFactory = arrClientFactory;

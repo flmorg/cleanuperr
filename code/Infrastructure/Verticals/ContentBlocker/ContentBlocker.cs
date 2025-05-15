@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
@@ -6,6 +6,7 @@ using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
+using Infrastructure.Configuration;
 using Infrastructure.Helpers;
 using Infrastructure.Providers;
 using Infrastructure.Verticals.Arr;
@@ -18,7 +19,6 @@ using Infrastructure.Verticals.Notifications;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using LogContext = Serilog.Context.LogContext;
 
 namespace Infrastructure.Verticals.ContentBlocker;
@@ -28,14 +28,11 @@ public sealed class ContentBlocker : GenericHandler
     private readonly ContentBlockerConfig _config;
     private readonly BlocklistProvider _blocklistProvider;
     private readonly IgnoredDownloadsProvider<ContentBlockerConfig> _ignoredDownloadsProvider;
+    private readonly IConfigurationManager _configManager;
 
     public ContentBlocker(
         ILogger<ContentBlocker> logger,
-        IOptions<ContentBlockerConfig> config,
-        IOptions<DownloadClientConfig> downloadClientConfig,
-        IOptions<SonarrConfig> sonarrConfig,
-        IOptions<RadarrConfig> radarrConfig,
-        IOptions<LidarrConfig> lidarrConfig,
+        IConfigurationManager configManager,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
@@ -45,19 +42,38 @@ public sealed class ContentBlocker : GenericHandler
         INotificationPublisher notifier,
         IgnoredDownloadsProvider<ContentBlockerConfig> ignoredDownloadsProvider
     ) : base(
-        logger, downloadClientConfig,
-        sonarrConfig, radarrConfig, lidarrConfig,
-        cache, messageBus, arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
-        notifier
+        logger, cache, messageBus, 
+        arrClientFactory, arrArrQueueIterator, 
+        downloadServiceFactory, notifier
     )
     {
-        _config = config.Value;
+        _configManager = configManager;
         _blocklistProvider = blocklistProvider;
         _ignoredDownloadsProvider = ignoredDownloadsProvider;
+        
+        // Initialize the configuration
+        var configTask = _configManager.GetContentBlockerConfigAsync();
+        configTask.Wait();
+        _config = configTask.Result ?? new ContentBlockerConfig();
+        
+        // Initialize base class configs
+        InitializeConfigs().Wait();
     }
 
+    private async Task InitializeConfigs()
+    {
+        // Get configurations from the configuration manager
+        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync() ?? new DownloadClientConfig();
+        _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
+        _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
+        _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
+    }
+    
     public override async Task ExecuteAsync()
     {
+        // Refresh configurations before executing
+        await InitializeConfigs();
+        
         if (_downloadClientConfig.DownloadClient is Common.Enums.DownloadClient.None or Common.Enums.DownloadClient.Disabled)
         {
             _logger.LogWarning("download client is not set");
