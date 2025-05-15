@@ -15,7 +15,7 @@ public sealed class BlocklistProvider
 {
     private readonly ILogger<BlocklistProvider> _logger;
     private readonly IConfigurationManager _configManager;
-    private readonly ContentBlockerConfig _contentBlockerConfig;
+    private ContentBlockerConfig _contentBlockerConfig;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
     private bool _initialized;

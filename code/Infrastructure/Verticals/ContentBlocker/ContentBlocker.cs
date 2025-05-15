@@ -25,7 +25,7 @@ namespace Infrastructure.Verticals.ContentBlocker;
 
 public sealed class ContentBlocker : GenericHandler
 {
-    private readonly ContentBlockerConfig _config;
+    private ContentBlockerConfig _config;
     private readonly BlocklistProvider _blocklistProvider;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly IConfigurationManager _configManager;

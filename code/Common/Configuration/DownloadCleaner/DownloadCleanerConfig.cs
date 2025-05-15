@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadCleaner;
 
-public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
+public sealed record DownloadCleanerConfig : IJobConfig
 {
     public const string SectionName = "DownloadCleaner";
     

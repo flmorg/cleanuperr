@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.ContentBlocker;
 
-public sealed record ContentBlockerConfig : IJobConfig, IIgnoredDownloadsConfig
+public sealed record ContentBlockerConfig : IJobConfig
 {
     public const string SectionName = "ContentBlocker";
     

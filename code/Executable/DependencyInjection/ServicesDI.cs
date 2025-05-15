@@ -1,8 +1,4 @@
-using Common.Configuration.ContentBlocker;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.QueueCleaner;
 using Infrastructure.Interceptors;
-using Infrastructure.Providers;
 using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
@@ -16,7 +12,6 @@ using Infrastructure.Verticals.DownloadRemover.Interfaces;
 using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.QueueCleaner;
-using Infrastructure.Services;
 
 namespace Executable.DependencyInjection;
 

@@ -56,19 +56,19 @@ public class ConfigInitializer
                 Sonarr = new BlocklistSettings
                 {
                     Enabled = false,
-                    Type = Domain.Enums.BlocklistType.Blacklist,
+                    Type = BlocklistType.Blacklist,
                     Path = ""
                 },
                 Radarr = new BlocklistSettings
                 {
                     Enabled = false,
-                    Type = Domain.Enums.BlocklistType.Blacklist,
+                    Type = BlocklistType.Blacklist,
                     Path = ""
                 },
                 Lidarr = new BlocklistSettings
                 {
                     Enabled = false,
-                    Type = Domain.Enums.BlocklistType.Blacklist,
+                    Type = BlocklistType.Blacklist,
                     Path = ""
                 }
             };

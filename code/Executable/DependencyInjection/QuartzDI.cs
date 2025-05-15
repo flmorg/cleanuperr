@@ -11,6 +11,7 @@ using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.QueueCleaner;
 using Quartz;
 using Quartz.Spi;
+using IConfigurationManager = Infrastructure.Configuration.IConfigurationManager;
 
 namespace Executable.DependencyInjection;
 

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.QueueCleaner;
 
-public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
+public sealed record QueueCleanerConfig : IJobConfig
 {
     public const string SectionName = "QueueCleaner";
     
