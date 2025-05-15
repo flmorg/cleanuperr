@@ -9,7 +9,7 @@ public abstract class ArrConfig
     [ConfigurationKeyName("IMPORT_FAILED_MAX_STRIKES")]
     public short ImportFailedMaxStrikes { get; init; } = -1;
     
-    public List<ArrInstance> Instances { get; init; } = new();
+    public List<ArrInstance> Instances { get; init; } = [];
 }
 
 // Block struct moved to ContentBlockerConfig.cs as BlocklistSettings

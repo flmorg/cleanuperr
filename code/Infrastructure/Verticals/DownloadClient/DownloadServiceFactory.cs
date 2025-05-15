@@ -15,12 +15,12 @@ namespace Infrastructure.Verticals.DownloadClient;
 public sealed class DownloadServiceFactory
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
     private readonly ILogger<DownloadServiceFactory> _logger;
     
     public DownloadServiceFactory(
         IServiceProvider serviceProvider, 
-        IConfigurationManager configManager,
+        IConfigManager configManager,
         ILogger<DownloadServiceFactory> logger)
     {
         _serviceProvider = serviceProvider;

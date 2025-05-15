@@ -35,13 +35,13 @@ public interface IIgnoredDownloadsService
 public class IgnoredDownloadsService : IIgnoredDownloadsService
 {
     private readonly ILogger<IgnoredDownloadsService> _logger;
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
     private readonly IMemoryCache _cache;
     private const string IgnoredDownloadsCacheKey = "IgnoredDownloads";
     
     public IgnoredDownloadsService(
         ILogger<IgnoredDownloadsService> logger,
-        IConfigurationManager configManager,
+        IConfigManager configManager,
         IMemoryCache cache)
     {
         _logger = logger;

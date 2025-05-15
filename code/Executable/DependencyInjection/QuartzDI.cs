@@ -11,7 +11,6 @@ using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.QueueCleaner;
 using Quartz;
 using Quartz.Spi;
-using IConfigurationManager = Infrastructure.Configuration.IConfigurationManager;
 
 namespace Executable.DependencyInjection;
 
@@ -35,7 +34,7 @@ public static class QuartzDI
         IServiceProvider serviceProvider
     )
     {
-        var configManager = serviceProvider.GetRequiredService<IConfigurationManager>();
+        var configManager = serviceProvider.GetRequiredService<IConfigManager>();
         
         // Get configurations from JSON files
         var contentBlockerConfigTask = configManager.GetContentBlockerConfigAsync();

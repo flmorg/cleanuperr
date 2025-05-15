@@ -26,13 +26,13 @@ public sealed class QueueCleaner : GenericHandler
 {
     private readonly QueueCleanerConfig _config;
     private readonly IMemoryCache _cache;
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly List<IDownloadService> _downloadServices;
 
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
-        IConfigurationManager configManager,
+        IConfigManager configManager,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
@@ -160,17 +160,15 @@ public sealed class QueueCleaner : GenericHandler
                     }
                     
                     // Check each download client for the download item
-                    bool processed = false;
                     foreach (var downloadService in _downloadServices)
                     {
                         try
                         {
                             // stalled download check
                             var result = await downloadService.ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
-                            if (result.Processed)
+                            if (result.Found)
                             {
                                 downloadCheckResult = result;
-                                processed = true;
                                 break;
                             }
                         }
@@ -180,10 +178,9 @@ public sealed class QueueCleaner : GenericHandler
                         }
                     }
                     
-                    if (!processed)
+                    if (!downloadCheckResult.Found)
                     {
-                        _logger.LogDebug("skip | no download client could process {title}", record.Title);
-                        continue;
+                        _logger.LogWarning("skip | download not found {title}", record.Title);
                     }
                 }
                 

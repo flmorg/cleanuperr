@@ -4,16 +4,13 @@ using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadClient;
 using Domain.Enums;
-using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Configuration;
 using Infrastructure.Helpers;
 using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
-using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
-using Infrastructure.Verticals.DownloadRemover.Models;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
 using MassTransit;
@@ -28,18 +25,16 @@ public sealed class ContentBlocker : GenericHandler
     private ContentBlockerConfig _config;
     private readonly BlocklistProvider _blocklistProvider;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
-    private readonly IConfigurationManager _configManager;
-    private readonly IEnumerable<IDownloadService> _downloadServices;
+    private readonly IConfigManager _configManager;
 
     public ContentBlocker(
         ILogger<ContentBlocker> logger,
-        IConfigurationManager configManager,
+        IConfigManager configManager,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
-        IEnumerable<IDownloadService> downloadServices,
         INotificationPublisher notifier,
         IIgnoredDownloadsService ignoredDownloadsService,
         DownloadServiceFactory downloadServiceFactory
@@ -52,7 +47,6 @@ public sealed class ContentBlocker : GenericHandler
         _configManager = configManager;
         _blocklistProvider = blocklistProvider;
         _ignoredDownloadsService = ignoredDownloadsService;
-        _downloadServices = downloadServices;
         
         // Initialize the configuration
         var configTask = _configManager.GetContentBlockerConfigAsync();
@@ -127,71 +121,89 @@ public sealed class ContentBlocker : GenericHandler
                 }
 
                 QueueRecord record = group.First();
-                string hash = record.DownloadId;
                 
-                // Skip this record if it is in the ignored list
-                if (ignoredDownloads.Contains(hash, StringComparer.InvariantCultureIgnoreCase))
+                if (record.Protocol is not "torrent")
                 {
-                    _logger.LogDebug("skipping {name} | download id is in ignore list", record.Title);
+                    continue;
+                }
+                
+                if (string.IsNullOrEmpty(record.DownloadId))
+                {
+                    _logger.LogDebug("skip | download id is null for {title}", record.Title);
+                    continue;
+                }
+                
+                if (ignoredDownloads.Contains(record.DownloadId, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    _logger.LogInformation("skip | {title} | ignored", record.Title);
                     continue;
                 }
                 
                 _logger.LogTrace("processing | {name}", record.Title);
                 
-                // Process through all download clients
-                bool foundInAnyClient = false;
+                string downloadRemovalKey = CacheKeys.DownloadMarkedForRemoval(record.DownloadId, instance.Url);
+                
+                if (_cache.TryGetValue(downloadRemovalKey, out bool _))
+                {
+                    _logger.LogDebug("skip | already marked for removal | {title}", record.Title);
+                    continue;
+                }
+                
+                _logger.LogDebug("searching unwanted files for {title}", record.Title);
+                bool found = false;
+                
                 foreach (var downloadService in _downloadServices)
                 {
                     try
                     {
-                        var result = await downloadService.BlockUnwantedFilesAsync(
-                            hash, 
-                            blocklistType, 
-                            patterns, 
-                            regexes, 
-                            ignoredDownloads);
-                        
-                        if (result.Processed)
+                        BlockFilesResult result = await downloadService
+                            .BlockUnwantedFilesAsync(record.DownloadId, blocklistType, patterns, regexes, ignoredDownloads);
+
+                        if (!result.Found)
                         {
-                            foundInAnyClient = true;
-                            
-                            // Successfully processed by this client, log results
-                            if (result.HasHardLinks)
-                            {
-                                _logger.LogInformation(
-                                    "skipping hard linked files | {title} | {paths}", 
-                                    record.Title, 
-                                    string.Join(", ", result.HardLinkedFiles));
-                            }
-                            
-                            if (result.BlockedFiles.Count > 0)
-                            {
-                                _notifier.BlockedFiles(
-                                    record.Title, 
-                                    instanceType.ToString(), 
-                                    result.BlockedFiles, 
-                                    _config.BlockDeleteAfter);
-                            }
-                            
-                            // Break after the first client successfully processes this download
+                            continue;
+                        }
+                        
+                        found = true;
+                        
+                        if (!result.ShouldRemove)
+                        {
                             break;
                         }
+                
+                        _logger.LogDebug("all files are marked as unwanted | {hash}", record.Title);
+                
+                        bool removeFromClient = true;
+                
+                        if (result.IsPrivate && !_config.DeletePrivate)
+                        {
+                            removeFromClient = false;
+                        }
+                
+                        await PublishQueueItemRemoveRequest(
+                            downloadRemovalKey,
+                            instanceType,
+                            instance,
+                            record,
+                            group.Count() > 1,
+                            removeFromClient,
+                            DeleteReason.AllFilesBlocked
+                        );
+
+                        break;
                     }
                     catch (Exception ex)
                     {
                         _logger.LogError(
-                            ex, 
+                            ex,
                             "Error blocking unwanted files for {hash} with download client", 
-                            hash);
+                            record.DownloadId);
                     }
                 }
                 
-                if (!foundInAnyClient)
+                if (!found)
                 {
-                    _logger.LogWarning(
-                        "Download {hash} ({title}) not found in any download client", 
-                        hash, 
-                        record.Title);
+                    _logger.LogWarning("skip | download not found {title}", record.Title);
                 }
             }
         });

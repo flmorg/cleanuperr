@@ -76,6 +76,8 @@ public class QBitService : DownloadService, IQBitService
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
+        
+        result.Found = true;
 
         IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(hash);
         
@@ -138,6 +140,9 @@ public class QBitService : DownloadService, IQBitService
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
+        
+        // Mark as processed since we found the download
+        result.Found = true;
         
         IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(hash);
         

@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Common.Enums;
-using Microsoft.Extensions.Configuration;
-
-namespace Common.Configuration.DownloadClient;
+﻿namespace Common.Configuration.DownloadClient;
 
 public sealed record DownloadClientConfig : IConfig
 {
-    public const string SectionName = "DownloadClient";
-    
     /// <summary>
     /// Collection of download clients configured for the application
     /// </summary>

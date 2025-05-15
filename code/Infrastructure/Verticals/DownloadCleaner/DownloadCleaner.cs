@@ -22,14 +22,14 @@ public sealed class DownloadCleaner : GenericHandler
     private readonly DownloadCleanerConfig _config;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
     private readonly List<IDownloadService> _downloadServices = [];
     
     private static bool _hardLinkCategoryCreated;
     
     public DownloadCleaner(
         ILogger<DownloadCleaner> logger,
-        IConfigurationManager configManager,
+        IConfigManager configManager,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,

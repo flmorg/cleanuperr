@@ -97,6 +97,8 @@ public class TransmissionService : DownloadService, ITransmissionService
             return result;
         }
         
+        result.Found = true;
+        
         if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogDebug("skip | download is ignored | {name}", download.Name);
@@ -149,6 +151,9 @@ public class TransmissionService : DownloadService, ITransmissionService
             return result;
         }
         
+        // Mark as processed since we found the download
+        result.Found = true;
+        
         if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {
             _logger.LogDebug("skip | download is ignored | {name}", download.Name);
@@ -164,7 +169,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             _logger.LogDebug("skip files check | download is private | {name}", download.Name);
             return result;
         }
-
+        
         List<long> unwantedFiles = [];
         long totalFiles = 0;
         long totalUnwantedFiles = 0;

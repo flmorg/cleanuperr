@@ -13,7 +13,7 @@ public static class ConfigurationExtensions
             return new JsonConfigurationProvider(logger, configDirectory);
         });
         
-        services.AddSingleton<IConfigurationManager, ConfigurationManager>();
+        services.AddSingleton<IConfigManager, ConfigManager>();
         services.AddSingleton<ConfigInitializer>();
         
         return services;

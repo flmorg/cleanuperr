@@ -35,11 +35,11 @@ public interface IConfigurationService
 public class ConfigurationService : IConfigurationService
 {
     private readonly ILogger<ConfigurationService> _logger;
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
 
     public ConfigurationService(
         ILogger<ConfigurationService> logger,
-        IConfigurationManager configManager)
+        IConfigManager configManager)
     {
         _logger = logger;
         _configManager = configManager;

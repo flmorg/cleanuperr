@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
-using IConfigurationManager = Infrastructure.Configuration.IConfigurationManager;
+using Infrastructure.Configuration;
 
 namespace Executable.Controllers;
 
@@ -9,11 +9,11 @@ namespace Executable.Controllers;
 public class ConfigFilesController : ControllerBase
 {
     private readonly ILogger<ConfigFilesController> _logger;
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
 
     public ConfigFilesController(
         ILogger<ConfigFilesController> logger,
-        IConfigurationManager configManager)
+        IConfigManager configManager)
     {
         _logger = logger;
         _configManager = configManager;

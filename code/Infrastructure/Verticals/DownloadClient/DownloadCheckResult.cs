@@ -15,4 +15,6 @@ public sealed record DownloadCheckResult
     /// True if the download is private; otherwise false.
     /// </summary>
     public bool IsPrivate { get; set; }
+    
+    public bool Found { get; set; }
 }

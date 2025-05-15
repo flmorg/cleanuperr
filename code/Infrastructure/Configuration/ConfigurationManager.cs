@@ -13,7 +13,7 @@ namespace Infrastructure.Configuration;
 /// <summary>
 /// Provides configuration management for various components with thread-safe file access.
 /// </summary>
-public interface IConfigurationManager
+public interface IConfigManager
 {
     // Configuration files
     Task<T?> GetConfigurationAsync<T>(string configFileName) where T : class, new();
@@ -43,9 +43,9 @@ public interface IConfigurationManager
     Task<bool> SaveIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config);
 }
 
-public class ConfigurationManager : IConfigurationManager
+public class ConfigManager : IConfigManager
 {
-    private readonly ILogger<ConfigurationManager> _logger;
+    private readonly ILogger<ConfigManager> _logger;
     private readonly JsonConfigurationProvider _configProvider;
     private readonly IOptionsMonitor<SonarrConfig> _sonarrConfig;
     private readonly IOptionsMonitor<RadarrConfig> _radarrConfig;
@@ -66,8 +66,8 @@ public class ConfigurationManager : IConfigurationManager
     private const string DownloadClientConfigFile = "downloadclient.json";
     private const string IgnoredDownloadsConfigFile = "ignoreddownloads.json";
 
-    public ConfigurationManager(
-        ILogger<ConfigurationManager> logger,
+    public ConfigManager(
+        ILogger<ConfigManager> logger,
         JsonConfigurationProvider configProvider,
         IOptionsMonitor<SonarrConfig> sonarrConfig,
         IOptionsMonitor<RadarrConfig> radarrConfig,

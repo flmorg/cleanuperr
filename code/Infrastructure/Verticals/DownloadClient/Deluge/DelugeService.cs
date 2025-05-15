@@ -75,6 +75,7 @@ public class DelugeService : DownloadService, IDelugeService
             return result;
         }
         
+        result.Found = true;
         result.IsPrivate = download.Private;
         
         if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
@@ -133,6 +134,9 @@ public class DelugeService : DownloadService, IDelugeService
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
+        
+        // Mark as processed since we found the download
+        result.Found = true;
         
         if (ignoredDownloads.Count > 0 && download.ShouldIgnore(ignoredDownloads))
         {

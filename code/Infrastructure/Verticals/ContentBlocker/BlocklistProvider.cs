@@ -14,7 +14,7 @@ namespace Infrastructure.Verticals.ContentBlocker;
 public sealed class BlocklistProvider
 {
     private readonly ILogger<BlocklistProvider> _logger;
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
     private ContentBlockerConfig _contentBlockerConfig;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
@@ -22,7 +22,7 @@ public sealed class BlocklistProvider
 
     public BlocklistProvider(
         ILogger<BlocklistProvider> logger,
-        IConfigurationManager configManager,
+        IConfigManager configManager,
         IMemoryCache cache,
         IHttpClientFactory httpClientFactory
     )

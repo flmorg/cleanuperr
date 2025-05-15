@@ -13,10 +13,10 @@ namespace Infrastructure.Configuration;
 /// </summary>
 public class ConfigInitializer
 {
-    private readonly IConfigurationManager _configManager;
+    private readonly IConfigManager _configManager;
     private readonly ILogger<ConfigInitializer> _logger;
 
-    public ConfigInitializer(IConfigurationManager configManager, ILogger<ConfigInitializer> logger)
+    public ConfigInitializer(IConfigManager configManager, ILogger<ConfigInitializer> logger)
     {
         _configManager = configManager;
         _logger = logger;
