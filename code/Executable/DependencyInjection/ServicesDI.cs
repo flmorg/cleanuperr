@@ -50,7 +50,5 @@ public static class ServicesDI
             .AddTransient<DownloadServiceFactory>()
             .AddTransient<IStriker, Striker>()
             .AddSingleton<BlocklistProvider>()
-            .AddSingleton<IgnoredDownloadsProvider<QueueCleanerConfig>>()
-            .AddSingleton<IgnoredDownloadsProvider<ContentBlockerConfig>>()
-            .AddSingleton<IgnoredDownloadsProvider<DownloadCleanerConfig>>();
+            .AddSingleton<IIgnoredDownloadsService, IgnoredDownloadsService>();
 }

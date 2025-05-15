@@ -8,7 +8,7 @@ using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Configuration;
 using Infrastructure.Helpers;
-using Infrastructure.Providers;
+using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
@@ -27,7 +27,7 @@ public sealed class ContentBlocker : GenericHandler
 {
     private readonly ContentBlockerConfig _config;
     private readonly BlocklistProvider _blocklistProvider;
-    private readonly IgnoredDownloadsProvider<ContentBlockerConfig> _ignoredDownloadsProvider;
+    private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly IConfigurationManager _configManager;
 
     public ContentBlocker(
@@ -40,7 +40,7 @@ public sealed class ContentBlocker : GenericHandler
         BlocklistProvider blocklistProvider,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
-        IgnoredDownloadsProvider<ContentBlockerConfig> ignoredDownloadsProvider
+        IIgnoredDownloadsService ignoredDownloadsService
     ) : base(
         logger, cache, messageBus, 
         arrClientFactory, arrArrQueueIterator, 
@@ -49,7 +49,7 @@ public sealed class ContentBlocker : GenericHandler
     {
         _configManager = configManager;
         _blocklistProvider = blocklistProvider;
-        _ignoredDownloadsProvider = ignoredDownloadsProvider;
+        _ignoredDownloadsService = ignoredDownloadsService;
         
         // Initialize the configuration
         var configTask = _configManager.GetContentBlockerConfigAsync();
@@ -101,7 +101,7 @@ public sealed class ContentBlocker : GenericHandler
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
     {
-        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
+        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
         
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
 

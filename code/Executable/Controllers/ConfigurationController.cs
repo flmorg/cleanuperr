@@ -1,10 +1,10 @@
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
+using Common.Configuration.DownloadClient;
+using Common.Configuration.IgnoredDownloads;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using System.Text.Json;
 
 namespace Executable.Controllers;
 
@@ -13,34 +13,23 @@ namespace Executable.Controllers;
 public class ConfigurationController : ControllerBase
 {
     private readonly ILogger<ConfigurationController> _logger;
-    private readonly IConfiguration _configuration;
-    private readonly IOptionsMonitor<QueueCleanerConfig> _queueCleanerConfig;
-    private readonly IOptionsMonitor<ContentBlockerConfig> _contentBlockerConfig;
-    private readonly IOptionsMonitor<DownloadCleanerConfig> _downloadCleanerConfig;
     private readonly IConfigurationService _configService;
 
     public ConfigurationController(
         ILogger<ConfigurationController> logger,
-        IConfiguration configuration,
-        IOptionsMonitor<QueueCleanerConfig> queueCleanerConfig,
-        IOptionsMonitor<ContentBlockerConfig> contentBlockerConfig,
-        IOptionsMonitor<DownloadCleanerConfig> downloadCleanerConfig,
         IConfigurationService configService)
     {
         _logger = logger;
-        _configuration = configuration;
-        _queueCleanerConfig = queueCleanerConfig;
-        _contentBlockerConfig = contentBlockerConfig;
-        _downloadCleanerConfig = downloadCleanerConfig;
         _configService = configService;
     }
 
     [HttpGet("queuecleaner")]
-    public IActionResult GetQueueCleanerConfig()
+    public async Task<IActionResult> GetQueueCleanerConfig()
     {
         try
         {
-            return Ok(_queueCleanerConfig.CurrentValue);
+            var config = await _configService.GetQueueCleanerConfigAsync();
+            return Ok(config);
         }
         catch (Exception ex)
         {
@@ -50,11 +39,12 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpGet("contentblocker")]
-    public IActionResult GetContentBlockerConfig()
+    public async Task<IActionResult> GetContentBlockerConfig()
     {
         try
         {
-            return Ok(_contentBlockerConfig.CurrentValue);
+            var config = await _configService.GetContentBlockerConfigAsync();
+            return Ok(config);
         }
         catch (Exception ex)
         {
@@ -64,16 +54,47 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpGet("downloadcleaner")]
-    public IActionResult GetDownloadCleanerConfig()
+    public async Task<IActionResult> GetDownloadCleanerConfig()
     {
         try
         {
-            return Ok(_downloadCleanerConfig.CurrentValue);
+            var config = await _configService.GetDownloadCleanerConfigAsync();
+            return Ok(config);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving DownloadCleaner configuration");
             return StatusCode(500, "An error occurred while retrieving DownloadCleaner configuration");
+        }
+    }
+    
+    [HttpGet("downloadclient")]
+    public async Task<IActionResult> GetDownloadClientConfig()
+    {
+        try
+        {
+            var config = await _configService.GetDownloadClientConfigAsync();
+            return Ok(config);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving DownloadClient configuration");
+            return StatusCode(500, "An error occurred while retrieving DownloadClient configuration");
+        }
+    }
+    
+    [HttpGet("ignoreddownloads")]
+    public async Task<IActionResult> GetIgnoredDownloadsConfig()
+    {
+        try
+        {
+            var config = await _configService.GetIgnoredDownloadsConfigAsync();
+            return Ok(config);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving IgnoredDownloads configuration");
+            return StatusCode(500, "An error occurred while retrieving IgnoredDownloads configuration");
         }
     }
 
@@ -86,7 +107,7 @@ public class ConfigurationController : ControllerBase
             config.Validate();
             
             // Persist the configuration
-            var result = await _configService.UpdateConfigurationAsync(QueueCleanerConfig.SectionName, config);
+            var result = await _configService.UpdateQueueCleanerConfigAsync(config);
             if (!result)
             {
                 return StatusCode(500, "Failed to save QueueCleaner configuration");
@@ -111,7 +132,7 @@ public class ConfigurationController : ControllerBase
             config.Validate();
             
             // Persist the configuration
-            var result = await _configService.UpdateConfigurationAsync(ContentBlockerConfig.SectionName, config);
+            var result = await _configService.UpdateContentBlockerConfigAsync(config);
             if (!result)
             {
                 return StatusCode(500, "Failed to save ContentBlocker configuration");
@@ -136,7 +157,7 @@ public class ConfigurationController : ControllerBase
             config.Validate();
             
             // Persist the configuration
-            var result = await _configService.UpdateConfigurationAsync(DownloadCleanerConfig.SectionName, config);
+            var result = await _configService.UpdateDownloadCleanerConfigAsync(config);
             if (!result)
             {
                 return StatusCode(500, "Failed to save DownloadCleaner configuration");
@@ -149,6 +170,50 @@ public class ConfigurationController : ControllerBase
         {
             _logger.LogError(ex, "Error updating DownloadCleaner configuration");
             return StatusCode(500, "An error occurred while updating DownloadCleaner configuration");
+        }
+    }
+    
+    [HttpPut("downloadclient")]
+    public async Task<IActionResult> UpdateDownloadClientConfig([FromBody] DownloadClientConfig config)
+    {
+        try
+        {
+            // Persist the configuration
+            var result = await _configService.UpdateDownloadClientConfigAsync(config);
+            if (!result)
+            {
+                return StatusCode(500, "Failed to save DownloadClient configuration");
+            }
+            
+            _logger.LogInformation("DownloadClient configuration updated successfully");
+            return Ok(new { Message = "DownloadClient configuration updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating DownloadClient configuration");
+            return StatusCode(500, "An error occurred while updating DownloadClient configuration");
+        }
+    }
+    
+    [HttpPut("ignoreddownloads")]
+    public async Task<IActionResult> UpdateIgnoredDownloadsConfig([FromBody] IgnoredDownloadsConfig config)
+    {
+        try
+        {
+            // Persist the configuration
+            var result = await _configService.UpdateIgnoredDownloadsConfigAsync(config);
+            if (!result)
+            {
+                return StatusCode(500, "Failed to save IgnoredDownloads configuration");
+            }
+            
+            _logger.LogInformation("IgnoredDownloads configuration updated successfully");
+            return Ok(new { Message = "IgnoredDownloads configuration updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating IgnoredDownloads configuration");
+            return StatusCode(500, "An error occurred while updating IgnoredDownloads configuration");
         }
     }
 }

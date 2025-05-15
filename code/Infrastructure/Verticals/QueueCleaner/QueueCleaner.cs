@@ -6,7 +6,7 @@ using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Configuration;
 using Infrastructure.Helpers;
-using Infrastructure.Providers;
+using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
@@ -26,7 +26,7 @@ public sealed class QueueCleaner : GenericHandler
     private readonly QueueCleanerConfig _config;
     private readonly IMemoryCache _cache;
     private readonly IConfigurationManager _configManager;
-    private readonly IgnoredDownloadsProvider<QueueCleanerConfig> _ignoredDownloadsProvider;
+    private readonly IIgnoredDownloadsService _ignoredDownloadsService;
 
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
@@ -37,7 +37,7 @@ public sealed class QueueCleaner : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
-        IgnoredDownloadsProvider<QueueCleanerConfig> ignoredDownloadsProvider
+        IIgnoredDownloadsService ignoredDownloadsService
     ) : base(
         logger, cache, messageBus,
         arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
@@ -46,7 +46,7 @@ public sealed class QueueCleaner : GenericHandler
     {
         _configManager = configManager;
         _cache = cache;
-        _ignoredDownloadsProvider = ignoredDownloadsProvider;
+        _ignoredDownloadsService = ignoredDownloadsService;
         
         // Initialize the configuration
         var configTask = _configManager.GetQueueCleanerConfigAsync();
@@ -72,7 +72,7 @@ public sealed class QueueCleaner : GenericHandler
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
     {
-        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
+        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
         
         using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
         

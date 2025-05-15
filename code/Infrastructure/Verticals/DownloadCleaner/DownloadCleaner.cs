@@ -4,7 +4,7 @@ using Common.Configuration.DownloadClient;
 using Domain.Enums;
 using Domain.Models.Arr.Queue;
 using Infrastructure.Configuration;
-using Infrastructure.Providers;
+using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
@@ -20,7 +20,7 @@ namespace Infrastructure.Verticals.DownloadCleaner;
 public sealed class DownloadCleaner : GenericHandler
 {
     private readonly DownloadCleanerConfig _config;
-    private readonly IgnoredDownloadsProvider<DownloadCleanerConfig> _ignoredDownloadsProvider;
+    private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
     private readonly IConfigurationManager _configManager;
     
@@ -35,7 +35,7 @@ public sealed class DownloadCleaner : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
-        IgnoredDownloadsProvider<DownloadCleanerConfig> ignoredDownloadsProvider
+        IIgnoredDownloadsService ignoredDownloadsService
     ) : base(
         logger, cache, messageBus,
         arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
@@ -43,7 +43,7 @@ public sealed class DownloadCleaner : GenericHandler
     )
     {
         _configManager = configManager;
-        _ignoredDownloadsProvider = ignoredDownloadsProvider;
+        _ignoredDownloadsService = ignoredDownloadsService;
         
         // Initialize the configuration
         var configTask = _configManager.GetDownloadCleanerConfigAsync();
@@ -87,7 +87,7 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
         
-        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsProvider.GetIgnoredDownloads();
+        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
         
         await _downloadService.LoginAsync();
         List<object>? downloads = await _downloadService.GetSeedingDownloads();

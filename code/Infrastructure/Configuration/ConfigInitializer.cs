@@ -2,6 +2,7 @@ using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.IgnoredDownloads;
 using Common.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 
@@ -35,6 +36,7 @@ public class ConfigInitializer
         await EnsureSonarrConfigAsync();
         await EnsureRadarrConfigAsync();
         await EnsureLidarrConfigAsync();
+        await EnsureIgnoredDownloadsConfigAsync();
         
         _logger.LogInformation("Configuration files initialized");
     }
@@ -171,6 +173,20 @@ public class ConfigInitializer
                 Instances = new List<ArrInstance>()
             };
             await _configManager.SaveLidarrConfigAsync(defaultConfig);
+        }
+    }
+    
+    private async Task EnsureIgnoredDownloadsConfigAsync()
+    {
+        var config = await _configManager.GetIgnoredDownloadsConfigAsync();
+        if (config == null)
+        {
+            _logger.LogInformation("Creating default IgnoredDownloads configuration");
+            var defaultConfig = new IgnoredDownloadsConfig
+            {
+                IgnoredDownloads = new List<string>()
+            };
+            await _configManager.SaveIgnoredDownloadsConfigAsync(defaultConfig);
         }
     }
 }

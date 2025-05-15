@@ -3,6 +3,7 @@ using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.IgnoredDownloads;
 using Common.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -30,6 +31,7 @@ public interface IConfigurationManager
     Task<QueueCleanerConfig?> GetQueueCleanerConfigAsync();
     Task<DownloadCleanerConfig?> GetDownloadCleanerConfigAsync();
     Task<DownloadClientConfig?> GetDownloadClientConfigAsync();
+    Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync();
 
     Task<bool> SaveSonarrConfigAsync(SonarrConfig config);
     Task<bool> SaveRadarrConfigAsync(RadarrConfig config);
@@ -38,6 +40,7 @@ public interface IConfigurationManager
     Task<bool> SaveQueueCleanerConfigAsync(QueueCleanerConfig config);
     Task<bool> SaveDownloadCleanerConfigAsync(DownloadCleanerConfig config);
     Task<bool> SaveDownloadClientConfigAsync(DownloadClientConfig config);
+    Task<bool> SaveIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config);
 }
 
 public class ConfigurationManager : IConfigurationManager
@@ -51,6 +54,7 @@ public class ConfigurationManager : IConfigurationManager
     private readonly IOptionsMonitor<QueueCleanerConfig> _queueCleanerConfig;
     private readonly IOptionsMonitor<DownloadCleanerConfig> _downloadCleanerConfig;
     private readonly IOptionsMonitor<DownloadClientConfig> _downloadClientConfig;
+    private readonly IOptionsMonitor<IgnoredDownloadsConfig> _ignoredDownloadsConfig;
 
     // Define standard config file names
     private const string SonarrConfigFile = "sonarr.json";
@@ -60,6 +64,7 @@ public class ConfigurationManager : IConfigurationManager
     private const string QueueCleanerConfigFile = "queuecleaner.json";
     private const string DownloadCleanerConfigFile = "downloadcleaner.json";
     private const string DownloadClientConfigFile = "downloadclient.json";
+    private const string IgnoredDownloadsConfigFile = "ignoreddownloads.json";
 
     public ConfigurationManager(
         ILogger<ConfigurationManager> logger,
@@ -70,7 +75,8 @@ public class ConfigurationManager : IConfigurationManager
         IOptionsMonitor<ContentBlockerConfig> contentBlockerConfig,
         IOptionsMonitor<QueueCleanerConfig> queueCleanerConfig,
         IOptionsMonitor<DownloadCleanerConfig> downloadCleanerConfig,
-        IOptionsMonitor<DownloadClientConfig> downloadClientConfig)
+        IOptionsMonitor<DownloadClientConfig> downloadClientConfig,
+        IOptionsMonitor<IgnoredDownloadsConfig> ignoredDownloadsConfig)
     {
         _logger = logger;
         _configProvider = configProvider;
@@ -81,6 +87,7 @@ public class ConfigurationManager : IConfigurationManager
         _queueCleanerConfig = queueCleanerConfig;
         _downloadCleanerConfig = downloadCleanerConfig;
         _downloadClientConfig = downloadClientConfig;
+        _ignoredDownloadsConfig = ignoredDownloadsConfig;
     }
 
     // Generic configuration methods
@@ -265,6 +272,25 @@ public class ConfigurationManager : IConfigurationManager
         catch (Exception ex)
         {
             _logger.LogError(ex, "DownloadClient configuration validation failed");
+            return Task.FromResult(false);
+        }
+    }
+    
+    public async Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync()
+    {
+        var config = await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(IgnoredDownloadsConfigFile);
+        return config ?? _ignoredDownloadsConfig.CurrentValue;
+    }
+
+    public Task<bool> SaveIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config)
+    {
+        try
+        {
+            return _configProvider.WriteConfigurationAsync(IgnoredDownloadsConfigFile, config);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "IgnoredDownloads configuration save failed");
             return Task.FromResult(false);
         }
     }

@@ -1,85 +1,57 @@
 using Common.Configuration;
-using Microsoft.Extensions.Configuration;
+using Common.Configuration.ContentBlocker;
+using Common.Configuration.DownloadCleaner;
+using Common.Configuration.DownloadClient;
+using Common.Configuration.IgnoredDownloads;
+using Common.Configuration.QueueCleaner;
+using Infrastructure.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using Microsoft.Extensions.Hosting;
 
 namespace Infrastructure.Services;
 
 public interface IConfigurationService
 {
-    Task<bool> UpdateConfigurationAsync<T>(string sectionName, T configSection) where T : class, IConfig;
-    Task<T?> GetConfigurationAsync<T>(string sectionName) where T : class, IConfig;
-    Task<bool> RefreshConfigurationAsync();
+    Task<bool> UpdateConfigurationAsync<T>(string sectionName, T configSection);
+    Task<T?> GetConfigurationAsync<T>(string sectionName);
+    Task<SonarrConfig?> GetSonarrConfigAsync();
+    Task<RadarrConfig?> GetRadarrConfigAsync();
+    Task<LidarrConfig?> GetLidarrConfigAsync();
+    Task<ContentBlockerConfig?> GetContentBlockerConfigAsync();
+    Task<QueueCleanerConfig?> GetQueueCleanerConfigAsync();
+    Task<DownloadCleanerConfig?> GetDownloadCleanerConfigAsync();
+    Task<DownloadClientConfig?> GetDownloadClientConfigAsync();
+    Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync();
+    Task<bool> UpdateSonarrConfigAsync(SonarrConfig config);
+    Task<bool> UpdateRadarrConfigAsync(RadarrConfig config);
+    Task<bool> UpdateLidarrConfigAsync(LidarrConfig config);
+    Task<bool> UpdateContentBlockerConfigAsync(ContentBlockerConfig config);
+    Task<bool> UpdateQueueCleanerConfigAsync(QueueCleanerConfig config);
+    Task<bool> UpdateDownloadCleanerConfigAsync(DownloadCleanerConfig config);
+    Task<bool> UpdateDownloadClientConfigAsync(DownloadClientConfig config);
+    Task<bool> UpdateIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config);
 }
 
 public class ConfigurationService : IConfigurationService
 {
     private readonly ILogger<ConfigurationService> _logger;
-    private readonly IConfiguration _configuration;
-    private readonly string _configFilePath;
+    private readonly IConfigurationManager _configManager;
 
     public ConfigurationService(
         ILogger<ConfigurationService> logger,
-        IConfiguration configuration,
-        IHostEnvironment environment)
+        IConfigurationManager configManager)
     {
         _logger = logger;
-        _configuration = configuration;
-        
-        // Find primary configuration file
-        var currentDirectory = environment.ContentRootPath;
-        _configFilePath = Path.Combine(currentDirectory, "appsettings.json");
-        
-        if (!File.Exists(_configFilePath))
-        {
-            _logger.LogWarning("Configuration file not found at: {path}", _configFilePath);
-            _configFilePath = Path.Combine(currentDirectory, "appsettings.Development.json");
-            
-            if (!File.Exists(_configFilePath))
-            {
-                _logger.LogError("No configuration file found");
-                throw new FileNotFoundException("Configuration file not found");
-            }
-        }
-        
-        _logger.LogInformation("Using configuration file: {path}", _configFilePath);
+        _configManager = configManager;
     }
 
-    public async Task<bool> UpdateConfigurationAsync<T>(string sectionName, T configSection) where T : class, IConfig
+    public async Task<bool> UpdateConfigurationAsync<T>(string sectionName, T configSection)
     {
         try
         {
-            // Read existing configuration
-            var json = await File.ReadAllTextAsync(_configFilePath);
-            var jsonObject = JsonNode.Parse(json)?.AsObject() 
-                ?? throw new InvalidOperationException("Failed to parse configuration file");
-            
-            // Create JsonObject from config section
-            var configJson = JsonSerializer.Serialize(configSection);
-            var configObject = JsonNode.Parse(configJson)?.AsObject()
-                ?? throw new InvalidOperationException("Failed to serialize configuration");
-            
-            // Update or add the section
-            jsonObject[sectionName] = configObject;
-            
-            // Save back to file
-            var options = new JsonSerializerOptions { WriteIndented = true };
-            var updatedJson = jsonObject.ToJsonString(options);
-            
-            // Create backup
-            var backupPath = $"{_configFilePath}.bak";
-            await File.WriteAllTextAsync(backupPath, json);
-            
-            // Write updated configuration
-            await File.WriteAllTextAsync(_configFilePath, updatedJson);
-            
-            // Refresh configuration
-            await RefreshConfigurationAsync();
-            
-            _logger.LogInformation("Configuration section {section} updated successfully", sectionName);
-            return true;
+            // This is just a placeholder method for backward compatibility
+            // The actual implementation depends on the specific config type
+            _logger.LogWarning("Using deprecated UpdateConfigurationAsync method with section name '{section}'.", sectionName);
+            return false;
         }
         catch (Exception ex)
         {
@@ -88,52 +60,39 @@ public class ConfigurationService : IConfigurationService
         }
     }
 
-    public async Task<T?> GetConfigurationAsync<T>(string sectionName) where T : class, IConfig
+    public async Task<T?> GetConfigurationAsync<T>(string sectionName)
     {
         try
         {
-            var json = await File.ReadAllTextAsync(_configFilePath);
-            var jsonObject = JsonNode.Parse(json)?.AsObject();
-            
-            if (jsonObject == null || !jsonObject.ContainsKey(sectionName))
-            {
-                _logger.LogWarning("Section {section} not found in configuration", sectionName);
-                return null;
-            }
-            
-            var sectionObject = jsonObject[sectionName]?.ToJsonString();
-            if (sectionObject == null)
-            {
-                return null;
-            }
-            
-            return JsonSerializer.Deserialize<T>(sectionObject);
+            // This is just a placeholder method for backward compatibility
+            // The actual implementation depends on the specific config type
+            _logger.LogWarning("Using deprecated GetConfigurationAsync method with section name '{section}'.", sectionName);
+            return default;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving configuration section {section}", sectionName);
-            return null;
+            return default;
         }
     }
 
-    public Task<bool> RefreshConfigurationAsync()
-    {
-        try
-        {
-            if (_configuration is IConfigurationRoot configRoot)
-            {
-                configRoot.Reload();
-                _logger.LogInformation("Configuration reloaded");
-                return Task.FromResult(true);
-            }
-            
-            _logger.LogWarning("Unable to reload configuration: IConfigurationRoot not available");
-            return Task.FromResult(false);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error reloading configuration");
-            return Task.FromResult(false);
-        }
-    }
+    // Specific configuration getters
+    public async Task<SonarrConfig?> GetSonarrConfigAsync() => await _configManager.GetSonarrConfigAsync();
+    public async Task<RadarrConfig?> GetRadarrConfigAsync() => await _configManager.GetRadarrConfigAsync();
+    public async Task<LidarrConfig?> GetLidarrConfigAsync() => await _configManager.GetLidarrConfigAsync();
+    public async Task<ContentBlockerConfig?> GetContentBlockerConfigAsync() => await _configManager.GetContentBlockerConfigAsync();
+    public async Task<QueueCleanerConfig?> GetQueueCleanerConfigAsync() => await _configManager.GetQueueCleanerConfigAsync();
+    public async Task<DownloadCleanerConfig?> GetDownloadCleanerConfigAsync() => await _configManager.GetDownloadCleanerConfigAsync();
+    public async Task<DownloadClientConfig?> GetDownloadClientConfigAsync() => await _configManager.GetDownloadClientConfigAsync();
+    public async Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync() => await _configManager.GetIgnoredDownloadsConfigAsync();
+    
+    // Specific configuration setters
+    public async Task<bool> UpdateSonarrConfigAsync(SonarrConfig config) => await _configManager.SaveSonarrConfigAsync(config);
+    public async Task<bool> UpdateRadarrConfigAsync(RadarrConfig config) => await _configManager.SaveRadarrConfigAsync(config);
+    public async Task<bool> UpdateLidarrConfigAsync(LidarrConfig config) => await _configManager.SaveLidarrConfigAsync(config);
+    public async Task<bool> UpdateContentBlockerConfigAsync(ContentBlockerConfig config) => await _configManager.SaveContentBlockerConfigAsync(config);
+    public async Task<bool> UpdateQueueCleanerConfigAsync(QueueCleanerConfig config) => await _configManager.SaveQueueCleanerConfigAsync(config);
+    public async Task<bool> UpdateDownloadCleanerConfigAsync(DownloadCleanerConfig config) => await _configManager.SaveDownloadCleanerConfigAsync(config);
+    public async Task<bool> UpdateDownloadClientConfigAsync(DownloadClientConfig config) => await _configManager.SaveDownloadClientConfigAsync(config);
+    public async Task<bool> UpdateIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config) => await _configManager.SaveIgnoredDownloadsConfigAsync(config);
 }
