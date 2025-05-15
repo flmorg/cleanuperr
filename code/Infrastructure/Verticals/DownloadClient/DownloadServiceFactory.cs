@@ -81,10 +81,9 @@ public sealed class DownloadServiceFactory
         
         return clientConfig.Type switch
         {
-            DownloadClientType.QBittorrent => CreateClientService<QBitService>(clientConfig),
-            DownloadClientType.Deluge => CreateClientService<DelugeService>(clientConfig),
-            DownloadClientType.Transmission => CreateClientService<TransmissionService>(clientConfig),
-            DownloadClientType.Usenet => null, // Usenet clients are handled elsewhere
+            Common.Enums.DownloadClient.QBittorrent => CreateClientService<QBitService>(clientConfig),
+            Common.Enums.DownloadClient.Deluge => CreateClientService<DelugeService>(clientConfig),
+            Common.Enums.DownloadClient.Transmission => CreateClientService<TransmissionService>(clientConfig),
             _ => null
         };
     }

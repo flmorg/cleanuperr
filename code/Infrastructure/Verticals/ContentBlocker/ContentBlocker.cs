@@ -41,11 +41,12 @@ public sealed class ContentBlocker : GenericHandler
         BlocklistProvider blocklistProvider,
         IEnumerable<IDownloadService> downloadServices,
         INotificationPublisher notifier,
-        IIgnoredDownloadsService ignoredDownloadsService
+        IIgnoredDownloadsService ignoredDownloadsService,
+        DownloadServiceFactory downloadServiceFactory
     ) : base(
         logger, cache, messageBus, 
         arrClientFactory, arrArrQueueIterator, 
-        downloadServices, notifier
+        downloadServiceFactory, notifier
     )
     {
         _configManager = configManager;

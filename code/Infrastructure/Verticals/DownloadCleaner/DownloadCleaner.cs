@@ -23,7 +23,7 @@ public sealed class DownloadCleaner : GenericHandler
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
     private readonly IConfigurationManager _configManager;
-    private readonly List<DownloadService> _downloadServices = new List<DownloadService>();
+    private readonly List<IDownloadService> _downloadServices = [];
     
     private static bool _hardLinkCategoryCreated;
     
@@ -168,7 +168,7 @@ public sealed class DownloadCleaner : GenericHandler
             {
                 try
                 {
-                    if (_downloadClientConfig.Clients.Any(x => x.Type == Common.Enums.DownloadClientType.QBittorrent) && !_config.UnlinkedUseTag)
+                    if (_downloadClientConfig.Clients.Any(x => x.Type == Common.Enums.DownloadClient.QBittorrent) && !_config.UnlinkedUseTag)
                     {
                         _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
                         await downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);

@@ -121,7 +121,7 @@ public class ConfigInitializer
             _logger.LogInformation("Creating default DownloadClient configuration");
             var defaultConfig = new DownloadClientConfig
             {
-                DownloadClient = Common.Enums.DownloadClient.None
+                Clients = []
             };
             await _configManager.SaveDownloadClientConfigAsync(defaultConfig);
         }
