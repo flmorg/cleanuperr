@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+using System.Reflection;
+using Infrastructure.Configuration;
 
 namespace Executable;
 
@@ -17,6 +18,17 @@ public static class HostExtensions
         );
         
         logger.LogInformation("timezone: {tz}", TimeZoneInfo.Local.DisplayName);
+        
+        // Initialize configuration files
+        try
+        {
+            var configInitializer = host.Services.GetRequiredService<ConfigInitializer>();
+            configInitializer.EnsureConfigFilesExistAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to initialize configuration files");
+        }
         
         return host;
     }

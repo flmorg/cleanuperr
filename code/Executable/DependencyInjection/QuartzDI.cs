@@ -1,7 +1,6 @@
 using Common.Configuration;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
-using Common.Configuration.General;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Executable.Jobs;
@@ -21,27 +20,9 @@ public static class QuartzDI
         services
             .AddQuartz(q =>
             {
-                // We'll configure triggers from a dedicated JSON file
-                var triggerConfigTask = services
-                    .BuildServiceProvider()
-                    .GetRequiredService<IConfigurationManager>()
-                    .GetConfigurationAsync<TriggersConfig>("triggers.json");
-                
-                triggerConfigTask.Wait();
-                TriggersConfig? config = triggerConfigTask.Result;
-
-                if (config is null)
-                {
-                    // Create a default if it doesn't exist
-                    config = new TriggersConfig
-                    {
-                        ContentBlocker = "0 */30 * ? * *", // Every 30 minutes
-                        QueueCleaner = "0 */15 * ? * *",   // Every 15 minutes
-                        DownloadCleaner = "0 */20 * ? * *" // Every 20 minutes
-                    };
-                }
-
-                q.AddJobs(services.BuildServiceProvider(), config);
+                // Configure quartz to use job-specific config files
+                var serviceProvider = services.BuildServiceProvider();
+                q.AddJobs(serviceProvider);
             })
             .AddQuartzHostedService(opt =>
             {
@@ -50,8 +31,7 @@ public static class QuartzDI
 
     private static void AddJobs(
         this IServiceCollectionQuartzConfigurator q,
-        IServiceProvider serviceProvider,
-        TriggersConfig triggersConfig
+        IServiceProvider serviceProvider
     )
     {
         var configManager = serviceProvider.GetRequiredService<IConfigurationManager>();
@@ -61,27 +41,36 @@ public static class QuartzDI
         contentBlockerConfigTask.Wait();
         ContentBlockerConfig? contentBlockerConfig = contentBlockerConfigTask.Result;
         
-        q.AddJob<ContentBlocker>(contentBlockerConfig, triggersConfig.ContentBlocker);
+        if (contentBlockerConfig != null)
+        {
+            q.AddJob<ContentBlocker>(contentBlockerConfig, contentBlockerConfig.CronExpression);
+        }
         
         var queueCleanerConfigTask = configManager.GetQueueCleanerConfigAsync();
         queueCleanerConfigTask.Wait();
         QueueCleanerConfig? queueCleanerConfig = queueCleanerConfigTask.Result;
 
-        if (contentBlockerConfig?.Enabled is true && queueCleanerConfig is { Enabled: true, RunSequentially: true })
+        if (queueCleanerConfig != null)
         {
-            q.AddJob<QueueCleaner>(queueCleanerConfig, string.Empty);
-            q.AddJobListener(new JobChainingListener(nameof(ContentBlocker), nameof(QueueCleaner)));
-        }
-        else
-        {
-            q.AddJob<QueueCleaner>(queueCleanerConfig, triggersConfig.QueueCleaner);
+            if (contentBlockerConfig?.Enabled is true && queueCleanerConfig is { Enabled: true, RunSequentially: true })
+            {
+                q.AddJob<QueueCleaner>(queueCleanerConfig, string.Empty);
+                q.AddJobListener(new JobChainingListener(nameof(ContentBlocker), nameof(QueueCleaner)));
+            }
+            else
+            {
+                q.AddJob<QueueCleaner>(queueCleanerConfig, queueCleanerConfig.CronExpression);
+            }
         }
         
         var downloadCleanerConfigTask = configManager.GetDownloadCleanerConfigAsync();
         downloadCleanerConfigTask.Wait();
         DownloadCleanerConfig? downloadCleanerConfig = downloadCleanerConfigTask.Result;
 
-        q.AddJob<DownloadCleaner>(downloadCleanerConfig, triggersConfig.DownloadCleaner);
+        if (downloadCleanerConfig != null)
+        {
+            q.AddJob<DownloadCleaner>(downloadCleanerConfig, downloadCleanerConfig.CronExpression);
+        }
     }
     
     private static void AddJob<T>(

@@ -80,9 +80,14 @@ public sealed class ContentBlocker : GenericHandler
             return;
         }
         
-        bool blocklistIsConfigured = _sonarrConfig.Enabled && !string.IsNullOrEmpty(_sonarrConfig.Block.Path) ||
-                                     _radarrConfig.Enabled && !string.IsNullOrEmpty(_radarrConfig.Block.Path) ||
-                                     _lidarrConfig.Enabled && !string.IsNullOrEmpty(_lidarrConfig.Block.Path);
+        // Update the content blocker configuration as well
+        var contentBlockerConfigTask = _configManager.GetContentBlockerConfigAsync();
+        await contentBlockerConfigTask;
+        _config = contentBlockerConfigTask.Result ?? _config;
+        
+        bool blocklistIsConfigured = _config.Sonarr.Enabled && !string.IsNullOrEmpty(_config.Sonarr.Path) ||
+                                     _config.Radarr.Enabled && !string.IsNullOrEmpty(_config.Radarr.Path) ||
+                                     _config.Lidarr.Enabled && !string.IsNullOrEmpty(_config.Lidarr.Path);
 
         if (!blocklistIsConfigured)
         {

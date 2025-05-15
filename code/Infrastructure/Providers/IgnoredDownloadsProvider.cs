@@ -1,8 +1,8 @@
-﻿using Common.Configuration;
+using Common.Configuration;
+using Infrastructure.Configuration;
 using Infrastructure.Helpers;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Providers;
 
@@ -11,15 +11,44 @@ public sealed class IgnoredDownloadsProvider<T>
 {
     private readonly ILogger<IgnoredDownloadsProvider<T>> _logger;
     private IIgnoredDownloadsConfig _config;
+    private readonly IConfigurationManager _configManager;
     private readonly IMemoryCache _cache;
     private DateTime _lastModified = DateTime.MinValue;
+    private readonly string _configType;
 
-    public IgnoredDownloadsProvider(ILogger<IgnoredDownloadsProvider<T>> logger, IOptionsMonitor<T> config, IMemoryCache cache)
+    public IgnoredDownloadsProvider(ILogger<IgnoredDownloadsProvider<T>> logger, IConfigurationManager configManager, IMemoryCache cache)
     {
-        _config = config.CurrentValue;
-        config.OnChange((newValue) => _config = newValue);
         _logger = logger;
+        _configManager = configManager;
         _cache = cache;
+        _configType = typeof(T).Name;
+        
+        // Initialize configuration
+        InitializeConfig().Wait();
+    }
+    
+    private async Task InitializeConfig()
+    {
+        // Get the configuration based on the type
+        if (typeof(T).Name.Contains("ContentBlocker"))
+        {
+            var config = await _configManager.GetContentBlockerConfigAsync();
+            _config = config ?? new T();
+        }
+        else if (typeof(T).Name.Contains("QueueCleaner"))
+        {
+            var config = await _configManager.GetQueueCleanerConfigAsync();
+            _config = config ?? new T();
+        }
+        else if (typeof(T).Name.Contains("DownloadCleaner"))
+        {
+            var config = await _configManager.GetDownloadCleanerConfigAsync();
+            _config = config ?? new T();
+        }
+        else
+        {
+            _config = new T();
+        }
 
         if (string.IsNullOrEmpty(_config.IgnoredDownloadsPath))
         {
@@ -28,12 +57,15 @@ public sealed class IgnoredDownloadsProvider<T>
 
         if (!File.Exists(_config.IgnoredDownloadsPath))
         {
-            throw new FileNotFoundException("file not found", _config.IgnoredDownloadsPath);
+            _logger.LogWarning("Ignored downloads file not found: {path}", _config.IgnoredDownloadsPath);
         }
     }
 
     public async Task<IReadOnlyList<string>> GetIgnoredDownloads()
     {
+        // Refresh the configuration before checking ignored downloads
+        await InitializeConfig();
+        
         if (string.IsNullOrEmpty(_config.IgnoredDownloadsPath))
         {
             return Array.Empty<string>();
@@ -42,7 +74,7 @@ public sealed class IgnoredDownloadsProvider<T>
         FileInfo fileInfo = new(_config.IgnoredDownloadsPath);
         
         if (fileInfo.LastWriteTime > _lastModified ||
-            !_cache.TryGetValue(CacheKeys.IgnoredDownloads(typeof(T).Name), out IReadOnlyList<string>? ignoredDownloads) ||
+            !_cache.TryGetValue(CacheKeys.IgnoredDownloads(_configType), out IReadOnlyList<string>? ignoredDownloads) ||
             ignoredDownloads is null)
         {
             _lastModified = fileInfo.LastWriteTime;

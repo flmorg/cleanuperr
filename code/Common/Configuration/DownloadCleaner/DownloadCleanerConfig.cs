@@ -1,4 +1,4 @@
-﻿using Common.Exceptions;
+using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadCleaner;
@@ -8,6 +8,10 @@ public sealed record DownloadCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     public const string SectionName = "DownloadCleaner";
     
     public bool Enabled { get; init; }
+
+    // Trigger configuration
+    [ConfigurationKeyName("CRON_EXPRESSION")]
+    public string CronExpression { get; init; } = "0 */20 * ? * *"; // Default: every 20 minutes
 
     public List<CleanCategory>? Categories { get; init; }
 

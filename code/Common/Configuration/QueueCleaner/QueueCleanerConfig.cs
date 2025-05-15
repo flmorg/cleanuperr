@@ -1,4 +1,4 @@
-﻿using Common.CustomDataTypes;
+using Common.CustomDataTypes;
 using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 
@@ -9,6 +9,10 @@ public sealed record QueueCleanerConfig : IJobConfig, IIgnoredDownloadsConfig
     public const string SectionName = "QueueCleaner";
     
     public bool Enabled { get; init; }
+    
+    // Trigger configuration
+    [ConfigurationKeyName("CRON_EXPRESSION")]
+    public string CronExpression { get; init; } = "0 */15 * ? * *"; // Default: every 15 minutes
     
     public bool RunSequentially { get; init; }
     

@@ -14,6 +14,7 @@ public static class ConfigurationExtensions
         });
         
         services.AddSingleton<IConfigurationManager, ConfigurationManager>();
+        services.AddSingleton<ConfigInitializer>();
         
         return services;
     }
