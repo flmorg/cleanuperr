@@ -79,8 +79,10 @@ public class JsonConfigurationProvider
 
             if (!File.Exists(fullPath))
             {
-                _logger.LogDebug("Configuration file does not exist: {file}", fullPath);
-                return new T();
+                _logger.LogDebug("Configuration file does not exist: {file} | creating it now", fullPath);
+                T defaultConfig = new();
+                await WriteConfigurationAsync(fileName, defaultConfig);
+                return defaultConfig;
             }
 
             var json = await File.ReadAllTextAsync(fullPath);
