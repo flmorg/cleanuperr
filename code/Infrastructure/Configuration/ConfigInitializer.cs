@@ -1,3 +1,4 @@
+using Common.Configuration.ContentBlocker;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Configuration;
@@ -37,41 +38,81 @@ public class ConfigInitializer
     
     private async Task EnsureContentBlockerConfigAsync()
     {
-        _ = await _configManager.GetContentBlockerConfigAsync();
+        var config = await _configManager.GetContentBlockerConfigAsync();
+
+        if (config is null)
+        {
+            await _configManager.SaveContentBlockerConfigAsync(new());
+        }
     }
     
     private async Task EnsureQueueCleanerConfigAsync()
     {
-        _ = await _configManager.GetQueueCleanerConfigAsync();
+        var config = await _configManager.GetQueueCleanerConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveQueueCleanerConfigAsync(new());
+        }
     }
     
     private async Task EnsureDownloadCleanerConfigAsync()
     {
-        _ = await _configManager.GetDownloadCleanerConfigAsync();
+        var config = await _configManager.GetDownloadCleanerConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveDownloadCleanerConfigAsync(new());
+        }
     }
     
     private async Task EnsureDownloadClientConfigAsync()
     {
-        _ = await _configManager.GetDownloadClientConfigAsync();
+        var config = await _configManager.GetDownloadClientConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveDownloadClientConfigAsync(new());
+        }
     }
     
     private async Task EnsureSonarrConfigAsync()
     {
-        _ = await _configManager.GetSonarrConfigAsync();
+        var config = await _configManager.GetSonarrConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveSonarrConfigAsync(new());
+        }
     }
     
     private async Task EnsureRadarrConfigAsync()
     {
-        _ = await _configManager.GetRadarrConfigAsync();
+        var config = await _configManager.GetRadarrConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveRadarrConfigAsync(new());
+        }
     }
     
     private async Task EnsureLidarrConfigAsync()
     {
-        _ = await _configManager.GetLidarrConfigAsync();
+        var config = await _configManager.GetLidarrConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveLidarrConfigAsync(new());
+        }
     }
     
     private async Task EnsureIgnoredDownloadsConfigAsync()
     {
-        _ = await _configManager.GetIgnoredDownloadsConfigAsync();
+        var config = await _configManager.GetIgnoredDownloadsConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveIgnoredDownloadsConfigAsync(new());
+        }
     }
 }

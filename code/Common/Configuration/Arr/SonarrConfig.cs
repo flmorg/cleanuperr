@@ -1,13 +1,10 @@
 ﻿namespace Common.Configuration.Arr;
 
-public sealed class SonarrConfig : ArrConfig, IConfig
+public sealed class SonarrConfig : ArrConfig
 {
-    public const string SectionName = "Sonarr";
+    public SonarrSearchType SearchType { get; init; } = SonarrSearchType.Episode;
     
-    public SonarrSearchType SearchType { get; init; }
-    
-    public void Validate()
+    public override void Validate()
     {
-        throw new NotImplementedException();
     }
 }

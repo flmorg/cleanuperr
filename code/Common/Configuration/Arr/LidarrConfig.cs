@@ -1,11 +1,8 @@
 ﻿namespace Common.Configuration.Arr;
 
-public sealed class LidarrConfig : ArrConfig, IConfig
+public sealed class LidarrConfig : ArrConfig
 {
-    public const string SectionName = "Lidarr";
-    
-    public void Validate()
+    public override void Validate()
     {
-        throw new NotImplementedException();
     }
 }

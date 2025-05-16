@@ -11,9 +11,8 @@ public static class ConfigurationDI
         // Instead, we rely solely on JSON configuration files
         
         // Define the configuration directory
-        string configDirectory = Path.Combine(
-            Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) ?? AppDomain.CurrentDomain.BaseDirectory,
-            "config");
+        // TODO change for docker containers
+        string configDirectory = "config";
             
         // Ensure the configuration directory exists
         Directory.CreateDirectory(configDirectory);

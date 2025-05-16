@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
-using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
 using Domain.Enums;
@@ -209,7 +208,7 @@ public abstract class DownloadService : IDownloadService
         {
             _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), downloadName);
             
-            var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+            var queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
             ushort maxStrikes = queueCleanerConfig?.SlowMaxStrikes ?? 0;
             bool shouldRemove = await _striker
                 .StrikeAndCheckLimit(downloadHash, downloadName, maxStrikes, StrikeType.SlowTime);

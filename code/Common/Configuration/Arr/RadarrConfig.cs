@@ -1,11 +1,8 @@
 ﻿namespace Common.Configuration.Arr;
 
-public sealed class RadarrConfig : ArrConfig, IConfig
+public sealed class RadarrConfig : ArrConfig
 {
-    public const string SectionName = "Radarr";
-    
-    public void Validate()
+    public override void Validate()
     {
-        throw new NotImplementedException();
     }
 }

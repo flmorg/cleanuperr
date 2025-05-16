@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.Arr;
 
-public abstract class ArrConfig
+public abstract class ArrConfig : IConfig
 {
     public bool Enabled { get; init; }
 
@@ -10,6 +10,6 @@ public abstract class ArrConfig
     public short ImportFailedMaxStrikes { get; init; } = -1;
     
     public List<ArrInstance> Instances { get; init; } = [];
-}
 
-// Block struct moved to ContentBlockerConfig.cs as BlocklistSettings
+    public abstract void Validate();
+}

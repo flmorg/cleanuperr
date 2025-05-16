@@ -77,11 +77,12 @@ public class ConfigManager : IConfigManager
     private const string SonarrConfigFile = "sonarr.json";
     private const string RadarrConfigFile = "radarr.json";
     private const string LidarrConfigFile = "lidarr.json";
-    private const string ContentBlockerConfigFile = "contentblocker.json";
-    private const string QueueCleanerConfigFile = "queuecleaner.json";
-    private const string DownloadCleanerConfigFile = "downloadcleaner.json";
-    private const string DownloadClientConfigFile = "downloadclient.json";
-    private const string IgnoredDownloadsConfigFile = "ignoreddownloads.json";
+    private const string ContentBlockerConfigFile = "content_blocker.json";
+    private const string QueueCleanerConfigFile = "queue_cleaner.json";
+    private const string DownloadCleanerConfigFile = "download_cleaner.json";
+    private const string DownloadClientConfigFile = "download_client.json";
+    private const string IgnoredDownloadsConfigFile = "ignored_downloads.json";
+    private const string GeneralSettings = "general.json";
 
     public ConfigManager(
         ILogger<ConfigManager> logger,

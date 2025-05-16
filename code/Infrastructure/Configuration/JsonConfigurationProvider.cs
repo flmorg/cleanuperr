@@ -37,7 +37,7 @@ public class JsonConfigurationProvider
         _serializerOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
             PropertyNameCaseInsensitive = true
         };
     }
@@ -79,10 +79,8 @@ public class JsonConfigurationProvider
 
             if (!File.Exists(fullPath))
             {
-                _logger.LogDebug("Configuration file does not exist: {file} | creating it now", fullPath);
-                T defaultConfig = new();
-                await WriteConfigurationAsync(fileName, defaultConfig);
-                return defaultConfig;
+                _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
+                return null;
             }
 
             var json = await File.ReadAllTextAsync(fullPath);
@@ -90,17 +88,17 @@ public class JsonConfigurationProvider
             if (string.IsNullOrWhiteSpace(json))
             {
                 _logger.LogWarning("Configuration file is empty: {file}", fullPath);
-                return new T();
+                return null;
             }
 
             var config = JsonSerializer.Deserialize<T>(json, _serializerOptions);
             _logger.LogDebug("Read configuration from {file}", fullPath);
-            return config ?? new T();
+            return config;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error reading configuration from {file}", fullPath);
-            return new T();
+            return null;
         }
         finally
         {
@@ -123,7 +121,7 @@ public class JsonConfigurationProvider
             if (!File.Exists(fullPath))
             {
                 _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
-                return new T();
+                return null;
             }
 
             var json = File.ReadAllText(fullPath);
@@ -131,17 +129,17 @@ public class JsonConfigurationProvider
             if (string.IsNullOrWhiteSpace(json))
             {
                 _logger.LogWarning("Configuration file is empty: {file}", fullPath);
-                return new T();
+                return null;
             }
 
             var config = JsonSerializer.Deserialize<T>(json, _serializerOptions);
             _logger.LogDebug("Read configuration from {file}", fullPath);
-            return config ?? new T();
+            return config;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error reading configuration from {file}", fullPath);
-            return new T();
+            return null;
         }
         finally
         {
