@@ -7,3 +7,6 @@
 7. You should use the same naming conventions as the rest of the codebase.
 8. If you are not sure about something, ask me.
 9. If you have any suggestions, let me know.
+10. Don't add new properties or stuff in general unless you run it by me first or I explicitly tell you to.
+11. Try to make the most of what the codebase already has.
+12. Check if the code you write is valid and compiles successfully.
