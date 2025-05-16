@@ -10,7 +10,7 @@ using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
@@ -18,9 +18,7 @@ public class DummyDownloadService : DownloadService
 {
     public DummyDownloadService(
         ILogger<DownloadService> logger,
-        IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IOptions<ContentBlockerConfig> contentBlockerConfig,
-        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
+        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -28,8 +26,7 @@ public class DummyDownloadService : DownloadService
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService
     ) : base(
-        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig,
-        cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
+        logger, configManager, cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
     }

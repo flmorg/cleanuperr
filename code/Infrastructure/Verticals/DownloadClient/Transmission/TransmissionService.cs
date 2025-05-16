@@ -17,7 +17,7 @@ using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 using Transmission.API.RPC;
 using Transmission.API.RPC.Arguments;
 using Transmission.API.RPC.Entity;
@@ -26,7 +26,6 @@ namespace Infrastructure.Verticals.DownloadClient.Transmission;
 
 public class TransmissionService : DownloadService, ITransmissionService
 {
-    private readonly TransmissionConfig _config;
     private readonly Client _client;
 
     private static readonly string[] Fields =
@@ -51,10 +50,7 @@ public class TransmissionService : DownloadService, ITransmissionService
     public TransmissionService(
         IHttpClientFactory httpClientFactory,
         ILogger<TransmissionService> logger,
-        IOptions<TransmissionConfig> config,
-        IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IOptions<ContentBlockerConfig> contentBlockerConfig,
-        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
+        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -62,22 +58,33 @@ public class TransmissionService : DownloadService, ITransmissionService
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService
     ) : base(
-        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
+        logger, configManager, cache,
         filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
-        _config = config.Value;
-        _config.Validate();
-        UriBuilder uriBuilder = new(_config.Url);
-        uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
-            ? $"{uriBuilder.Path.TrimEnd('/')}/rpc"
-            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
-        _client = new(
-            httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
-            uriBuilder.Uri.ToString(),
-            login: _config.Username,
-            password: _config.Password
-        );
+        var config = configManager.GetConfiguration<TransmissionConfig>("transmission.json");
+        if (config != null)
+        {
+            config.Validate();
+            UriBuilder uriBuilder = new(config.Url);
+            uriBuilder.Path = string.IsNullOrEmpty(config.UrlBase)
+                ? $"{uriBuilder.Path.TrimEnd('/')}/rpc"
+                : $"{uriBuilder.Path.TrimEnd('/')}/{config.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
+            _client = new(
+                httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
+                uriBuilder.Uri.ToString(),
+                login: config.Username,
+                password: config.Password
+            );
+        }
+        else
+        {
+            _logger.LogWarning("Transmission configuration not found. Using default values.");
+            _client = new(
+                httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
+                "http://localhost:9091/transmission/rpc"
+            );
+        }
     }
 
     public override async Task LoginAsync()
@@ -472,7 +479,8 @@ public class TransmissionService : DownloadService, ITransmissionService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(TorrentInfo download)
     {
-        if (_queueCleanerConfig.SlowMaxStrikes is 0)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig == null || queueCleanerConfig.SlowMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
@@ -488,22 +496,22 @@ public class TransmissionService : DownloadService, ITransmissionService
             return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.SlowIgnorePrivate && download.IsPrivate is true)
+        if (queueCleanerConfig.SlowIgnorePrivate && download.IsPrivate is true)
         {
             // ignore private trackers
             _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
             return (false, DeleteReason.None);
         }
 
-        if (download.TotalSize > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        if (download.TotalSize > (queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
         {
             _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
-        ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
+        ByteSize minSpeed = queueCleanerConfig.SlowMinSpeedByteSize;
         ByteSize currentSpeed = new ByteSize(download.RateDownload ?? long.MaxValue);
-        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(queueCleanerConfig.SlowMaxTime);
         SmartTimeSpan currentTime = SmartTimeSpan.FromSeconds(download.Eta ?? 0);
 
         return await CheckIfSlow(
@@ -518,7 +526,8 @@ public class TransmissionService : DownloadService, ITransmissionService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(TorrentInfo download)
     {
-        if (_queueCleanerConfig.StalledMaxStrikes is 0)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig == null || queueCleanerConfig.StalledMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
@@ -534,7 +543,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.StalledIgnorePrivate && (download.IsPrivate ?? false))
+        if (queueCleanerConfig.StalledIgnorePrivate && (download.IsPrivate ?? false))
         {
             // ignore private trackers
             _logger.LogDebug("skip stalled check | download is private | {name}", download.Name);
@@ -543,7 +552,8 @@ public class TransmissionService : DownloadService, ITransmissionService
         
         ResetStalledStrikesOnProgress(download.HashString!, download.DownloadedEver ?? 0);
         
-        return (await _striker.StrikeAndCheckLimit(download.HashString!, download.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
+        int maxStrikes = queueCleanerConfig.StalledMaxStrikes;
+        return (await _striker.StrikeAndCheckLimit(download.HashString!, download.Name!, maxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
 
     private async Task<TorrentInfo?> GetTorrentAsync(string hash) =>

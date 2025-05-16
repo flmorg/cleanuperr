@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Common.Configuration.Arr;
 using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
@@ -9,7 +9,7 @@ using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
@@ -19,11 +19,10 @@ public class RadarrClient : ArrClient, IRadarrClient
     public RadarrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
-        IOptions<LoggingConfig> loggingConfig,
-        IOptions<QueueCleanerConfig> queueCleanerConfig,
+        IConfigManager configManager,
         IStriker striker,
         IDryRunInterceptor dryRunInterceptor
-    ) : base(logger, httpClientFactory, loggingConfig, queueCleanerConfig, striker, dryRunInterceptor)
+    ) : base(logger, httpClientFactory, configManager, striker, dryRunInterceptor)
     {
     }
 

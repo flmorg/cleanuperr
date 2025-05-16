@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Common.Configuration;
 using Common.Configuration.DownloadClient;
@@ -34,9 +34,9 @@ public sealed class DelugeClient
         "download_location"
     ];
     
-    public DelugeClient(IOptions<DelugeConfig> config, IHttpClientFactory httpClientFactory)
+    public DelugeClient(DelugeConfig config, IHttpClientFactory httpClientFactory)
     {
-        _config = config.Value;
+        _config = config;
         _config.Validate();
         _httpClient = httpClientFactory.CreateClient(nameof(DelugeService));
     }

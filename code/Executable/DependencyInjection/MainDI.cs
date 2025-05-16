@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Common.Configuration.General;
 using Common.Helpers;
 using Domain.Models.Arr;
@@ -9,7 +9,7 @@ using Infrastructure.Verticals.Notifications.Consumers;
 using Infrastructure.Verticals.Notifications.Models;
 using MassTransit;
 using MassTransit.Configuration;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 using Polly;
 using Polly.Extensions.Http;
 
@@ -69,7 +69,8 @@ public static class MainDI
         // add default HttpClient
         services.AddHttpClient();
         
-        HttpConfig config = configuration.Get<HttpConfig>() ?? new();
+        var configManager = services.BuildServiceProvider().GetRequiredService<IConfigManager>();
+        HttpConfig config = configManager.GetConfiguration<HttpConfig>("http.json") ?? new();
         config.Validate();
 
         // add retry HttpClient

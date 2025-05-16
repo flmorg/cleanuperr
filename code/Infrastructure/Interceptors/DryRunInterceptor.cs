@@ -1,8 +1,8 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Common.Attributes;
 using Common.Configuration.General;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 
 namespace Infrastructure.Interceptors;
 
@@ -11,10 +11,10 @@ public class DryRunInterceptor : IDryRunInterceptor
     private readonly ILogger<DryRunInterceptor> _logger;
     private readonly DryRunConfig _config;
     
-    public DryRunInterceptor(ILogger<DryRunInterceptor> logger, IOptions<DryRunConfig> config)
+    public DryRunInterceptor(ILogger<DryRunInterceptor> logger, IConfigManager configManager)
     {
         _logger = logger;
-        _config = config.Value;
+        _config = configManager.GetConfiguration<DryRunConfig>("dryrun.json") ?? new DryRunConfig();
     }
     
     public void Intercept(Action action)

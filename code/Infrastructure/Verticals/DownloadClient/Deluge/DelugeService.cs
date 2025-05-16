@@ -19,7 +19,7 @@ using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 
 namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
@@ -29,11 +29,8 @@ public class DelugeService : DownloadService, IDelugeService
 
     public DelugeService(
         ILogger<DelugeService> logger,
-        IOptions<DelugeConfig> config,
+        IConfigManager configManager,
         IHttpClientFactory httpClientFactory,
-        IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IOptions<ContentBlockerConfig> contentBlockerConfig,
-        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -41,12 +38,24 @@ public class DelugeService : DownloadService, IDelugeService
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService
     ) : base(
-        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
+        logger, configManager, cache,
         filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
-        config.Value.Validate();
-        _client = new (config, httpClientFactory);
+        var config = configManager.GetConfiguration<DelugeConfig>("deluge.json");
+        if (config != null)
+        {
+            config.Validate();
+            _client = new DelugeClient(config, httpClientFactory);
+        }
+        else
+        {
+            _logger.LogWarning("Deluge configuration not found. Using default values.");
+            _client = new DelugeClient(new DelugeConfig
+            {
+                Url = "http://localhost:8112"
+            }, httpClientFactory);
+        }
     }
     
     public override async Task LoginAsync()
@@ -452,7 +461,8 @@ public class DelugeService : DownloadService, IDelugeService
     
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(DownloadStatus download)
     {
-        if (_queueCleanerConfig.SlowMaxStrikes is 0)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig == null || queueCleanerConfig.SlowMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
@@ -467,22 +477,25 @@ public class DelugeService : DownloadService, IDelugeService
             return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.SlowIgnorePrivate && download.Private)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig != null && queueCleanerConfig.SlowIgnorePrivate && download.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
-        if (download.Size > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig != null && download.Size > (queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
         {
             _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
-        ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig() ?? new QueueCleanerConfig();
+        ByteSize minSpeed = queueCleanerConfig.SlowMinSpeedByteSize;
         ByteSize currentSpeed = new ByteSize(download.DownloadSpeed);
-        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(queueCleanerConfig.SlowMaxTime);
         SmartTimeSpan currentTime = SmartTimeSpan.FromSeconds(download.Eta);
 
         return await CheckIfSlow(
@@ -497,12 +510,13 @@ public class DelugeService : DownloadService, IDelugeService
     
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(DownloadStatus status)
     {
-        if (_queueCleanerConfig.StalledMaxStrikes is 0)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig == null || queueCleanerConfig.StalledMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
+        if (queueCleanerConfig.StalledIgnorePrivate && status.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip stalled check | download is private | {name}", status.Name);
@@ -521,7 +535,8 @@ public class DelugeService : DownloadService, IDelugeService
         
         ResetStalledStrikesOnProgress(status.Hash!, status.TotalDone);
         
-        return (await _striker.StrikeAndCheckLimit(status.Hash!, status.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
+        int maxStrikes = queueCleanerConfig?.StalledMaxStrikes ?? 0;
+        return (await _striker.StrikeAndCheckLimit(status.Hash!, status.Name!, maxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
     
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory>? contents, Action<string, DelugeFileOrDirectory> processFile)

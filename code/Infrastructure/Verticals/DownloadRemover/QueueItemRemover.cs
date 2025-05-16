@@ -1,4 +1,4 @@
-﻿using Common.Configuration.Arr;
+using Common.Configuration.Arr;
 using Common.Configuration.General;
 using Domain.Enums;
 using Domain.Models.Arr;
@@ -10,7 +10,7 @@ using Infrastructure.Verticals.DownloadRemover.Interfaces;
 using Infrastructure.Verticals.DownloadRemover.Models;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 
 namespace Infrastructure.Verticals.DownloadRemover;
 
@@ -22,13 +22,13 @@ public sealed class QueueItemRemover : IQueueItemRemover
     private readonly INotificationPublisher _notifier;
 
     public QueueItemRemover(
-        IOptions<SearchConfig> searchConfig,
+        IConfigManager configManager,
         IMemoryCache cache,
         ArrClientFactory arrClientFactory,
         INotificationPublisher notifier
     )
     {
-        _searchConfig = searchConfig.Value;
+        _searchConfig = configManager.GetConfiguration<SearchConfig>("search.json") ?? new SearchConfig();
         _cache = cache;
         _arrClientFactory = arrClientFactory;
         _notifier = notifier;

@@ -1,11 +1,11 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Common.Configuration.General;
 using Common.Enums;
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 
 namespace Infrastructure.Services;
 
@@ -14,10 +14,10 @@ public class CertificateValidationService
     private readonly ILogger<CertificateValidationService> _logger;
     private readonly HttpConfig _config;
 
-    public CertificateValidationService(ILogger<CertificateValidationService> logger, IOptions<HttpConfig> config)
+    public CertificateValidationService(ILogger<CertificateValidationService> logger, IConfigManager configManager)
     {
         _logger = logger;
-        _config = config.Value;
+        _config = configManager.GetConfiguration<HttpConfig>("http.json") ?? new HttpConfig();
     }
 
     public bool ShouldByPassValidationError(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
