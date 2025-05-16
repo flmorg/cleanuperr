@@ -53,7 +53,7 @@ public class QBitService : DownloadService, IQBitService
         base.Initialize(clientConfig);
         
         // Ensure client type is correct
-        if (clientConfig.Type != Common.Enums.DownloadClient.QBittorrent)
+        if (clientConfig.Type != Common.Enums.DownloadClientType.QBittorrent)
         {
             throw new InvalidOperationException($"Cannot initialize QBitService with client type {clientConfig.Type}");
         }
@@ -637,7 +637,8 @@ public class QBitService : DownloadService, IQBitService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(TorrentInfo torrent, bool isPrivate)
     {
-        if (_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").StalledMaxStrikes is 0 && _configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").DownloadingMetadataMaxStrikes is 0)
+        var _queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
+        if (_queueCleanerConfig.StalledMaxStrikes is 0 && _configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").DownloadingMetadataMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }

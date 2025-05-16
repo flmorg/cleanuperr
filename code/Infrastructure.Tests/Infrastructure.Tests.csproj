@@ -30,4 +30,8 @@
       <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Verticals\DownloadClient\Factory\" />
+    </ItemGroup>
+
 </Project>

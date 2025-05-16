@@ -1,6 +1,6 @@
 ﻿namespace Common.Enums;
 
-public enum DownloadClient
+public enum DownloadClientType
 {
     QBittorrent,
     Deluge,

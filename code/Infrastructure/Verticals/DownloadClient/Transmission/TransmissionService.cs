@@ -74,7 +74,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         base.Initialize(clientConfig);
         
         // Ensure client type is correct
-        if (clientConfig.Type != Common.Enums.DownloadClient.Transmission)
+        if (clientConfig.Type != Common.Enums.DownloadClientType.Transmission)
         {
             throw new InvalidOperationException($"Cannot initialize TransmissionService with client type {clientConfig.Type}");
         }
@@ -201,6 +201,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         bool isPrivate = download.IsPrivate ?? false;
         result.IsPrivate = isPrivate;
         
+        var _contentBlockerConfig = await _configManager.GetContentBlockerConfigAsync();
         if (_contentBlockerConfig.IgnorePrivate && isPrivate)
         {
             // ignore private trackers
@@ -333,6 +334,7 @@ public class TransmissionService : DownloadService, ITransmissionService
                 continue;
             }
 
+            var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
             if (!_downloadCleanerConfig.DeletePrivate && download.IsPrivate is true)
             {
                 _logger.LogDebug("skip | download is private | {name}", download.Name);
@@ -376,6 +378,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             return;
         }
         
+        var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
         if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
         {
             _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);

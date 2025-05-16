@@ -60,11 +60,6 @@ public sealed record DownloadClientConfig : IConfig
             {
                 throw new InvalidOperationException($"Host cannot be empty for client ID: {client.Id}");
             }
-            
-            if (client.Port <= 0)
-            {
-                throw new InvalidOperationException($"Port must be greater than 0 for client ID: {client.Id}");
-            }
         }
     }
 }

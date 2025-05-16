@@ -8,6 +8,8 @@ using Infrastructure.Http;
 using Infrastructure.Services;
 using Infrastructure.Verticals.DownloadClient.Factory;
 using Infrastructure.Verticals.DownloadClient.Deluge;
+using Infrastructure.Verticals.DownloadClient.QBittorrent;
+using Infrastructure.Verticals.DownloadClient.Transmission;
 using Infrastructure.Verticals.DownloadRemover.Consumers;
 using Infrastructure.Verticals.Notifications.Consumers;
 using Infrastructure.Verticals.Notifications.Models;
@@ -77,30 +79,30 @@ public static class MainDI
         // add dynamic HTTP client provider
         services.AddSingleton<IDynamicHttpClientProvider, DynamicHttpClientProvider>();
         
-        var configManager = services.BuildServiceProvider().GetRequiredService<IConfigManager>();
-        HttpConfig config = configManager.GetConfiguration<HttpConfig>("http.json") ?? new();
-        config.Validate();
-
-        // add retry HttpClient
-        services
-            .AddHttpClient(Constants.HttpClientWithRetryName, x =>
-            {
-                x.Timeout = TimeSpan.FromSeconds(config.Timeout);
-            })
-            .ConfigurePrimaryHttpMessageHandler(provider =>
-            {
-                CertificateValidationService service = provider.GetRequiredService<CertificateValidationService>();
-                
-                return new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = service.ShouldByPassValidationError
-                };
-            })
-            .AddRetryPolicyHandler(config);
-
-        // Note: We're no longer configuring specific named HttpClients for each download service
-        // Instead, we use the DynamicHttpClientProvider to create HttpClients as needed based on client configurations
-
+        // var configManager = services.BuildServiceProvider().GetRequiredService<IConfigManager>();
+        // HttpConfig config = configManager.GetConfiguration<HttpConfig>("http.json") ?? new();
+        // config.Validate();
+        //
+        // // add retry HttpClient
+        // services
+        //     .AddHttpClient(Constants.HttpClientWithRetryName, x =>
+        //     {
+        //         x.Timeout = TimeSpan.FromSeconds(config.Timeout);
+        //     })
+        //     .ConfigurePrimaryHttpMessageHandler(provider =>
+        //     {
+        //         CertificateValidationService service = provider.GetRequiredService<CertificateValidationService>();
+        //         
+        //         return new HttpClientHandler
+        //         {
+        //             ServerCertificateCustomValidationCallback = service.ShouldByPassValidationError
+        //         };
+        //     })
+        //     .AddRetryPolicyHandler(config);
+        //
+        // // Note: We're no longer configuring specific named HttpClients for each download service
+        // // Instead, we use the DynamicHttpClientProvider to create HttpClients as needed based on client configurations
+        
         return services;
     }
 
@@ -120,9 +122,9 @@ public static class MainDI
             
             // Register all download client service types
             // The factory will create instances as needed based on the client configuration
-            .AddTransient<Infrastructure.Verticals.DownloadClient.QBittorrent.QBitService>()
-            .AddTransient<Infrastructure.Verticals.DownloadClient.Transmission.TransmissionService>()
-            .AddTransient<Infrastructure.Verticals.DownloadClient.Deluge.DelugeService>();
+            .AddTransient<QBitService>()
+            .AddTransient<TransmissionService>()
+            .AddTransient<DelugeService>();
             
     /// <summary>
     /// Adds health check services to the service collection

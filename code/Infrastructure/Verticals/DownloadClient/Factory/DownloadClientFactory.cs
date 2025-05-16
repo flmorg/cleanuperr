@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using Common.Configuration.DownloadClient;
 using Common.Enums;
-using Domain.Exceptions;
 using Infrastructure.Configuration;
+using Infrastructure.Http;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient.Deluge;
@@ -61,7 +61,7 @@ public class DownloadClientFactory : IDownloadClientFactory
     }
 
     /// <inheritdoc />
-    public IEnumerable<IDownloadService> GetClientsByType(DownloadClient clientType)
+    public IEnumerable<IDownloadService> GetClientsByType(DownloadClientType clientType)
     {
         var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>("downloadclients.json") 
                                   ?? new DownloadClientConfig();
@@ -109,14 +109,14 @@ public class DownloadClientFactory : IDownloadClientFactory
         
         if (clientConfig == null)
         {
-            throw new NotFoundException($"No configuration found for client with ID {clientId}");
+            throw new Exception($"No configuration found for client with ID {clientId}");
         }
 
         IDownloadService service = clientConfig.Type switch
         {
-            DownloadClient.QBittorrent => CreateQBitService(clientConfig),
-            DownloadClient.Transmission => CreateTransmissionService(clientConfig),
-            DownloadClient.Deluge => CreateDelugeService(clientConfig),
+            DownloadClientType.QBittorrent => CreateQBitService(clientConfig),
+            DownloadClientType.Transmission => CreateTransmissionService(clientConfig),
+            DownloadClientType.Deluge => CreateDelugeService(clientConfig),
             _ => throw new NotSupportedException($"Download client type {clientConfig.Type} is not supported")
         };
 
@@ -131,44 +131,22 @@ public class DownloadClientFactory : IDownloadClientFactory
 
     private QBitService CreateQBitService(ClientConfig clientConfig)
     {
-        return new QBitService(
-            _serviceProvider.GetRequiredService<ILogger<QBitService>>(),
-            _serviceProvider.GetRequiredService<IHttpClientFactory>(),
-            _configManager,
-            _serviceProvider.GetRequiredService<IMemoryCache>(),
-            _serviceProvider.GetRequiredService<IFilenameEvaluator>(),
-            _serviceProvider.GetRequiredService<IStriker>(),
-            _serviceProvider.GetRequiredService<INotificationPublisher>(),
-            _serviceProvider.GetRequiredService<IDryRunInterceptor>(),
-            _serviceProvider.GetRequiredService<IHardLinkFileService>()
-        );
+        var client = _serviceProvider.GetRequiredService<QBitService>();
+        client.Initialize(clientConfig);
+        return client;
     }
 
     private TransmissionService CreateTransmissionService(ClientConfig clientConfig)
     {
-        return new TransmissionService(
-            _serviceProvider.GetRequiredService<ILogger<TransmissionService>>(),
-            _configManager,
-            _serviceProvider.GetRequiredService<IMemoryCache>(),
-            _serviceProvider.GetRequiredService<IFilenameEvaluator>(),
-            _serviceProvider.GetRequiredService<IStriker>(),
-            _serviceProvider.GetRequiredService<INotificationPublisher>(),
-            _serviceProvider.GetRequiredService<IDryRunInterceptor>(),
-            _serviceProvider.GetRequiredService<IHardLinkFileService>()
-        );
+        var client = _serviceProvider.GetRequiredService<TransmissionService>();
+        client.Initialize(clientConfig);
+        return client;
     }
 
     private DelugeService CreateDelugeService(ClientConfig clientConfig)
     {
-        return new DelugeService(
-            _serviceProvider.GetRequiredService<ILogger<DelugeService>>(),
-            _configManager,
-            _serviceProvider.GetRequiredService<IMemoryCache>(),
-            _serviceProvider.GetRequiredService<IFilenameEvaluator>(),
-            _serviceProvider.GetRequiredService<IStriker>(),
-            _serviceProvider.GetRequiredService<INotificationPublisher>(),
-            _serviceProvider.GetRequiredService<IDryRunInterceptor>(),
-            _serviceProvider.GetRequiredService<IHardLinkFileService>()
-        );
+        var client = _serviceProvider.GetRequiredService<DelugeService>();
+        client.Initialize(clientConfig);
+        return client;
     }
 }

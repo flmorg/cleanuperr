@@ -114,14 +114,11 @@ public class DownloadClientsController : ControllerBase
             config.Clients.Add(clientConfig);
 
             // Persist the updated configuration
-            var result = await _configManager.UpdateDownloadClientConfigAsync(config);
+            var result = await _configManager.SaveDownloadClientConfigAsync(config);
             if (!result)
             {
                 return StatusCode(500, new { Error = "Failed to save download client configuration" });
             }
-
-            // Refresh the client factory to recognize the new client
-            await _clientFactory.RefreshClients();
 
             _logger.LogInformation("Added new download client: {name} ({id})", clientConfig.Name, clientConfig.Id);
             return CreatedAtAction(nameof(GetClient), new { id = clientConfig.Id }, clientConfig);
@@ -168,14 +165,11 @@ public class DownloadClientsController : ControllerBase
             config.Clients[existingClientIndex] = clientConfig;
 
             // Persist the updated configuration
-            var result = await _configManager.UpdateDownloadClientConfigAsync(config);
+            var result = await _configManager.SaveDownloadClientConfigAsync(config);
             if (!result)
             {
                 return StatusCode(500, new { Error = "Failed to save download client configuration" });
             }
-
-            // Refresh the client factory to recognize the updated client
-            await _clientFactory.RefreshClients();
 
             _logger.LogInformation("Updated download client: {name} ({id})", clientConfig.Name, clientConfig.Id);
             return Ok(clientConfig);
@@ -213,14 +207,11 @@ public class DownloadClientsController : ControllerBase
             config.Clients.RemoveAt(existingClientIndex);
 
             // Persist the updated configuration
-            var result = await _configManager.UpdateDownloadClientConfigAsync(config);
+            var result = await _configManager.SaveDownloadClientConfigAsync(config);
             if (!result)
             {
                 return StatusCode(500, new { Error = "Failed to save download client configuration" });
             }
-
-            // Refresh the client factory to recognize the deleted client
-            await _clientFactory.RefreshClients();
 
             _logger.LogInformation("Deleted download client with ID: {id}", id);
             return NoContent();
@@ -282,7 +273,7 @@ public class DownloadClientsController : ControllerBase
     /// Gets all clients of a specific type
     /// </summary>
     [HttpGet("type/{type}")]
-    public async Task<IActionResult> GetClientsByType(DownloadClient type)
+    public async Task<IActionResult> GetClientsByType(DownloadClientType type)
     {
         try
         {

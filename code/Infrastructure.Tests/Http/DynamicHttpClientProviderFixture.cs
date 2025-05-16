@@ -1,6 +1,8 @@
 using Common.Configuration.DownloadClient;
 using Common.Enums;
+using Infrastructure.Configuration;
 using Infrastructure.Http;
+using Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
@@ -17,7 +19,15 @@ public class DynamicHttpClientProviderFixture : IDisposable
     
     public DynamicHttpClientProvider CreateSut()
     {
-        return new DynamicHttpClientProvider(Logger);
+        var httpClientFactory = Substitute.For<IHttpClientFactory>();
+        var configManager = Substitute.For<IConfigManager>();
+        var certificateValidationService = Substitute.For<CertificateValidationService>();
+
+        return new DynamicHttpClientProvider(
+            Logger,
+            httpClientFactory,
+            configManager,
+            certificateValidationService);
     }
     
     public ClientConfig CreateQBitClientConfig()
@@ -26,9 +36,9 @@ public class DynamicHttpClientProviderFixture : IDisposable
         {
             Id = "qbit-test",
             Name = "QBit Test",
-            Type = DownloadClient.QBittorrent,
+            Type = DownloadClientType.QBittorrent,
             Enabled = true,
-            Url = "http://localhost:8080",
+            Host = "http://localhost:8080",
             Username = "admin",
             Password = "adminadmin"
         };
@@ -40,9 +50,9 @@ public class DynamicHttpClientProviderFixture : IDisposable
         {
             Id = "transmission-test",
             Name = "Transmission Test",
-            Type = DownloadClient.Transmission,
+            Type = DownloadClientType.Transmission,
             Enabled = true,
-            Url = "http://localhost:9091",
+            Host = "http://localhost:9091",
             Username = "admin",
             Password = "adminadmin",
             UrlBase = "transmission"
@@ -55,9 +65,9 @@ public class DynamicHttpClientProviderFixture : IDisposable
         {
             Id = "deluge-test",
             Name = "Deluge Test",
-            Type = DownloadClient.Deluge,
+            Type = DownloadClientType.Deluge,
             Enabled = true,
-            Url = "http://localhost:8112",
+            Host = "http://localhost:8112",
             Username = "admin",
             Password = "deluge"
         };

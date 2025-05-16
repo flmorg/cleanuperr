@@ -114,11 +114,6 @@ public class RadarrClient : ArrClient, IRadarrClient
     {
         try
         {
-            if (!_loggingConfig.Enhanced)
-            {
-                return null;
-            }
-
             StringBuilder log = new();
 
             foreach (long movieId in command.MovieIds)

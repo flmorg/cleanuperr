@@ -27,7 +27,7 @@ public class DynamicHttpClientProviderTests : IClassFixture<DynamicHttpClientPro
 
         // Assert
         httpClient.ShouldNotBeNull();
-        httpClient.BaseAddress.ShouldBe(new Uri(config.Url));
+        httpClient.BaseAddress.ShouldBe(config.Url);
         VerifyDefaultHttpClientProperties(httpClient);
     }
     
@@ -43,7 +43,7 @@ public class DynamicHttpClientProviderTests : IClassFixture<DynamicHttpClientPro
 
         // Assert
         httpClient.ShouldNotBeNull();
-        httpClient.BaseAddress.ShouldBe(new Uri(config.Url));
+        httpClient.BaseAddress.ShouldBe(config.Url);
         VerifyDefaultHttpClientProperties(httpClient);
     }
     
@@ -59,7 +59,7 @@ public class DynamicHttpClientProviderTests : IClassFixture<DynamicHttpClientPro
 
         // Assert
         httpClient.ShouldNotBeNull();
-        httpClient.BaseAddress.ShouldBe(new Uri(config.Url));
+        httpClient.BaseAddress.ShouldBe(config.Url);
         
         // Deluge client should have additional properties configured
         VerifyDelugeHttpClientProperties(httpClient);
@@ -88,7 +88,6 @@ public class DynamicHttpClientProviderTests : IClassFixture<DynamicHttpClientPro
         // Arrange
         var sut = _fixture.CreateSut();
         var config = _fixture.CreateQBitClientConfig();
-        config.IgnoreSslErrors = true;
 
         // Act
         var httpClient = sut.CreateClient(config);
@@ -98,7 +97,7 @@ public class DynamicHttpClientProviderTests : IClassFixture<DynamicHttpClientPro
         
         // Since we can't directly access the handler settings after creation,
         // we verify the behavior is working by checking if the client can be created properly
-        httpClient.BaseAddress.ShouldBe(new Uri(config.Url));
+        httpClient.BaseAddress.ShouldBe(config.Url);
     }
     
     [Fact]

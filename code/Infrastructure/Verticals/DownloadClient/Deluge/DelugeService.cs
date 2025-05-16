@@ -54,7 +54,7 @@ public class DelugeService : DownloadService, IDelugeService
         base.Initialize(clientConfig);
         
         // Ensure client type is correct
-        if (clientConfig.Type != Common.Enums.DownloadClient.Deluge)
+        if (clientConfig.Type != Common.Enums.DownloadClientType.Deluge)
         {
             throw new InvalidOperationException($"Cannot initialize DelugeService with client type {clientConfig.Type}");
         }
@@ -187,7 +187,8 @@ public class DelugeService : DownloadService, IDelugeService
         }
 
         result.IsPrivate = download.Private;
-        
+
+        var _contentBlockerConfig = await _configManager.GetContentBlockerConfigAsync();
         if (_contentBlockerConfig.IgnorePrivate && download.Private)
         {
             // ignore private trackers
@@ -322,6 +323,7 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
 
+            var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
             if (!_downloadCleanerConfig.DeletePrivate && download.Private)
             {
                 _logger.LogDebug("skip | download is private | {name}", download.Name);
@@ -372,6 +374,7 @@ public class DelugeService : DownloadService, IDelugeService
             return;
         }
 
+        var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
         if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
         {
             _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);

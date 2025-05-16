@@ -1,3 +1,4 @@
+using Common.Enums;
 using Microsoft.Extensions.Configuration;
 
 namespace Common.Configuration.DownloadClient;
@@ -20,17 +21,12 @@ public sealed record ClientConfig
     /// <summary>
     /// Type of download client
     /// </summary>
-    public Common.Enums.DownloadClient Type { get; init; } = Common.Enums.DownloadClient.None;
+    public DownloadClientType Type { get; init; } = DownloadClientType.None;
     
     /// <summary>
     /// Host address for the download client
     /// </summary>
     public string Host { get; init; } = string.Empty;
-    
-    /// <summary>
-    /// Port for the download client
-    /// </summary>
-    public int Port { get; init; }
     
     /// <summary>
     /// Username for authentication
@@ -71,7 +67,7 @@ public sealed record ClientConfig
     /// <summary>
     /// The computed full URL for the client
     /// </summary>
-    public Uri Url => new Uri($"{(UseHttps ? "https" : "http")}://{Host}:{Port}/{UrlBase.TrimStart('/').TrimEnd('/')}");
+    public Uri Url => new($"{Host.TrimEnd('/')}/{UrlBase.TrimStart('/').TrimEnd('/')}");
     
     /// <summary>
     /// Validates the configuration
@@ -93,12 +89,7 @@ public sealed record ClientConfig
             throw new InvalidOperationException($"Host cannot be empty for client ID: {Id}");
         }
         
-        if (Port <= 0)
-        {
-            throw new InvalidOperationException($"Port must be greater than 0 for client ID: {Id}");
-        }
-        
-        if (Type == Common.Enums.DownloadClient.None)
+        if (Type == DownloadClientType.None)
         {
             throw new InvalidOperationException($"Client type must be specified for client ID: {Id}");
         }

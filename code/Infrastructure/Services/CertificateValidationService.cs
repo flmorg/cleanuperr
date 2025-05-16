@@ -12,15 +12,19 @@ namespace Infrastructure.Services;
 public class CertificateValidationService
 {
     private readonly ILogger<CertificateValidationService> _logger;
-    private readonly HttpConfig _config;
 
-    public CertificateValidationService(ILogger<CertificateValidationService> logger, IConfigManager configManager)
+    public CertificateValidationService(ILogger<CertificateValidationService> logger)
     {
         _logger = logger;
-        _config = configManager.GetConfiguration<HttpConfig>("http.json") ?? new HttpConfig();
     }
 
-    public bool ShouldByPassValidationError(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+    public bool ShouldByPassValidationError(
+        CertificateValidationType certificateValidationType,
+        object sender,
+        X509Certificate? certificate,
+        X509Chain? chain,
+        SslPolicyErrors sslPolicyErrors
+    )
     {
         var targetHostName = string.Empty;
 
@@ -58,12 +62,12 @@ public class CertificateValidationService
 
         var ipAddresses = GetIpAddresses(targetHostName);
 
-        if (_config.CertificateValidation == CertificateValidationType.Disabled)
+        if (certificateValidationType == CertificateValidationType.Disabled)
         {
             return true;
         }
 
-        if (_config.CertificateValidation == CertificateValidationType.DisabledForLocalAddresses &&
+        if (certificateValidationType == CertificateValidationType.DisabledForLocalAddresses &&
             ipAddresses.All(i => i.IsLocalAddress()))
         {
             return true;

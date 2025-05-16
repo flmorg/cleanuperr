@@ -117,7 +117,6 @@ public class StatusController : ControllerBase
                         client.Name,
                         client.Type,
                         client.Host,
-                        client.Port,
                         client.Enabled,
                         IsConnected = client.Enabled, // We can't check connection status without implementing test methods
                     });

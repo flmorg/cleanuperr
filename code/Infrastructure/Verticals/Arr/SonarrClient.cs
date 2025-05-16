@@ -123,11 +123,6 @@ public class SonarrClient : ArrClient, ISonarrClient
     {
         try
         {
-            if (!_loggingConfig.Enhanced)
-            {
-                return null;
-            }
-            
             StringBuilder log = new();
 
             if (searchType is SonarrSearchType.Episode)

@@ -25,7 +25,7 @@ public interface IDownloadClientFactory
     /// </summary>
     /// <param name="clientType">The client type</param>
     /// <returns>Collection of enabled download client services of the specified type</returns>
-    IEnumerable<IDownloadService> GetClientsByType(DownloadClient clientType);
+    IEnumerable<IDownloadService> GetClientsByType(DownloadClientType clientType);
     
     /// <summary>
     /// Refreshes a specific client instance (disposes and recreates)

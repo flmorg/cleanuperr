@@ -80,7 +80,7 @@ public class HealthCheckService : IHealthCheckService
                 {
                     ClientId = clientId,
                     ClientName = config.Name,
-                    ClientType = config.Type,
+                    ClientTypeType = config.Type,
                     IsHealthy = true,
                     LastChecked = DateTime.UtcNow,
                     ResponseTime = stopwatch.Elapsed
@@ -99,7 +99,7 @@ public class HealthCheckService : IHealthCheckService
                 {
                     ClientId = clientId,
                     ClientName = config.Name,
-                    ClientType = config.Type,
+                    ClientTypeType = config.Type,
                     IsHealthy = false,
                     LastChecked = DateTime.UtcNow,
                     ErrorMessage = $"Connection failed: {ex.Message}",

@@ -113,8 +113,6 @@ public class LidarrClient : ArrClient, ILidarrClient
     {
         try
         {
-            if (!_loggingConfig.Enhanced) return null;
-
             StringBuilder log = new();
 
             var albums = await GetAlbumsAsync(arrInstance, command.AlbumIds);

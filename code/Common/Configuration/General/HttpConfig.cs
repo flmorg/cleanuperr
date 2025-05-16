@@ -1,18 +1,18 @@
 ﻿using Common.Enums;
 using Common.Exceptions;
-using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace Common.Configuration.General;
 
 public sealed record HttpConfig : IConfig
 {
-    [ConfigurationKeyName("HTTP_MAX_RETRIES")]
+    [JsonProperty("http_max_retries")]
     public ushort MaxRetries { get; init; }
     
-    [ConfigurationKeyName("HTTP_TIMEOUT")]
+    [JsonProperty("http_timeout")]
     public ushort Timeout { get; init; } = 100;
     
-    [ConfigurationKeyName("HTTP_VALIDATE_CERT")]
+    [JsonProperty("http_validate_cert")]
     public CertificateValidationType CertificateValidation { get; init; } = CertificateValidationType.Enabled;
 
     public void Validate()

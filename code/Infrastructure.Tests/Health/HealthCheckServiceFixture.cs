@@ -34,9 +34,8 @@ public class HealthCheckServiceFixture : IDisposable
                 {
                     Id = "qbit1",
                     Name = "Test QBittorrent",
-                    Type = DownloadClient.QBittorrent,
+                    Type = DownloadClientType.QBittorrent,
                     Enabled = true,
-                    Url = "http://localhost:8080",
                     Username = "admin",
                     Password = "adminadmin"
                 },
@@ -44,9 +43,8 @@ public class HealthCheckServiceFixture : IDisposable
                 {
                     Id = "transmission1",
                     Name = "Test Transmission",
-                    Type = DownloadClient.Transmission,
+                    Type = DownloadClientType.Transmission,
                     Enabled = true,
-                    Url = "http://localhost:9091",
                     Username = "admin",
                     Password = "adminadmin"
                 },
@@ -54,9 +52,8 @@ public class HealthCheckServiceFixture : IDisposable
                 {
                     Id = "disabled1",
                     Name = "Disabled Client",
-                    Type = DownloadClient.QBittorrent,
+                    Type = DownloadClientType.QBittorrent,
                     Enabled = false,
-                    Url = "http://localhost:5555"
                 }
             }
         };

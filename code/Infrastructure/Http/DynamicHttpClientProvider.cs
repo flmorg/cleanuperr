@@ -74,11 +74,18 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
         // Create handler with certificate validation
         var handler = new HttpClientHandler
         {
-            ServerCertificateCustomValidationCallback = _certificateValidationService.ShouldByPassValidationError,
+            ServerCertificateCustomValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
+                _certificateValidationService.ShouldByPassValidationError(
+                    httpConfig.CertificateValidation,
+                    sender,
+                    certificate,
+                    chain,
+                    sslPolicyErrors
+                ),
             UseDefaultCredentials = false
         };
 
-        if (clientConfig.Type == Common.Enums.DownloadClient.Deluge)
+        if (clientConfig.Type == Common.Enums.DownloadClientType.Deluge)
         {
             handler.AllowAutoRedirect = true;
             handler.UseCookies = true;

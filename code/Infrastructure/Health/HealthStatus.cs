@@ -38,5 +38,5 @@ public class HealthStatus
     /// <summary>
     /// Gets or sets the client type
     /// </summary>
-    public Common.Enums.DownloadClient ClientType { get; set; }
+    public Common.Enums.DownloadClientType ClientTypeType { get; set; }
 }
