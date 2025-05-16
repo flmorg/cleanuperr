@@ -36,40 +36,25 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
 {
     private readonly ILogger<IgnoredDownloadsService> _logger;
     private readonly IConfigManager _configManager;
-    private readonly IMemoryCache _cache;
-    private const string IgnoredDownloadsCacheKey = "IgnoredDownloads";
     
     public IgnoredDownloadsService(
         ILogger<IgnoredDownloadsService> logger,
-        IConfigManager configManager,
-        IMemoryCache cache)
+        IConfigManager configManager
+    )
     {
         _logger = logger;
         _configManager = configManager;
-        _cache = cache;
     }
     
     public async Task<IReadOnlyList<string>> GetIgnoredDownloadsAsync()
     {
-        // Try to get from cache first
-        if (_cache.TryGetValue(IgnoredDownloadsCacheKey, out IReadOnlyList<string>? cachedList) && 
-            cachedList != null)
-        {
-            return cachedList;
-        }
-        
-        // Not in cache, load from config
         var config = await _configManager.GetIgnoredDownloadsConfigAsync();
         if (config == null)
         {
             return Array.Empty<string>();
         }
         
-        // Store in cache for quick access (5 minute expiration)
-        var ignoredDownloads = config.IgnoredDownloads.ToList();
-        _cache.Set(IgnoredDownloadsCacheKey, ignoredDownloads, TimeSpan.FromMinutes(5));
-        
-        return ignoredDownloads;
+        return config.IgnoredDownloads;
     }
     
     public async Task<bool> AddIgnoredDownloadAsync(string downloadId)
@@ -84,12 +69,12 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
         {
             config = new IgnoredDownloadsConfig
             {
-                IgnoredDownloads = new List<string> { downloadId }
+                IgnoredDownloads = [downloadId]
             };
         }
         else if (!config.IgnoredDownloads.Contains(downloadId, StringComparer.OrdinalIgnoreCase))
         {
-            var updatedList = config.IgnoredDownloads.ToList();
+            var updatedList = config.IgnoredDownloads;
             updatedList.Add(downloadId);
             config = new IgnoredDownloadsConfig
             {
@@ -105,8 +90,6 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
         var result = await _configManager.SaveIgnoredDownloadsConfigAsync(config);
         if (result)
         {
-            // Update cache
-            _cache.Remove(IgnoredDownloadsCacheKey);
             _logger.LogInformation("Added download ID to ignored list: {downloadId}", downloadId);
         }
         
@@ -132,7 +115,7 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
         
         if (updatedList.Count == config.IgnoredDownloads.Count)
         {
-            return true; // Item wasn't in the list
+            return true;
         }
         
         var newConfig = new IgnoredDownloadsConfig
@@ -143,8 +126,6 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
         var result = await _configManager.SaveIgnoredDownloadsConfigAsync(newConfig);
         if (result)
         {
-            // Update cache
-            _cache.Remove(IgnoredDownloadsCacheKey);
             _logger.LogInformation("Removed download ID from ignored list: {downloadId}", downloadId);
         }
         
@@ -159,10 +140,10 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
         };
         
         var result = await _configManager.SaveIgnoredDownloadsConfigAsync(config);
+        
         if (result)
         {
             // Update cache
-            _cache.Remove(IgnoredDownloadsCacheKey);
             _logger.LogInformation("Cleared all ignored downloads");
         }
         
