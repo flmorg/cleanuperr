@@ -2,14 +2,16 @@ using System.Net;
 using Common.Configuration.General;
 using Common.Helpers;
 using Domain.Models.Arr;
+using Infrastructure.Configuration;
+using Infrastructure.Http;
 using Infrastructure.Services;
+using Infrastructure.Verticals.DownloadClient.Factory;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadRemover.Consumers;
 using Infrastructure.Verticals.Notifications.Consumers;
 using Infrastructure.Verticals.Notifications.Models;
 using MassTransit;
 using MassTransit.Configuration;
-using Infrastructure.Configuration;
 using Polly;
 using Polly.Extensions.Http;
 
@@ -26,6 +28,7 @@ public static class MainDI
                 options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
             })
             .AddServices()
+            .AddDownloadClientServices()
             .AddQuartzServices(configuration)
             .AddNotifications(configuration)
             .AddMassTransit(config =>
@@ -69,6 +72,9 @@ public static class MainDI
         // add default HttpClient
         services.AddHttpClient();
         
+        // add dynamic HTTP client provider
+        services.AddSingleton<IDynamicHttpClientProvider, DynamicHttpClientProvider>();
+        
         var configManager = services.BuildServiceProvider().GetRequiredService<IConfigManager>();
         HttpConfig config = configManager.GetConfiguration<HttpConfig>("http.json") ?? new();
         config.Validate();
@@ -90,24 +96,8 @@ public static class MainDI
             })
             .AddRetryPolicyHandler(config);
 
-        // add Deluge HttpClient
-        services
-            .AddHttpClient(nameof(DelugeService), x =>
-            {
-                x.Timeout = TimeSpan.FromSeconds(config.Timeout);
-            })
-            .ConfigurePrimaryHttpMessageHandler(_ =>
-            {
-                return new HttpClientHandler
-                {
-                    AllowAutoRedirect = true,
-                    UseCookies = true,
-                    CookieContainer = new CookieContainer(),
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-                };
-            })
-            .AddRetryPolicyHandler(config);
+        // Note: We're no longer configuring specific named HttpClients for each download service
+        // Instead, we use the DynamicHttpClientProvider to create HttpClients as needed based on client configurations
 
         return services;
     }
@@ -120,4 +110,15 @@ public static class MainDI
                 .OrResult(response => !response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized)
                 .WaitAndRetryAsync(config.MaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
         );
+        
+    private static IServiceCollection AddDownloadClientServices(this IServiceCollection services) =>
+        services
+            // Register the factory that creates download clients
+            .AddSingleton<IDownloadClientFactory, DownloadClientFactory>()
+            
+            // Register all download client service types
+            // The factory will create instances as needed based on the client configuration
+            .AddTransient<Infrastructure.Verticals.DownloadClient.QBittorrent.QBitService>()
+            .AddTransient<Infrastructure.Verticals.DownloadClient.Transmission.TransmissionService>()
+            .AddTransient<Infrastructure.Verticals.DownloadClient.Deluge.DelugeService>();
 }

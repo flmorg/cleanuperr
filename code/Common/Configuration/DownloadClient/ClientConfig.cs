@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Configuration;
+
 namespace Common.Configuration.DownloadClient;
 
 /// <summary>
@@ -54,4 +56,51 @@ public sealed record ClientConfig
     /// Whether this client is enabled
     /// </summary>
     public bool Enabled { get; init; } = true;
+    
+    /// <summary>
+    /// The base URL path component, used by clients like Transmission and Deluge
+    /// </summary>
+    [ConfigurationKeyName("URL_BASE")]
+    public string UrlBase { get; init; } = string.Empty;
+    
+    /// <summary>
+    /// Use HTTPS protocol
+    /// </summary>
+    public bool UseHttps { get; init; } = false;
+    
+    /// <summary>
+    /// The computed full URL for the client
+    /// </summary>
+    public Uri Url => new Uri($"{(UseHttps ? "https" : "http")}://{Host}:{Port}/{UrlBase.TrimStart('/').TrimEnd('/')}");
+    
+    /// <summary>
+    /// Validates the configuration
+    /// </summary>
+    public void Validate()
+    {
+        if (string.IsNullOrWhiteSpace(Id))
+        {
+            throw new InvalidOperationException("Client ID cannot be empty");
+        }
+        
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            throw new InvalidOperationException($"Client name cannot be empty for client ID: {Id}");
+        }
+        
+        if (string.IsNullOrWhiteSpace(Host))
+        {
+            throw new InvalidOperationException($"Host cannot be empty for client ID: {Id}");
+        }
+        
+        if (Port <= 0)
+        {
+            throw new InvalidOperationException($"Port must be greater than 0 for client ID: {Id}");
+        }
+        
+        if (Type == Common.Enums.DownloadClient.None)
+        {
+            throw new InvalidOperationException($"Client type must be specified for client ID: {Id}");
+        }
+    }
 }

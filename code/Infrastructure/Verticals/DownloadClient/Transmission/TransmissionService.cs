@@ -18,6 +18,7 @@ using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Infrastructure.Configuration;
+using Infrastructure.Http;
 using Transmission.API.RPC;
 using Transmission.API.RPC.Arguments;
 using Transmission.API.RPC.Entity;
@@ -26,7 +27,7 @@ namespace Infrastructure.Verticals.DownloadClient.Transmission;
 
 public class TransmissionService : DownloadService, ITransmissionService
 {
-    private readonly Client _client;
+    private Client? _client;
 
     private static readonly string[] Fields =
     [
@@ -48,7 +49,6 @@ public class TransmissionService : DownloadService, ITransmissionService
     ];
 
     public TransmissionService(
-        IHttpClientFactory httpClientFactory,
         ILogger<TransmissionService> logger,
         IConfigManager configManager,
         IMemoryCache cache,
@@ -56,45 +56,76 @@ public class TransmissionService : DownloadService, ITransmissionService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardLinkFileService hardLinkFileService
+        IHardLinkFileService hardLinkFileService,
+        IDynamicHttpClientProvider httpClientProvider
     ) : base(
         logger, configManager, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService,
+        httpClientProvider
     )
     {
-        var config = configManager.GetConfiguration<TransmissionConfig>("transmission.json");
-        if (config != null)
+        // Client will be initialized when Initialize() is called with a specific client configuration
+    }
+    
+    /// <inheritdoc />
+    public override void Initialize(ClientConfig clientConfig)
+    {
+        // Initialize base service first
+        base.Initialize(clientConfig);
+        
+        // Ensure client type is correct
+        if (clientConfig.Type != Common.Enums.DownloadClient.Transmission)
         {
-            config.Validate();
-            UriBuilder uriBuilder = new(config.Url);
-            uriBuilder.Path = string.IsNullOrEmpty(config.UrlBase)
-                ? $"{uriBuilder.Path.TrimEnd('/')}/rpc"
-                : $"{uriBuilder.Path.TrimEnd('/')}/{config.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
-            _client = new(
-                httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
-                uriBuilder.Uri.ToString(),
-                login: config.Username,
-                password: config.Password
-            );
+            throw new InvalidOperationException($"Cannot initialize TransmissionService with client type {clientConfig.Type}");
         }
-        else
+        
+        if (_httpClient == null)
         {
-            _logger.LogWarning("Transmission configuration not found. Using default values.");
-            _client = new(
-                httpClientFactory.CreateClient(Constants.HttpClientWithRetryName),
-                "http://localhost:9091/transmission/rpc"
-            );
+            throw new InvalidOperationException("HTTP client is not initialized");
         }
+        
+        // Create the RPC path
+        string rpcPath = string.IsNullOrEmpty(clientConfig.UrlBase)
+            ? "/rpc"
+            : $"/{clientConfig.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
+        
+        // Create full RPC URL
+        string rpcUrl = new UriBuilder(clientConfig.Url) { Path = rpcPath }.Uri.ToString();
+        
+        // Create Transmission client
+        _client = new Client(_httpClient, rpcUrl, login: clientConfig.Username, password: clientConfig.Password);
+        
+        _logger.LogInformation("Initialized Transmission service for client {clientName} ({clientId})", 
+            clientConfig.Name, clientConfig.Id);
     }
 
     public override async Task LoginAsync()
     {
-        await _client.GetSessionInformationAsync();
+        if (_client == null)
+        {
+            throw new InvalidOperationException("Transmission client is not initialized");
+        }
+        
+        try 
+        {
+            await _client.GetSessionInformationAsync();
+            _logger.LogDebug("Successfully logged in to Transmission client {clientId}", _clientConfig.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to login to Transmission client {clientId}", _clientConfig.Id);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
     public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("Transmission client is not initialized");
+        }
+        
         DownloadCheckResult result = new();
         TorrentInfo? download = await GetTorrentAsync(hash);
 
@@ -447,6 +478,8 @@ public class TransmissionService : DownloadService, ITransmissionService
 
     public override void Dispose()
     {
+        _client = null;
+        _httpClient?.Dispose();
     }
     
     [DryRunSafeguard]
@@ -556,8 +589,15 @@ public class TransmissionService : DownloadService, ITransmissionService
         return (await _striker.StrikeAndCheckLimit(download.HashString!, download.Name!, maxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
 
-    private async Task<TorrentInfo?> GetTorrentAsync(string hash) =>
-        (await _client.TorrentGetAsync(Fields, hash))
-        ?.Torrents
-        ?.FirstOrDefault();
+    private async Task<TorrentInfo?> GetTorrentAsync(string hash)
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("Transmission client is not initialized");
+        }
+        
+        return (await _client.TorrentGetAsync(Fields, hash))
+            ?.Torrents
+            ?.FirstOrDefault();
+    }
 }

@@ -20,57 +20,90 @@ using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Infrastructure.Configuration;
+using Infrastructure.Http;
 
 namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
 public class DelugeService : DownloadService, IDelugeService
 {
-    private readonly DelugeClient _client;
+    private DelugeClient? _client;
 
     public DelugeService(
         ILogger<DelugeService> logger,
         IConfigManager configManager,
-        IHttpClientFactory httpClientFactory,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardLinkFileService hardLinkFileService
+        IHardLinkFileService hardLinkFileService,
+        IDynamicHttpClientProvider httpClientProvider
     ) : base(
         logger, configManager, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
+        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService,
+        httpClientProvider
     )
     {
-        var config = configManager.GetConfiguration<DelugeConfig>("deluge.json");
-        if (config != null)
+        // Client will be initialized when Initialize() is called with a specific client configuration
+    }
+    
+    /// <inheritdoc />
+    public override void Initialize(ClientConfig clientConfig)
+    {
+        // Initialize base service first
+        base.Initialize(clientConfig);
+        
+        // Ensure client type is correct
+        if (clientConfig.Type != Common.Enums.DownloadClient.Deluge)
         {
-            config.Validate();
-            _client = new DelugeClient(config, httpClientFactory);
+            throw new InvalidOperationException($"Cannot initialize DelugeService with client type {clientConfig.Type}");
         }
-        else
+        
+        if (_httpClient == null)
         {
-            _logger.LogWarning("Deluge configuration not found. Using default values.");
-            _client = new DelugeClient(new DelugeConfig
-            {
-                Url = "http://localhost:8112"
-            }, httpClientFactory);
+            throw new InvalidOperationException("HTTP client is not initialized");
         }
+        
+        // Create Deluge client
+        _client = new DelugeClient(clientConfig, _httpClient);
+        
+        _logger.LogInformation("Initialized Deluge service for client {clientName} ({clientId})", 
+            clientConfig.Name, clientConfig.Id);
     }
     
     public override async Task LoginAsync()
     {
-        await _client.LoginAsync();
-
-        if (!await _client.IsConnected() && !await _client.Connect())
+        if (_client == null)
         {
-            throw new FatalException("Deluge WebUI is not connected to the daemon");
+            throw new InvalidOperationException("Deluge client is not initialized");
+        }
+        
+        try 
+        {
+            await _client.LoginAsync();
+            
+            if (!await _client.IsConnected() && !await _client.Connect())
+            {
+                throw new FatalException("Deluge WebUI is not connected to the daemon");
+            }
+            
+            _logger.LogDebug("Successfully logged in to Deluge client {clientId}", _clientConfig.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to login to Deluge client {clientId}", _clientConfig.Id);
+            throw;
         }
     }
 
     /// <inheritdoc/>
     public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("Deluge client is not initialized");
+        }
+        
         hash = hash.ToLowerInvariant();
         
         DelugeContents? contents = null;
@@ -563,5 +596,7 @@ public class DelugeService : DownloadService, IDelugeService
 
     public override void Dispose()
     {
+        _client = null;
+        _httpClient?.Dispose();
     }
 }

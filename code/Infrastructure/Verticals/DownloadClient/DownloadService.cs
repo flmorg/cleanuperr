@@ -8,7 +8,9 @@ using Common.CustomDataTypes;
 using Common.Helpers;
 using Domain.Enums;
 using Domain.Models.Cache;
+using Infrastructure.Configuration;
 using Infrastructure.Helpers;
+using Infrastructure.Http;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
@@ -17,7 +19,6 @@ using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
@@ -32,9 +33,13 @@ public abstract class DownloadService : IDownloadService
     protected readonly INotificationPublisher _notifier;
     protected readonly IDryRunInterceptor _dryRunInterceptor;
     protected readonly IHardLinkFileService _hardLinkFileService;
+    protected readonly IDynamicHttpClientProvider _httpClientProvider;
     
     // Client-specific configuration
     protected ClientConfig _clientConfig;
+    
+    // HTTP client for this service
+    protected HttpClient? _httpClient;
 
     protected DownloadService(
         ILogger<DownloadService> logger,
@@ -44,7 +49,8 @@ public abstract class DownloadService : IDownloadService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardLinkFileService hardLinkFileService
+        IHardLinkFileService hardLinkFileService,
+        IDynamicHttpClientProvider httpClientProvider
     )
     {
         _logger = logger;
@@ -55,6 +61,7 @@ public abstract class DownloadService : IDownloadService
         _notifier = notifier;
         _dryRunInterceptor = dryRunInterceptor;
         _hardLinkFileService = hardLinkFileService;
+        _httpClientProvider = httpClientProvider;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
         
@@ -63,9 +70,19 @@ public abstract class DownloadService : IDownloadService
     }
     
     /// <inheritdoc />
+    public string GetClientId()
+    {
+        return _clientConfig.Id;
+    }
+    
+    /// <inheritdoc />
     public virtual void Initialize(ClientConfig clientConfig)
     {
         _clientConfig = clientConfig;
+        
+        // Create HTTP client for this service
+        _httpClient = _httpClientProvider.CreateClient(clientConfig);
+        
         _logger.LogDebug("Initialized download service for client {clientId} ({type})", 
             clientConfig.Id, clientConfig.Type);
     }

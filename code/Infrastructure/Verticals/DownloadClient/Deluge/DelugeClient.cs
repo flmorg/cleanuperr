@@ -14,7 +14,7 @@ namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
 public sealed class DelugeClient
 {
-    private readonly DelugeConfig _config;
+    private readonly ClientConfig _config;
     private readonly HttpClient _httpClient;
     
     private static readonly IReadOnlyList<string> Fields =
@@ -34,11 +34,10 @@ public sealed class DelugeClient
         "download_location"
     ];
     
-    public DelugeClient(DelugeConfig config, IHttpClientFactory httpClientFactory)
+    public DelugeClient(ClientConfig config, HttpClient httpClient)
     {
         _config = config;
-        _config.Validate();
-        _httpClient = httpClientFactory.CreateClient(nameof(DelugeService));
+        _httpClient = httpClient;
     }
     
     public async Task<bool> LoginAsync()

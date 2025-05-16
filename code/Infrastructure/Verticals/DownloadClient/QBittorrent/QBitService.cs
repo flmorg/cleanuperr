@@ -8,7 +8,9 @@ using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
 using Domain.Enums;
+using Infrastructure.Configuration;
 using Infrastructure.Extensions;
+using Infrastructure.Http;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
@@ -17,17 +19,13 @@ using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
 public class QBitService : DownloadService, IQBitService
 {
-    protected readonly IHttpClientFactory _httpClientFactory;
-    protected readonly IConfigManager _configManager;
-    protected readonly QBittorrentClient _client;
-    protected readonly ILogger<QBitService> _logger;
+    protected QBittorrentClient? _client;
 
     public QBitService(
         ILogger<QBitService> logger,
@@ -38,47 +36,68 @@ public class QBitService : DownloadService, IQBitService
         IStriker striker,
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
-        IHardLinkFileService hardLinkFileService
+        IHardLinkFileService hardLinkFileService,
+        IDynamicHttpClientProvider httpClientProvider
     ) : base(
-        logger, configManager, cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
+        logger, configManager, cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService,
+        httpClientProvider
     )
     {
-        _logger = logger;
-        _httpClientFactory = httpClientFactory;
-        _configManager = configManager;
-
-        // Get configuration for initialization
-        var config = _configManager.GetConfiguration<QBitConfig>("qbit.json");
-        if (config != null)
+        // Client will be initialized when Initialize() is called with a specific client configuration
+    }
+    
+    /// <inheritdoc />
+    public override void Initialize(ClientConfig clientConfig)
+    {
+        // Initialize base service first
+        base.Initialize(clientConfig);
+        
+        // Ensure client type is correct
+        if (clientConfig.Type != Common.Enums.DownloadClient.QBittorrent)
         {
-            config.Validate();
-            UriBuilder uriBuilder = new(config.Url);
-            uriBuilder.Path = string.IsNullOrEmpty(config.UrlBase)
-                ? uriBuilder.Path
-                : $"{uriBuilder.Path.TrimEnd('/')}/{config.UrlBase.TrimStart('/')}";
-            _client = new(_httpClientFactory.CreateClient(Constants.HttpClientWithRetryName), uriBuilder.Uri);
+            throw new InvalidOperationException($"Cannot initialize QBitService with client type {clientConfig.Type}");
         }
-        else
-        {
-            _logger.LogError("Failed to load QBit configuration");
-            throw new InvalidOperationException("QBit configuration is missing or invalid");
-        }
+        
+        // Create QBittorrent client
+        _client = new QBittorrentClient(_httpClient, clientConfig.Url);
+        
+        _logger.LogInformation("Initialized QBittorrent service for client {clientName} ({clientId})", 
+            clientConfig.Name, clientConfig.Id);
     }
 
     public override async Task LoginAsync()
     {
-        var config = _configManager.GetConfiguration<QBitConfig>("qbit.json");
-        if (config == null || (string.IsNullOrEmpty(config.Username) && string.IsNullOrEmpty(config.Password)))
+        if (_client == null)
         {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        if (string.IsNullOrEmpty(_clientConfig.Username) && string.IsNullOrEmpty(_clientConfig.Password))
+        {
+            _logger.LogDebug("No credentials configured for client {clientId}, skipping login", _clientConfig.Id);
             return;
         }
 
-        await _client.LoginAsync(config.Username, config.Password);
+        try
+        {
+            await _client.LoginAsync(_clientConfig.Username, _clientConfig.Password);
+            _logger.LogDebug("Successfully logged in to QBittorrent client {clientId}", _clientConfig.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to login to QBittorrent client {clientId}", _clientConfig.Id);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
     public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         DownloadCheckResult result = new();
         TorrentInfo? download = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();
@@ -136,16 +155,22 @@ public class QBitService : DownloadService, IQBitService
     }
 
     /// <inheritdoc/>
-    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
+    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(
+        string hash,
         BlocklistType blocklistType,
         ConcurrentBag<string> patterns,
         ConcurrentBag<Regex> regexes,
         IReadOnlyList<string> ignoredDownloads
     )
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        BlockFilesResult result = new(hash);
         TorrentInfo? download = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();
-        BlockFilesResult result = new();
 
         if (download is null)
         {
@@ -244,14 +269,18 @@ public class QBitService : DownloadService, IQBitService
     }
 
     /// <inheritdoc/>
-    public override async Task<List<object>?> GetSeedingDownloads() =>
-        (await _client.GetTorrentListAsync(new()
+    public override async Task<List<object>?> GetSeedingDownloads()
+    {
+        if (_client == null)
         {
-            Filter = TorrentListFilter.Seeding
-        }))
-        ?.Where(x => !string.IsNullOrEmpty(x.Hash))
-        .Cast<object>()
-        .ToList();
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        var torrentList = await _client.GetTorrentListAsync(new TorrentListQuery { Filter = TorrentListFilter.Seeding });
+        return torrentList?.Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Cast<object>()
+            .ToList();
+    }
 
     /// <inheritdoc/>
     public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) =>
@@ -284,6 +313,11 @@ public class QBitService : DownloadService, IQBitService
     public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
         HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         if (downloads?.Count is null or 0)
         {
             return;
@@ -366,6 +400,11 @@ public class QBitService : DownloadService, IQBitService
 
     public override async Task CreateCategoryAsync(string name)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         IReadOnlyDictionary<string, Category>? existingCategories = await _client.GetCategoriesAsync();
 
         if (existingCategories.Any(x => x.Value.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
@@ -378,6 +417,11 @@ public class QBitService : DownloadService, IQBitService
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         if (downloads?.Count is null or 0)
         {
             return;
@@ -481,24 +525,44 @@ public class QBitService : DownloadService, IQBitService
     [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)
     {
-        await _client.DeleteAsync(hash, deleteDownloadedData: true);
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        await _client.DeleteAsync([hash], deleteFiles: true);
     }
 
     [DryRunSafeguard]
     protected async Task CreateCategory(string name)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         await _client.AddCategoryAsync(name);
     }
 
     [DryRunSafeguard]
     protected virtual async Task SkipFile(string hash, int fileIndex)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
     }
 
     [DryRunSafeguard]
     protected virtual async Task ChangeCategory(string hash, string newCategory)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         if (_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedUseTag)
         {
             await _client.AddTorrentTagAsync([hash], newCategory);
@@ -510,7 +574,8 @@ public class QBitService : DownloadService, IQBitService
 
     public override void Dispose()
     {
-        _client.Dispose();
+        _client?.Dispose();
+        _httpClient?.Dispose();
     }
 
     private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(TorrentInfo torrent, bool isPrivate)
@@ -609,6 +674,11 @@ public class QBitService : DownloadService, IQBitService
 
     private async Task<IReadOnlyList<TorrentTracker>> GetTrackersAsync(string hash)
     {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
         return (await _client.GetTorrentTrackersAsync(hash))
             .Where(x => x.Url.Contains("**"))
             .ToList();

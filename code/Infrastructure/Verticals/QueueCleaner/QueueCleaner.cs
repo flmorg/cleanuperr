@@ -11,6 +11,7 @@ using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.DownloadClient.Factory;
 using Infrastructure.Verticals.DownloadRemover.Models;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
@@ -28,7 +29,7 @@ public sealed class QueueCleaner : GenericHandler
     private readonly IMemoryCache _cache;
     private readonly IConfigManager _configManager;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
-    private readonly List<IDownloadService> _downloadServices;
+    private readonly IDownloadClientFactory _downloadClientFactory;
 
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
@@ -39,7 +40,8 @@ public sealed class QueueCleaner : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         INotificationPublisher notifier,
-        IIgnoredDownloadsService ignoredDownloadsService
+        IIgnoredDownloadsService ignoredDownloadsService,
+        IDownloadClientFactory downloadClientFactory
     ) : base(
         logger, cache, messageBus,
         arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
@@ -49,7 +51,7 @@ public sealed class QueueCleaner : GenericHandler
         _configManager = configManager;
         _cache = cache;
         _ignoredDownloadsService = ignoredDownloadsService;
-        _downloadServices = new List<IDownloadService>();
+        _downloadClientFactory = downloadClientFactory;
         
         // Initialize the configuration
         var configTask = _configManager.GetQueueCleanerConfigAsync();
@@ -72,29 +74,18 @@ public sealed class QueueCleaner : GenericHandler
         _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
         _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
         
-        // Initialize download services
+        // Log information about configured download clients
         if (_downloadClientConfig.Clients.Count > 0)
         {
             foreach (var client in _downloadClientConfig.GetEnabledClients())
             {
-                try
-                {
-                    var service = _downloadServiceFactory.GetDownloadService(client.Id);
-                    if (service != null)
-                    {
-                        _downloadServices.Add(service);
-                        _logger.LogDebug("Added download client: {name} ({id})", client.Name, client.Id);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Download client service not available for: {id}", client.Id);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error initializing download client {id}: {message}", client.Id, ex.Message);
-                }
+                _logger.LogDebug("Found configured download client: {name} ({id}) of type {type}", 
+                    client.Name, client.Id, client.Type);
             }
+        }
+        else
+        {
+            _logger.LogWarning("No download clients configured in downloadclients.json");
         }
     }
     
@@ -160,7 +151,7 @@ public sealed class QueueCleaner : GenericHandler
                     }
                     
                     // Check each download client for the download item
-                    foreach (var downloadService in _downloadServices)
+                    foreach (var downloadService in _downloadClientFactory.GetAllEnabledClients())
                     {
                         try
                         {
@@ -169,12 +160,15 @@ public sealed class QueueCleaner : GenericHandler
                             if (result.Found)
                             {
                                 downloadCheckResult = result;
+                                // Add client ID to context for tracking
+                                ContextProvider.Set("ClientId", downloadService.GetClientId());
                                 break;
                             }
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error checking download {id} with download client", record.DownloadId);
+                            _logger.LogError(ex, "Error checking download {id} with download client {clientId}", 
+                                record.DownloadId, downloadService.GetClientId());
                         }
                     }
                     

@@ -10,6 +10,12 @@ namespace Infrastructure.Verticals.DownloadClient;
 public interface IDownloadService : IDisposable
 {
     /// <summary>
+    /// Gets the unique identifier for this download client
+    /// </summary>
+    /// <returns>The client ID</returns>
+    string GetClientId();
+
+    /// <summary>
     /// Initializes the download service with client-specific configuration
     /// </summary>
     /// <param name="clientConfig">The client configuration</param>
