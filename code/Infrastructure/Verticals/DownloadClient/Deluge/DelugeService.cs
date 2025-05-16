@@ -494,7 +494,7 @@ public class DelugeService : DownloadService, IDelugeService
     
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(DownloadStatus download)
     {
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        var queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
         if (queueCleanerConfig == null || queueCleanerConfig.SlowMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
@@ -510,7 +510,6 @@ public class DelugeService : DownloadService, IDelugeService
             return (false, DeleteReason.None);
         }
         
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
         if (queueCleanerConfig != null && queueCleanerConfig.SlowIgnorePrivate && download.Private)
         {
             // ignore private trackers
@@ -518,14 +517,12 @@ public class DelugeService : DownloadService, IDelugeService
             return (false, DeleteReason.None);
         }
         
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
         if (queueCleanerConfig != null && download.Size > (queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
         {
             _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig() ?? new QueueCleanerConfig();
         ByteSize minSpeed = queueCleanerConfig.SlowMinSpeedByteSize;
         ByteSize currentSpeed = new ByteSize(download.DownloadSpeed);
         SmartTimeSpan maxTime = SmartTimeSpan.FromHours(queueCleanerConfig.SlowMaxTime);
@@ -568,7 +565,7 @@ public class DelugeService : DownloadService, IDelugeService
         
         ResetStalledStrikesOnProgress(status.Hash!, status.TotalDone);
         
-        int maxStrikes = queueCleanerConfig?.StalledMaxStrikes ?? 0;
+        ushort maxStrikes = queueCleanerConfig?.StalledMaxStrikes ?? 0;
         return (await _striker.StrikeAndCheckLimit(status.Hash!, status.Name!, maxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
     

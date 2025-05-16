@@ -13,7 +13,7 @@ public sealed record NotifiarrConfig : NotificationConfig
     [ConfigurationKeyName("CHANNEL_ID")]
     public string? ChannelId { get; init; }
 
-    public override bool IsValid()
+    public bool IsValid()
     {
         if (string.IsNullOrEmpty(ApiKey?.Trim()))
         {

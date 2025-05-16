@@ -72,7 +72,7 @@ public abstract class ArrClient : IArrClient
 
     public virtual async Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload, short arrMaxStrikes)
     {
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        var queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
         if (queueCleanerConfig?.ImportFailedIgnorePrivate == true && isPrivateDownload)
         {
             // ignore private trackers
@@ -95,7 +95,7 @@ public abstract class ArrClient : IArrClient
         
         if (hasWarn() && (isImportBlocked() || isImportPending() || isImportFailed()) || isFailedLidarr())
         {
-            if (HasIgnoredPatterns(record))
+            if (await HasIgnoredPatterns(record))
             {
                 _logger.LogDebug("skip failed import check | contains ignored pattern | {name}", record.Title);
                 return false;
@@ -107,7 +107,6 @@ public abstract class ArrClient : IArrClient
                 return false;
             }
             
-            var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
             ushort maxStrikes = arrMaxStrikes > 0 ? (ushort)arrMaxStrikes : (queueCleanerConfig?.ImportFailedMaxStrikes ?? 0);
             
             return await _striker.StrikeAndCheckLimit(
@@ -212,9 +211,9 @@ public abstract class ArrClient : IArrClient
         return response;
     }
     
-    private bool HasIgnoredPatterns(QueueRecord record)
+    private async Task<bool> HasIgnoredPatterns(QueueRecord record)
     {
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        var queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
         if (queueCleanerConfig?.ImportFailedIgnorePatterns?.Count is null or 0)
         {
             // no patterns are configured
@@ -234,7 +233,6 @@ public abstract class ArrClient : IArrClient
             .ToList()
             .ForEach(x => messages.Add(x));
         
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
         return messages.Any(
             m => queueCleanerConfig?.ImportFailedIgnorePatterns?.Any(
                 p => !string.IsNullOrWhiteSpace(p.Trim()) && m.Contains(p, StringComparison.InvariantCultureIgnoreCase)

@@ -585,7 +585,7 @@ public class TransmissionService : DownloadService, ITransmissionService
         
         ResetStalledStrikesOnProgress(download.HashString!, download.DownloadedEver ?? 0);
         
-        int maxStrikes = queueCleanerConfig.StalledMaxStrikes;
+        ushort maxStrikes = queueCleanerConfig.StalledMaxStrikes;
         return (await _striker.StrikeAndCheckLimit(download.HashString!, download.Name!, maxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
 

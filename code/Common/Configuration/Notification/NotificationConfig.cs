@@ -2,7 +2,7 @@
 
 namespace Common.Configuration.Notification;
 
-public abstract record NotificationConfig
+public record NotificationConfig
 {
     [ConfigurationKeyName("ON_IMPORT_FAILED_STRIKE")]
     public bool OnImportFailedStrike { get; init; }
@@ -30,5 +30,8 @@ public abstract record NotificationConfig
         OnDownloadCleaned ||
         OnCategoryChanged;
 
-    public abstract bool IsValid();
+    public bool IsValid()
+    {
+        return false;
+    }
 }

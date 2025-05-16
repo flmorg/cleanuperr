@@ -191,7 +191,7 @@ public abstract class DownloadService : IDownloadService
             _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), downloadName);
             
             var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
-            int maxStrikes = queueCleanerConfig?.SlowMaxStrikes ?? 0;
+            ushort maxStrikes = queueCleanerConfig?.SlowMaxStrikes ?? 0;
             bool shouldRemove = await _striker
                 .StrikeAndCheckLimit(downloadHash, downloadName, maxStrikes, StrikeType.SlowSpeed);
 
@@ -210,7 +210,7 @@ public abstract class DownloadService : IDownloadService
             _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), downloadName);
             
             var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
-            int maxStrikes = queueCleanerConfig?.SlowMaxStrikes ?? 0;
+            ushort maxStrikes = queueCleanerConfig?.SlowMaxStrikes ?? 0;
             bool shouldRemove = await _striker
                 .StrikeAndCheckLimit(downloadHash, downloadName, maxStrikes, StrikeType.SlowTime);
 

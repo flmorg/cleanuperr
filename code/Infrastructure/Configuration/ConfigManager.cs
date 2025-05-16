@@ -280,11 +280,6 @@ public class ConfigManager : IConfigManager
         }
     }
     
-    public async Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(IgnoredDownloadsConfigFile);
-    }
-
     public Task<bool> SaveIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config)
     {
         try
@@ -301,12 +296,12 @@ public class ConfigManager : IConfigManager
     // Generic synchronous configuration methods
     public T? GetConfiguration<T>(string fileName) where T : class, new()
     {
-        return _jsonConfigurationProvider.ReadConfiguration<T>(fileName);
+        return _configProvider.ReadConfiguration<T>(fileName);
     }
     
-    public Common.Configuration.QueueCleaner.QueueCleanerConfig? GetQueueCleanerConfig()
+    public QueueCleanerConfig? GetQueueCleanerConfig()
     {
-        return GetConfiguration<Common.Configuration.QueueCleaner.QueueCleanerConfig>("queue-cleaner.json");
+        return GetConfiguration<QueueCleanerConfig>("queue-cleaner.json");
     }
     
     public bool SaveConfiguration<T>(string configFileName, T config) where T : class
@@ -357,11 +352,6 @@ public class ConfigManager : IConfigManager
     public LidarrConfig? GetLidarrConfig()
     {
         return _configProvider.ReadConfiguration<LidarrConfig>(LidarrConfigFile);
-    }
-    
-    public QueueCleanerConfig? GetQueueCleanerConfig()
-    {
-        return _configProvider.ReadConfiguration<QueueCleanerConfig>(QueueCleanerConfigFile);
     }
     
     public DownloadCleanerConfig? GetDownloadCleanerConfig()

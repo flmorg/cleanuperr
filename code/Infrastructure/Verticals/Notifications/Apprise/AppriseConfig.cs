@@ -10,7 +10,7 @@ public sealed record AppriseConfig : NotificationConfig
     
     public string? Key { get; init; }
     
-    public override bool IsValid()
+    public bool IsValid()
     {
         if (Url is null)
         {

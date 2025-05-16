@@ -168,7 +168,7 @@ public class QBitService : DownloadService, IQBitService
             throw new InvalidOperationException("QBittorrent client is not initialized");
         }
         
-        BlockFilesResult result = new(hash);
+        BlockFilesResult result = new();
         TorrentInfo? download = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();
 
@@ -530,7 +530,7 @@ public class QBitService : DownloadService, IQBitService
             throw new InvalidOperationException("QBittorrent client is not initialized");
         }
         
-        await _client.DeleteAsync([hash], deleteFiles: true);
+        await _client.DeleteAsync([hash], deleteDownloadedData: true);
     }
 
     [DryRunSafeguard]
