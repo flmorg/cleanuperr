@@ -57,8 +57,8 @@ public class DownloadClientsController : ControllerBase
     /// <summary>
     /// Gets a specific download client by ID
     /// </summary>
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetClient(string id)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetClient(Guid id)
     {
         try
         {
@@ -133,8 +133,8 @@ public class DownloadClientsController : ControllerBase
     /// <summary>
     /// Updates an existing download client
     /// </summary>
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateClient(string id, [FromBody] ClientConfig clientConfig)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateClient(Guid id, [FromBody] ClientConfig clientConfig)
     {
         try
         {
@@ -184,8 +184,8 @@ public class DownloadClientsController : ControllerBase
     /// <summary>
     /// Deletes a download client
     /// </summary>
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteClient(string id)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteClient(Guid id)
     {
         try
         {
@@ -226,8 +226,8 @@ public class DownloadClientsController : ControllerBase
     /// <summary>
     /// Tests connection to a download client
     /// </summary>
-    [HttpPost("{id}/test")]
-    public async Task<IActionResult> TestConnection(string id)
+    [HttpPost("{id:guid}/test")]
+    public async Task<IActionResult> TestConnection(Guid id)
     {
         try
         {

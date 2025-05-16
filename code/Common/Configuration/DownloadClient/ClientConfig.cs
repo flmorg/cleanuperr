@@ -1,5 +1,6 @@
 using Common.Enums;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace Common.Configuration.DownloadClient;
 
@@ -9,9 +10,14 @@ namespace Common.Configuration.DownloadClient;
 public sealed record ClientConfig
 {
     /// <summary>
+    /// Whether this client is enabled
+    /// </summary>
+    public bool Enabled { get; init; } = true;
+    
+    /// <summary>
     /// Unique identifier for this client
     /// </summary>
-    public string Id { get; init; } = Guid.NewGuid().ToString("N");
+    public Guid Id { get; init; } = Guid.NewGuid();
     
     /// <summary>
     /// Friendly name for this client
@@ -39,30 +45,10 @@ public sealed record ClientConfig
     public string Password { get; init; } = string.Empty;
     
     /// <summary>
-    /// Default category to use
-    /// </summary>
-    public string Category { get; init; } = string.Empty;
-    
-    /// <summary>
-    /// Path to download directory
-    /// </summary>
-    public string Path { get; init; } = string.Empty;
-    
-    /// <summary>
-    /// Whether this client is enabled
-    /// </summary>
-    public bool Enabled { get; init; } = true;
-    
-    /// <summary>
     /// The base URL path component, used by clients like Transmission and Deluge
     /// </summary>
-    [ConfigurationKeyName("URL_BASE")]
+    [JsonProperty("url_base")]
     public string UrlBase { get; init; } = string.Empty;
-    
-    /// <summary>
-    /// Use HTTPS protocol
-    /// </summary>
-    public bool UseHttps { get; init; } = false;
     
     /// <summary>
     /// The computed full URL for the client
@@ -74,7 +60,7 @@ public sealed record ClientConfig
     /// </summary>
     public void Validate()
     {
-        if (string.IsNullOrWhiteSpace(Id))
+        if (Id == Guid.Empty)
         {
             throw new InvalidOperationException("Client ID cannot be empty");
         }

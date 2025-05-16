@@ -13,7 +13,7 @@ public interface IDownloadService : IDisposable
     /// Gets the unique identifier for this download client
     /// </summary>
     /// <returns>The client ID</returns>
-    string GetClientId();
+    Guid GetClientId();
 
     /// <summary>
     /// Initializes the download service with client-specific configuration

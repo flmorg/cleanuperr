@@ -12,7 +12,7 @@ public interface IDownloadClientFactory
     /// </summary>
     /// <param name="clientId">The client ID</param>
     /// <returns>The download service for the specified client</returns>
-    IDownloadService GetClient(string clientId);
+    IDownloadService GetClient(Guid clientId);
     
     /// <summary>
     /// Gets all enabled download clients
@@ -31,7 +31,7 @@ public interface IDownloadClientFactory
     /// Refreshes a specific client instance (disposes and recreates)
     /// </summary>
     /// <param name="clientId">The client ID to refresh</param>
-    void RefreshClient(string clientId);
+    void RefreshClient(Guid clientId);
     
     /// <summary>
     /// Refreshes all client instances (disposes and recreates)

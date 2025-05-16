@@ -24,6 +24,7 @@ public class HealthCheckServiceFixture : IDisposable
         ConfigManager = Substitute.For<IConfigManager>();
         ClientFactory = Substitute.For<IDownloadClientFactory>();
         MockClient = Substitute.For<IDownloadService>();
+        Guid clientId = Guid.NewGuid();
         
         // Set up test download client config
         DownloadClientConfig = new DownloadClientConfig
@@ -32,7 +33,7 @@ public class HealthCheckServiceFixture : IDisposable
             {
                 new()
                 {
-                    Id = "qbit1",
+                    Id = clientId,
                     Name = "Test QBittorrent",
                     Type = DownloadClientType.QBittorrent,
                     Enabled = true,
@@ -41,7 +42,7 @@ public class HealthCheckServiceFixture : IDisposable
                 },
                 new()
                 {
-                    Id = "transmission1",
+                    Id = Guid.NewGuid(),
                     Name = "Test Transmission",
                     Type = DownloadClientType.Transmission,
                     Enabled = true,
@@ -50,7 +51,7 @@ public class HealthCheckServiceFixture : IDisposable
                 },
                 new()
                 {
-                    Id = "disabled1",
+                    Id = Guid.NewGuid(),
                     Name = "Disabled Client",
                     Type = DownloadClientType.QBittorrent,
                     Enabled = false,
@@ -59,8 +60,8 @@ public class HealthCheckServiceFixture : IDisposable
         };
         
         // Set up the mock client factory
-        ClientFactory.GetClient(Arg.Any<string>()).Returns(MockClient);
-        MockClient.GetClientId().Returns("qbit1");
+        ClientFactory.GetClient(Arg.Any<Guid>()).Returns(MockClient);
+        MockClient.GetClientId().Returns(clientId);
         
         // Set up mock config manager
         ConfigManager.GetDownloadClientConfigAsync().Returns(DownloadClientConfig);
@@ -71,13 +72,13 @@ public class HealthCheckServiceFixture : IDisposable
         return new HealthCheckService(Logger, ConfigManager, ClientFactory);
     }
     
-    public void SetupHealthyClient(string clientId)
+    public void SetupHealthyClient(Guid clientId)
     {
         // Setup a client that will successfully login
         MockClient.LoginAsync().Returns(Task.CompletedTask);
     }
     
-    public void SetupUnhealthyClient(string clientId, string errorMessage = "Failed to connect")
+    public void SetupUnhealthyClient(Guid clientId, string errorMessage = "Failed to connect")
     {
         // Setup a client that will fail to login
         MockClient.LoginAsync().Throws(new Exception(errorMessage));

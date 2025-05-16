@@ -25,7 +25,7 @@ public class DownloadClientFactory : IDownloadClientFactory
     private readonly ILogger<DownloadClientFactory> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly IConfigManager _configManager;
-    private readonly ConcurrentDictionary<string, IDownloadService> _clients = new();
+    private readonly ConcurrentDictionary<Guid, IDownloadService> _clients = new();
 
     public DownloadClientFactory(
         ILogger<DownloadClientFactory> logger,
@@ -38,9 +38,9 @@ public class DownloadClientFactory : IDownloadClientFactory
     }
 
     /// <inheritdoc />
-    public IDownloadService GetClient(string clientId)
+    public IDownloadService GetClient(Guid clientId)
     {
-        if (string.IsNullOrWhiteSpace(clientId))
+        if (clientId == Guid.Empty)
         {
             throw new ArgumentException("Client ID cannot be empty", nameof(clientId));
         }
@@ -73,7 +73,7 @@ public class DownloadClientFactory : IDownloadClientFactory
     }
 
     /// <inheritdoc />
-    public void RefreshClient(string clientId)
+    public void RefreshClient(Guid clientId)
     {
         if (_clients.TryRemove(clientId, out var service))
         {
@@ -100,7 +100,7 @@ public class DownloadClientFactory : IDownloadClientFactory
         }
     }
 
-    private IDownloadService CreateClient(string clientId)
+    private IDownloadService CreateClient(Guid clientId)
     {
         var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>("downloadclients.json") 
                                   ?? new DownloadClientConfig();

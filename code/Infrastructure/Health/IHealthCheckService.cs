@@ -15,24 +15,24 @@ public interface IHealthCheckService
     /// </summary>
     /// <param name="clientId">The client ID to check</param>
     /// <returns>The health status of the client</returns>
-    Task<HealthStatus> CheckClientHealthAsync(string clientId);
+    Task<HealthStatus> CheckClientHealthAsync(Guid clientId);
     
     /// <summary>
     /// Checks the health of all enabled clients
     /// </summary>
     /// <returns>A dictionary of client IDs to health statuses</returns>
-    Task<IDictionary<string, HealthStatus>> CheckAllClientsHealthAsync();
+    Task<IDictionary<Guid, HealthStatus>> CheckAllClientsHealthAsync();
     
     /// <summary>
     /// Gets the current health status of a client
     /// </summary>
     /// <param name="clientId">The client ID</param>
     /// <returns>The current health status, or null if the client hasn't been checked</returns>
-    HealthStatus? GetClientHealth(string clientId);
+    HealthStatus? GetClientHealth(Guid clientId);
     
     /// <summary>
     /// Gets the current health status of all clients that have been checked
     /// </summary>
     /// <returns>A dictionary of client IDs to health statuses</returns>
-    IDictionary<string, HealthStatus> GetAllClientHealth();
+    IDictionary<Guid, HealthStatus> GetAllClientHealth();
 }

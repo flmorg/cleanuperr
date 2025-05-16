@@ -45,8 +45,8 @@ public class HealthCheckController : ControllerBase
     /// <summary>
     /// Gets the health status of a specific download client
     /// </summary>
-    [HttpGet("{id}")]
-    public IActionResult GetClientHealth(string id)
+    [HttpGet("{id:guid}")]
+    public IActionResult GetClientHealth(Guid id)
     {
         try
         {
@@ -86,8 +86,8 @@ public class HealthCheckController : ControllerBase
     /// <summary>
     /// Triggers a health check for a specific download client
     /// </summary>
-    [HttpPost("check/{id}")]
-    public async Task<IActionResult> CheckClientHealth(string id)
+    [HttpPost("check/{id:guid}")]
+    public async Task<IActionResult> CheckClientHealth(Guid id)
     {
         try
         {

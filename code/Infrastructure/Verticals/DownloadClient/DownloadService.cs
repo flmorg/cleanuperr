@@ -70,7 +70,7 @@ public abstract class DownloadService : IDownloadService
     }
     
     /// <inheritdoc />
-    public string GetClientId()
+    public Guid GetClientId()
     {
         return _clientConfig.Id;
     }

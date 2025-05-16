@@ -34,7 +34,7 @@ public class DynamicHttpClientProviderFixture : IDisposable
     {
         return new ClientConfig
         {
-            Id = "qbit-test",
+            Id = Guid.NewGuid(),
             Name = "QBit Test",
             Type = DownloadClientType.QBittorrent,
             Enabled = true,
@@ -48,7 +48,7 @@ public class DynamicHttpClientProviderFixture : IDisposable
     {
         return new ClientConfig
         {
-            Id = "transmission-test",
+            Id = Guid.NewGuid(),
             Name = "Transmission Test",
             Type = DownloadClientType.Transmission,
             Enabled = true,
@@ -63,7 +63,7 @@ public class DynamicHttpClientProviderFixture : IDisposable
     {
         return new ClientConfig
         {
-            Id = "deluge-test",
+            Id = Guid.NewGuid(),
             Name = "Deluge Test",
             Type = DownloadClientType.Deluge,
             Enabled = true,

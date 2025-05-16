@@ -19,15 +19,15 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
     {
         // Arrange
         var sut = _fixture.CreateSut();
-        _fixture.SetupHealthyClient("qbit1");
+        _fixture.SetupHealthyClient(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Act
-        var result = await sut.CheckClientHealthAsync("qbit1");
+        var result = await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Assert
         result.ShouldSatisfyAllConditions(
             () => result.IsHealthy.ShouldBeTrue(),
-            () => result.ClientId.ShouldBe("qbit1"),
+            () => result.ClientId.ShouldBe(new Guid("00000000-0000-0000-0000-000000000001")),
             () => result.ErrorMessage.ShouldBeNull(),
             () => result.LastChecked.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow)
         );
@@ -38,15 +38,15 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
     {
         // Arrange
         var sut = _fixture.CreateSut();
-        _fixture.SetupUnhealthyClient("qbit1", "Connection refused");
+        _fixture.SetupUnhealthyClient(new Guid("00000000-0000-0000-0000-000000000001"), "Connection refused");
         
         // Act
-        var result = await sut.CheckClientHealthAsync("qbit1");
+        var result = await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Assert
         result.ShouldSatisfyAllConditions(
             () => result.IsHealthy.ShouldBeFalse(),
-            () => result.ClientId.ShouldBe("qbit1"),
+            () => result.ClientId.ShouldBe(new Guid("00000000-0000-0000-0000-000000000001")),
             () => result.ErrorMessage.ShouldContain("Connection refused"),
             () => result.LastChecked.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow)
         );
@@ -64,12 +64,12 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
         );
         
         // Act
-        var result = await sut.CheckClientHealthAsync("non-existent");
+        var result = await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000010"));
         
         // Assert
         result.ShouldSatisfyAllConditions(
             () => result.IsHealthy.ShouldBeFalse(),
-            () => result.ClientId.ShouldBe("non-existent"),
+            () => result.ClientId.ShouldBe(new Guid("00000000-0000-0000-0000-000000000010")),
             () => result.ErrorMessage.ShouldContain("not found"),
             () => result.LastChecked.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow)
         );
@@ -80,18 +80,18 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
     {
         // Arrange
         var sut = _fixture.CreateSut();
-        _fixture.SetupHealthyClient("qbit1");
-        _fixture.SetupUnhealthyClient("transmission1");
+        _fixture.SetupHealthyClient(new Guid("00000000-0000-0000-0000-000000000001"));
+        _fixture.SetupUnhealthyClient(new Guid("00000000-0000-0000-0000-000000000002"));
         
         // Act
         var results = await sut.CheckAllClientsHealthAsync();
         
         // Assert
         results.Count.ShouldBe(2); // Only enabled clients
-        results.Keys.ShouldContain("qbit1");
-        results.Keys.ShouldContain("transmission1");
-        results["qbit1"].IsHealthy.ShouldBeTrue();
-        results["transmission1"].IsHealthy.ShouldBeFalse();
+        results.Keys.ShouldContain(new Guid("00000000-0000-0000-0000-000000000001"));
+        results.Keys.ShouldContain(new Guid("00000000-0000-0000-0000-000000000002"));
+        results[new Guid("00000000-0000-0000-0000-000000000001")].IsHealthy.ShouldBeTrue();
+        results[new Guid("00000000-0000-0000-0000-000000000002")].IsHealthy.ShouldBeFalse();
     }
     
     [Fact]
@@ -99,23 +99,23 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
     {
         // Arrange
         var sut = _fixture.CreateSut();
-        _fixture.SetupHealthyClient("qbit1");
+        _fixture.SetupHealthyClient(new Guid("00000000-0000-0000-0000-000000000001"));
         
         ClientHealthChangedEventArgs? capturedArgs = null;
         sut.ClientHealthChanged += (_, args) => capturedArgs = args;
         
         // Act - first check establishes initial state
-        var firstResult = await sut.CheckClientHealthAsync("qbit1");
+        var firstResult = await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Setup client to be unhealthy for second check
-        _fixture.SetupUnhealthyClient("qbit1");
+        _fixture.SetupUnhealthyClient(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Act - second check changes state
-        var secondResult = await sut.CheckClientHealthAsync("qbit1");
+        var secondResult = await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Assert
         capturedArgs.ShouldNotBeNull();
-        capturedArgs.ClientId.ShouldBe("qbit1");
+        capturedArgs.ClientId.ShouldBe(new Guid("00000000-0000-0000-0000-000000000001"));
         capturedArgs.Status.IsHealthy.ShouldBeFalse();
         capturedArgs.IsDegraded.ShouldBeTrue();
         capturedArgs.IsRecovered.ShouldBeFalse();
@@ -126,18 +126,18 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
     {
         // Arrange
         var sut = _fixture.CreateSut();
-        _fixture.SetupHealthyClient("qbit1");
+        _fixture.SetupHealthyClient(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Perform a check to cache the status
-        await sut.CheckClientHealthAsync("qbit1");
+        await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Act
-        var result = sut.GetClientHealth("qbit1");
+        var result = sut.GetClientHealth(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Assert
         result.ShouldNotBeNull();
         result.IsHealthy.ShouldBeTrue();
-        result.ClientId.ShouldBe("qbit1");
+        result.ClientId.ShouldBe(new Guid("00000000-0000-0000-0000-000000000001"));
     }
     
     [Fact]
@@ -147,7 +147,7 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
         var sut = _fixture.CreateSut();
         
         // Act
-        var result = sut.GetClientHealth("qbit1");
+        var result = sut.GetClientHealth(new Guid("00000000-0000-0000-0000-000000000001"));
         
         // Assert
         result.ShouldBeNull();
@@ -158,21 +158,21 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
     {
         // Arrange
         var sut = _fixture.CreateSut();
-        _fixture.SetupHealthyClient("qbit1");
-        _fixture.SetupUnhealthyClient("transmission1");
+        _fixture.SetupHealthyClient(new Guid("00000000-0000-0000-0000-000000000001"));
+        _fixture.SetupUnhealthyClient(new Guid("00000000-0000-0000-0000-000000000002"));
         
         // Perform checks to cache statuses
-        await sut.CheckClientHealthAsync("qbit1");
-        await sut.CheckClientHealthAsync("transmission1");
+        await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000001"));
+        await sut.CheckClientHealthAsync(new Guid("00000000-0000-0000-0000-000000000002"));
         
         // Act
         var results = sut.GetAllClientHealth();
         
         // Assert
         results.Count.ShouldBe(2);
-        results.Keys.ShouldContain("qbit1");
-        results.Keys.ShouldContain("transmission1");
-        results["qbit1"].IsHealthy.ShouldBeTrue();
-        results["transmission1"].IsHealthy.ShouldBeFalse();
+        results.Keys.ShouldContain(new Guid("00000000-0000-0000-0000-000000000001"));
+        results.Keys.ShouldContain(new Guid("00000000-0000-0000-0000-000000000002"));
+        results[new Guid("00000000-0000-0000-0000-000000000001")].IsHealthy.ShouldBeTrue();
+        results[new Guid("00000000-0000-0000-0000-000000000002")].IsHealthy.ShouldBeFalse();
     }
 }

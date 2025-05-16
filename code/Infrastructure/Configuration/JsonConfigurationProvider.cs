@@ -79,7 +79,7 @@ public class JsonConfigurationProvider
 
             if (!File.Exists(fullPath))
             {
-                _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
+                _logger.LogDebug("Configuration file does not exist: {file}", fullPath);
                 return new T();
             }
 

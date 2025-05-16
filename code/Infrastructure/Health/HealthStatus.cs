@@ -28,7 +28,7 @@ public class HealthStatus
     /// <summary>
     /// Gets or sets the client ID
     /// </summary>
-    public string ClientId { get; set; } = string.Empty;
+    public Guid ClientId { get; set; } = Guid.Empty;
     
     /// <summary>
     /// Gets or sets the client name

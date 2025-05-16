@@ -1,5 +1,6 @@
 using Common.Configuration.Arr;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace Common.Configuration.ContentBlocker;
 
@@ -10,22 +11,28 @@ public sealed record ContentBlockerConfig : IJobConfig
     public bool Enabled { get; init; }
     
     // Trigger configuration
-    [ConfigurationKeyName("CRON_EXPRESSION")]
+    [JsonProperty("cron_expression")]
     public string CronExpression { get; init; } = "0 */30 * ? * *"; // Default: every 30 minutes
     
     // Privacy settings
-    [ConfigurationKeyName("IGNORE_PRIVATE")]
+    [JsonProperty("ignore_private")]
     public bool IgnorePrivate { get; init; }
     
-    [ConfigurationKeyName("DELETE_PRIVATE")]
+    [JsonProperty("delete_private")]
     public bool DeletePrivate { get; init; }
 
-    [ConfigurationKeyName("IGNORED_DOWNLOADS_PATH")]
+    // TODO
+    [JsonProperty("IGNORED_DOWNLOADS_PATH")]
     public string? IgnoredDownloadsPath { get; init; }
     
     // Blocklist settings moved from ArrConfig
+    [JsonProperty("sonarr")]
     public BlocklistSettings Sonarr { get; init; } = new();
+    
+    [JsonProperty("radarr")]
     public BlocklistSettings Radarr { get; init; } = new();
+    
+    [JsonProperty("lidarr")]
     public BlocklistSettings Lidarr { get; init; } = new();
     
     public void Validate()

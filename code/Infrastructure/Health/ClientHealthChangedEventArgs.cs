@@ -8,7 +8,7 @@ public class ClientHealthChangedEventArgs : EventArgs
     /// <summary>
     /// Gets the client ID
     /// </summary>
-    public string ClientId { get; }
+    public Guid ClientId { get; }
     
     /// <summary>
     /// Gets the health status
@@ -31,7 +31,7 @@ public class ClientHealthChangedEventArgs : EventArgs
     /// <param name="clientId">The client ID</param>
     /// <param name="status">The current health status</param>
     /// <param name="previousStatus">The previous health status, if any</param>
-    public ClientHealthChangedEventArgs(string clientId, HealthStatus status, HealthStatus? previousStatus)
+    public ClientHealthChangedEventArgs(Guid clientId, HealthStatus status, HealthStatus? previousStatus)
     {
         ClientId = clientId;
         Status = status;

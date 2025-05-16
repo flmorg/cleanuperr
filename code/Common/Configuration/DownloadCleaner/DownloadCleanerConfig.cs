@@ -1,5 +1,6 @@
 using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace Common.Configuration.DownloadCleaner;
 
@@ -10,27 +11,29 @@ public sealed record DownloadCleanerConfig : IJobConfig
     public bool Enabled { get; init; }
 
     // Trigger configuration
-    [ConfigurationKeyName("CRON_EXPRESSION")]
+    [JsonProperty("cron_expression")]
     public string CronExpression { get; init; } = "0 */20 * ? * *"; // Default: every 20 minutes
 
     public List<CleanCategory>? Categories { get; init; }
 
-    [ConfigurationKeyName("DELETE_PRIVATE")]
+    [JsonProperty("delete_private")]
     public bool DeletePrivate { get; init; }
     
-    [ConfigurationKeyName("IGNORED_DOWNLOADS_PATH")]
+    // TODO
+    [JsonProperty("ignored_downloads_path")]
     public string? IgnoredDownloadsPath { get; init; }
 
-    [ConfigurationKeyName("UNLINKED_TARGET_CATEGORY")]
+    [JsonProperty("unlinked_target_category")]
     public string UnlinkedTargetCategory { get; init; } = "cleanuperr-unlinked";
 
-    [ConfigurationKeyName("UNLINKED_USE_TAG")]
+    [JsonProperty("unlinked_use_tag")]
     public bool UnlinkedUseTag { get; init; }
 
-    [ConfigurationKeyName("UNLINKED_IGNORED_ROOT_DIR")]
+    [JsonProperty("unlinked_ignored_root_dir")]
     public string UnlinkedIgnoredRootDir { get; init; } = string.Empty;
     
-    [ConfigurationKeyName("UNLINKED_CATEGORIES")]
+    // TODO rename to unlinked objects and add type (category, tag, etc)
+    [JsonProperty("unlinked_categories")]
     public List<string>? UnlinkedCategories { get; init; }
 
     public void Validate()

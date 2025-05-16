@@ -12,7 +12,7 @@ public sealed record DownloadClientConfig : IConfig
     /// </summary>
     /// <param name="id">The client id</param>
     /// <returns>The client configuration or null if not found</returns>
-    public ClientConfig? GetClientConfig(string id)
+    public ClientConfig? GetClientConfig(Guid id)
     {
         return Clients.FirstOrDefault(c => c.Id == id);
     }
@@ -46,7 +46,7 @@ public sealed record DownloadClientConfig : IConfig
         // Validate each client configuration
         foreach (var client in Clients)
         {
-            if (string.IsNullOrWhiteSpace(client.Id))
+            if (client.Id == Guid.Empty)
             {
                 throw new InvalidOperationException("Client ID cannot be empty");
             }

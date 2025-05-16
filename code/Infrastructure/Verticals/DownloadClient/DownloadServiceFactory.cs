@@ -33,9 +33,9 @@ public sealed class DownloadServiceFactory
     /// </summary>
     /// <param name="clientId">The client ID to create a service for</param>
     /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
-    public IDownloadService? GetDownloadService(string clientId)
+    public IDownloadService? GetDownloadService(Guid clientId)
     {
-        var config = _configManager.GetDownloadClientConfigAsync().GetAwaiter().GetResult();
+        var config = _configManager.GetDownloadClientConfig();
         
         if (config == null)
         {

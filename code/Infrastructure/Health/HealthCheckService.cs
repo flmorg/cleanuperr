@@ -14,7 +14,7 @@ public class HealthCheckService : IHealthCheckService
     private readonly ILogger<HealthCheckService> _logger;
     private readonly IConfigManager _configManager;
     private readonly IDownloadClientFactory _clientFactory;
-    private readonly Dictionary<string, HealthStatus> _healthStatuses = new();
+    private readonly Dictionary<Guid, HealthStatus> _healthStatuses = new();
     private readonly object _lockObject = new();
 
     /// <summary>
@@ -39,7 +39,7 @@ public class HealthCheckService : IHealthCheckService
     }
 
     /// <inheritdoc />
-    public async Task<HealthStatus> CheckClientHealthAsync(string clientId)
+    public async Task<HealthStatus> CheckClientHealthAsync(Guid clientId)
     {
         _logger.LogDebug("Checking health for client {clientId}", clientId);
 
@@ -128,7 +128,7 @@ public class HealthCheckService : IHealthCheckService
     }
 
     /// <inheritdoc />
-    public async Task<IDictionary<string, HealthStatus>> CheckAllClientsHealthAsync()
+    public async Task<IDictionary<Guid, HealthStatus>> CheckAllClientsHealthAsync()
     {
         _logger.LogDebug("Checking health for all enabled clients");
         
@@ -139,11 +139,11 @@ public class HealthCheckService : IHealthCheckService
             if (config == null)
             {
                 _logger.LogWarning("Download client configuration not found");
-                return new Dictionary<string, HealthStatus>();
+                return new Dictionary<Guid, HealthStatus>();
             }
             
             var enabledClients = config.GetEnabledClients();
-            var results = new Dictionary<string, HealthStatus>();
+            var results = new Dictionary<Guid, HealthStatus>();
             
             // Check health of each enabled client
             foreach (var clientConfig in enabledClients)
@@ -157,12 +157,12 @@ public class HealthCheckService : IHealthCheckService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking health for all clients");
-            return new Dictionary<string, HealthStatus>();
+            return new Dictionary<Guid, HealthStatus>();
         }
     }
 
     /// <inheritdoc />
-    public HealthStatus? GetClientHealth(string clientId)
+    public HealthStatus? GetClientHealth(Guid clientId)
     {
         lock (_lockObject)
         {
@@ -171,15 +171,15 @@ public class HealthCheckService : IHealthCheckService
     }
 
     /// <inheritdoc />
-    public IDictionary<string, HealthStatus> GetAllClientHealth()
+    public IDictionary<Guid, HealthStatus> GetAllClientHealth()
     {
         lock (_lockObject)
         {
-            return new Dictionary<string, HealthStatus>(_healthStatuses);
+            return new Dictionary<Guid, HealthStatus>(_healthStatuses);
         }
     }
     
-    private async Task<ClientConfig?> GetClientConfigAsync(string clientId)
+    private async Task<ClientConfig?> GetClientConfigAsync(Guid clientId)
     {
         var config = await _configManager.GetDownloadClientConfigAsync();
         return config?.GetClientConfig(clientId);
