@@ -1,3 +1,4 @@
+using Infrastructure.Health;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
@@ -11,6 +12,13 @@ public static class ApiDI
         // Add API-specific services
         services.AddControllers();
         services.AddEndpointsApiExplorer();
+        
+        // Add SignalR for real-time updates
+        services.AddSignalR();
+        
+        // Add health status broadcaster
+        services.AddHostedService<HealthStatusBroadcaster>();
+        
         services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new OpenApiInfo
@@ -45,6 +53,9 @@ public static class ApiDI
         app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();
+        
+        // Map SignalR hubs
+        app.MapHub<HealthStatusHub>("/hubs/health");
 
         return app;
     }

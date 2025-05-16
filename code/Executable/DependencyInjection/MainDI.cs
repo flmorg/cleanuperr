@@ -3,6 +3,7 @@ using Common.Configuration.General;
 using Common.Helpers;
 using Domain.Models.Arr;
 using Infrastructure.Configuration;
+using Infrastructure.Health;
 using Infrastructure.Http;
 using Infrastructure.Services;
 using Infrastructure.Verticals.DownloadClient.Factory;
@@ -29,6 +30,7 @@ public static class MainDI
             })
             .AddServices()
             .AddDownloadClientServices()
+            .AddHealthServices()
             .AddQuartzServices(configuration)
             .AddNotifications(configuration)
             .AddMassTransit(config =>
@@ -121,4 +123,15 @@ public static class MainDI
             .AddTransient<Infrastructure.Verticals.DownloadClient.QBittorrent.QBitService>()
             .AddTransient<Infrastructure.Verticals.DownloadClient.Transmission.TransmissionService>()
             .AddTransient<Infrastructure.Verticals.DownloadClient.Deluge.DelugeService>();
+            
+    /// <summary>
+    /// Adds health check services to the service collection
+    /// </summary>
+    private static IServiceCollection AddHealthServices(this IServiceCollection services) =>
+        services
+            // Register the health check service
+            .AddSingleton<IHealthCheckService, HealthCheckService>()
+            
+            // Register the background service for periodic health checks
+            .AddHostedService<HealthCheckBackgroundService>();
 }
