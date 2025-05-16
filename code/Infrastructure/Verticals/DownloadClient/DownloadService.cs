@@ -17,16 +17,14 @@ using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
 public abstract class DownloadService : IDownloadService
 {
     protected readonly ILogger<DownloadService> _logger;
-    protected readonly QueueCleanerConfig _queueCleanerConfig;
-    protected readonly ContentBlockerConfig _contentBlockerConfig;
-    protected readonly DownloadCleanerConfig _downloadCleanerConfig;
+    protected readonly IConfigManager _configManager;
     protected readonly IMemoryCache _cache;
     protected readonly IFilenameEvaluator _filenameEvaluator;
     protected readonly IStriker _striker;
@@ -40,9 +38,7 @@ public abstract class DownloadService : IDownloadService
 
     protected DownloadService(
         ILogger<DownloadService> logger,
-        IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IOptions<ContentBlockerConfig> contentBlockerConfig,
-        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
+        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -52,9 +48,7 @@ public abstract class DownloadService : IDownloadService
     )
     {
         _logger = logger;
-        _queueCleanerConfig = queueCleanerConfig.Value;
-        _contentBlockerConfig = contentBlockerConfig.Value;
-        _downloadCleanerConfig = downloadCleanerConfig.Value;
+        _configManager = configManager;
         _cache = cache;
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
@@ -111,7 +105,8 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetStalledStrikesOnProgress(string hash, long downloaded)
     {
-        if (!_queueCleanerConfig.StalledResetStrikesOnProgress)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig == null || !queueCleanerConfig.StalledResetStrikesOnProgress)
         {
             return;
         }
@@ -129,7 +124,8 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetSlowSpeedStrikesOnProgress(string downloadName, string hash)
     {
-        if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig == null || !queueCleanerConfig.SlowResetStrikesOnProgress)
         {
             return;
         }
@@ -147,7 +143,8 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetSlowTimeStrikesOnProgress(string downloadName, string hash)
     {
-        if (!_queueCleanerConfig.SlowResetStrikesOnProgress)
+        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+        if (queueCleanerConfig == null || !queueCleanerConfig.SlowResetStrikesOnProgress)
         {
             return;
         }
@@ -176,8 +173,10 @@ public abstract class DownloadService : IDownloadService
         {
             _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), downloadName);
             
+            var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+            int maxStrikes = queueCleanerConfig?.SlowMaxStrikes ?? 0;
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
+                .StrikeAndCheckLimit(downloadHash, downloadName, maxStrikes, StrikeType.SlowSpeed);
 
             if (shouldRemove)
             {
@@ -193,8 +192,10 @@ public abstract class DownloadService : IDownloadService
         {
             _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), downloadName);
             
+            var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
+            int maxStrikes = queueCleanerConfig?.SlowMaxStrikes ?? 0;
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
+                .StrikeAndCheckLimit(downloadHash, downloadName, maxStrikes, StrikeType.SlowTime);
 
             if (shouldRemove)
             {

@@ -1,4 +1,5 @@
-﻿using System.Text;
+using System.Text;
+using Infrastructure.Configuration;
 using Infrastructure.Verticals.Notifications.Models;
 using Microsoft.Extensions.Options;
 
@@ -9,10 +10,10 @@ public sealed class AppriseProvider : NotificationProvider
     private readonly AppriseConfig _config;
     private readonly IAppriseProxy _proxy;
     
-    public AppriseProvider(IOptions<AppriseConfig> config, IAppriseProxy proxy)
-        : base(config)
+    public AppriseProvider(IConfigManager configManager, IAppriseProxy proxy)
+        : base(configManager)
     {
-        _config = config.Value;
+        _config = configManager.GetConfiguration<AppriseConfig>("apprise.json") ?? new AppriseConfig();
         _proxy = proxy;
     }
     

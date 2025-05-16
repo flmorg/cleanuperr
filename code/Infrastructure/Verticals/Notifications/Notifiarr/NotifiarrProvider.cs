@@ -1,3 +1,4 @@
+using Infrastructure.Configuration;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
 using Microsoft.Extensions.Options;
@@ -15,10 +16,10 @@ public class NotifiarrProvider : NotificationProvider
     
     public override string Name => "Notifiarr";
 
-    public NotifiarrProvider(IOptions<NotifiarrConfig> config, INotifiarrProxy proxy)
-        : base(config)
+    public NotifiarrProvider(IConfigManager configManager, INotifiarrProxy proxy)
+        : base(configManager)
     {
-        _config = config.Value;
+        _config = configManager.GetConfiguration<NotifiarrConfig>("notifiarr.json") ?? new NotifiarrConfig();
         _proxy = proxy;
     }
 

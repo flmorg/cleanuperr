@@ -1,4 +1,5 @@
 using Common.Configuration.Notification;
+using Infrastructure.Configuration;
 using Infrastructure.Verticals.Notifications.Models;
 using Microsoft.Extensions.Options;
 
@@ -6,12 +7,15 @@ namespace Infrastructure.Verticals.Notifications;
 
 public abstract class NotificationProvider : INotificationProvider
 {
-    protected NotificationProvider(IOptions<NotificationConfig> config)
+    protected NotificationProvider(IConfigManager configManager)
     {
-        Config = config.Value;
+        ConfigManager = configManager;
+        Config = configManager.GetConfiguration<NotificationConfig>("notification.json") ?? new NotificationConfig();
     }
     
     public abstract string Name { get; }
+    
+    public IConfigManager ConfigManager { get; }
     
     public NotificationConfig Config { get; }
     

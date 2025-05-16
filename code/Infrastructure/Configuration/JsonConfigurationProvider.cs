@@ -66,7 +66,7 @@ public class JsonConfigurationProvider
     }
 
     /// <summary>
-    /// Reads a configuration from a JSON file.
+    /// Reads a configuration from a JSON file asynchronously.
     /// </summary>
     public async Task<T?> ReadConfigurationAsync<T>(string fileName) where T : class, new()
     {
@@ -107,7 +107,48 @@ public class JsonConfigurationProvider
     }
 
     /// <summary>
-    /// Writes a configuration to a JSON file in a thread-safe manner.
+    /// Reads a configuration from a JSON file synchronously.
+    /// </summary>
+    public T? ReadConfiguration<T>(string fileName) where T : class, new()
+    {
+        var fileLock = GetFileLock(fileName);
+        var fullPath = GetFullPath(fileName);
+
+        try
+        {
+            fileLock.Wait();
+
+            if (!File.Exists(fullPath))
+            {
+                _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
+                return new T();
+            }
+
+            var json = File.ReadAllText(fullPath);
+
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                _logger.LogWarning("Configuration file is empty: {file}", fullPath);
+                return new T();
+            }
+
+            var config = JsonSerializer.Deserialize<T>(json, _serializerOptions);
+            _logger.LogDebug("Read configuration from {file}", fullPath);
+            return config ?? new T();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading configuration from {file}", fullPath);
+            return new T();
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Writes a configuration to a JSON file in a thread-safe manner asynchronously.
     /// </summary>
     public async Task<bool> WriteConfigurationAsync<T>(string fileName, T configuration) where T : class
     {
@@ -136,6 +177,51 @@ public class JsonConfigurationProvider
 
             var json = JsonSerializer.Serialize(configuration, _serializerOptions);
             await File.WriteAllTextAsync(fullPath, json);
+            
+            _logger.LogInformation("Wrote configuration to {file}", fullPath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error writing configuration to {file}", fullPath);
+            return false;
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Writes a configuration to a JSON file in a thread-safe manner synchronously.
+    /// </summary>
+    public bool WriteConfiguration<T>(string fileName, T configuration) where T : class
+    {
+        var fileLock = GetFileLock(fileName);
+        var fullPath = GetFullPath(fileName);
+
+        try
+        {
+            fileLock.Wait();
+
+            // Create backup if file exists
+            if (File.Exists(fullPath))
+            {
+                var backupPath = $"{fullPath}.bak";
+                try
+                {
+                    File.Copy(fullPath, backupPath, true);
+                    _logger.LogDebug("Created backup of configuration file: {backup}", backupPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to create backup of configuration file: {file}", fullPath);
+                    // Continue anyway - prefer having new config to having no config
+                }
+            }
+
+            var json = JsonSerializer.Serialize(configuration, _serializerOptions);
+            File.WriteAllText(fullPath, json);
             
             _logger.LogInformation("Wrote configuration to {file}", fullPath);
             return true;
@@ -233,6 +319,89 @@ public class JsonConfigurationProvider
             fileLock.Release();
         }
     }
+    
+    /// <summary>
+    /// Updates a specific property within a JSON configuration file synchronously.
+    /// </summary>
+    public bool UpdateConfigurationProperty<T>(string fileName, string propertyPath, T value)
+    {
+        var fileLock = GetFileLock(fileName);
+        var fullPath = GetFullPath(fileName);
+
+        try
+        {
+            fileLock.Wait();
+
+            if (!File.Exists(fullPath))
+            {
+                _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
+                return false;
+            }
+
+            // Create backup
+            var backupPath = $"{fullPath}.bak";
+            try
+            {
+                File.Copy(fullPath, backupPath, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create backup of configuration file: {file}", fullPath);
+            }
+
+            var json = File.ReadAllText(fullPath);
+            var jsonNode = JsonNode.Parse(json)?.AsObject();
+
+            if (jsonNode == null)
+            {
+                _logger.LogError("Failed to parse configuration file: {file}", fullPath);
+                return false;
+            }
+
+            // Handle simple property paths like "propertyName"
+            if (!propertyPath.Contains('.'))
+            {
+                jsonNode[propertyPath] = JsonValue.Create(value);
+            }
+            else
+            {
+                // Handle nested property paths like "parent.child.property"
+                var parts = propertyPath.Split('.');
+                var current = jsonNode;
+
+                for (int i = 0; i < parts.Length - 1; i++)
+                {
+                    if (current[parts[i]] is JsonObject nestedObject)
+                    {
+                        current = nestedObject;
+                    }
+                    else
+                    {
+                        var newObject = new JsonObject();
+                        current[parts[i]] = newObject;
+                        current = newObject;
+                    }
+                }
+
+                current[parts[^1]] = JsonValue.Create(value);
+            }
+
+            var updatedJson = jsonNode.ToJsonString(_serializerOptions);
+            File.WriteAllText(fullPath, updatedJson);
+            
+            _logger.LogInformation("Updated property {property} in {file}", propertyPath, fullPath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating property {property} in {file}", propertyPath, fullPath);
+            return false;
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
 
     /// <summary>
     /// Merges an existing configuration with new values.
@@ -300,6 +469,73 @@ public class JsonConfigurationProvider
             fileLock.Release();
         }
     }
+    
+    /// <summary>
+    /// Merges an existing configuration with new values synchronously.
+    /// </summary>
+    public bool MergeConfiguration<T>(string fileName, T newValues) where T : class
+    {
+        var fileLock = GetFileLock(fileName);
+        var fullPath = GetFullPath(fileName);
+
+        try
+        {
+            fileLock.Wait();
+
+            T currentConfig;
+
+            if (File.Exists(fullPath))
+            {
+                var json = File.ReadAllText(fullPath);
+                currentConfig = JsonSerializer.Deserialize<T>(json, _serializerOptions) ?? Activator.CreateInstance<T>();
+
+                // Create backup
+                var backupPath = $"{fullPath}.bak";
+                try
+                {
+                    File.Copy(fullPath, backupPath, true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to create backup of configuration file: {file}", fullPath);
+                }
+            }
+            else
+            {
+                currentConfig = Activator.CreateInstance<T>() ?? throw new InvalidOperationException($"Failed to create instance of {typeof(T).Name}");
+            }
+
+            // Merge properties using JsonNode
+            var currentJson = JsonSerializer.Serialize(currentConfig, _serializerOptions);
+            var currentNode = JsonNode.Parse(currentJson)?.AsObject();
+            
+            var newJson = JsonSerializer.Serialize(newValues, _serializerOptions);
+            var newNode = JsonNode.Parse(newJson)?.AsObject();
+
+            if (currentNode == null || newNode == null)
+            {
+                _logger.LogError("Failed to parse configuration for merging: {file}", fullPath);
+                return false;
+            }
+
+            MergeJsonNodes(currentNode, newNode);
+
+            var mergedJson = currentNode.ToJsonString(_serializerOptions);
+            File.WriteAllText(fullPath, mergedJson);
+            
+            _logger.LogInformation("Merged configuration in {file}", fullPath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error merging configuration in {file}", fullPath);
+            return false;
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
 
     private void MergeJsonNodes(JsonObject target, JsonObject source)
     {
@@ -337,6 +573,50 @@ public class JsonConfigurationProvider
         try
         {
             await fileLock.WaitAsync();
+
+            if (!File.Exists(fullPath))
+            {
+                _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
+                return true; // Already gone
+            }
+
+            // Create backup
+            var backupPath = $"{fullPath}.bak";
+            try
+            {
+                File.Copy(fullPath, backupPath, true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create backup of configuration file: {file}", fullPath);
+            }
+
+            File.Delete(fullPath);
+            _logger.LogInformation("Deleted configuration file: {file}", fullPath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting configuration file: {file}", fullPath);
+            return false;
+        }
+        finally
+        {
+            fileLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Deletes a configuration file synchronously.
+    /// </summary>
+    public bool DeleteConfiguration(string fileName)
+    {
+        var fileLock = GetFileLock(fileName);
+        var fullPath = GetFullPath(fileName);
+
+        try
+        {
+            fileLock.Wait();
 
             if (!File.Exists(fullPath))
             {

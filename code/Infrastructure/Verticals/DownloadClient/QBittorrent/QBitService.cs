@@ -17,23 +17,22 @@ using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Infrastructure.Configuration;
 using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
 public class QBitService : DownloadService, IQBitService
 {
-    private readonly QBitConfig _config;
-    private readonly QBittorrentClient _client;
+    protected readonly IHttpClientFactory _httpClientFactory;
+    protected readonly IConfigManager _configManager;
+    protected readonly QBittorrentClient _client;
+    protected readonly ILogger<QBitService> _logger;
 
     public QBitService(
         ILogger<QBitService> logger,
         IHttpClientFactory httpClientFactory,
-        IOptions<QBitConfig> config,
-        IOptions<QueueCleanerConfig> queueCleanerConfig,
-        IOptions<ContentBlockerConfig> contentBlockerConfig,
-        IOptions<DownloadCleanerConfig> downloadCleanerConfig,
+        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -41,27 +40,40 @@ public class QBitService : DownloadService, IQBitService
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService
     ) : base(
-        logger, queueCleanerConfig, contentBlockerConfig, downloadCleanerConfig, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
+        logger, configManager, cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService
     )
     {
-        _config = config.Value;
-        _config.Validate();
-        UriBuilder uriBuilder = new(_config.Url);
-        uriBuilder.Path = string.IsNullOrEmpty(_config.UrlBase)
-            ? uriBuilder.Path
-            : $"{uriBuilder.Path.TrimEnd('/')}/{_config.UrlBase.TrimStart('/')}";
-        _client = new(httpClientFactory.CreateClient(Constants.HttpClientWithRetryName), uriBuilder.Uri);
+        _logger = logger;
+        _httpClientFactory = httpClientFactory;
+        _configManager = configManager;
+
+        // Get configuration for initialization
+        var config = _configManager.GetConfiguration<QBitConfig>("qbit.json");
+        if (config != null)
+        {
+            config.Validate();
+            UriBuilder uriBuilder = new(config.Url);
+            uriBuilder.Path = string.IsNullOrEmpty(config.UrlBase)
+                ? uriBuilder.Path
+                : $"{uriBuilder.Path.TrimEnd('/')}/{config.UrlBase.TrimStart('/')}";
+            _client = new(_httpClientFactory.CreateClient(Constants.HttpClientWithRetryName), uriBuilder.Uri);
+        }
+        else
+        {
+            _logger.LogError("Failed to load QBit configuration");
+            throw new InvalidOperationException("QBit configuration is missing or invalid");
+        }
     }
 
     public override async Task LoginAsync()
     {
-        if (string.IsNullOrEmpty(_config.Username) && string.IsNullOrEmpty(_config.Password))
+        var config = _configManager.GetConfiguration<QBitConfig>("qbit.json");
+        if (config == null || (string.IsNullOrEmpty(config.Username) && string.IsNullOrEmpty(config.Password)))
         {
             return;
         }
-        
-        await _client.LoginAsync(_config.Username, _config.Password);
+
+        await _client.LoginAsync(config.Username, config.Password);
     }
 
     /// <inheritdoc/>
@@ -76,11 +88,11 @@ public class QBitService : DownloadService, IQBitService
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
-        
+
         result.Found = true;
 
         IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(hash);
-        
+
         if (ignoredDownloads.Count > 0 &&
             (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads)) is true))
         {
@@ -105,14 +117,14 @@ public class QBitService : DownloadService, IQBitService
         if (files?.Count is > 0 && files.All(x => x.Priority is TorrentContentPriority.Skip))
         {
             result.ShouldRemove = true;
-            
+
             // if all files were blocked by qBittorrent
             if (download is { CompletionOn: not null, Downloaded: null or 0 })
             {
                 result.DeleteReason = DeleteReason.AllFilesSkippedByQBit;
                 return result;
             }
-            
+
             // remove if all files are unwanted
             result.DeleteReason = DeleteReason.AllFilesSkipped;
             return result;
@@ -140,19 +152,19 @@ public class QBitService : DownloadService, IQBitService
             _logger.LogDebug("failed to find torrent {hash} in the download client", hash);
             return result;
         }
-        
+
         // Mark as processed since we found the download
         result.Found = true;
-        
+
         IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(hash);
-        
+
         if (ignoredDownloads.Count > 0 &&
             (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads)) is true))
         {
             _logger.LogInformation("skip | download is ignored | {name}", download.Name);
             return result;
         }
-        
+
         TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(hash);
 
         if (torrentProperties is null)
@@ -167,13 +179,13 @@ public class QBitService : DownloadService, IQBitService
 
         result.IsPrivate = isPrivate;
 
-        if (_contentBlockerConfig.IgnorePrivate && isPrivate)
+        if (_configManager.GetConfiguration<ContentBlockerConfig>("contentblocker.json").IgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", download.Name);
             return result;
         }
-        
+
         IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(hash);
 
         if (files is null)
@@ -184,7 +196,7 @@ public class QBitService : DownloadService, IQBitService
         List<int> unwantedFiles = [];
         long totalFiles = 0;
         long totalUnwantedFiles = 0;
-        
+
         foreach (TorrentContent file in files)
         {
             if (!file.Index.HasValue)
@@ -204,7 +216,7 @@ public class QBitService : DownloadService, IQBitService
             {
                 continue;
             }
-            
+
             _logger.LogInformation("unwanted file found | {file}", file.Name);
             unwantedFiles.Add(file.Index.Value);
             totalUnwantedFiles++;
@@ -214,12 +226,12 @@ public class QBitService : DownloadService, IQBitService
         {
             return result;
         }
-        
+
         if (totalUnwantedFiles == totalFiles)
         {
             // Skip marking files as unwanted. The download will be removed completely.
             result.ShouldRemove = true;
-            
+
             return result;
         }
 
@@ -227,10 +239,10 @@ public class QBitService : DownloadService, IQBitService
         {
             await _dryRunInterceptor.InterceptAsync(SkipFile, hash, fileIndex);
         }
-        
+
         return result;
     }
-    
+
     /// <inheritdoc/>
     public override async Task<List<object>?> GetSeedingDownloads() =>
         (await _client.GetTorrentListAsync(new()
@@ -258,9 +270,9 @@ public class QBitService : DownloadService, IQBitService
             .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
             .Where(x =>
             {
-                if (_downloadCleanerConfig.UnlinkedUseTag)
+                if (_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedUseTag)
                 {
-                    return !x.Tags.Any(tag => tag.Equals(_downloadCleanerConfig.UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
+                    return !x.Tags.Any(tag => tag.Equals(_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 return true;
@@ -276,20 +288,20 @@ public class QBitService : DownloadService, IQBitService
         {
             return;
         }
-        
+
         foreach (TorrentInfo download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
             {
                 continue;
             }
-            
+
             if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
             {
                 _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
-            
+
             IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(download.Hash);
 
             if (ignoredDownloads.Count > 0 &&
@@ -298,16 +310,16 @@ public class QBitService : DownloadService, IQBitService
                 _logger.LogInformation("skip | download is ignored | {name}", download.Name);
                 continue;
             }
-            
+
             CleanCategory? category = categoriesToClean
                 .FirstOrDefault(x => download.Category.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase));
-            
+
             if (category is null)
             {
                 continue;
             }
-            
-            if (!_downloadCleanerConfig.DeletePrivate)
+
+            if (!_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").DeletePrivate)
             {
                 TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(download.Hash);
 
@@ -316,7 +328,7 @@ public class QBitService : DownloadService, IQBitService
                     _logger.LogDebug("failed to find torrent properties in the download client | {name}", download.Name);
                     return;
                 }
-                
+
                 bool isPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
                                  bool.TryParse(dictValue?.ToString(), out bool boolValue)
                                  && boolValue;
@@ -327,7 +339,7 @@ public class QBitService : DownloadService, IQBitService
                     continue;
                 }
             }
-            
+
             ContextProvider.Set("downloadName", download.Name);
             ContextProvider.Set("hash", download.Hash);
 
@@ -347,7 +359,7 @@ public class QBitService : DownloadService, IQBitService
                     : "MAX_SEED_TIME",
                 download.Name
             );
-            
+
             await _notifier.NotifyDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
         }
     }
@@ -355,12 +367,12 @@ public class QBitService : DownloadService, IQBitService
     public override async Task CreateCategoryAsync(string name)
     {
         IReadOnlyDictionary<string, Category>? existingCategories = await _client.GetCategoriesAsync();
-        
+
         if (existingCategories.Any(x => x.Value.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
         {
             return;
         }
-        
+
         await _dryRunInterceptor.InterceptAsync(CreateCategory, name);
     }
 
@@ -370,34 +382,34 @@ public class QBitService : DownloadService, IQBitService
         {
             return;
         }
-        
-        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+
+        if (!string.IsNullOrEmpty(_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedIgnoredRootDir))
         {
-            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+            _hardLinkFileService.PopulateFileCounts(_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedIgnoredRootDir);
         }
-        
+
         foreach (TorrentInfo download in downloads)
         {
             if (string.IsNullOrEmpty(download.Hash))
             {
                 continue;
             }
-            
+
             if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
             {
                 _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
                 continue;
             }
-            
+
             IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(download.Hash);
-            
+
             if (ignoredDownloads.Count > 0 &&
                 (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads))))
             {
                 _logger.LogInformation("skip | download is ignored | {name}", download.Name);
                 continue;
             }
-            
+
             IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(download.Hash);
 
             if (files is null)
@@ -409,7 +421,7 @@ public class QBitService : DownloadService, IQBitService
             ContextProvider.Set("downloadName", download.Name);
             ContextProvider.Set("hash", download.Hash);
             bool hasHardlinks = false;
-            
+
             foreach (TorrentContent file in files)
             {
                 if (!file.Index.HasValue)
@@ -426,8 +438,8 @@ public class QBitService : DownloadService, IQBitService
                     _logger.LogDebug("skip | file is not downloaded | {file}", filePath);
                     continue;
                 }
-                
-                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedIgnoredRootDir));
 
                 if (hardlinkCount < 0)
                 {
@@ -442,29 +454,29 @@ public class QBitService : DownloadService, IQBitService
                     break;
                 }
             }
-            
+
             if (hasHardlinks)
             {
                 _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
                 continue;
             }
-            
-            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
 
-            if (_downloadCleanerConfig.UnlinkedUseTag)
+            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedTargetCategory);
+
+            if (_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedUseTag)
             {
                 _logger.LogInformation("tag added for {name}", download.Name);
             }
             else
             {
                 _logger.LogInformation("category changed for {name}", download.Name);
-                download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
+                download.Category = _configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedTargetCategory;
             }
-            
-            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory, _downloadCleanerConfig.UnlinkedUseTag);
+
+            await _notifier.NotifyCategoryChanged(download.Category, _configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedTargetCategory, _configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedUseTag);
         }
     }
-    
+
     /// <inheritdoc/>
     [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)
@@ -477,7 +489,7 @@ public class QBitService : DownloadService, IQBitService
     {
         await _client.AddCategoryAsync(name);
     }
-    
+
     [DryRunSafeguard]
     protected virtual async Task SkipFile(string hash, int fileIndex)
     {
@@ -487,12 +499,12 @@ public class QBitService : DownloadService, IQBitService
     [DryRunSafeguard]
     protected virtual async Task ChangeCategory(string hash, string newCategory)
     {
-        if (_downloadCleanerConfig.UnlinkedUseTag)
+        if (_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedUseTag)
         {
             await _client.AddTorrentTagAsync([hash], newCategory);
             return;
         }
-        
+
         await _client.SetTorrentCategoryAsync([hash], newCategory);
     }
 
@@ -515,37 +527,37 @@ public class QBitService : DownloadService, IQBitService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(TorrentInfo download, bool isPrivate)
     {
-        if (_queueCleanerConfig.SlowMaxStrikes is 0)
+        if (_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").SlowMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
-        
+
         if (download.State is not (TorrentState.Downloading or TorrentState.ForcedDownload))
         {
             return (false, DeleteReason.None);
         }
-        
+
         if (download.DownloadSpeed <= 0)
         {
             return (false, DeleteReason.None);
         }
-        
-        if (_queueCleanerConfig.SlowIgnorePrivate && isPrivate)
+
+        if (_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").SlowIgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
             return (false, DeleteReason.None);
         }
 
-        if (download.Size > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        if (download.Size > (_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
         {
             _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
             return (false, DeleteReason.None);
         }
-        
-        ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
+
+        ByteSize minSpeed = _configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").SlowMinSpeedByteSize;
         ByteSize currentSpeed = new ByteSize(download.DownloadSpeed);
-        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").SlowMaxTime);
         SmartTimeSpan currentTime = new SmartTimeSpan(download.EstimatedTime ?? TimeSpan.Zero);
 
         return await CheckIfSlow(
@@ -560,11 +572,11 @@ public class QBitService : DownloadService, IQBitService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(TorrentInfo torrent, bool isPrivate)
     {
-        if (_queueCleanerConfig.StalledMaxStrikes is 0 && _queueCleanerConfig.DownloadingMetadataMaxStrikes is 0)
+        if (_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").StalledMaxStrikes is 0 && _configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").DownloadingMetadataMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
-        
+
         if (torrent.State is not TorrentState.StalledDownload and not TorrentState.FetchingMetadata
             and not TorrentState.ForcedFetchingMetadata)
         {
@@ -572,9 +584,9 @@ public class QBitService : DownloadService, IQBitService
             return (false, DeleteReason.None);
         }
 
-        if (_queueCleanerConfig.StalledMaxStrikes > 0 && torrent.State is TorrentState.StalledDownload)
+        if (_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").StalledMaxStrikes > 0 && torrent.State is TorrentState.StalledDownload)
         {
-            if (_queueCleanerConfig.StalledIgnorePrivate && isPrivate)
+            if (_configManager.GetConfiguration<QueueCleanerConfig>("queuecleaner.json").StalledIgnorePrivate && isPrivate)
             {
                 // ignore private trackers
                 _logger.LogDebug("skip stalled check | download is private | {name}", torrent.Name);
