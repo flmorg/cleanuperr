@@ -70,7 +70,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
     /// <summary>
     /// Reads a configuration from a JSON file asynchronously.
     /// </summary>
-    public async Task<T?> ReadConfigurationAsync<T>(string fileName) where T : class, new()
+    public async Task<T> ReadConfigurationAsync<T>(string fileName) where T : class, new()
     {
         var fileLock = GetFileLock(fileName);
         var fullPath = GetFullPath(fileName);
@@ -82,7 +82,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
             if (!File.Exists(fullPath))
             {
                 _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
-                return null;
+                return new T();
             }
 
             var json = await File.ReadAllTextAsync(fullPath);
@@ -90,17 +90,23 @@ public class JsonConfigurationProvider : IConfigurationProvider
             if (string.IsNullOrWhiteSpace(json))
             {
                 _logger.LogWarning("Configuration file is empty: {file}", fullPath);
-                return null;
+                return new T();
             }
 
             var config = JsonSerializer.Deserialize<T>(json, _serializerOptions);
+            if (config == null)
+            {
+                _logger.LogWarning("Failed to deserialize configuration: {file}", fullPath);
+                return new T();
+            }
+            
             _logger.LogDebug("Read configuration from {file}", fullPath);
             return config;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error reading configuration from {file}", fullPath);
-            return null;
+            return new T();
         }
         finally
         {
@@ -111,7 +117,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
     /// <summary>
     /// Reads a configuration from a JSON file synchronously.
     /// </summary>
-    public T? ReadConfiguration<T>(string fileName) where T : class, new()
+    public T ReadConfiguration<T>(string fileName) where T : class, new()
     {
         var fileLock = GetFileLock(fileName);
         var fullPath = GetFullPath(fileName);
@@ -123,7 +129,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
             if (!File.Exists(fullPath))
             {
                 _logger.LogWarning("Configuration file does not exist: {file}", fullPath);
-                return null;
+                return new T();
             }
 
             var json = File.ReadAllText(fullPath);
@@ -131,17 +137,23 @@ public class JsonConfigurationProvider : IConfigurationProvider
             if (string.IsNullOrWhiteSpace(json))
             {
                 _logger.LogWarning("Configuration file is empty: {file}", fullPath);
-                return null;
+                return new T();
             }
 
             var config = JsonSerializer.Deserialize<T>(json, _serializerOptions);
+            if (config == null)
+            {
+                _logger.LogWarning("Failed to deserialize configuration: {file}", fullPath);
+                return new T();
+            }
+            
             _logger.LogDebug("Read configuration from {file}", fullPath);
             return config;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error reading configuration from {file}", fullPath);
-            return null;
+            return new T();
         }
         finally
         {

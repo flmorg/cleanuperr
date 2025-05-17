@@ -10,15 +10,9 @@ public static class ConfigurationDI
         // We no longer configure options from appsettings.json
         // Instead, we rely solely on JSON configuration files
         
-        // Define the configuration directory
-        // TODO change for docker containers
-        string configDirectory = "config";
-            
-        // Ensure the configuration directory exists
-        Directory.CreateDirectory(configDirectory);
-        
-        // Add JSON-based configuration services
-        services.AddConfigurationServices(configDirectory);
+        // Add JSON-based configuration services with Docker-aware path detection
+        // and automatic caching with real-time change detection
+        services.AddConfigurationServices();
         
         return services;
     }

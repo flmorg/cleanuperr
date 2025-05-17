@@ -49,7 +49,7 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
         _logger.LogInformation("Initialized cached configuration provider for directory: {directory}", _configDirectory);
     }
 
-    public T? ReadConfiguration<T>(string fileName) where T : class, new()
+    public T ReadConfiguration<T>(string fileName) where T : class, new()
     {
         var cacheKey = GetCacheKey<T>(fileName);
         
@@ -68,15 +68,21 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
 
         // Read from provider and update cache
         var config = _baseProvider.ReadConfiguration<T>(fileName);
-        if (config != null)
+        
+        // If no configuration exists, create a default one
+        if (config == null)
         {
-            UpdateCache(cacheKey, fileName, config);
+            config = new T();
+            _logger.LogInformation("Created default configuration for: {file}", fileName);
         }
+        
+        // Update cache with either loaded or default config
+        UpdateCache(cacheKey, fileName, config);
         
         return config;
     }
 
-    public async Task<T?> ReadConfigurationAsync<T>(string fileName) where T : class, new()
+    public async Task<T> ReadConfigurationAsync<T>(string fileName) where T : class, new()
     {
         var cacheKey = GetCacheKey<T>(fileName);
         
@@ -95,10 +101,16 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
 
         // Read from provider and update cache
         var config = await _baseProvider.ReadConfigurationAsync<T>(fileName);
-        if (config != null)
+        
+        // If no configuration exists, create a default one
+        if (config == null)
         {
-            UpdateCache(cacheKey, fileName, config);
+            config = new T();
+            _logger.LogInformation("Created default configuration for: {file}", fileName);
         }
+        
+        // Update cache with either loaded or default config
+        UpdateCache(cacheKey, fileName, config);
         
         return config;
     }

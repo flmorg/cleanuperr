@@ -5,16 +5,17 @@ namespace Infrastructure.Configuration;
 
 public static class ConfigurationExtensions
 {
-    public static IServiceCollection AddConfigurationServices(this IServiceCollection services, string configDirectory)
+    public static IServiceCollection AddConfigurationServices(this IServiceCollection services)
     {
-        // Create settings subdirectory path
-        var settingsDirectory = Path.Combine(configDirectory, "settings");
-
+        // Register path provider to handle Docker vs local environment
+        services.AddSingleton<ConfigurationPathProvider>();
+        
         // Register the base JSON provider
         services.AddSingleton<JsonConfigurationProvider>(provider => 
         {
             var logger = provider.GetRequiredService<ILogger<JsonConfigurationProvider>>();
-            return new JsonConfigurationProvider(logger, configDirectory);
+            var pathProvider = provider.GetRequiredService<ConfigurationPathProvider>();
+            return new JsonConfigurationProvider(logger, pathProvider.GetConfigPath());
         });
         
         // Register the cached provider as the implementation of IConfigurationProvider
@@ -22,12 +23,16 @@ public static class ConfigurationExtensions
         {
             var logger = provider.GetRequiredService<ILogger<CachedConfigurationProvider>>();
             var baseProvider = provider.GetRequiredService<JsonConfigurationProvider>();
-            return new CachedConfigurationProvider(logger, baseProvider, settingsDirectory);
+            var pathProvider = provider.GetRequiredService<ConfigurationPathProvider>();
+            return new CachedConfigurationProvider(logger, baseProvider, pathProvider.GetSettingsPath());
         });
         
         // Register config manager and initializer
         services.AddSingleton<IConfigManager, ConfigManager>();
         services.AddSingleton<ConfigInitializer>();
+        
+        // Register the configuration preloader as a hosted service
+        services.AddHostedService<ConfigurationPreloader>();
         
         return services;
     }

@@ -9,14 +9,14 @@ namespace Infrastructure.Configuration;
 public interface IConfigurationProvider
 {
     /// <summary>
-    /// Reads a configuration from storage asynchronously
+    /// Reads a configuration from storage asynchronously. Returns a default instance if the configuration doesn't exist.
     /// </summary>
-    Task<T?> ReadConfigurationAsync<T>(string fileName) where T : class, new();
+    Task<T> ReadConfigurationAsync<T>(string fileName) where T : class, new();
     
     /// <summary>
-    /// Reads a configuration from storage synchronously
+    /// Reads a configuration from storage synchronously. Returns a default instance if the configuration doesn't exist.
     /// </summary>
-    T? ReadConfiguration<T>(string fileName) where T : class, new();
+    T ReadConfiguration<T>(string fileName) where T : class, new();
     
     /// <summary>
     /// Writes a configuration to storage asynchronously
