@@ -1,0 +1,91 @@
+<rss version="2.0">
+  <channel>
+    <title>Test feed</title>
+    <link>http://nginx/custom/sonarr.xml</link>
+    <description>
+      Test
+    </description>
+    <language>en-CA</language>
+    <copyright> Test </copyright>
+    <pubDate>Tue, 5 Nov 2024 22:02:13 -0400</pubDate>
+    <lastBuildDate>Tue, 5 Nov 2024 22:02:13 -0400</lastBuildDate>
+    <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+    <ttl>30</ttl>
+    <item>
+      <title>Agatha.All.Along.S01E01.Seekest.Thou.the.Road.2160p.APPS.WEB-DL.DDP5.1.Atmos.H.265-VARYG</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>http://nginx/custom/sonarr_bad_nested.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f9057a23f81efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Agatha.All.Along.S01E02.Circle.Sewn.With.Fate.Unlock.Thy.Hidden.Gate.2160p.DSNP.WEB-DL.DDP5.1.Atmos.DV.HDR.H.265-FLUX</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>http://nginx/custom/sonarr_bad_single.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f689057ac3f81efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Top.Gear.S23E01.720p.x265.HDTV.HEVC.-.YSTEAM</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>magnet:?xt=urn:btih:cf82cf859b110af0ad3d94b846e006828417b193&amp;dn=TPG.2301.720p.x265.yourserie.com.mkv</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f5057ac3f81efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Top.Gear.S23E03.720p.x265.HDTV.HEVC.-.YSTEAM</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>magnet:?xt=urn:btih:cf92cf859b110af0ad3d94b846e006828417b193&amp;dn=TPG.2303.720p.x265.yourserie.com.mkv</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f5057ac3f81efde384ed216c2de43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Top.Gear.S23E01.720p.x265.HDTV.HEVC.-.YSTEAM</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>http://nginx/custom/sonarr_bad_stuck_stalled.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f9057ac3f81efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Top.Gear.S23E02.720p.x265.HDTV.HEVC.-.YSTEAM</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>http://nginx/custom/sonarr_bad_nested_top.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f9057ac3f82efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Sherlock.S01.1080p.BluRay.DD5.1.x264-DON</title>
+      <description>Test</description>
+      <size>4138858110</size>
+      <link>http://nginx/custom/sonarr_bad_pack.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f9057ac3f82efde384ed216cade43564ec45gf2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+  </channel>
+</rss>

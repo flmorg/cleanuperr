@@ -1,0 +1,38 @@
+<rss version="2.0">
+  <channel>
+    <title>Test feed</title>
+    <link>http://nginx/custom/sonarr.xml</link>
+    <description>
+      Test
+    </description>
+    <language>en-CA</language>
+    <copyright> Test </copyright>
+    <pubDate>Tue, 5 Nov 2024 22:02:13 -0400</pubDate>
+    <lastBuildDate>Tue, 5 Nov 2024 22:02:13 -0400</lastBuildDate>
+    <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+    <ttl>30</ttl>
+
+
+    <item>
+      <title>Coldplay-Ghost Stories-(Deluxe Edition)-2014-MTD</title>
+      <description>Test</description>
+      <size>104857600</size>
+      <link>http://nginx/custom/lidarr_bad_single.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f6f9057a23f81efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+
+    <item>
+      <title>Coldplay-Everyday.Life-2019-C4</title>
+      <description>Test</description>
+      <size>104857600</size>
+      <link>http://nginx/custom/lidarr_bad_pack.torrent</link>
+      <guid isPermaLink="false">
+        174674a88c8947f689057ac3f81efde384ed216cade43564ec450f2cb4677554
+      </guid>
+      <pubDate>Sat, 24 Sep 2022 22:02:13 -0300</pubDate>
+    </item>
+  </channel>
+</rss>
