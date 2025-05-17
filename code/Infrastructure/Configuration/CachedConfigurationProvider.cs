@@ -18,12 +18,13 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
 
     public CachedConfigurationProvider(
         ILogger<CachedConfigurationProvider> logger,
-        IConfigurationProvider baseProvider,
-        string configDirectory)
+        JsonConfigurationProvider baseProvider,
+        ConfigurationPathProvider pathProvider
+    )
     {
         _logger = logger;
         _baseProvider = baseProvider;
-        _configDirectory = configDirectory;
+        _configDirectory = pathProvider.GetSettingsPath();
         
         // Ensure directory exists
         if (!Directory.Exists(_configDirectory))
