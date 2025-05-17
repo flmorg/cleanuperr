@@ -20,9 +20,6 @@ public static class ConfigurationExtensions
         services.AddSingleton<IConfigManager, ConfigManager>();
         services.AddSingleton<ConfigInitializer>();
         
-        // Register the configuration preloader as a hosted service
-        services.AddHostedService<ConfigurationPreloader>();
-        
         return services;
     }
 }

@@ -16,31 +16,41 @@ public class ConfigManager : IConfigManager
     private readonly ILogger<ConfigManager> _logger;
     private readonly IConfigurationProvider _configProvider;
 
-    // Define settings subdirectory
-    private const string SettingsDirectory = "settings";
-    
     // Define standard config file names with cross-platform paths
-    private readonly string _generalConfigFile = Path.Combine(SettingsDirectory, "general.json");
-    private readonly string _sonarrConfigFile = Path.Combine(SettingsDirectory, "sonarr.json");
-    private readonly string _radarrConfigFile = Path.Combine(SettingsDirectory, "radarr.json");
-    private readonly string _lidarrConfigFile = Path.Combine(SettingsDirectory, "lidarr.json");
-    private readonly string _contentBlockerConfigFile = Path.Combine(SettingsDirectory, "content_blocker.json");
-    private readonly string _queueCleanerConfigFile = Path.Combine(SettingsDirectory, "queue_cleaner.json");
-    private readonly string _downloadCleanerConfigFile = Path.Combine(SettingsDirectory, "download_cleaner.json");
-    private readonly string _downloadClientConfigFile = Path.Combine(SettingsDirectory, "download_client.json");
-    private readonly string _ignoredDownloadsConfigFile = Path.Combine(SettingsDirectory, "ignored_downloads.json");
-    private readonly string _notificationsConfigFile = Path.Combine(SettingsDirectory, "notifications.json");
+    private readonly string _generalConfigFile;
+    private readonly string _sonarrConfigFile;
+    private readonly string _radarrConfigFile;
+    private readonly string _lidarrConfigFile;
+    private readonly string _contentBlockerConfigFile;
+    private readonly string _queueCleanerConfigFile;
+    private readonly string _downloadCleanerConfigFile;
+    private readonly string _downloadClientConfigFile;
+    private readonly string _ignoredDownloadsConfigFile;
+    private readonly string _notificationsConfigFile;
 
     public ConfigManager(
         ILogger<ConfigManager> logger,
-        IConfigurationProvider configProvider)
+        IConfigurationProvider configProvider,
+        ConfigurationPathProvider pathProvider)
     {
         _logger = logger;
         _configProvider = configProvider;
+        string settingsPath = pathProvider.GetSettingsPath();
+        
+        _generalConfigFile = Path.Combine(settingsPath, "general.json");
+        _sonarrConfigFile = Path.Combine(settingsPath, "sonarr.json");
+        _radarrConfigFile = Path.Combine(settingsPath, "radarr.json");
+        _lidarrConfigFile = Path.Combine(settingsPath, "lidarr.json");
+        _contentBlockerConfigFile = Path.Combine(settingsPath, "content_blocker.json");
+        _queueCleanerConfigFile = Path.Combine(settingsPath, "queue_cleaner.json");
+        _downloadCleanerConfigFile = Path.Combine(settingsPath, "download_cleaner.json");
+        _downloadClientConfigFile = Path.Combine(settingsPath, "download_client.json");
+        _ignoredDownloadsConfigFile = Path.Combine(settingsPath, "ignored_downloads.json");
+        _notificationsConfigFile = Path.Combine(settingsPath, "notifications.json");
     }
 
     // Generic configuration methods
-    public Task<T?> GetConfigurationAsync<T>(string configFileName) where T : class, new()
+    public Task<T> GetConfigurationAsync<T>(string configFileName) where T : class, new()
     {
         return _configProvider.ReadConfigurationAsync<T>(configFileName);
     }
@@ -85,52 +95,52 @@ public class ConfigManager : IConfigManager
     }
 
     // Specific configuration type methods
-    public async Task<GeneralConfig?> GetGeneralConfigAsync()
+    public async Task<GeneralConfig> GetGeneralConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<GeneralConfig>(_generalConfigFile);
     }
     
-    public async Task<SonarrConfig?> GetSonarrConfigAsync()
+    public async Task<SonarrConfig> GetSonarrConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<SonarrConfig>(_sonarrConfigFile);
     }
 
-    public async Task<RadarrConfig?> GetRadarrConfigAsync()
+    public async Task<RadarrConfig> GetRadarrConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<RadarrConfig>(_radarrConfigFile);
     }
 
-    public async Task<LidarrConfig?> GetLidarrConfigAsync()
+    public async Task<LidarrConfig> GetLidarrConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<LidarrConfig>(_lidarrConfigFile);
     }
 
-    public async Task<ContentBlockerConfig?> GetContentBlockerConfigAsync()
+    public async Task<ContentBlockerConfig> GetContentBlockerConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(_contentBlockerConfigFile);
     }
     
-    public async Task<NotificationsConfig?> GetNotificationsConfigAsync()
+    public async Task<NotificationsConfig> GetNotificationsConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<NotificationsConfig>(_notificationsConfigFile);
     }
 
-    public async Task<QueueCleanerConfig?> GetQueueCleanerConfigAsync()
+    public async Task<QueueCleanerConfig> GetQueueCleanerConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<QueueCleanerConfig>(_queueCleanerConfigFile);
     }
 
-    public async Task<DownloadCleanerConfig?> GetDownloadCleanerConfigAsync()
+    public async Task<DownloadCleanerConfig> GetDownloadCleanerConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<DownloadCleanerConfig>(_downloadCleanerConfigFile);
     }
 
-    public async Task<DownloadClientConfig?> GetDownloadClientConfigAsync()
+    public async Task<DownloadClientConfig> GetDownloadClientConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<DownloadClientConfig>(_downloadClientConfigFile);
     }
 
-    public async Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync()
+    public async Task<IgnoredDownloadsConfig> GetIgnoredDownloadsConfigAsync()
     {
         return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
     }
@@ -274,7 +284,7 @@ public class ConfigManager : IConfigManager
     }
     
     // Generic synchronous configuration methods
-    public T? GetConfiguration<T>(string fileName) where T : class, new()
+    public T GetConfiguration<T>(string fileName) where T : class, new()
     {
         return _configProvider.ReadConfiguration<T>(fileName);
     }
@@ -315,52 +325,52 @@ public class ConfigManager : IConfigManager
     
     // Specific synchronous configuration methods for typed configs
     
-    public GeneralConfig? GetGeneralConfig()
+    public GeneralConfig GetGeneralConfig()
     {
         return _configProvider.ReadConfiguration<GeneralConfig>(_generalConfigFile);
     }
     
-    public SonarrConfig? GetSonarrConfig()
+    public SonarrConfig GetSonarrConfig()
     {
         return _configProvider.ReadConfiguration<SonarrConfig>(_sonarrConfigFile);
     }
     
-    public RadarrConfig? GetRadarrConfig()
+    public RadarrConfig GetRadarrConfig()
     {
         return _configProvider.ReadConfiguration<RadarrConfig>(_radarrConfigFile);
     }
     
-    public LidarrConfig? GetLidarrConfig()
+    public LidarrConfig GetLidarrConfig()
     {
         return _configProvider.ReadConfiguration<LidarrConfig>(_lidarrConfigFile);
     }
     
-    public QueueCleanerConfig? GetQueueCleanerConfig()
+    public QueueCleanerConfig GetQueueCleanerConfig()
     {
         return GetConfiguration<QueueCleanerConfig>(_queueCleanerConfigFile);
     }
     
-    public ContentBlockerConfig? GetContentBlockerConfig()
+    public ContentBlockerConfig GetContentBlockerConfig()
     {
         return _configProvider.ReadConfiguration<ContentBlockerConfig>(_contentBlockerConfigFile);
     }
     
-    public DownloadCleanerConfig? GetDownloadCleanerConfig()
+    public DownloadCleanerConfig GetDownloadCleanerConfig()
     {
         return _configProvider.ReadConfiguration<DownloadCleanerConfig>(_downloadCleanerConfigFile);
     }
     
-    public DownloadClientConfig? GetDownloadClientConfig()
+    public DownloadClientConfig GetDownloadClientConfig()
     {
         return _configProvider.ReadConfiguration<DownloadClientConfig>(_downloadClientConfigFile);
     }
     
-    public IgnoredDownloadsConfig? GetIgnoredDownloadsConfig()
+    public IgnoredDownloadsConfig GetIgnoredDownloadsConfig()
     {
         return _configProvider.ReadConfiguration<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
     }
     
-    public NotificationsConfig? GetNotificationsConfig()
+    public NotificationsConfig GetNotificationsConfig()
     {
         return _configProvider.ReadConfiguration<NotificationsConfig>(_notificationsConfigFile);
     }

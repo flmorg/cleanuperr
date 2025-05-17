@@ -6,7 +6,6 @@ using Common.Configuration.General;
 using Common.Configuration.IgnoredDownloads;
 using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
-using Infrastructure.Verticals.Notifications.Notifiarr;
 
 namespace Infrastructure.Configuration;
 
@@ -16,7 +15,7 @@ namespace Infrastructure.Configuration;
 public interface IConfigManager
 {
     // Configuration files - Async methods
-    Task<T?> GetConfigurationAsync<T>(string configFileName) where T : class, new();
+    Task<T> GetConfigurationAsync<T>(string configFileName) where T : class, new();
     Task<bool> SaveConfigurationAsync<T>(string configFileName, T config) where T : class;
     Task<bool> UpdateConfigurationPropertyAsync<T>(string configFileName, string propertyPath, T value);
     Task<bool> MergeConfigurationAsync<T>(string configFileName, T newValues) where T : class;
@@ -31,16 +30,16 @@ public interface IConfigManager
     bool DeleteConfiguration(string configFileName);
 
     // Specific configuration types - Async methods
-    Task<GeneralConfig?> GetGeneralConfigAsync();
-    Task<SonarrConfig?> GetSonarrConfigAsync();
-    Task<RadarrConfig?> GetRadarrConfigAsync();
-    Task<LidarrConfig?> GetLidarrConfigAsync();
-    Task<ContentBlockerConfig?> GetContentBlockerConfigAsync();
-    Task<QueueCleanerConfig?> GetQueueCleanerConfigAsync();
-    Task<DownloadCleanerConfig?> GetDownloadCleanerConfigAsync();
-    Task<DownloadClientConfig?> GetDownloadClientConfigAsync();
-    Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync();
-    Task<NotificationsConfig?> GetNotificationsConfigAsync();
+    Task<GeneralConfig> GetGeneralConfigAsync();
+    Task<SonarrConfig> GetSonarrConfigAsync();
+    Task<RadarrConfig> GetRadarrConfigAsync();
+    Task<LidarrConfig> GetLidarrConfigAsync();
+    Task<ContentBlockerConfig> GetContentBlockerConfigAsync();
+    Task<QueueCleanerConfig> GetQueueCleanerConfigAsync();
+    Task<DownloadCleanerConfig> GetDownloadCleanerConfigAsync();
+    Task<DownloadClientConfig> GetDownloadClientConfigAsync();
+    Task<IgnoredDownloadsConfig> GetIgnoredDownloadsConfigAsync();
+    Task<NotificationsConfig> GetNotificationsConfigAsync();
 
     Task<bool> SaveGeneralConfigAsync(GeneralConfig config);
     Task<bool> SaveSonarrConfigAsync(SonarrConfig config);
@@ -54,16 +53,16 @@ public interface IConfigManager
     Task<bool> SaveNotificationsConfigAsync(NotificationsConfig config);
     
     // Specific configuration types - Sync methods
-    GeneralConfig? GetGeneralConfig();
-    SonarrConfig? GetSonarrConfig();
-    RadarrConfig? GetRadarrConfig();
-    LidarrConfig? GetLidarrConfig();
-    ContentBlockerConfig? GetContentBlockerConfig();
-    QueueCleanerConfig? GetQueueCleanerConfig();
-    DownloadCleanerConfig? GetDownloadCleanerConfig();
-    DownloadClientConfig? GetDownloadClientConfig();
-    IgnoredDownloadsConfig? GetIgnoredDownloadsConfig();
-    NotificationsConfig? GetNotificationsConfig();
+    GeneralConfig GetGeneralConfig();
+    SonarrConfig GetSonarrConfig();
+    RadarrConfig GetRadarrConfig();
+    LidarrConfig GetLidarrConfig();
+    ContentBlockerConfig GetContentBlockerConfig();
+    QueueCleanerConfig GetQueueCleanerConfig();
+    DownloadCleanerConfig GetDownloadCleanerConfig();
+    DownloadClientConfig GetDownloadClientConfig();
+    IgnoredDownloadsConfig GetIgnoredDownloadsConfig();
+    NotificationsConfig GetNotificationsConfig();
     
     bool SaveGeneralConfig(GeneralConfig config);
     bool SaveSonarrConfig(SonarrConfig config);
