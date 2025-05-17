@@ -37,18 +37,14 @@ public static class QuartzDI
         var configManager = serviceProvider.GetRequiredService<IConfigManager>();
         
         // Get configurations from JSON files
-        var contentBlockerConfigTask = configManager.GetContentBlockerConfigAsync();
-        contentBlockerConfigTask.Wait();
-        ContentBlockerConfig? contentBlockerConfig = contentBlockerConfigTask.Result;
+        ContentBlockerConfig? contentBlockerConfig = configManager.GetContentBlockerConfig();
         
         if (contentBlockerConfig != null)
         {
             q.AddJob<ContentBlocker>(contentBlockerConfig, contentBlockerConfig.CronExpression);
         }
         
-        var queueCleanerConfigTask = configManager.GetQueueCleanerConfigAsync();
-        queueCleanerConfigTask.Wait();
-        QueueCleanerConfig? queueCleanerConfig = queueCleanerConfigTask.Result;
+        QueueCleanerConfig? queueCleanerConfig = configManager.GetQueueCleanerConfig();
 
         if (queueCleanerConfig != null)
         {
@@ -63,9 +59,7 @@ public static class QuartzDI
             }
         }
         
-        var downloadCleanerConfigTask = configManager.GetDownloadCleanerConfigAsync();
-        downloadCleanerConfigTask.Wait();
-        DownloadCleanerConfig? downloadCleanerConfig = downloadCleanerConfigTask.Result;
+        DownloadCleanerConfig? downloadCleanerConfig = configManager.GetDownloadCleanerConfig();
 
         if (downloadCleanerConfig != null)
         {

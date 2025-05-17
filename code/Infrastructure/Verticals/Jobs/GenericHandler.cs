@@ -49,6 +49,8 @@ public abstract class GenericHandler : IHandler, IDisposable
         _downloadServiceFactory = downloadServiceFactory;
         _notifier = notifier;
     }
+
+    protected abstract Task InitializeConfigAsync();
     
     /// <summary>
     /// Initialize download services based on configuration
@@ -66,20 +68,20 @@ public abstract class GenericHandler : IHandler, IDisposable
             {
                 try
                 {
-                    var service = _downloadServiceFactory.GetDownloadService(client.Id);
+                    var service = _downloadServiceFactory.GetDownloadService(client);
                     if (service != null)
                     {
                         _downloadServices.Add(service);
-                        _logger.LogDebug("Initialized download client: {name} ({id})", client.Name, client.Id);
+                        _logger.LogDebug("Initialized download client: {name}", client.Name);
                     }
                     else
                     {
-                        _logger.LogWarning("Download client service not available for: {id}", client.Id);
+                        _logger.LogWarning("Download client service not available for: {name}", client.Name);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to initialize download client: {id}", client.Id);
+                    _logger.LogError(ex, "Failed to initialize download client: {name}", client.Name);
                 }
             }
         }
@@ -90,12 +92,13 @@ public abstract class GenericHandler : IHandler, IDisposable
         }
         else
         {
-            _logger.LogInformation("Initialized {count} download clients", _downloadServices.Count);
+            _logger.LogDebug("Initialized {count} download clients", _downloadServices.Count);
         }
     }
 
     public virtual async Task ExecuteAsync()
     {
+        await InitializeConfigAsync();
         // Initialize download services
         InitializeDownloadServices();
         

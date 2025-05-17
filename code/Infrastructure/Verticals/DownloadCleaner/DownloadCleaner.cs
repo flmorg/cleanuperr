@@ -19,7 +19,7 @@ namespace Infrastructure.Verticals.DownloadCleaner;
 
 public sealed class DownloadCleaner : GenericHandler
 {
-    private readonly DownloadCleanerConfig _config;
+    private DownloadCleanerConfig _config;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
     private readonly IConfigManager _configManager;
@@ -45,23 +45,11 @@ public sealed class DownloadCleaner : GenericHandler
     {
         _configManager = configManager;
         _ignoredDownloadsService = ignoredDownloadsService;
-        
-        // Initialize the configuration
-        var configTask = _configManager.GetDownloadCleanerConfigAsync();
-        configTask.Wait();
-        _config = configTask.Result ?? new DownloadCleanerConfig();
-        if (_config != null)
-        {
-            _config.Validate();
-        }
-        
-        // Initialize base class configs
-        InitializeConfigs().Wait();
     }
     
-    private async Task InitializeConfigs()
+    protected override async Task InitializeConfigAsync()
     {
-        // Get configurations from the configuration manager
+        _config = await _configManager.GetDownloadCleanerConfigAsync();
         _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync() ?? new DownloadClientConfig();
         _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
         _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
@@ -83,7 +71,7 @@ public sealed class DownloadCleaner : GenericHandler
         {
             try
             {
-                var downloadService = _downloadServiceFactory.GetDownloadService(client.Id);
+                var downloadService = _downloadServiceFactory.GetDownloadService(client);
                 if (downloadService != null)
                 {
                     _downloadServices.Add(downloadService);
@@ -104,7 +92,7 @@ public sealed class DownloadCleaner : GenericHandler
     public override async Task ExecuteAsync()
     {
         // Refresh configurations before executing
-        await InitializeConfigs();
+        await InitializeConfigAsync();
         
         if (_downloadClientConfig.Clients.Count == 0)
         {

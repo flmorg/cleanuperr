@@ -1,11 +1,11 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Infrastructure.Configuration;
 
 namespace Executable;
 
 public static class HostExtensions
 {
-    public static IHost Init(this IHost host)
+    public static async Task<IHost> Init(this IHost host)
     {
         ILogger<Program> logger = host.Services.GetRequiredService<ILogger<Program>>();
 
@@ -23,7 +23,7 @@ public static class HostExtensions
         try
         {
             var configInitializer = host.Services.GetRequiredService<ConfigInitializer>();
-            configInitializer.EnsureConfigFilesExistAsync().GetAwaiter().GetResult();
+            await configInitializer.EnsureConfigFilesExistAsync();
         }
         catch (Exception ex)
         {

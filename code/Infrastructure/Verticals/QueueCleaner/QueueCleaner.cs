@@ -25,8 +25,7 @@ namespace Infrastructure.Verticals.QueueCleaner;
 
 public sealed class QueueCleaner : GenericHandler
 {
-    private readonly QueueCleanerConfig _config;
-    private readonly IMemoryCache _cache;
+    private QueueCleanerConfig _config;
     private readonly IConfigManager _configManager;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly IDownloadClientFactory _downloadClientFactory;
@@ -49,30 +48,18 @@ public sealed class QueueCleaner : GenericHandler
     )
     {
         _configManager = configManager;
-        _cache = cache;
         _ignoredDownloadsService = ignoredDownloadsService;
         _downloadClientFactory = downloadClientFactory;
-        
-        // Initialize the configuration
-        var configTask = _configManager.GetQueueCleanerConfigAsync();
-        configTask.Wait();
-        _config = configTask.Result ?? new QueueCleanerConfig();
-        if (_config != null)
-        {
-            _config.Validate();
-        }
-        
-        // Initialize base class configs
-        InitializeConfigs().Wait();
     }
     
-    private async Task InitializeConfigs()
+    protected override async Task InitializeConfigAsync()
     {
         // Get configurations from the configuration manager
-        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync() ?? new DownloadClientConfig();
-        _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
-        _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
-        _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
+        _config = await _configManager.GetQueueCleanerConfigAsync();
+        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
+        _sonarrConfig = await _configManager.GetSonarrConfigAsync();
+        _radarrConfig = await _configManager.GetRadarrConfigAsync();
+        _lidarrConfig = await _configManager.GetLidarrConfigAsync();
         
         // Log information about configured download clients
         if (_downloadClientConfig.Clients.Count > 0)

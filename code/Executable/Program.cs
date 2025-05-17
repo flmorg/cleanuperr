@@ -16,6 +16,6 @@ var app = builder.Build();
 app.ConfigureApi();
 
 // Initialize the host
-((IHost)app).Init();
+await app.Init();
 
-app.Run();
+await app.RunAsync();

@@ -21,7 +21,7 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        if (IsDryRun(methodInfo))
+        if (_config.IsDryRun)
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
             return;
@@ -34,7 +34,7 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        if (IsDryRun(methodInfo))
+        if (_config.IsDryRun)
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
             return Task.CompletedTask;
@@ -54,7 +54,7 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        if (IsDryRun(methodInfo))
+        if (_config.IsDryRun)
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
             return Task.FromResult(default(T));
@@ -68,10 +68,5 @@ public class DryRunInterceptor : IDryRunInterceptor
         }
 
         return Task.FromResult(default(T));
-    }
-    
-    private bool IsDryRun(MethodInfo method)
-    {
-        return method.GetCustomAttributes(typeof(DryRunSafeguardAttribute), true).Any() && _config.IsDryRun;
     }
 }

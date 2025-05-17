@@ -106,13 +106,13 @@ public static class MainDI
         return services;
     }
 
-    private static IHttpClientBuilder AddRetryPolicyHandler(this IHttpClientBuilder builder, HttpConfig config) =>
+    private static IHttpClientBuilder AddRetryPolicyHandler(this IHttpClientBuilder builder, GeneralConfig config) =>
         builder.AddPolicyHandler(
             HttpPolicyExtensions
                 .HandleTransientHttpError()
                 // do not retry on Unauthorized
                 .OrResult(response => !response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized)
-                .WaitAndRetryAsync(config.MaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
+                .WaitAndRetryAsync(config.HttpMaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))
         );
         
     private static IServiceCollection AddDownloadClientServices(this IServiceCollection services) =>

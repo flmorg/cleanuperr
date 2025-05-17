@@ -1,0 +1,27 @@
+﻿using Common.Enums;
+using Common.Exceptions;
+using Newtonsoft.Json;
+
+namespace Common.Configuration.General;
+
+public sealed record GeneralConfig : IConfig
+{
+    public ushort HttpMaxRetries { get; init; }
+    
+    public ushort HttpTimeout { get; init; } = 100;
+    
+    [JsonProperty("http_validate_cert")]
+    public CertificateValidationType CertificateValidation { get; init; } = CertificateValidationType.Enabled;
+
+    public bool SearchEnabled { get; init; } = true;
+    
+    public ushort SearchDelay { get; init; } = 30;
+    
+    public void Validate()
+    {
+        if (HttpTimeout is 0)
+        {
+            throw new ValidationException("HTTP_TIMEOUT must be greater than 0");
+        }
+    }
+}

@@ -10,31 +10,22 @@ public sealed record DownloadCleanerConfig : IJobConfig
     
     public bool Enabled { get; init; }
 
-    // Trigger configuration
-    [JsonProperty("cron_expression")]
-    public string CronExpression { get; init; } = "0 */20 * ? * *"; // Default: every 20 minutes
+    public string CronExpression { get; init; } = "0 0 * * * ?";
 
-    public List<CleanCategory>? Categories { get; init; }
+    public List<CleanCategory> Categories { get; init; } = [];
 
-    [JsonProperty("delete_private")]
     public bool DeletePrivate { get; init; }
     
-    // TODO
-    [JsonProperty("ignored_downloads_path")]
-    public string? IgnoredDownloadsPath { get; init; }
+    public string IgnoredDownloadsPath { get; init; } = string.Empty;
 
-    [JsonProperty("unlinked_target_category")]
     public string UnlinkedTargetCategory { get; init; } = "cleanuperr-unlinked";
 
-    [JsonProperty("unlinked_use_tag")]
     public bool UnlinkedUseTag { get; init; }
 
-    [JsonProperty("unlinked_ignored_root_dir")]
     public string UnlinkedIgnoredRootDir { get; init; } = string.Empty;
     
     // TODO rename to unlinked objects and add type (category, tag, etc)
-    [JsonProperty("unlinked_categories")]
-    public List<string>? UnlinkedCategories { get; init; }
+    public List<string> UnlinkedCategories { get; init; } = [];
 
     public void Validate()
     {

@@ -1,6 +1,6 @@
 using Common.CustomDataTypes;
 using Common.Exceptions;
-using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace Common.Configuration.QueueCleaner;
 
@@ -10,65 +10,48 @@ public sealed record QueueCleanerConfig : IJobConfig
     
     public bool Enabled { get; init; }
     
-    // Trigger configuration
-    [ConfigurationKeyName("CRON_EXPRESSION")]
-    public string CronExpression { get; init; } = "0 */15 * ? * *"; // Default: every 15 minutes
+    public string CronExpression { get; init; } = "0 0/5 * * * ?";
     
     public bool RunSequentially { get; init; }
+
+    public string IgnoredDownloadsPath { get; init; } = string.Empty;
     
-    [ConfigurationKeyName("IGNORED_DOWNLOADS_PATH")]
-    public string? IgnoredDownloadsPath { get; init; }
-    
-    [ConfigurationKeyName("IMPORT_FAILED_MAX_STRIKES")]
     public ushort ImportFailedMaxStrikes { get; init; }
     
-    [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PRIVATE")]
     public bool ImportFailedIgnorePrivate { get; init; }
     
-    [ConfigurationKeyName("IMPORT_FAILED_DELETE_PRIVATE")]
     public bool ImportFailedDeletePrivate { get; init; }
+
+    public IReadOnlyList<string> ImportFailedIgnorePatterns { get; init; } = [];
     
-    [ConfigurationKeyName("IMPORT_FAILED_IGNORE_PATTERNS")]
-    public IReadOnlyList<string>? ImportFailedIgnorePatterns { get; init; }
-    
-    [ConfigurationKeyName("STALLED_MAX_STRIKES")]
     public ushort StalledMaxStrikes { get; init; }
     
-    [ConfigurationKeyName("STALLED_RESET_STRIKES_ON_PROGRESS")]
     public bool StalledResetStrikesOnProgress { get; init; }
     
-    [ConfigurationKeyName("STALLED_IGNORE_PRIVATE")]
     public bool StalledIgnorePrivate { get; init; }
     
-    [ConfigurationKeyName("STALLED_DELETE_PRIVATE")]
     public bool StalledDeletePrivate { get; init; }
     
-    [ConfigurationKeyName("DOWNLOADING_METADATA_MAX_STRIKES")]
     public ushort DownloadingMetadataMaxStrikes { get; init; }
     
-    [ConfigurationKeyName("SLOW_MAX_STRIKES")]
     public ushort SlowMaxStrikes { get; init; }
     
-    [ConfigurationKeyName("SLOW_RESET_STRIKES_ON_PROGRESS")]
     public bool SlowResetStrikesOnProgress { get; init; }
 
-    [ConfigurationKeyName("SLOW_IGNORE_PRIVATE")]
     public bool SlowIgnorePrivate { get; init; }
     
-    [ConfigurationKeyName("SLOW_DELETE_PRIVATE")]
     public bool SlowDeletePrivate { get; init; }
 
-    [ConfigurationKeyName("SLOW_MIN_SPEED")]
     public string SlowMinSpeed { get; init; } = string.Empty;
     
+    [JsonIgnore]
     public ByteSize SlowMinSpeedByteSize => string.IsNullOrEmpty(SlowMinSpeed) ? new ByteSize(0) : ByteSize.Parse(SlowMinSpeed);
     
-    [ConfigurationKeyName("SLOW_MAX_TIME")]
     public double SlowMaxTime { get; init; }
     
-    [ConfigurationKeyName("SLOW_IGNORE_ABOVE_SIZE")]
     public string SlowIgnoreAboveSize { get; init; } = string.Empty;
     
+    [JsonIgnore]
     public ByteSize? SlowIgnoreAboveSizeByteSize => string.IsNullOrEmpty(SlowIgnoreAboveSize) ? null : ByteSize.Parse(SlowIgnoreAboveSize);
     
     public void Validate()

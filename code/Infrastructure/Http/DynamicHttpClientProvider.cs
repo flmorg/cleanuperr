@@ -69,7 +69,7 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
     /// <returns>A configured HttpClient instance</returns>
     private HttpClient CreateGenericClient(ClientConfig clientConfig)
     {
-        var httpConfig = _configManager.GetConfiguration<HttpConfig>("http.json") ?? new HttpConfig();
+        var httpConfig = _configManager.GetConfiguration<GeneralConfig>("http.json") ?? new GeneralConfig();
         
         // Create handler with certificate validation
         var handler = new HttpClientHandler
@@ -96,7 +96,7 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
         // Create client with policy
         var client = new HttpClient(handler)
         {
-            Timeout = TimeSpan.FromSeconds(httpConfig.Timeout)
+            Timeout = TimeSpan.FromSeconds(httpConfig.HttpTimeout)
         };
         
         // Set base address if needed
@@ -114,14 +114,14 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
     /// <summary>
     /// Creates a retry policy for the HTTP client
     /// </summary>
-    /// <param name="httpConfig">The HTTP configuration</param>
+    /// <param name="generalConfig">The HTTP configuration</param>
     /// <returns>A configured policy</returns>
-    private static IAsyncPolicy<HttpResponseMessage> CreateRetryPolicy(HttpConfig httpConfig)
+    private static IAsyncPolicy<HttpResponseMessage> CreateRetryPolicy(GeneralConfig generalConfig)
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError()
             // Do not retry on Unauthorized
             .OrResult(response => !response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized)
-            .WaitAndRetryAsync(httpConfig.MaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+            .WaitAndRetryAsync(generalConfig.HttpMaxRetries, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
     }
 }

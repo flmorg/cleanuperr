@@ -47,29 +47,20 @@ public sealed class ContentBlocker : GenericHandler
         _configManager = configManager;
         _blocklistProvider = blocklistProvider;
         _ignoredDownloadsService = ignoredDownloadsService;
-        
-        // Initialize the configuration
-        var configTask = _configManager.GetContentBlockerConfigAsync();
-        configTask.Wait();
-        _config = configTask.Result ?? new ContentBlockerConfig();
-        
-        // Initialize base class configs
-        InitializeConfigs().Wait();
     }
 
-    private async Task InitializeConfigs()
+    protected override async Task InitializeConfigAsync()
     {
-        // Get configurations from the configuration manager
-        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync() ?? new DownloadClientConfig();
-        _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
-        _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
-        _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
+        _config = await _configManager.GetContentBlockerConfigAsync();
+        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
+        _sonarrConfig = await _configManager.GetSonarrConfigAsync();
+        _radarrConfig = await _configManager.GetRadarrConfigAsync();
+        _lidarrConfig = await _configManager.GetLidarrConfigAsync();
     }
     
     public override async Task ExecuteAsync()
     {
-        // Refresh configurations before executing
-        await InitializeConfigs();
+        await InitializeConfigAsync();
         
         if (_downloadClientConfig.Clients.Count == 0)
         {
