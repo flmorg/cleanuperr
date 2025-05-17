@@ -8,7 +8,7 @@ namespace Infrastructure.Configuration;
 /// <summary>
 /// Provides thread-safe access to JSON configuration files.
 /// </summary>
-public class JsonConfigurationProvider
+public class JsonConfigurationProvider : IConfigurationProvider
 {
     private readonly ILogger<JsonConfigurationProvider> _logger;
     private readonly string _configDirectory;

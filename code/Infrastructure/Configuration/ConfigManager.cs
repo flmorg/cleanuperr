@@ -16,22 +16,25 @@ namespace Infrastructure.Configuration;
 public class ConfigManager : IConfigManager
 {
     private readonly ILogger<ConfigManager> _logger;
-    private readonly JsonConfigurationProvider _configProvider;
+    private readonly IConfigurationProvider _configProvider;
 
-    // Define standard config file names
-    private const string SonarrConfigFile = "sonarr.json";
-    private const string RadarrConfigFile = "radarr.json";
-    private const string LidarrConfigFile = "lidarr.json";
-    private const string ContentBlockerConfigFile = "content_blocker.json";
-    private const string QueueCleanerConfigFile = "queue_cleaner.json";
-    private const string DownloadCleanerConfigFile = "download_cleaner.json";
-    private const string DownloadClientConfigFile = "download_client.json";
-    private const string IgnoredDownloadsConfigFile = "ignored_downloads.json";
-    private const string GeneralSettings = "general.json";
+    // Define settings subdirectory
+    private const string SettingsDirectory = "settings";
+    
+    // Define standard config file names with cross-platform paths
+    private readonly string SonarrConfigFile = Path.Combine(SettingsDirectory, "sonarr.json");
+    private readonly string RadarrConfigFile = Path.Combine(SettingsDirectory, "radarr.json");
+    private readonly string LidarrConfigFile = Path.Combine(SettingsDirectory, "lidarr.json");
+    private readonly string ContentBlockerConfigFile = Path.Combine(SettingsDirectory, "content_blocker.json");
+    private readonly string QueueCleanerConfigFile = Path.Combine(SettingsDirectory, "queue_cleaner.json");
+    private readonly string DownloadCleanerConfigFile = Path.Combine(SettingsDirectory, "download_cleaner.json");
+    private readonly string DownloadClientConfigFile = Path.Combine(SettingsDirectory, "download_client.json");
+    private readonly string IgnoredDownloadsConfigFile = Path.Combine(SettingsDirectory, "ignored_downloads.json");
+    private readonly string GeneralSettings = Path.Combine(SettingsDirectory, "general.json");
 
     public ConfigManager(
         ILogger<ConfigManager> logger,
-        JsonConfigurationProvider configProvider)
+        IConfigurationProvider configProvider)
     {
         _logger = logger;
         _configProvider = configProvider;
