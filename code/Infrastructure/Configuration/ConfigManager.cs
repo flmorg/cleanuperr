@@ -11,8 +11,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Configuration;
 
-
-
 public class ConfigManager : IConfigManager
 {
     private readonly ILogger<ConfigManager> _logger;
@@ -22,15 +20,16 @@ public class ConfigManager : IConfigManager
     private const string SettingsDirectory = "settings";
     
     // Define standard config file names with cross-platform paths
-    private readonly string SonarrConfigFile = Path.Combine(SettingsDirectory, "sonarr.json");
-    private readonly string RadarrConfigFile = Path.Combine(SettingsDirectory, "radarr.json");
-    private readonly string LidarrConfigFile = Path.Combine(SettingsDirectory, "lidarr.json");
-    private readonly string ContentBlockerConfigFile = Path.Combine(SettingsDirectory, "content_blocker.json");
-    private readonly string QueueCleanerConfigFile = Path.Combine(SettingsDirectory, "queue_cleaner.json");
-    private readonly string DownloadCleanerConfigFile = Path.Combine(SettingsDirectory, "download_cleaner.json");
-    private readonly string DownloadClientConfigFile = Path.Combine(SettingsDirectory, "download_client.json");
-    private readonly string IgnoredDownloadsConfigFile = Path.Combine(SettingsDirectory, "ignored_downloads.json");
-    private readonly string GeneralSettings = Path.Combine(SettingsDirectory, "general.json");
+    private readonly string _generalConfigFile = Path.Combine(SettingsDirectory, "general.json");
+    private readonly string _sonarrConfigFile = Path.Combine(SettingsDirectory, "sonarr.json");
+    private readonly string _radarrConfigFile = Path.Combine(SettingsDirectory, "radarr.json");
+    private readonly string _lidarrConfigFile = Path.Combine(SettingsDirectory, "lidarr.json");
+    private readonly string _contentBlockerConfigFile = Path.Combine(SettingsDirectory, "content_blocker.json");
+    private readonly string _queueCleanerConfigFile = Path.Combine(SettingsDirectory, "queue_cleaner.json");
+    private readonly string _downloadCleanerConfigFile = Path.Combine(SettingsDirectory, "download_cleaner.json");
+    private readonly string _downloadClientConfigFile = Path.Combine(SettingsDirectory, "download_client.json");
+    private readonly string _ignoredDownloadsConfigFile = Path.Combine(SettingsDirectory, "ignored_downloads.json");
+    private readonly string _notificationsConfigFile = Path.Combine(SettingsDirectory, "notifications.json");
 
     public ConfigManager(
         ILogger<ConfigManager> logger,
@@ -88,52 +87,52 @@ public class ConfigManager : IConfigManager
     // Specific configuration type methods
     public async Task<GeneralConfig?> GetGeneralConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<GeneralConfig>(GeneralSettings);
+        return await _configProvider.ReadConfigurationAsync<GeneralConfig>(_generalConfigFile);
     }
     
     public async Task<SonarrConfig?> GetSonarrConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<SonarrConfig>(SonarrConfigFile);
+        return await _configProvider.ReadConfigurationAsync<SonarrConfig>(_sonarrConfigFile);
     }
 
     public async Task<RadarrConfig?> GetRadarrConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<RadarrConfig>(RadarrConfigFile);
+        return await _configProvider.ReadConfigurationAsync<RadarrConfig>(_radarrConfigFile);
     }
 
     public async Task<LidarrConfig?> GetLidarrConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<LidarrConfig>(LidarrConfigFile);
+        return await _configProvider.ReadConfigurationAsync<LidarrConfig>(_lidarrConfigFile);
     }
 
     public async Task<ContentBlockerConfig?> GetContentBlockerConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(ContentBlockerConfigFile);
+        return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(_contentBlockerConfigFile);
     }
     
     public async Task<NotificationsConfig?> GetNotificationsConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<NotificationsConfig>(GeneralSettings);
+        return await _configProvider.ReadConfigurationAsync<NotificationsConfig>(_notificationsConfigFile);
     }
 
     public async Task<QueueCleanerConfig?> GetQueueCleanerConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<QueueCleanerConfig>(QueueCleanerConfigFile);
+        return await _configProvider.ReadConfigurationAsync<QueueCleanerConfig>(_queueCleanerConfigFile);
     }
 
     public async Task<DownloadCleanerConfig?> GetDownloadCleanerConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<DownloadCleanerConfig>(DownloadCleanerConfigFile);
+        return await _configProvider.ReadConfigurationAsync<DownloadCleanerConfig>(_downloadCleanerConfigFile);
     }
 
     public async Task<DownloadClientConfig?> GetDownloadClientConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<DownloadClientConfig>(DownloadClientConfigFile);
+        return await _configProvider.ReadConfigurationAsync<DownloadClientConfig>(_downloadClientConfigFile);
     }
 
     public async Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync()
     {
-        return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(IgnoredDownloadsConfigFile);
+        return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
     }
 
     public Task<bool> SaveGeneralConfigAsync(GeneralConfig config)
@@ -141,7 +140,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(GeneralSettings, config);
+            return _configProvider.WriteConfigurationAsync(_generalConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -155,7 +154,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(SonarrConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_sonarrConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -169,7 +168,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(RadarrConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_radarrConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -183,7 +182,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(LidarrConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_lidarrConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -197,7 +196,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(ContentBlockerConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_contentBlockerConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -211,7 +210,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(QueueCleanerConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_queueCleanerConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -225,7 +224,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(DownloadCleanerConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_downloadCleanerConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -239,7 +238,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfigurationAsync(DownloadClientConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_downloadClientConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -252,7 +251,7 @@ public class ConfigManager : IConfigManager
     {
         try
         {
-            return _configProvider.WriteConfigurationAsync(IgnoredDownloadsConfigFile, config);
+            return _configProvider.WriteConfigurationAsync(_ignoredDownloadsConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -265,7 +264,7 @@ public class ConfigManager : IConfigManager
     {
         try
         {
-            return _configProvider.WriteConfigurationAsync(GeneralSettings, config);
+            return _configProvider.WriteConfigurationAsync(_notificationsConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -318,52 +317,52 @@ public class ConfigManager : IConfigManager
     
     public GeneralConfig? GetGeneralConfig()
     {
-        return _configProvider.ReadConfiguration<GeneralConfig>(GeneralSettings);
+        return _configProvider.ReadConfiguration<GeneralConfig>(_generalConfigFile);
     }
     
     public SonarrConfig? GetSonarrConfig()
     {
-        return _configProvider.ReadConfiguration<SonarrConfig>(SonarrConfigFile);
+        return _configProvider.ReadConfiguration<SonarrConfig>(_sonarrConfigFile);
     }
     
     public RadarrConfig? GetRadarrConfig()
     {
-        return _configProvider.ReadConfiguration<RadarrConfig>(RadarrConfigFile);
+        return _configProvider.ReadConfiguration<RadarrConfig>(_radarrConfigFile);
     }
     
     public LidarrConfig? GetLidarrConfig()
     {
-        return _configProvider.ReadConfiguration<LidarrConfig>(LidarrConfigFile);
+        return _configProvider.ReadConfiguration<LidarrConfig>(_lidarrConfigFile);
     }
     
     public QueueCleanerConfig? GetQueueCleanerConfig()
     {
-        return GetConfiguration<QueueCleanerConfig>(QueueCleanerConfigFile);
+        return GetConfiguration<QueueCleanerConfig>(_queueCleanerConfigFile);
     }
     
     public ContentBlockerConfig? GetContentBlockerConfig()
     {
-        return _configProvider.ReadConfiguration<ContentBlockerConfig>(ContentBlockerConfigFile);
+        return _configProvider.ReadConfiguration<ContentBlockerConfig>(_contentBlockerConfigFile);
     }
     
     public DownloadCleanerConfig? GetDownloadCleanerConfig()
     {
-        return _configProvider.ReadConfiguration<DownloadCleanerConfig>(DownloadCleanerConfigFile);
+        return _configProvider.ReadConfiguration<DownloadCleanerConfig>(_downloadCleanerConfigFile);
     }
     
     public DownloadClientConfig? GetDownloadClientConfig()
     {
-        return _configProvider.ReadConfiguration<DownloadClientConfig>(DownloadClientConfigFile);
+        return _configProvider.ReadConfiguration<DownloadClientConfig>(_downloadClientConfigFile);
     }
     
     public IgnoredDownloadsConfig? GetIgnoredDownloadsConfig()
     {
-        return _configProvider.ReadConfiguration<IgnoredDownloadsConfig>(IgnoredDownloadsConfigFile);
+        return _configProvider.ReadConfiguration<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
     }
     
     public NotificationsConfig? GetNotificationsConfig()
     {
-        return _configProvider.ReadConfiguration<NotificationsConfig>(GeneralSettings);
+        return _configProvider.ReadConfiguration<NotificationsConfig>(_notificationsConfigFile);
     }
     
     public bool SaveGeneralConfig(GeneralConfig config)
@@ -371,7 +370,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(GeneralSettings, config);
+            return _configProvider.WriteConfiguration(_generalConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -385,7 +384,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(SonarrConfigFile, config);
+            return _configProvider.WriteConfiguration(_sonarrConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -399,7 +398,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(RadarrConfigFile, config);
+            return _configProvider.WriteConfiguration(_radarrConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -413,7 +412,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(LidarrConfigFile, config);
+            return _configProvider.WriteConfiguration(_lidarrConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -427,7 +426,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(ContentBlockerConfigFile, config);
+            return _configProvider.WriteConfiguration(_contentBlockerConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -441,7 +440,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(QueueCleanerConfigFile, config);
+            return _configProvider.WriteConfiguration(_queueCleanerConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -455,7 +454,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(DownloadCleanerConfigFile, config);
+            return _configProvider.WriteConfiguration(_downloadCleanerConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -469,7 +468,7 @@ public class ConfigManager : IConfigManager
         try
         {
             config.Validate();
-            return _configProvider.WriteConfiguration(DownloadClientConfigFile, config);
+            return _configProvider.WriteConfiguration(_downloadClientConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -482,7 +481,7 @@ public class ConfigManager : IConfigManager
     {
         try
         {
-            return _configProvider.WriteConfiguration(IgnoredDownloadsConfigFile, config);
+            return _configProvider.WriteConfiguration(_ignoredDownloadsConfigFile, config);
         }
         catch (Exception ex)
         {
@@ -495,7 +494,7 @@ public class ConfigManager : IConfigManager
     {
         try
         {
-            return _configProvider.WriteConfiguration(GeneralSettings, config);
+            return _configProvider.WriteConfiguration(_notificationsConfigFile, config);
         }
         catch (Exception ex)
         {
