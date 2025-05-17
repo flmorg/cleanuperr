@@ -171,137 +171,137 @@ services:
       - 8787:8787
     restart: unless-stopped
 
-  # cleanuperr:
-  #   image: ghcr.io/flmorg/cleanuperr:latest
-  #   container_name: cleanuperr
-  #   environment:
-  #     - TZ=Europe/Bucharest
-  #     - DRY_RUN=false
+  cleanuperr:
+    image: ghcr.io/flmorg/cleanuperr:latest
+    container_name: cleanuperr
+    environment:
+      - TZ=Europe/Bucharest
+      - DRY_RUN=false
 
-  #     - LOGGING__LOGLEVEL=Verbose
-  #     - LOGGING__FILE__ENABLED=true
-  #     - LOGGING__FILE__PATH=/var/logs
-  #     - LOGGING__ENHANCED=true
+      - LOGGING__LOGLEVEL=Verbose
+      - LOGGING__FILE__ENABLED=true
+      - LOGGING__FILE__PATH=/var/logs
+      - LOGGING__ENHANCED=true
 
-  #     - HTTP_MAX_RETRIES=0
-  #     - HTTP_TIMEOUT=20
+      - HTTP_MAX_RETRIES=0
+      - HTTP_TIMEOUT=20
 
-  #     - SEARCH_ENABLED=true
-  #     - SEARCH_DELAY=5
+      - SEARCH_ENABLED=true
+      - SEARCH_DELAY=5
 
-  #     - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
-  #     - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
-  #     - TRIGGERS__DOWNLOADCLEANER=0/30 * * * * ?
+      - TRIGGERS__QUEUECLEANER=0/30 * * * * ?
+      - TRIGGERS__CONTENTBLOCKER=0/30 * * * * ?
+      - TRIGGERS__DOWNLOADCLEANER=0/30 * * * * ?
 
-  #     - QUEUECLEANER__ENABLED=true
-  #     - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored
-  #     - QUEUECLEANER__RUNSEQUENTIALLY=true
+      - QUEUECLEANER__ENABLED=true
+      - QUEUECLEANER__IGNORED_DOWNLOADS_PATH=/ignored
+      - QUEUECLEANER__RUNSEQUENTIALLY=true
 
-  #     - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=3
-  #     - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=true
-  #     - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
-  #     - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=file is a sample
+      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=3
+      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=true
+      - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
+      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=file is a sample
 
-  #     - QUEUECLEANER__STALLED_MAX_STRIKES=3
-  #     - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=true
-  #     - QUEUECLEANER__STALLED_IGNORE_PRIVATE=true
-  #     - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
-  #     - QUEUECLEANER__DOWNLOADING_METADATA_MAX_STRIKES=3
+      - QUEUECLEANER__STALLED_MAX_STRIKES=3
+      - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=true
+      - QUEUECLEANER__STALLED_IGNORE_PRIVATE=true
+      - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
+      - QUEUECLEANER__DOWNLOADING_METADATA_MAX_STRIKES=3
 
-  #     - QUEUECLEANER__SLOW_MAX_STRIKES=5
-  #     - QUEUECLEANER__SLOW_RESET_STRIKES_ON_PROGRESS=true
-  #     - QUEUECLEANER__SLOW_IGNORE_PRIVATE=false
-  #     - QUEUECLEANER__SLOW_DELETE_PRIVATE=false
-  #     - QUEUECLEANER__SLOW_MIN_SPEED=1MB
-  #     - QUEUECLEANER__SLOW_MAX_TIME=20
-  #     - QUEUECLEANER__SLOW_IGNORE_ABOVE_SIZE=1KB
+      - QUEUECLEANER__SLOW_MAX_STRIKES=5
+      - QUEUECLEANER__SLOW_RESET_STRIKES_ON_PROGRESS=true
+      - QUEUECLEANER__SLOW_IGNORE_PRIVATE=false
+      - QUEUECLEANER__SLOW_DELETE_PRIVATE=false
+      - QUEUECLEANER__SLOW_MIN_SPEED=1MB
+      - QUEUECLEANER__SLOW_MAX_TIME=20
+      - QUEUECLEANER__SLOW_IGNORE_ABOVE_SIZE=1KB
 
-  #     - CONTENTBLOCKER__ENABLED=true
-  #     - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored
-  #     - CONTENTBLOCKER__IGNORE_PRIVATE=true
-  #     - CONTENTBLOCKER__DELETE_PRIVATE=false
+      - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH=/ignored
+      - CONTENTBLOCKER__IGNORE_PRIVATE=true
+      - CONTENTBLOCKER__DELETE_PRIVATE=false
 
-  #     - DOWNLOADCLEANER__ENABLED=true
-  #     - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored
-  #     - DOWNLOADCLEANER__DELETE_PRIVATE=false
+      - DOWNLOADCLEANER__ENABLED=true
+      - DOWNLOADCLEANER__IGNORED_DOWNLOADS_PATH=/ignored
+      - DOWNLOADCLEANER__DELETE_PRIVATE=false
       
-  #     - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
-  #     - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
-  #     - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
-  #     - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=99999
-  #     - DOWNLOADCLEANER__CATEGORIES__1__NAME=cleanuperr-unlinked
-  #     - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
-  #     - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
-  #     - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=99999
+      - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv-sonarr
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=99999
+      - DOWNLOADCLEANER__CATEGORIES__1__NAME=cleanuperr-unlinked
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=99999
 
-  #     - DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY=cleanuperr-unlinked
-  #     - DOWNLOADCLEANER__UNLINKED_USE_TAG=false
-  #     - DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR=/downloads
-  #     - DOWNLOADCLEANER__UNLINKED_CATEGORIES__0=tv-sonarr
-  #     - DOWNLOADCLEANER__UNLINKED_CATEGORIES__1=radarr
+      - DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY=cleanuperr-unlinked
+      - DOWNLOADCLEANER__UNLINKED_USE_TAG=false
+      - DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR=/downloads
+      - DOWNLOADCLEANER__UNLINKED_CATEGORIES__0=tv-sonarr
+      - DOWNLOADCLEANER__UNLINKED_CATEGORIES__1=radarr
 
-  #     - DOWNLOAD_CLIENT=qbittorrent
-  #     - QBITTORRENT__URL=http://qbittorrent:8080
-  #     - QBITTORRENT__USERNAME=test
-  #     - QBITTORRENT__PASSWORD=testing
-  #     # OR
-  #     # - DOWNLOAD_CLIENT=deluge
-  #     # - DELUGE__URL=http://deluge:8112
-  #     # - DELUGE__PASSWORD=testing
-  #     # OR
-  #     # - DOWNLOAD_CLIENT=transmission
-  #     # - TRANSMISSION__URL=http://transmission:9091
-  #     # - TRANSMISSION__USERNAME=test
-  #     # - TRANSMISSION__PASSWORD=testing
+      - DOWNLOAD_CLIENT=qbittorrent
+      - QBITTORRENT__URL=http://qbittorrent:8080
+      - QBITTORRENT__USERNAME=test
+      - QBITTORRENT__PASSWORD=testing
+      # OR
+      # - DOWNLOAD_CLIENT=deluge
+      # - DELUGE__URL=http://deluge:8112
+      # - DELUGE__PASSWORD=testing
+      # OR
+      # - DOWNLOAD_CLIENT=transmission
+      # - TRANSMISSION__URL=http://transmission:9091
+      # - TRANSMISSION__USERNAME=test
+      # - TRANSMISSION__PASSWORD=testing
 
-  #     - SONARR__ENABLED=true
-  #     - SONARR__IMPORT_FAILED_MAX_STRIKES=-1
-  #     - SONARR__SEARCHTYPE=Episode
-  #     - SONARR__BLOCK__TYPE=blacklist
-  #     - SONARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
-  #     - SONARR__INSTANCES__0__URL=http://sonarr:8989
-  #     - SONARR__INSTANCES__0__APIKEY=425d1e713f0c405cbbf359ac0502c1f4
+      - SONARR__ENABLED=true
+      - SONARR__IMPORT_FAILED_MAX_STRIKES=-1
+      - SONARR__SEARCHTYPE=Episode
+      - SONARR__BLOCK__TYPE=blacklist
+      - SONARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
+      - SONARR__INSTANCES__0__URL=http://sonarr:8989
+      - SONARR__INSTANCES__0__APIKEY=425d1e713f0c405cbbf359ac0502c1f4
 
-  #     - RADARR__ENABLED=true
-  #     - RADARR__IMPORT_FAILED_MAX_STRIKES=-1
-  #     - RADARR__BLOCK__TYPE=blacklist
-  #     - RADARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
-  #     - RADARR__INSTANCES__0__URL=http://radarr:7878
-  #     - RADARR__INSTANCES__0__APIKEY=8b7454f668e54c5b8f44f56f93969761
+      - RADARR__ENABLED=true
+      - RADARR__IMPORT_FAILED_MAX_STRIKES=-1
+      - RADARR__BLOCK__TYPE=blacklist
+      - RADARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist
+      - RADARR__INSTANCES__0__URL=http://radarr:7878
+      - RADARR__INSTANCES__0__APIKEY=8b7454f668e54c5b8f44f56f93969761
 
-  #     - LIDARR__ENABLED=true
-  #     - LIDARR__IMPORT_FAILED_MAX_STRIKES=-1
-  #     - LIDARR__BLOCK__TYPE=blacklist
-  #     - LIDARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist # TODO
-  #     - LIDARR__INSTANCES__0__URL=http://lidarr:8686
-  #     - LIDARR__INSTANCES__0__APIKEY=7f677cfdc074414397af53dd633860c5
+      - LIDARR__ENABLED=true
+      - LIDARR__IMPORT_FAILED_MAX_STRIKES=-1
+      - LIDARR__BLOCK__TYPE=blacklist
+      - LIDARR__BLOCK__PATH=https://raw.githubusercontent.com/flmorg/cleanuperr/refs/heads/main/blacklist # TODO
+      - LIDARR__INSTANCES__0__URL=http://lidarr:8686
+      - LIDARR__INSTANCES__0__APIKEY=7f677cfdc074414397af53dd633860c5
 
-  #     # - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
-  #     # - NOTIFIARR__ON_STALLED_STRIKE=true
-  #     # - NOTIFIARR__ON_SLOW_STRIKE=true
-  #     # - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
-  #     # - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
-  #     # - NOTIFIARR__ON_CATEGORY_CHANGED=true
-  #     # - NOTIFIARR__API_KEY=notifiarr_secret
-  #     # - NOTIFIARR__CHANNEL_ID=discord_channel_id
+      # - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
+      # - NOTIFIARR__ON_STALLED_STRIKE=true
+      # - NOTIFIARR__ON_SLOW_STRIKE=true
+      # - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
+      # - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
+      # - NOTIFIARR__ON_CATEGORY_CHANGED=true
+      # - NOTIFIARR__API_KEY=notifiarr_secret
+      # - NOTIFIARR__CHANNEL_ID=discord_channel_id
 
-  #     # - APPRISE__ON_IMPORT_FAILED_STRIKE=true
-  #     # - APPRISE__ON_STALLED_STRIKE=true
-  #     # - APPRISE__ON_SLOW_STRIKE=true
-  #     # - APPRISE__ON_QUEUE_ITEM_DELETED=true
-  #     # - APPRISE__ON_DOWNLOAD_CLEANED=true
-  #     # - APPRISE__URL=http://localhost:8000
-  #     # - APPRISE__KEY=mykey
-  #   volumes:
-  #     - ./data/cleanuperr/logs:/var/logs
-  #     - ./data/cleanuperr/ignored_downloads:/ignored
-  #     - ./data/qbittorrent/downloads:/downloads
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - qbittorrent
-  #     - deluge
-  #     - transmission
-  #     - sonarr
-  #     - radarr
-  #     - lidarr
-  #     - readarr
+      # - APPRISE__ON_IMPORT_FAILED_STRIKE=true
+      # - APPRISE__ON_STALLED_STRIKE=true
+      # - APPRISE__ON_SLOW_STRIKE=true
+      # - APPRISE__ON_QUEUE_ITEM_DELETED=true
+      # - APPRISE__ON_DOWNLOAD_CLEANED=true
+      # - APPRISE__URL=http://localhost:8000
+      # - APPRISE__KEY=mykey
+    volumes:
+      - ./data/cleanuperr/logs:/var/logs
+      - ./data/cleanuperr/ignored_downloads:/ignored
+      - ./data/qbittorrent/downloads:/downloads
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+      - deluge
+      - transmission
+      - sonarr
+      - radarr
+      - lidarr
+      - readarr

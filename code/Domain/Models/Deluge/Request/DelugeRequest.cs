@@ -8,19 +8,19 @@ public class DelugeRequest
     public int RequestId { get; set; }
 
     [JsonProperty(PropertyName = "method")]
-    public String Method { get; set; }
+    public string Method { get; set; }
 
     [JsonProperty(PropertyName = "params")]
-    public List<Object> Params { get; set; }
+    public List<object> Params { get; set; }
 
     [JsonIgnore]
     public NullValueHandling NullValueHandling { get; set; }
 
-    public DelugeRequest(int requestId, String method, params object[] parameters)
+    public DelugeRequest(int requestId, string method, params object[]? parameters)
     {
         RequestId = requestId;
         Method = method;
-        Params = new List<Object>();
+        Params = [];
 
         if (parameters != null)
         {

@@ -1,6 +1,6 @@
+using System.Text.Json.Serialization;
 using Common.CustomDataTypes;
 using Common.Exceptions;
-using Newtonsoft.Json;
 
 namespace Common.Configuration.QueueCleaner;
 

@@ -1,0 +1,22 @@
+{
+  "enabled": false,
+  "cron_expression": "0 0/5 * * * ?",
+  "ignore_private": false,
+  "delete_private": false,
+  "ignored_downloads_path": "",
+  "sonarr": {
+    "enabled": false,
+    "type": 0,
+    "path": null
+  },
+  "radarr": {
+    "enabled": false,
+    "type": 0,
+    "path": null
+  },
+  "lidarr": {
+    "enabled": false,
+    "type": 0,
+    "path": null
+  }
+}

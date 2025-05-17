@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Configuration;
@@ -40,6 +41,7 @@ public class JsonConfigurationProvider
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
             PropertyNameCaseInsensitive = true
         };
+        _serializerOptions.Converters.Add(new JsonStringEnumConverter());
     }
 
     /// <summary>

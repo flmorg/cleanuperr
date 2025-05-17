@@ -62,27 +62,24 @@ public abstract class GenericHandler : IHandler, IDisposable
         _downloadServices.Clear();
         
         // Add all enabled clients
-        if (_downloadClientConfig.Clients.Count > 0)
+        foreach (var client in _downloadClientConfig.GetEnabledClients())
         {
-            foreach (var client in _downloadClientConfig.GetEnabledClients())
+            try
             {
-                try
+                var service = _downloadServiceFactory.GetDownloadService(client);
+                if (service != null)
                 {
-                    var service = _downloadServiceFactory.GetDownloadService(client);
-                    if (service != null)
-                    {
-                        _downloadServices.Add(service);
-                        _logger.LogDebug("Initialized download client: {name}", client.Name);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Download client service not available for: {name}", client.Name);
-                    }
+                    _downloadServices.Add(service);
+                    _logger.LogDebug("Initialized download client: {name}", client.Name);
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, "Failed to initialize download client: {name}", client.Name);
+                    _logger.LogWarning("Download client service not available for: {name}", client.Name);
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize download client: {name}", client.Name);
             }
         }
         

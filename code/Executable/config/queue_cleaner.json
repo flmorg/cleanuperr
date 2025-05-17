@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "cron_expression": "0/30 * * * * ?",
+  "run_sequentially": false,
+  "ignored_downloads_path": "",
+  "import_failed_max_strikes": 3,
+  "import_failed_ignore_private": false,
+  "import_failed_delete_private": false,
+  "import_failed_ignore_patterns": [],
+  "stalled_max_strikes": 3,
+  "stalled_reset_strikes_on_progress": false,
+  "stalled_ignore_private": false,
+  "stalled_delete_private": false,
+  "downloading_metadata_max_strikes": 3,
+  "slow_max_strikes": 3,
+  "slow_reset_strikes_on_progress": false,
+  "slow_ignore_private": false,
+  "slow_delete_private": false,
+  "slow_min_speed": "1KB",
+  "slow_max_time": 0,
+  "slow_ignore_above_size": ""
+}
