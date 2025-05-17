@@ -5,7 +5,7 @@ namespace Infrastructure.Verticals.Notifications;
 
 public interface INotificationProvider
 {
-    NotificationConfig Config { get; }
+    BaseNotificationConfig Config { get; }
     
     string Name { get; }
     

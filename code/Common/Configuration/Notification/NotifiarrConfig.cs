@@ -1,9 +1,8 @@
-using Common.Configuration.Notification;
 using Microsoft.Extensions.Configuration;
 
-namespace Infrastructure.Verticals.Notifications.Notifiarr;
+namespace Common.Configuration.Notification;
 
-public sealed record NotifiarrConfig : NotificationConfig
+public sealed record NotifiarrConfig : BaseNotificationConfig
 {
     public const string SectionName = "Notifiarr";
     
@@ -13,7 +12,7 @@ public sealed record NotifiarrConfig : NotificationConfig
     [ConfigurationKeyName("CHANNEL_ID")]
     public string? ChannelId { get; init; }
 
-    public bool IsValid()
+    public override bool IsValid()
     {
         if (string.IsNullOrEmpty(ApiKey?.Trim()))
         {

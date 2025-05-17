@@ -4,7 +4,9 @@ using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.General;
 using Common.Configuration.IgnoredDownloads;
+using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
+using Infrastructure.Verticals.Notifications.Notifiarr;
 
 namespace Infrastructure.Configuration;
 
@@ -38,6 +40,7 @@ public interface IConfigManager
     Task<DownloadCleanerConfig?> GetDownloadCleanerConfigAsync();
     Task<DownloadClientConfig?> GetDownloadClientConfigAsync();
     Task<IgnoredDownloadsConfig?> GetIgnoredDownloadsConfigAsync();
+    Task<NotificationsConfig?> GetNotificationsConfigAsync();
 
     Task<bool> SaveGeneralConfigAsync(GeneralConfig config);
     Task<bool> SaveSonarrConfigAsync(SonarrConfig config);
@@ -48,6 +51,7 @@ public interface IConfigManager
     Task<bool> SaveDownloadCleanerConfigAsync(DownloadCleanerConfig config);
     Task<bool> SaveDownloadClientConfigAsync(DownloadClientConfig config);
     Task<bool> SaveIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config);
+    Task<bool> SaveNotificationsConfigAsync(NotificationsConfig config);
     
     // Specific configuration types - Sync methods
     GeneralConfig? GetGeneralConfig();
@@ -59,6 +63,7 @@ public interface IConfigManager
     DownloadCleanerConfig? GetDownloadCleanerConfig();
     DownloadClientConfig? GetDownloadClientConfig();
     IgnoredDownloadsConfig? GetIgnoredDownloadsConfig();
+    NotificationsConfig? GetNotificationsConfig();
     
     bool SaveGeneralConfig(GeneralConfig config);
     bool SaveSonarrConfig(SonarrConfig config);
@@ -69,4 +74,5 @@ public interface IConfigManager
     bool SaveDownloadCleanerConfig(DownloadCleanerConfig config);
     bool SaveDownloadClientConfig(DownloadClientConfig config);
     bool SaveIgnoredDownloadsConfig(IgnoredDownloadsConfig config);
+    bool SaveNotificationsConfig(NotificationsConfig config);
 }

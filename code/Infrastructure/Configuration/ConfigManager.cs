@@ -5,6 +5,7 @@ using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.General;
 using Common.Configuration.IgnoredDownloads;
+using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 
@@ -107,9 +108,9 @@ public class ConfigManager : IConfigManager
         return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(ContentBlockerConfigFile);
     }
     
-    public ContentBlockerConfig? GetContentBlockerConfig()
+    public async Task<NotificationsConfig?> GetNotificationsConfigAsync()
     {
-        return _configProvider.ReadConfiguration<ContentBlockerConfig>(ContentBlockerConfigFile);
+        return await _configProvider.ReadConfigurationAsync<NotificationsConfig>(GeneralSettings);
     }
 
     public async Task<QueueCleanerConfig?> GetQueueCleanerConfigAsync()
@@ -257,6 +258,19 @@ public class ConfigManager : IConfigManager
         }
     }
     
+    public Task<bool> SaveNotificationsConfigAsync(NotificationsConfig config)
+    {
+        try
+        {
+            return _configProvider.WriteConfigurationAsync(GeneralSettings, config);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Notifications configuration save failed");
+            return Task.FromResult(false);
+        }
+    }
+    
     // Generic synchronous configuration methods
     public T? GetConfiguration<T>(string fileName) where T : class, new()
     {
@@ -324,6 +338,11 @@ public class ConfigManager : IConfigManager
         return GetConfiguration<QueueCleanerConfig>(QueueCleanerConfigFile);
     }
     
+    public ContentBlockerConfig? GetContentBlockerConfig()
+    {
+        return _configProvider.ReadConfiguration<ContentBlockerConfig>(ContentBlockerConfigFile);
+    }
+    
     public DownloadCleanerConfig? GetDownloadCleanerConfig()
     {
         return _configProvider.ReadConfiguration<DownloadCleanerConfig>(DownloadCleanerConfigFile);
@@ -337,6 +356,11 @@ public class ConfigManager : IConfigManager
     public IgnoredDownloadsConfig? GetIgnoredDownloadsConfig()
     {
         return _configProvider.ReadConfiguration<IgnoredDownloadsConfig>(IgnoredDownloadsConfigFile);
+    }
+    
+    public NotificationsConfig? GetNotificationsConfig()
+    {
+        return _configProvider.ReadConfiguration<NotificationsConfig>(GeneralSettings);
     }
     
     public bool SaveGeneralConfig(GeneralConfig config)
@@ -460,6 +484,19 @@ public class ConfigManager : IConfigManager
         catch (Exception ex)
         {
             _logger.LogError(ex, "IgnoredDownloads configuration save failed");
+            return false;
+        }
+    }
+    
+    public bool SaveNotificationsConfig(NotificationsConfig config)
+    {
+        try
+        {
+            return _configProvider.WriteConfiguration(GeneralSettings, config);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Notifications configuration save failed");
             return false;
         }
     }

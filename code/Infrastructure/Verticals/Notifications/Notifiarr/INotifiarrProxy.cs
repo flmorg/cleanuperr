@@ -1,4 +1,6 @@
-﻿namespace Infrastructure.Verticals.Notifications.Notifiarr;
+﻿using Common.Configuration.Notification;
+
+namespace Infrastructure.Verticals.Notifications.Notifiarr;
 
 public interface INotifiarrProxy
 {

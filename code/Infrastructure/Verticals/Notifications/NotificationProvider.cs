@@ -7,17 +7,18 @@ namespace Infrastructure.Verticals.Notifications;
 
 public abstract class NotificationProvider : INotificationProvider
 {
+    private readonly IConfigManager _configManager;
+    protected readonly NotificationsConfig _config;
+    
+    public abstract BaseNotificationConfig Config { get; }
+
     protected NotificationProvider(IConfigManager configManager)
     {
-        ConfigManager = configManager;
-        Config = configManager.GetConfiguration<NotificationConfig>("notification.json") ?? new NotificationConfig();
+        _configManager = configManager;
+        _config = configManager.GetNotificationsConfig();
     }
     
     public abstract string Name { get; }
-    
-    public IConfigManager ConfigManager { get; }
-    
-    public NotificationConfig Config { get; }
     
     public abstract Task OnFailedImportStrike(FailedImportStrikeNotification notification);
 

@@ -1,4 +1,6 @@
-﻿namespace Infrastructure.Verticals.Notifications.Apprise;
+﻿using Common.Configuration.Notification;
+
+namespace Infrastructure.Verticals.Notifications.Apprise;
 
 public interface IAppriseProxy
 {

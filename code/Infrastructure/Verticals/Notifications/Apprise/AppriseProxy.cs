@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Common.Configuration.Notification;
 using Common.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;

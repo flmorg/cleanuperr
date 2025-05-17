@@ -17,7 +17,7 @@ public class NotificationFactory : INotificationFactory
 
     public List<INotificationProvider> OnFailedImportStrikeEnabled() =>
         ActiveProviders()
-            .Where(n => n.Config.OnImportFailedStrike)
+            .Where(n => n.Config.OnFailedImportStrike)
             .ToList();
 
     public List<INotificationProvider> OnStalledStrikeEnabled() =>

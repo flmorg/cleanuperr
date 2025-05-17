@@ -1,5 +1,4 @@
 using System.Reflection;
-using Common.Attributes;
 using Common.Configuration.General;
 using Microsoft.Extensions.Logging;
 using Infrastructure.Configuration;
@@ -9,19 +8,19 @@ namespace Infrastructure.Interceptors;
 public class DryRunInterceptor : IDryRunInterceptor
 {
     private readonly ILogger<DryRunInterceptor> _logger;
-    private readonly DryRunConfig _config;
+    private readonly GeneralConfig _config;
     
     public DryRunInterceptor(ILogger<DryRunInterceptor> logger, IConfigManager configManager)
     {
         _logger = logger;
-        _config = configManager.GetConfiguration<DryRunConfig>("dryrun.json") ?? new DryRunConfig();
+        _config = configManager.GetGeneralConfig();
     }
     
     public void Intercept(Action action)
     {
         MethodInfo methodInfo = action.Method;
         
-        if (_config.IsDryRun)
+        if (_config.DryRun)
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
             return;
@@ -34,7 +33,7 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        if (_config.IsDryRun)
+        if (_config.DryRun)
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
             return Task.CompletedTask;
@@ -54,7 +53,7 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        if (_config.IsDryRun)
+        if (_config.DryRun)
         {
             _logger.LogInformation("[DRY RUN] skipping method: {name}", methodInfo.Name);
             return Task.FromResult(default(T));

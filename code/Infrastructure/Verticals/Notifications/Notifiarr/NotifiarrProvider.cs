@@ -1,56 +1,56 @@
+using Common.Configuration.Notification;
 using Infrastructure.Configuration;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.Notifications.Notifiarr;
 
 public class NotifiarrProvider : NotificationProvider
 {
-    private readonly NotifiarrConfig _config;
     private readonly INotifiarrProxy _proxy;
 
     private const string WarningColor = "f0ad4e";
     private const string ImportantColor = "bb2124";
     private const string Logo = "https://github.com/flmorg/cleanuperr/blob/main/Logo/48.png?raw=true";
-    
+
+    public override NotifiarrConfig Config => _config.Notifiarr;
+
     public override string Name => "Notifiarr";
 
     public NotifiarrProvider(IConfigManager configManager, INotifiarrProxy proxy)
         : base(configManager)
     {
-        _config = configManager.GetConfiguration<NotifiarrConfig>("notifiarr.json") ?? new NotifiarrConfig();
         _proxy = proxy;
     }
 
     public override async Task OnFailedImportStrike(FailedImportStrikeNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
+        await _proxy.SendNotification(BuildPayload(notification, WarningColor), Config);
     }
     
     public override async Task OnStalledStrike(StalledStrikeNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
+        await _proxy.SendNotification(BuildPayload(notification, WarningColor), Config);
     }
     
     public override async Task OnSlowStrike(SlowStrikeNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification, WarningColor), _config);
+        await _proxy.SendNotification(BuildPayload(notification, WarningColor), Config);
     }
     
     public override async Task OnQueueItemDeleted(QueueItemDeletedNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification, ImportantColor), _config);
+        await _proxy.SendNotification(BuildPayload(notification, ImportantColor), Config);
     }
 
     public override async Task OnDownloadCleaned(DownloadCleanedNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification), _config);
+        await _proxy.SendNotification(BuildPayload(notification), Config);
     }
     
     public override async Task OnCategoryChanged(CategoryChangedNotification notification)
     {
-        await _proxy.SendNotification(BuildPayload(notification), _config);
+        await _proxy.SendNotification(BuildPayload(notification), Config);
     }
 
     private NotifiarrPayload BuildPayload(ArrNotification notification, string color)
@@ -74,7 +74,7 @@ public class NotifiarrProvider : NotificationProvider
                 },
                 Ids = new Ids
                 {
-                    Channel = _config.ChannelId
+                    Channel = Config.ChannelId
                 },
                 Images = new()
                 {
@@ -105,7 +105,7 @@ public class NotifiarrProvider : NotificationProvider
                 },
                 Ids = new Ids
                 {
-                    Channel = _config.ChannelId
+                    Channel = Config.ChannelId
                 },
                 Images = new()
                 {
@@ -133,7 +133,7 @@ public class NotifiarrProvider : NotificationProvider
                 },
                 Ids = new Ids
                 {
-                    Channel = _config.ChannelId
+                    Channel = Config.ChannelId
                 },
                 Images = new()
                 {

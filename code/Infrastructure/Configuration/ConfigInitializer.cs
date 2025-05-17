@@ -23,7 +23,8 @@ public class ConfigInitializer
     public async Task EnsureConfigFilesExistAsync()
     {
         _logger.LogInformation("Initializing configuration files...");
-        
+
+        await EnsureGeneralConfigAsync();
         await EnsureContentBlockerConfigAsync();
         await EnsureQueueCleanerConfigAsync();
         await EnsureDownloadCleanerConfigAsync();
@@ -32,8 +33,19 @@ public class ConfigInitializer
         await EnsureRadarrConfigAsync();
         await EnsureLidarrConfigAsync();
         await EnsureIgnoredDownloadsConfigAsync();
+        await EnsureNotificationsConfigAsync();
         
         _logger.LogInformation("Configuration files initialized");
+    }
+    
+    private async Task EnsureGeneralConfigAsync()
+    {
+        var config = await _configManager.GetGeneralConfigAsync();
+
+        if (config is null)
+        {
+            await _configManager.SaveGeneralConfigAsync(new());
+        }
     }
     
     private async Task EnsureContentBlockerConfigAsync()
@@ -113,6 +125,16 @@ public class ConfigInitializer
         if (config is null)
         {
             await _configManager.SaveIgnoredDownloadsConfigAsync(new());
+        }
+    }
+    
+    private async Task EnsureNotificationsConfigAsync()
+    {
+        var config = await _configManager.GetNotificationsConfigAsync();
+        
+        if (config is null)
+        {
+            await _configManager.SaveNotificationsConfigAsync(new());
         }
     }
 }
