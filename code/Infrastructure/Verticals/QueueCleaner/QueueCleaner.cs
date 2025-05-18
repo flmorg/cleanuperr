@@ -50,30 +50,12 @@ public sealed class QueueCleaner : GenericHandler
         _configManager = configManager;
         _ignoredDownloadsService = ignoredDownloadsService;
         _downloadClientFactory = downloadClientFactory;
-    }
-    
-    protected override async Task InitializeConfigAsync()
-    {
-        // Get configurations from the configuration manager
-        _config = await _configManager.GetQueueCleanerConfigAsync();
-        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
-        _sonarrConfig = await _configManager.GetSonarrConfigAsync();
-        _radarrConfig = await _configManager.GetRadarrConfigAsync();
-        _lidarrConfig = await _configManager.GetLidarrConfigAsync();
         
-        // Log information about configured download clients
-        if (_downloadClientConfig.Clients.Count > 0)
-        {
-            foreach (var client in _downloadClientConfig.GetEnabledClients())
-            {
-                _logger.LogDebug("Found configured download client: {name} ({id}) of type {type}", 
-                    client.Name, client.Id, client.Type);
-            }
-        }
-        else
-        {
-            _logger.LogWarning("No download clients configured in downloadclients.json");
-        }
+        _config = configManager.GetConfiguration<QueueCleanerConfig>();
+        _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
+        _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
+        _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
+        _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
     
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)

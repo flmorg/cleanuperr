@@ -32,10 +32,7 @@ public sealed class BlocklistProvider
         _cache = cache;
         _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
         
-        // Get the content blocker config
-        var configTask = _configManager.GetContentBlockerConfigAsync();
-        configTask.Wait();
-        _contentBlockerConfig = configTask.Result ?? new ContentBlockerConfig();
+        _contentBlockerConfig = _configManager.GetConfiguration<ContentBlockerConfig>();
     }
 
     public async Task LoadBlocklistsAsync()
@@ -48,15 +45,6 @@ public sealed class BlocklistProvider
         
         try
         {
-            // Refresh the configuration before loading blocklists
-            var configTask = _configManager.GetContentBlockerConfigAsync();
-            await configTask;
-            if (configTask.Result != null)
-            {
-                // Update the local config reference
-                _contentBlockerConfig = configTask.Result;
-            }
-            
             await LoadPatternsAndRegexesAsync(_contentBlockerConfig.Sonarr, InstanceType.Sonarr);
             await LoadPatternsAndRegexesAsync(_contentBlockerConfig.Radarr, InstanceType.Radarr);
             await LoadPatternsAndRegexesAsync(_contentBlockerConfig.Lidarr, InstanceType.Lidarr);

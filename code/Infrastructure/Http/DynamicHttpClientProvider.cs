@@ -69,7 +69,8 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
     /// <returns>A configured HttpClient instance</returns>
     private HttpClient CreateGenericClient(ClientConfig clientConfig)
     {
-        var httpConfig = _configManager.GetConfiguration<GeneralConfig>("http.json") ?? new GeneralConfig();
+        // TODO
+        var httpConfig = _configManager.GetConfiguration<GeneralConfig>();
         
         // Create handler with certificate validation
         var handler = new HttpClientHandler

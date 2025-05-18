@@ -15,7 +15,7 @@ public abstract class NotificationProvider : INotificationProvider
     protected NotificationProvider(IConfigManager configManager)
     {
         _configManager = configManager;
-        _config = configManager.GetNotificationsConfig();
+        _config = configManager.GetConfiguration<NotificationsConfig>();
     }
     
     public abstract string Name { get; }

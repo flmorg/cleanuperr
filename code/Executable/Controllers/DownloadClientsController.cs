@@ -39,12 +39,9 @@ public class DownloadClientsController : ControllerBase
     {
         try
         {
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                return NotFound(new { Message = "No download client configuration found" });
-            }
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
 
+            // TODO don't expose passwords
             return Ok(config.Clients);
         }
         catch (Exception ex)
@@ -62,11 +59,7 @@ public class DownloadClientsController : ControllerBase
     {
         try
         {
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                return NotFound(new { Message = "No download client configuration found" });
-            }
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
 
             var client = config.GetClientConfig(id);
             if (client == null)
@@ -95,14 +88,7 @@ public class DownloadClientsController : ControllerBase
             clientConfig.Validate();
 
             // Get the current configuration
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                config = new DownloadClientConfig
-                {
-                    Clients = new List<ClientConfig>()
-                };
-            }
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
 
             // Check if a client with the same ID already exists
             if (config.GetClientConfig(clientConfig.Id) != null)
@@ -114,7 +100,7 @@ public class DownloadClientsController : ControllerBase
             config.Clients.Add(clientConfig);
 
             // Persist the updated configuration
-            var result = await _configManager.SaveDownloadClientConfigAsync(config);
+            var result = await _configManager.SaveConfigurationAsync(config);
             if (!result)
             {
                 return StatusCode(500, new { Error = "Failed to save download client configuration" });
@@ -148,11 +134,7 @@ public class DownloadClientsController : ControllerBase
             clientConfig.Validate();
 
             // Get the current configuration
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                return NotFound(new { Message = "No download client configuration found" });
-            }
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
 
             // Find the client to update
             var existingClientIndex = config.Clients.FindIndex(c => c.Id == id);
@@ -165,7 +147,7 @@ public class DownloadClientsController : ControllerBase
             config.Clients[existingClientIndex] = clientConfig;
 
             // Persist the updated configuration
-            var result = await _configManager.SaveDownloadClientConfigAsync(config);
+            var result = await _configManager.SaveConfigurationAsync(config);
             if (!result)
             {
                 return StatusCode(500, new { Error = "Failed to save download client configuration" });
@@ -190,11 +172,7 @@ public class DownloadClientsController : ControllerBase
         try
         {
             // Get the current configuration
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                return NotFound(new { Message = "No download client configuration found" });
-            }
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
 
             // Find the client to delete
             var existingClientIndex = config.Clients.FindIndex(c => c.Id == id);
@@ -207,7 +185,7 @@ public class DownloadClientsController : ControllerBase
             config.Clients.RemoveAt(existingClientIndex);
 
             // Persist the updated configuration
-            var result = await _configManager.SaveDownloadClientConfigAsync(config);
+            var result = await _configManager.SaveConfigurationAsync(config);
             if (!result)
             {
                 return StatusCode(500, new { Error = "Failed to save download client configuration" });
@@ -232,11 +210,7 @@ public class DownloadClientsController : ControllerBase
         try
         {
             // Get the client configuration
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                return NotFound(new { Message = "No download client configuration found" });
-            }
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
 
             var clientConfig = config.GetClientConfig(id);
             if (clientConfig == null)
@@ -277,11 +251,7 @@ public class DownloadClientsController : ControllerBase
     {
         try
         {
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                return NotFound(new { Message = "No download client configuration found" });
-            }
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
 
             var clients = config.Clients.Where(c => c.Type == type).ToList();
             return Ok(clients);

@@ -47,7 +47,7 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
         result.ShouldSatisfyAllConditions(
             () => result.IsHealthy.ShouldBeFalse(),
             () => result.ClientId.ShouldBe(new Guid("00000000-0000-0000-0000-000000000001")),
-            () => result.ErrorMessage.ShouldContain("Connection refused"),
+            () => result.ErrorMessage?.ShouldContain("Connection refused"),
             () => result.LastChecked.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow)
         );
     }
@@ -59,8 +59,8 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
         var sut = _fixture.CreateSut();
         
         // Configure the ConfigManager to return null for the client config
-        _fixture.ConfigManager.GetDownloadClientConfigAsync().Returns(
-            Task.FromResult<DownloadClientConfig?>(null)
+        _fixture.ConfigManager.GetConfigurationAsync<DownloadClientConfig>().Returns(
+            Task.FromResult<DownloadClientConfig>(new())
         );
         
         // Act
@@ -70,7 +70,7 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
         result.ShouldSatisfyAllConditions(
             () => result.IsHealthy.ShouldBeFalse(),
             () => result.ClientId.ShouldBe(new Guid("00000000-0000-0000-0000-000000000010")),
-            () => result.ErrorMessage.ShouldContain("not found"),
+            () => result.ErrorMessage?.ShouldContain("not found"),
             () => result.LastChecked.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-10), DateTime.UtcNow)
         );
     }

@@ -3,20 +3,10 @@ using Infrastructure.Models;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Collections.Concurrent;
+using Infrastructure.Services.Interfaces;
 using Quartz.Impl.Matchers;
 
 namespace Infrastructure.Services;
-
-public interface IJobManagementService
-{
-    Task<bool> StartJob(string jobName, string cronExpression = null);
-    Task<bool> StopJob(string jobName);
-    Task<bool> PauseJob(string jobName);
-    Task<bool> ResumeJob(string jobName);
-    Task<IReadOnlyList<JobInfo>> GetAllJobs();
-    Task<JobInfo> GetJob(string jobName);
-    Task<bool> UpdateJobSchedule(string jobName, string cronExpression);
-}
 
 public class JobManagementService : IJobManagementService
 {
@@ -30,7 +20,7 @@ public class JobManagementService : IJobManagementService
         _schedulerFactory = schedulerFactory;
     }
 
-    public async Task<bool> StartJob(string jobName, string cronExpression = null)
+    public async Task<bool> StartJob(string jobName, string? cronExpression = null)
     {
         try
         {
@@ -223,8 +213,8 @@ public class JobManagementService : IJobManagementService
                             jobInfo.Schedule = cronTrigger.CronExpressionString;
                         }
                         
-                        jobInfo.NextRunTime = trigger.GetNextFireTimeUtc()?.LocalDateTime;
-                        jobInfo.PreviousRunTime = trigger.GetPreviousFireTimeUtc()?.LocalDateTime;
+                        jobInfo.NextRunTime = trigger.GetNextFireTimeUtc()?.UtcDateTime;
+                        jobInfo.PreviousRunTime = trigger.GetPreviousFireTimeUtc()?.UtcDateTime;
                     }
                     
                     result.Add(jobInfo);

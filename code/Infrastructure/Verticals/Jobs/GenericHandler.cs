@@ -50,8 +50,6 @@ public abstract class GenericHandler : IHandler, IDisposable
         _notifier = notifier;
     }
 
-    protected abstract Task InitializeConfigAsync();
-    
     /// <summary>
     /// Initialize download services based on configuration
     /// </summary>
@@ -95,7 +93,6 @@ public abstract class GenericHandler : IHandler, IDisposable
 
     public virtual async Task ExecuteAsync()
     {
-        await InitializeConfigAsync();
         // Initialize download services
         InitializeDownloadServices();
         

@@ -28,6 +28,8 @@ public class ConfigManager : IConfigManager
     private readonly string _ignoredDownloadsConfigFile;
     private readonly string _notificationsConfigFile;
 
+    private readonly Dictionary<Type, string> _settingsPaths;
+
     public ConfigManager(
         ILogger<ConfigManager> logger,
         IConfigurationProvider configProvider,
@@ -37,26 +39,95 @@ public class ConfigManager : IConfigManager
         _configProvider = configProvider;
         string settingsPath = pathProvider.GetSettingsPath();
         
-        _generalConfigFile = Path.Combine(settingsPath, "general.json");
-        _sonarrConfigFile = Path.Combine(settingsPath, "sonarr.json");
-        _radarrConfigFile = Path.Combine(settingsPath, "radarr.json");
-        _lidarrConfigFile = Path.Combine(settingsPath, "lidarr.json");
-        _contentBlockerConfigFile = Path.Combine(settingsPath, "content_blocker.json");
-        _queueCleanerConfigFile = Path.Combine(settingsPath, "queue_cleaner.json");
-        _downloadCleanerConfigFile = Path.Combine(settingsPath, "download_cleaner.json");
-        _downloadClientConfigFile = Path.Combine(settingsPath, "download_client.json");
-        _ignoredDownloadsConfigFile = Path.Combine(settingsPath, "ignored_downloads.json");
-        _notificationsConfigFile = Path.Combine(settingsPath, "notifications.json");
+        // _generalConfigFile = Path.Combine(settingsPath, "general.json");
+        // _sonarrConfigFile = Path.Combine(settingsPath, "sonarr.json");
+        // _radarrConfigFile = Path.Combine(settingsPath, "radarr.json");
+        // _lidarrConfigFile = Path.Combine(settingsPath, "lidarr.json");
+        // _contentBlockerConfigFile = Path.Combine(settingsPath, "content_blocker.json");
+        // _queueCleanerConfigFile = Path.Combine(settingsPath, "queue_cleaner.json");
+        // _downloadCleanerConfigFile = Path.Combine(settingsPath, "download_cleaner.json");
+        // _downloadClientConfigFile = Path.Combine(settingsPath, "download_client.json");
+        // _ignoredDownloadsConfigFile = Path.Combine(settingsPath, "ignored_downloads.json");
+        // _notificationsConfigFile = Path.Combine(settingsPath, "notifications.json");
+        
+        _settingsPaths = new()
+        {
+            { typeof(GeneralConfig), Path.Combine(settingsPath, "general.json") },
+            { typeof(SonarrConfig), Path.Combine(settingsPath, "sonarr.json") },
+            { typeof(RadarrConfig), Path.Combine(settingsPath, "radarr.json") },
+            { typeof(LidarrConfig), Path.Combine(settingsPath, "lidarr.json") },
+            { typeof(ContentBlockerConfig), Path.Combine(settingsPath, "content_blocker.json") },
+            { typeof(QueueCleanerConfig), Path.Combine(settingsPath, "queue_cleaner.json") },
+            { typeof(DownloadCleanerConfig), Path.Combine(settingsPath, "download_cleaner.json") },
+            { typeof(DownloadClientConfig), Path.Combine(settingsPath, "download_client.json") },
+            { typeof(IgnoredDownloadsConfig), Path.Combine(settingsPath, "ignored_downloads.json") },
+            { typeof(NotificationsConfig), Path.Combine(settingsPath, "notifications.json") }
+        };
+    }
+
+    public async Task EnsureFilesExist()
+    {
+        foreach ((Type type, string path) in _settingsPaths)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    continue;
+                }
+                
+                var config = Activator.CreateInstance(type);
+
+                if (config is null)
+                {
+                    throw new InvalidOperationException($"Failed to create instance of {type}");
+                }
+                
+                // Create the file with default values
+                await _configProvider.WriteConfigurationAsync(path, config);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to ensure configuration file exists: {path}", path);
+                throw;
+            }
+        }
     }
 
     // Generic configuration methods
-    public Task<T> GetConfigurationAsync<T>(string configFileName) where T : class, new()
+    // public Task<T> GetConfigurationAsync<T>(string configFileName) where T : class, new()
+    // {
+    //     return _configProvider.ReadConfigurationAsync<T>(configFileName);
+    // }
+    
+    public Task<T> GetConfigurationAsync<T>() where T : class, new()
     {
-        return _configProvider.ReadConfigurationAsync<T>(configFileName);
+        return _configProvider.ReadConfigurationAsync<T>(_settingsPaths[typeof(T)]);
     }
 
-    public Task<bool> SaveConfigurationAsync<T>(string configFileName, T config) where T : class
+    // public Task<bool> SaveConfigurationAsync<T>(string configFileName, T config) where T : class
+    // {
+    //     // Validate if it's an IConfig
+    //     if (config is IConfig configurable)
+    //     {
+    //         try
+    //         {
+    //             configurable.Validate();
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             _logger.LogError(ex, "Configuration validation failed for {fileName}", configFileName);
+    //             return Task.FromResult(false);
+    //         }
+    //     }
+    //
+    //     return _configProvider.WriteConfigurationAsync(configFileName, config);
+    // }
+    
+    public Task<bool> SaveConfigurationAsync<T>(T config) where T : class
     {
+        string configFileName = _settingsPaths[typeof(T)];
+        
         // Validate if it's an IConfig
         if (config is IConfig configurable)
         {
@@ -95,202 +166,228 @@ public class ConfigManager : IConfigManager
     }
 
     // Specific configuration type methods
-    public async Task<GeneralConfig> GetGeneralConfigAsync()
+    // public async Task<GeneralConfig> GetGeneralConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<GeneralConfig>(_generalConfigFile);
+    // }
+    //
+    // public async Task<SonarrConfig> GetSonarrConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<SonarrConfig>(_sonarrConfigFile);
+    // }
+    //
+    // public async Task<RadarrConfig> GetRadarrConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<RadarrConfig>(_radarrConfigFile);
+    // }
+    //
+    // public async Task<LidarrConfig> GetLidarrConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<LidarrConfig>(_lidarrConfigFile);
+    // }
+    //
+    // public async Task<ContentBlockerConfig> GetContentBlockerConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(_contentBlockerConfigFile);
+    // }
+    //
+    // public async Task<NotificationsConfig> GetNotificationsConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<NotificationsConfig>(_notificationsConfigFile);
+    // }
+    //
+    // public async Task<QueueCleanerConfig> GetQueueCleanerConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<QueueCleanerConfig>(_queueCleanerConfigFile);
+    // }
+    //
+    // public async Task<DownloadCleanerConfig> GetDownloadCleanerConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<DownloadCleanerConfig>(_downloadCleanerConfigFile);
+    // }
+    //
+    // public async Task<DownloadClientConfig> GetDownloadClientConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<DownloadClientConfig>(_downloadClientConfigFile);
+    // }
+    //
+    // public async Task<IgnoredDownloadsConfig> GetIgnoredDownloadsConfigAsync()
+    // {
+    //     return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
+    // }
+
+    // public Task<bool> SaveGeneralConfigAsync(GeneralConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_generalConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "General configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveSonarrConfigAsync(SonarrConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_sonarrConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Sonarr configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveRadarrConfigAsync(RadarrConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_radarrConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Radarr configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveLidarrConfigAsync(LidarrConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_lidarrConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Lidarr configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveContentBlockerConfigAsync(ContentBlockerConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_contentBlockerConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "ContentBlocker configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveQueueCleanerConfigAsync(QueueCleanerConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_queueCleanerConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "QueueCleaner configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveDownloadCleanerConfigAsync(DownloadCleanerConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_downloadCleanerConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "DownloadCleaner configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveDownloadClientConfigAsync(DownloadClientConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfigurationAsync(_downloadClientConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "DownloadClient configuration validation failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config)
+    // {
+    //     try
+    //     {
+    //         return _configProvider.WriteConfigurationAsync(_ignoredDownloadsConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "IgnoredDownloads configuration save failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    //
+    // public Task<bool> SaveNotificationsConfigAsync(NotificationsConfig config)
+    // {
+    //     try
+    //     {
+    //         return _configProvider.WriteConfigurationAsync(_notificationsConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Notifications configuration save failed");
+    //         return Task.FromResult(false);
+    //     }
+    // }
+    
+    // // Generic synchronous configuration methods
+    // public T GetConfiguration<T>(string fileName) where T : class, new()
+    // {
+    //     return _configProvider.ReadConfiguration<T>(fileName);
+    // }
+
+    public T GetConfiguration<T>() where T : class, new()
     {
-        return await _configProvider.ReadConfigurationAsync<GeneralConfig>(_generalConfigFile);
+        return _configProvider.ReadConfiguration<T>(_settingsPaths[typeof(T)]);
     }
     
-    public async Task<SonarrConfig> GetSonarrConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<SonarrConfig>(_sonarrConfigFile);
-    }
-
-    public async Task<RadarrConfig> GetRadarrConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<RadarrConfig>(_radarrConfigFile);
-    }
-
-    public async Task<LidarrConfig> GetLidarrConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<LidarrConfig>(_lidarrConfigFile);
-    }
-
-    public async Task<ContentBlockerConfig> GetContentBlockerConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(_contentBlockerConfigFile);
-    }
+    // public bool SaveConfiguration<T>(string configFileName, T config) where T : class
+    // {
+    //     // Validate if it's an IConfig
+    //     if (config is IConfig configurable)
+    //     {
+    //         try
+    //         {
+    //             configurable.Validate();
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             _logger.LogError(ex, "Configuration validation failed for {fileName}", configFileName);
+    //             return false;
+    //         }
+    //     }
+    //
+    //     return _configProvider.WriteConfiguration(configFileName, config);
+    // }
     
-    public async Task<NotificationsConfig> GetNotificationsConfigAsync()
+    public bool SaveConfiguration<T>(T config) where T : class
     {
-        return await _configProvider.ReadConfigurationAsync<NotificationsConfig>(_notificationsConfigFile);
-    }
-
-    public async Task<QueueCleanerConfig> GetQueueCleanerConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<QueueCleanerConfig>(_queueCleanerConfigFile);
-    }
-
-    public async Task<DownloadCleanerConfig> GetDownloadCleanerConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<DownloadCleanerConfig>(_downloadCleanerConfigFile);
-    }
-
-    public async Task<DownloadClientConfig> GetDownloadClientConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<DownloadClientConfig>(_downloadClientConfigFile);
-    }
-
-    public async Task<IgnoredDownloadsConfig> GetIgnoredDownloadsConfigAsync()
-    {
-        return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
-    }
-
-    public Task<bool> SaveGeneralConfigAsync(GeneralConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_generalConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "General configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-    
-    public Task<bool> SaveSonarrConfigAsync(SonarrConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_sonarrConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Sonarr configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-
-    public Task<bool> SaveRadarrConfigAsync(RadarrConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_radarrConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Radarr configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-
-    public Task<bool> SaveLidarrConfigAsync(LidarrConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_lidarrConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lidarr configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-
-    public Task<bool> SaveContentBlockerConfigAsync(ContentBlockerConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_contentBlockerConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "ContentBlocker configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-
-    public Task<bool> SaveQueueCleanerConfigAsync(QueueCleanerConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_queueCleanerConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "QueueCleaner configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-
-    public Task<bool> SaveDownloadCleanerConfigAsync(DownloadCleanerConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_downloadCleanerConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "DownloadCleaner configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-
-    public Task<bool> SaveDownloadClientConfigAsync(DownloadClientConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfigurationAsync(_downloadClientConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "DownloadClient configuration validation failed");
-            return Task.FromResult(false);
-        }
-    }
-    
-    public Task<bool> SaveIgnoredDownloadsConfigAsync(IgnoredDownloadsConfig config)
-    {
-        try
-        {
-            return _configProvider.WriteConfigurationAsync(_ignoredDownloadsConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "IgnoredDownloads configuration save failed");
-            return Task.FromResult(false);
-        }
-    }
-    
-    public Task<bool> SaveNotificationsConfigAsync(NotificationsConfig config)
-    {
-        try
-        {
-            return _configProvider.WriteConfigurationAsync(_notificationsConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Notifications configuration save failed");
-            return Task.FromResult(false);
-        }
-    }
-    
-    // Generic synchronous configuration methods
-    public T GetConfiguration<T>(string fileName) where T : class, new()
-    {
-        return _configProvider.ReadConfiguration<T>(fileName);
-    }
-    
-    public bool SaveConfiguration<T>(string configFileName, T config) where T : class
-    {
+        string configFileName = _settingsPaths[typeof(T)];
+        
         // Validate if it's an IConfig
         if (config is IConfig configurable)
         {
@@ -305,7 +402,15 @@ public class ConfigManager : IConfigManager
             }
         }
 
-        return _configProvider.WriteConfiguration(configFileName, config);
+        try
+        {
+            return _configProvider.WriteConfiguration(configFileName, config);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Configuration save failed for {fileName}", configFileName);
+            throw;
+        }
     }
     
     public bool UpdateConfigurationProperty<T>(string configFileName, string propertyPath, T value)
@@ -325,191 +430,191 @@ public class ConfigManager : IConfigManager
     
     // Specific synchronous configuration methods for typed configs
     
-    public GeneralConfig GetGeneralConfig()
-    {
-        return _configProvider.ReadConfiguration<GeneralConfig>(_generalConfigFile);
-    }
+    // public GeneralConfig GetGeneralConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<GeneralConfig>(_generalConfigFile);
+    // }
+    //
+    // public SonarrConfig GetSonarrConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<SonarrConfig>(_sonarrConfigFile);
+    // }
+    //
+    // public RadarrConfig GetRadarrConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<RadarrConfig>(_radarrConfigFile);
+    // }
+    //
+    // public LidarrConfig GetLidarrConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<LidarrConfig>(_lidarrConfigFile);
+    // }
+    //
+    // public QueueCleanerConfig GetQueueCleanerConfig()
+    // {
+    //     return GetConfiguration<QueueCleanerConfig>(_queueCleanerConfigFile);
+    // }
+    //
+    // public ContentBlockerConfig GetContentBlockerConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<ContentBlockerConfig>(_contentBlockerConfigFile);
+    // }
+    //
+    // public DownloadCleanerConfig GetDownloadCleanerConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<DownloadCleanerConfig>(_downloadCleanerConfigFile);
+    // }
+    //
+    // public DownloadClientConfig GetDownloadClientConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<DownloadClientConfig>(_downloadClientConfigFile);
+    // }
+    //
+    // public IgnoredDownloadsConfig GetIgnoredDownloadsConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
+    // }
+    //
+    // public NotificationsConfig GetNotificationsConfig()
+    // {
+    //     return _configProvider.ReadConfiguration<NotificationsConfig>(_notificationsConfigFile);
+    // }
     
-    public SonarrConfig GetSonarrConfig()
-    {
-        return _configProvider.ReadConfiguration<SonarrConfig>(_sonarrConfigFile);
-    }
-    
-    public RadarrConfig GetRadarrConfig()
-    {
-        return _configProvider.ReadConfiguration<RadarrConfig>(_radarrConfigFile);
-    }
-    
-    public LidarrConfig GetLidarrConfig()
-    {
-        return _configProvider.ReadConfiguration<LidarrConfig>(_lidarrConfigFile);
-    }
-    
-    public QueueCleanerConfig GetQueueCleanerConfig()
-    {
-        return GetConfiguration<QueueCleanerConfig>(_queueCleanerConfigFile);
-    }
-    
-    public ContentBlockerConfig GetContentBlockerConfig()
-    {
-        return _configProvider.ReadConfiguration<ContentBlockerConfig>(_contentBlockerConfigFile);
-    }
-    
-    public DownloadCleanerConfig GetDownloadCleanerConfig()
-    {
-        return _configProvider.ReadConfiguration<DownloadCleanerConfig>(_downloadCleanerConfigFile);
-    }
-    
-    public DownloadClientConfig GetDownloadClientConfig()
-    {
-        return _configProvider.ReadConfiguration<DownloadClientConfig>(_downloadClientConfigFile);
-    }
-    
-    public IgnoredDownloadsConfig GetIgnoredDownloadsConfig()
-    {
-        return _configProvider.ReadConfiguration<IgnoredDownloadsConfig>(_ignoredDownloadsConfigFile);
-    }
-    
-    public NotificationsConfig GetNotificationsConfig()
-    {
-        return _configProvider.ReadConfiguration<NotificationsConfig>(_notificationsConfigFile);
-    }
-    
-    public bool SaveGeneralConfig(GeneralConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_generalConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "General configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveSonarrConfig(SonarrConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_sonarrConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Sonarr configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveRadarrConfig(RadarrConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_radarrConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Radarr configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveLidarrConfig(LidarrConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_lidarrConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lidarr configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveContentBlockerConfig(ContentBlockerConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_contentBlockerConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "ContentBlocker configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveQueueCleanerConfig(QueueCleanerConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_queueCleanerConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "QueueCleaner configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveDownloadCleanerConfig(DownloadCleanerConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_downloadCleanerConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "DownloadCleaner configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveDownloadClientConfig(DownloadClientConfig config)
-    {
-        try
-        {
-            config.Validate();
-            return _configProvider.WriteConfiguration(_downloadClientConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "DownloadClient configuration validation failed");
-            return false;
-        }
-    }
-    
-    public bool SaveIgnoredDownloadsConfig(IgnoredDownloadsConfig config)
-    {
-        try
-        {
-            return _configProvider.WriteConfiguration(_ignoredDownloadsConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "IgnoredDownloads configuration save failed");
-            return false;
-        }
-    }
-    
-    public bool SaveNotificationsConfig(NotificationsConfig config)
-    {
-        try
-        {
-            return _configProvider.WriteConfiguration(_notificationsConfigFile, config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Notifications configuration save failed");
-            return false;
-        }
-    }
+    // public bool SaveGeneralConfig(GeneralConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_generalConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "General configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveSonarrConfig(SonarrConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_sonarrConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Sonarr configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveRadarrConfig(RadarrConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_radarrConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Radarr configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveLidarrConfig(LidarrConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_lidarrConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Lidarr configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveContentBlockerConfig(ContentBlockerConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_contentBlockerConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "ContentBlocker configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveQueueCleanerConfig(QueueCleanerConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_queueCleanerConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "QueueCleaner configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveDownloadCleanerConfig(DownloadCleanerConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_downloadCleanerConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "DownloadCleaner configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveDownloadClientConfig(DownloadClientConfig config)
+    // {
+    //     try
+    //     {
+    //         config.Validate();
+    //         return _configProvider.WriteConfiguration(_downloadClientConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "DownloadClient configuration validation failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveIgnoredDownloadsConfig(IgnoredDownloadsConfig config)
+    // {
+    //     try
+    //     {
+    //         return _configProvider.WriteConfiguration(_ignoredDownloadsConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "IgnoredDownloads configuration save failed");
+    //         return false;
+    //     }
+    // }
+    //
+    // public bool SaveNotificationsConfig(NotificationsConfig config)
+    // {
+    //     try
+    //     {
+    //         return _configProvider.WriteConfiguration(_notificationsConfigFile, config);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.LogError(ex, "Notifications configuration save failed");
+    //         return false;
+    //     }
+    // }
 }

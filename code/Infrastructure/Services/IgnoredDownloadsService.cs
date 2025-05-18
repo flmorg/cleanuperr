@@ -48,11 +48,7 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
     
     public async Task<IReadOnlyList<string>> GetIgnoredDownloadsAsync()
     {
-        var config = await _configManager.GetIgnoredDownloadsConfigAsync();
-        if (config == null)
-        {
-            return Array.Empty<string>();
-        }
+        var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
         
         return config.IgnoredDownloads;
     }
@@ -64,15 +60,9 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
             return false;
         }
         
-        var config = await _configManager.GetIgnoredDownloadsConfigAsync();
-        if (config == null)
-        {
-            config = new IgnoredDownloadsConfig
-            {
-                IgnoredDownloads = [downloadId]
-            };
-        }
-        else if (!config.IgnoredDownloads.Contains(downloadId, StringComparer.OrdinalIgnoreCase))
+        var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
+        
+        if (!config.IgnoredDownloads.Contains(downloadId, StringComparer.OrdinalIgnoreCase))
         {
             var updatedList = config.IgnoredDownloads;
             updatedList.Add(downloadId);
@@ -87,7 +77,7 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
             return true;
         }
         
-        var result = await _configManager.SaveIgnoredDownloadsConfigAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(config);
         if (result)
         {
             _logger.LogInformation("Added download ID to ignored list: {downloadId}", downloadId);
@@ -103,12 +93,7 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
             return false;
         }
         
-        var config = await _configManager.GetIgnoredDownloadsConfigAsync();
-        if (config == null || config.IgnoredDownloads.Count == 0)
-        {
-            return true; // Nothing to remove
-        }
-        
+        var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
         var updatedList = config.IgnoredDownloads
             .Where(id => !string.Equals(id, downloadId, StringComparison.OrdinalIgnoreCase))
             .ToList();
@@ -123,7 +108,7 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
             IgnoredDownloads = updatedList
         };
         
-        var result = await _configManager.SaveIgnoredDownloadsConfigAsync(newConfig);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (result)
         {
             _logger.LogInformation("Removed download ID from ignored list: {downloadId}", downloadId);
@@ -139,7 +124,7 @@ public class IgnoredDownloadsService : IIgnoredDownloadsService
             IgnoredDownloads = new List<string>()
         };
         
-        var result = await _configManager.SaveIgnoredDownloadsConfigAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(config);
         
         if (result)
         {

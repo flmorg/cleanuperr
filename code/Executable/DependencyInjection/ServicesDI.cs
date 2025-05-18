@@ -21,7 +21,6 @@ public static class ServicesDI
         services
             // API services
             .AddSingleton<IJobManagementService, JobManagementService>()
-            .AddSingleton<IConfigurationService, ConfigurationService>()
             // Core services
             .AddTransient<IDryRunInterceptor, DryRunInterceptor>()
             .AddTransient<CertificateValidationService>()

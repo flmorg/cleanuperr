@@ -135,13 +135,7 @@ public class HealthCheckService : IHealthCheckService
         try
         {
             // Get all enabled client configurations
-            var config = await _configManager.GetDownloadClientConfigAsync();
-            if (config == null)
-            {
-                _logger.LogWarning("Download client configuration not found");
-                return new Dictionary<Guid, HealthStatus>();
-            }
-            
+            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
             var enabledClients = config.GetEnabledClients();
             var results = new Dictionary<Guid, HealthStatus>();
             
@@ -181,8 +175,8 @@ public class HealthCheckService : IHealthCheckService
     
     private async Task<ClientConfig?> GetClientConfigAsync(Guid clientId)
     {
-        var config = await _configManager.GetDownloadClientConfigAsync();
-        return config?.GetClientConfig(clientId);
+        var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+        return config.GetClientConfig(clientId);
     }
     
     private void UpdateHealthStatus(HealthStatus newStatus)

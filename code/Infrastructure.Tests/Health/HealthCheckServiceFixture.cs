@@ -64,7 +64,7 @@ public class HealthCheckServiceFixture : IDisposable
         MockClient.GetClientId().Returns(clientId);
         
         // Set up mock config manager
-        ConfigManager.GetDownloadClientConfigAsync().Returns(DownloadClientConfig);
+        ConfigManager.GetConfiguration<DownloadClientConfig>().Returns(DownloadClientConfig);
     }
 
     public HealthCheckService CreateSut()

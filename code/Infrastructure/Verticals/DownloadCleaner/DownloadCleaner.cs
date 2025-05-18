@@ -8,6 +8,7 @@ using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
+using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.Notifications;
 using MassTransit;
@@ -19,7 +20,7 @@ namespace Infrastructure.Verticals.DownloadCleaner;
 
 public sealed class DownloadCleaner : GenericHandler
 {
-    private DownloadCleanerConfig _config;
+    private readonly DownloadCleanerConfig _config;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
     private readonly IConfigManager _configManager;
@@ -45,18 +46,15 @@ public sealed class DownloadCleaner : GenericHandler
     {
         _configManager = configManager;
         _ignoredDownloadsService = ignoredDownloadsService;
+        
+        _config = configManager.GetConfiguration<DownloadCleanerConfig>();
+        _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
+        _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
+        _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
+        _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
     
-    protected override async Task InitializeConfigAsync()
-    {
-        _config = await _configManager.GetDownloadCleanerConfigAsync();
-        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync() ?? new DownloadClientConfig();
-        _sonarrConfig = await _configManager.GetSonarrConfigAsync() ?? new SonarrConfig();
-        _radarrConfig = await _configManager.GetRadarrConfigAsync() ?? new RadarrConfig();
-        _lidarrConfig = await _configManager.GetLidarrConfigAsync() ?? new LidarrConfig();
-    }
-    
-    private void InitializeDownloadServices()
+    protected override void InitializeDownloadServices()
     {
         // Clear existing services
         _downloadServices.Clear();
@@ -91,10 +89,7 @@ public sealed class DownloadCleaner : GenericHandler
     
     public override async Task ExecuteAsync()
     {
-        // Refresh configurations before executing
-        await InitializeConfigAsync();
-        
-        if (_downloadClientConfig.Clients.Count == 0)
+        if (_downloadClientConfig.Clients.Count is 0)
         {
             _logger.LogWarning("No download clients configured");
             return;
@@ -109,8 +104,8 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
         
-        bool isUnlinkedEnabled = !string.IsNullOrEmpty(_config.UnlinkedTargetCategory) && _config.UnlinkedCategories?.Count > 0;
-        bool isCleaningEnabled = _config.Categories?.Count > 0;
+        bool isUnlinkedEnabled = !string.IsNullOrEmpty(_config.UnlinkedTargetCategory) && _config.UnlinkedCategories.Count > 0;
+        bool isCleaningEnabled = _config.Categories.Count > 0;
         
         if (!isUnlinkedEnabled && !isCleaningEnabled)
         {
@@ -156,11 +151,9 @@ public sealed class DownloadCleaner : GenericHandler
             {
                 try
                 {
-                    if (_downloadClientConfig.Clients.Any(x => x.Type == Common.Enums.DownloadClientType.QBittorrent) && !_config.UnlinkedUseTag)
-                    {
-                        _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
-                        await downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
-                    }
+                    _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
+                    await downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
+                    // TODO mark creation as done
                 }
                 catch (Exception ex)
                 {
@@ -177,6 +170,7 @@ public sealed class DownloadCleaner : GenericHandler
                     var clientDownloads = downloadService.FilterDownloadsToChangeCategoryAsync(allDownloads, _config.UnlinkedCategories);
                     if (clientDownloads?.Count > 0)
                     {
+                        // TODO this is fucked up; I can't know which client the download belongs to
                         downloadsToChangeCategory.AddRange(clientDownloads);
                     }
                 }
@@ -228,6 +222,7 @@ public sealed class DownloadCleaner : GenericHandler
                 var clientDownloads = downloadService.FilterDownloadsToBeCleanedAsync(allDownloads, _config.Categories);
                 if (clientDownloads?.Count > 0)
                 {
+                    // TODO this is fucked up; I can't know which client the download belongs to
                     downloadsToClean.AddRange(clientDownloads);
                 }
             }

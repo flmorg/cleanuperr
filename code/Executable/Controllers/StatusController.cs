@@ -37,23 +37,17 @@ public class StatusController : ControllerBase
             var process = Process.GetCurrentProcess();
             
             // Get configuration
-            var downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
-            var sonarrConfig = await _configManager.GetSonarrConfigAsync();
-            var radarrConfig = await _configManager.GetRadarrConfigAsync();
-            var lidarrConfig = await _configManager.GetLidarrConfigAsync();
-            
-            // Default if configs are null
-            downloadClientConfig ??= new DownloadClientConfig();
-            sonarrConfig ??= new SonarrConfig();
-            radarrConfig ??= new RadarrConfig();
-            lidarrConfig ??= new LidarrConfig();
+            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+            var sonarrConfig = await _configManager.GetConfigurationAsync<SonarrConfig>();
+            var radarrConfig = await _configManager.GetConfigurationAsync<RadarrConfig>();
+            var lidarrConfig = await _configManager.GetConfigurationAsync<LidarrConfig>();
             
             var status = new
             {
                 Application = new
                 {
                     Version = GetType().Assembly.GetName().Version?.ToString() ?? "Unknown",
-                    StartTime = process.StartTime,
+                    process.StartTime,
                     UpTime = DateTime.Now - process.StartTime,
                     MemoryUsageMB = Math.Round(process.WorkingSet64 / 1024.0 / 1024.0, 2),
                     ProcessorTime = process.TotalProcessorTime
@@ -96,13 +90,7 @@ public class StatusController : ControllerBase
     {
         try
         {
-            var downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
-            
-            if (downloadClientConfig == null)
-            {
-                return NotFound("Download client configuration not found");
-            }
-            
+            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
             var result = new Dictionary<string, object>();
             
             // Check for configured clients
@@ -142,12 +130,12 @@ public class StatusController : ControllerBase
             var status = new Dictionary<string, object>();
             
             // Get configurations
-            var sonarrConfig = await _configManager.GetSonarrConfigAsync();
-            var radarrConfig = await _configManager.GetRadarrConfigAsync();
-            var lidarrConfig = await _configManager.GetLidarrConfigAsync();
+            var sonarrConfig = await _configManager.GetConfigurationAsync<SonarrConfig>();
+            var radarrConfig = await _configManager.GetConfigurationAsync<RadarrConfig>();
+            var lidarrConfig = await _configManager.GetConfigurationAsync<LidarrConfig>();
 
             // Check Sonarr instances
-            if (sonarrConfig?.Enabled == true && sonarrConfig.Instances?.Count > 0)
+            if (sonarrConfig is { Enabled: true, Instances.Count: > 0 })
             {
                 var sonarrStatus = new List<object>();
                 
@@ -160,8 +148,8 @@ public class StatusController : ControllerBase
                         
                         sonarrStatus.Add(new
                         {
-                            Name = instance.Name,
-                            Url = instance.Url,
+                            instance.Name,
+                            instance.Url,
                             IsConnected = true,
                             Message = "Successfully connected"
                         });
@@ -170,8 +158,8 @@ public class StatusController : ControllerBase
                     {
                         sonarrStatus.Add(new
                         {
-                            Name = instance.Name,
-                            Url = instance.Url,
+                            instance.Name,
+                            instance.Url,
                             IsConnected = false,
                             Message = $"Connection failed: {ex.Message}"
                         });
@@ -182,7 +170,7 @@ public class StatusController : ControllerBase
             }
 
             // Check Radarr instances
-            if (radarrConfig?.Enabled == true && radarrConfig.Instances?.Count > 0)
+            if (radarrConfig is { Enabled: true, Instances.Count: > 0 })
             {
                 var radarrStatus = new List<object>();
                 
@@ -195,8 +183,8 @@ public class StatusController : ControllerBase
                         
                         radarrStatus.Add(new
                         {
-                            Name = instance.Name,
-                            Url = instance.Url,
+                            instance.Name,
+                            instance.Url,
                             IsConnected = true,
                             Message = "Successfully connected"
                         });
@@ -205,8 +193,8 @@ public class StatusController : ControllerBase
                     {
                         radarrStatus.Add(new
                         {
-                            Name = instance.Name,
-                            Url = instance.Url,
+                            instance.Name,
+                            instance.Url,
                             IsConnected = false,
                             Message = $"Connection failed: {ex.Message}"
                         });
@@ -217,7 +205,7 @@ public class StatusController : ControllerBase
             }
 
             // Check Lidarr instances
-            if (lidarrConfig?.Enabled == true && lidarrConfig.Instances?.Count > 0)
+            if (lidarrConfig.Enabled == true && lidarrConfig.Instances?.Count > 0)
             {
                 var lidarrStatus = new List<object>();
                 
@@ -230,8 +218,8 @@ public class StatusController : ControllerBase
                         
                         lidarrStatus.Add(new
                         {
-                            Name = instance.Name,
-                            Url = instance.Url,
+                            instance.Name,
+                            instance.Url,
                             IsConnected = true,
                             Message = "Successfully connected"
                         });
@@ -240,8 +228,8 @@ public class StatusController : ControllerBase
                     {
                         lidarrStatus.Add(new
                         {
-                            Name = instance.Name,
-                            Url = instance.Url,
+                            instance.Name,
+                            instance.Url,
                             IsConnected = false,
                             Message = $"Connection failed: {ex.Message}"
                         });

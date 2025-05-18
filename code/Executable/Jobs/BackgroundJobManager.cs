@@ -78,9 +78,9 @@ public class BackgroundJobManager : IHostedService
         }
         
         // Get configurations from JSON files
-        ContentBlockerConfig? contentBlockerConfig = await _configManager.GetContentBlockerConfigAsync();
-        QueueCleanerConfig? queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
-        DownloadCleanerConfig? downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
+        ContentBlockerConfig? contentBlockerConfig = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
+        QueueCleanerConfig? queueCleanerConfig = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
+        DownloadCleanerConfig? downloadCleanerConfig = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
         
         // Add ContentBlocker job if enabled
         if (contentBlockerConfig?.Enabled == true)

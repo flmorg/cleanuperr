@@ -47,31 +47,21 @@ public sealed class ContentBlocker : GenericHandler
         _configManager = configManager;
         _blocklistProvider = blocklistProvider;
         _ignoredDownloadsService = ignoredDownloadsService;
-    }
-
-    protected override async Task InitializeConfigAsync()
-    {
-        _config = await _configManager.GetContentBlockerConfigAsync();
-        _downloadClientConfig = await _configManager.GetDownloadClientConfigAsync();
-        _sonarrConfig = await _configManager.GetSonarrConfigAsync();
-        _radarrConfig = await _configManager.GetRadarrConfigAsync();
-        _lidarrConfig = await _configManager.GetLidarrConfigAsync();
+        
+        _config = configManager.GetConfiguration<ContentBlockerConfig>();
+        _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
+        _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
+        _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
+        _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
     
     public override async Task ExecuteAsync()
     {
-        await InitializeConfigAsync();
-        
-        if (_downloadClientConfig.Clients.Count == 0)
+        if (_downloadClientConfig.Clients.Count is 0)
         {
             _logger.LogWarning("No download clients configured");
             return;
         }
-        
-        // Update the content blocker configuration as well
-        var contentBlockerConfigTask = _configManager.GetContentBlockerConfigAsync();
-        await contentBlockerConfigTask;
-        _config = contentBlockerConfigTask.Result ?? _config;
         
         bool blocklistIsConfigured = _config.Sonarr.Enabled && !string.IsNullOrEmpty(_config.Sonarr.Path) ||
                                      _config.Radarr.Enabled && !string.IsNullOrEmpty(_config.Radarr.Path) ||

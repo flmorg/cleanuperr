@@ -1,5 +1,4 @@
-using Infrastructure.Models;
-using Infrastructure.Services;
+using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Executable.Controllers;

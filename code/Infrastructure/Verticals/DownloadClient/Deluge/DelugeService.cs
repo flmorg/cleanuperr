@@ -1,11 +1,9 @@
 using System.Collections.Concurrent;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Common.Attributes;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
-using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Exceptions;
 using Domain.Enums;
@@ -45,6 +43,7 @@ public class DelugeService : DownloadService, IDelugeService
     )
     {
         // Client will be initialized when Initialize() is called with a specific client configuration
+        // TODO initialize client & httpclient here
     }
     
     /// <inheritdoc />
@@ -188,7 +187,6 @@ public class DelugeService : DownloadService, IDelugeService
 
         result.IsPrivate = download.Private;
 
-        var _contentBlockerConfig = await _configManager.GetContentBlockerConfigAsync();
         if (_contentBlockerConfig.IgnorePrivate && download.Private)
         {
             // ignore private trackers
@@ -323,7 +321,6 @@ public class DelugeService : DownloadService, IDelugeService
                 continue;
             }
 
-            var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
             if (!_downloadCleanerConfig.DeletePrivate && download.Private)
             {
                 _logger.LogDebug("skip | download is private | {name}", download.Name);
@@ -374,7 +371,6 @@ public class DelugeService : DownloadService, IDelugeService
             return;
         }
 
-        var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
         if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
         {
             _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
@@ -497,8 +493,7 @@ public class DelugeService : DownloadService, IDelugeService
     
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(DownloadStatus download)
     {
-        var queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
-        if (queueCleanerConfig == null || queueCleanerConfig.SlowMaxStrikes is 0)
+        if (_queueCleanerConfig.SlowMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
@@ -513,22 +508,22 @@ public class DelugeService : DownloadService, IDelugeService
             return (false, DeleteReason.None);
         }
         
-        if (queueCleanerConfig != null && queueCleanerConfig.SlowIgnorePrivate && download.Private)
+        if (_queueCleanerConfig.SlowIgnorePrivate && download.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
-        if (queueCleanerConfig != null && download.Size > (queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        if (download.Size > (_queueCleanerConfig.SlowIgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
         {
             _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
-        ByteSize minSpeed = queueCleanerConfig.SlowMinSpeedByteSize;
+        ByteSize minSpeed = _queueCleanerConfig.SlowMinSpeedByteSize;
         ByteSize currentSpeed = new ByteSize(download.DownloadSpeed);
-        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(queueCleanerConfig.SlowMaxTime);
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.SlowMaxTime);
         SmartTimeSpan currentTime = SmartTimeSpan.FromSeconds(download.Eta);
 
         return await CheckIfSlow(
@@ -543,13 +538,12 @@ public class DelugeService : DownloadService, IDelugeService
     
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(DownloadStatus status)
     {
-        var queueCleanerConfig = _configManager.GetQueueCleanerConfig();
-        if (queueCleanerConfig == null || queueCleanerConfig.StalledMaxStrikes is 0)
+        if (_queueCleanerConfig.StalledMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
         
-        if (queueCleanerConfig.StalledIgnorePrivate && status.Private)
+        if (_queueCleanerConfig.StalledIgnorePrivate && status.Private)
         {
             // ignore private trackers
             _logger.LogDebug("skip stalled check | download is private | {name}", status.Name);
@@ -568,8 +562,7 @@ public class DelugeService : DownloadService, IDelugeService
         
         ResetStalledStrikesOnProgress(status.Hash!, status.TotalDone);
         
-        ushort maxStrikes = queueCleanerConfig?.StalledMaxStrikes ?? 0;
-        return (await _striker.StrikeAndCheckLimit(status.Hash!, status.Name!, maxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
+        return (await _striker.StrikeAndCheckLimit(status.Hash!, status.Name!, _queueCleanerConfig.StalledMaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
     
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory>? contents, Action<string, DelugeFileOrDirectory> processFile)

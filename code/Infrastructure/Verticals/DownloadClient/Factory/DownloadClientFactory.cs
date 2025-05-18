@@ -51,7 +51,7 @@ public class DownloadClientFactory : IDownloadClientFactory
     /// <inheritdoc />
     public IEnumerable<IDownloadService> GetAllEnabledClients()
     {
-        var downloadClientConfig = _configManager.GetDownloadClientConfig();
+        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>();
         
         foreach (var client in downloadClientConfig.GetEnabledClients())
         {
@@ -62,7 +62,7 @@ public class DownloadClientFactory : IDownloadClientFactory
     /// <inheritdoc />
     public IEnumerable<IDownloadService> GetClientsByType(DownloadClientType clientType)
     {
-        var downloadClientConfig = _configManager.GetDownloadClientConfig();
+        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>();
         
         foreach (var client in downloadClientConfig.GetEnabledClients().Where(c => c.Type == clientType))
         {
@@ -100,7 +100,7 @@ public class DownloadClientFactory : IDownloadClientFactory
 
     private IDownloadService CreateClient(Guid clientId)
     {
-        var downloadClientConfig = _configManager.GetDownloadClientConfig();
+        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>();
         
         var clientConfig = downloadClientConfig.GetClientConfig(clientId);
         

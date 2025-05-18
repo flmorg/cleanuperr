@@ -204,7 +204,7 @@ public class QBitService : DownloadService, IQBitService
 
         result.IsPrivate = isPrivate;
 
-        if (_configManager.GetConfiguration<ContentBlockerConfig>("contentblocker.json").IgnorePrivate && isPrivate)
+        if (_contentBlockerConfig.IgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {name}", download.Name);
@@ -299,9 +299,9 @@ public class QBitService : DownloadService, IQBitService
             .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
             .Where(x =>
             {
-                if (_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedUseTag)
+                if (_downloadCleanerConfig.UnlinkedUseTag)
                 {
-                    return !x.Tags.Any(tag => tag.Equals(_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
+                    return !x.Tags.Any(tag => tag.Equals(_downloadCleanerConfig.UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 return true;
@@ -353,7 +353,7 @@ public class QBitService : DownloadService, IQBitService
                 continue;
             }
 
-            if (!_configManager.GetConfiguration<DownloadCleanerConfig>("downloadcleaner.json").DeletePrivate)
+            if (!_downloadCleanerConfig.DeletePrivate)
             {
                 TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(download.Hash);
 
@@ -417,7 +417,6 @@ public class QBitService : DownloadService, IQBitService
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
     {
-        var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
         if (_client == null)
         {
             throw new InvalidOperationException("QBittorrent client is not initialized");
@@ -559,7 +558,6 @@ public class QBitService : DownloadService, IQBitService
     [DryRunSafeguard]
     protected virtual async Task ChangeCategory(string hash, string newCategory)
     {
-        var _downloadCleanerConfig = await _configManager.GetDownloadCleanerConfigAsync();
         if (_client == null)
         {
             throw new InvalidOperationException("QBittorrent client is not initialized");
@@ -594,7 +592,6 @@ public class QBitService : DownloadService, IQBitService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(TorrentInfo download, bool isPrivate)
     {
-        var _queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
         if (_queueCleanerConfig.SlowMaxStrikes is 0)
         {
             return (false, DeleteReason.None);
@@ -640,7 +637,6 @@ public class QBitService : DownloadService, IQBitService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(TorrentInfo torrent, bool isPrivate)
     {
-        var _queueCleanerConfig = await _configManager.GetQueueCleanerConfigAsync();
         if (_queueCleanerConfig.StalledMaxStrikes is 0 && _queueCleanerConfig.DownloadingMetadataMaxStrikes is 0)
         {
             return (false, DeleteReason.None);

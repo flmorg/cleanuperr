@@ -13,7 +13,7 @@ public class DryRunInterceptor : IDryRunInterceptor
     public DryRunInterceptor(ILogger<DryRunInterceptor> logger, IConfigManager configManager)
     {
         _logger = logger;
-        _config = configManager.GetGeneralConfig();
+        _config = configManager.GetConfiguration<GeneralConfig>();
     }
     
     public void Intercept(Action action)

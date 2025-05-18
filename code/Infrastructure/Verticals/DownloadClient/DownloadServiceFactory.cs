@@ -35,14 +35,7 @@ public sealed class DownloadServiceFactory
     /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
     public IDownloadService? GetDownloadService(Guid clientId)
     {
-        var config = _configManager.GetDownloadClientConfig();
-        
-        if (config == null)
-        {
-            _logger.LogWarning("No download client configuration found");
-            return null;
-        }
-        
+        var config = _configManager.GetConfiguration<DownloadClientConfig>();
         var clientConfig = config.GetClientConfig(clientId);
         
         if (clientConfig == null)
@@ -67,12 +60,6 @@ public sealed class DownloadServiceFactory
     /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
     public IDownloadService? GetDownloadService(ClientConfig clientConfig)
     {
-        if (clientConfig == null)
-        {
-            _logger.LogWarning("Client configuration is null");
-            return null;
-        }
-        
         if (!clientConfig.Enabled)
         {
             _logger.LogWarning("Download client {clientId} is disabled", clientConfig.Id);
@@ -96,6 +83,7 @@ public sealed class DownloadServiceFactory
     /// <returns>An implementation of IDownloadService</returns>
     private T CreateClientService<T>(ClientConfig clientConfig) where T : IDownloadService
     {
+        // TODO
         var service = _serviceProvider.GetRequiredService<T>();
         service.Initialize(clientConfig);
         return service;

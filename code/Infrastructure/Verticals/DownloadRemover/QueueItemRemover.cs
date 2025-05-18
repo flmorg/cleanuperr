@@ -16,7 +16,7 @@ namespace Infrastructure.Verticals.DownloadRemover;
 
 public sealed class QueueItemRemover : IQueueItemRemover
 {
-    private readonly GeneralConfig _searchConfig;
+    private readonly GeneralConfig _generalConfig;
     private readonly IMemoryCache _cache;
     private readonly ArrClientFactory _arrClientFactory;
     private readonly INotificationPublisher _notifier;
@@ -28,7 +28,7 @@ public sealed class QueueItemRemover : IQueueItemRemover
         INotificationPublisher notifier
     )
     {
-        _searchConfig = configManager.GetGeneralConfig();
+        _generalConfig = configManager.GetConfiguration<GeneralConfig>();
         _cache = cache;
         _arrClientFactory = arrClientFactory;
         _notifier = notifier;
@@ -48,7 +48,7 @@ public sealed class QueueItemRemover : IQueueItemRemover
             ContextProvider.Set(nameof(InstanceType), request.InstanceType);
             await _notifier.NotifyQueueItemDeleted(request.RemoveFromClient, request.DeleteReason);
 
-            if (!_searchConfig.SearchEnabled)
+            if (!_generalConfig.SearchEnabled)
             {
                 return;
             }
@@ -56,7 +56,7 @@ public sealed class QueueItemRemover : IQueueItemRemover
             await arrClient.SearchItemsAsync(request.Instance, [request.SearchItem]);
 
             // prevent tracker spamming
-            await Task.Delay(TimeSpan.FromSeconds(_searchConfig.SearchDelay));
+            await Task.Delay(TimeSpan.FromSeconds(_generalConfig.SearchDelay));
         }
         finally
         {
