@@ -1,4 +1,5 @@
 using Infrastructure.Health;
+using Infrastructure.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
@@ -18,6 +19,9 @@ public static class ApiDI
         
         // Add health status broadcaster
         services.AddHostedService<HealthStatusBroadcaster>();
+        
+        // Add logging initializer service
+        services.AddHostedService<LoggingInitializer>();
         
         services.AddSwaggerGen(options =>
         {
@@ -56,6 +60,7 @@ public static class ApiDI
         
         // Map SignalR hubs
         app.MapHub<HealthStatusHub>("/hubs/health");
+        app.MapHub<LogHub>("/hubs/logs");
 
         return app;
     }

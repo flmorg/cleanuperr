@@ -8,7 +8,7 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddApiServices();
 
-builder.Logging.AddLogging(builder.Configuration);
+builder.Logging.AddLogging(builder.Configuration, builder.Services.BuildServiceProvider());
 
 var app = builder.Build();
 
