@@ -1,5 +1,6 @@
 using Common.Configuration;
 using Infrastructure.Models;
+using Infrastructure.Utilities;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System.Collections.Concurrent;
@@ -20,8 +21,11 @@ public class JobManagementService : IJobManagementService
         _schedulerFactory = schedulerFactory;
     }
 
-    public async Task<bool> StartJob(string jobName, string? cronExpression = null)
+    public async Task<bool> StartJob(JobType jobType, JobSchedule? schedule = null)
     {
+        string jobName = jobType.ToJobName();
+        string? cronExpression = schedule?.ToCronExpression();
+        
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -92,8 +96,9 @@ public class JobManagementService : IJobManagementService
         }
     }
 
-    public async Task<bool> StopJob(string jobName)
+    public async Task<bool> StopJob(JobType jobType)
     {
+        string jobName = jobType.ToJobName();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -122,8 +127,9 @@ public class JobManagementService : IJobManagementService
         }
     }
 
-    public async Task<bool> PauseJob(string jobName)
+    public async Task<bool> PauseJob(JobType jobType)
     {
+        string jobName = jobType.ToJobName();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -146,8 +152,9 @@ public class JobManagementService : IJobManagementService
         }
     }
 
-    public async Task<bool> ResumeJob(string jobName)
+    public async Task<bool> ResumeJob(JobType jobType)
     {
+        string jobName = jobType.ToJobName();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -230,8 +237,9 @@ public class JobManagementService : IJobManagementService
         }
     }
 
-    public async Task<JobInfo> GetJob(string jobName)
+    public async Task<JobInfo> GetJob(JobType jobType)
     {
+        string jobName = jobType.ToJobName();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -287,8 +295,14 @@ public class JobManagementService : IJobManagementService
         }
     }
 
-    public async Task<bool> UpdateJobSchedule(string jobName, string cronExpression)
+    public async Task<bool> UpdateJobSchedule(JobType jobType, JobSchedule schedule)
     {
+        if (schedule == null)
+            throw new ArgumentNullException(nameof(schedule));
+            
+        string jobName = jobType.ToJobName();
+        string cronExpression = schedule.ToCronExpression();
+        
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
