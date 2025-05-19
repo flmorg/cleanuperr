@@ -1,6 +1,7 @@
-﻿using Common.Enums;
+using Common.Enums;
 using Common.Exceptions;
 using Newtonsoft.Json;
+using Serilog.Events;
 
 namespace Common.Configuration.General;
 
@@ -18,6 +19,8 @@ public sealed record GeneralConfig : IConfig
     public bool SearchEnabled { get; init; } = true;
     
     public ushort SearchDelay { get; init; } = 30;
+    
+    public LogEventLevel LogLevel { get; set; } = LogEventLevel.Information;
 
     public void Validate()
     {

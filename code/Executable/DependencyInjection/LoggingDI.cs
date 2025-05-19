@@ -1,3 +1,4 @@
+using Common.Configuration.General;
 using Common.Configuration.Logging;
 using Domain.Enums;
 using Infrastructure.Configuration;
@@ -5,6 +6,7 @@ using Infrastructure.Logging;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.QueueCleaner;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.SignalR;
 using Serilog;
 using Serilog.Core;
@@ -16,13 +18,25 @@ namespace Executable.DependencyInjection;
 
 public static class LoggingDI
 {
-    public static ILoggingBuilder AddLogging(this ILoggingBuilder builder, IConfiguration configuration, IServiceProvider serviceProvider)
+    public static ILoggingBuilder AddLogging(this ILoggingBuilder builder, IServiceProvider serviceProvider)
     {
-        // Get the logging configuration
-        LoggingConfig? config = configuration.GetSection(LoggingConfig.SectionName).Get<LoggingConfig>();
-
+        // Register LoggingConfigManager as a singleton
+        serviceProvider.GetRequiredService<IServiceCollection>()
+            .TryAddSingleton<LoggingConfigManager>();
+        
+        // Get LoggingConfigManager (will be created if not already registered)
+        var configManager = serviceProvider.GetRequiredService<LoggingConfigManager>();
+        
+        
+        // Get the dynamic level switch for controlling log levels
+        var levelSwitch = configManager.GetLevelSwitch();
+        
         // Get the configuration path provider
         var pathProvider = serviceProvider.GetRequiredService<ConfigurationPathProvider>();
+        
+        // Get logging config from the config manager
+        var config = serviceProvider.GetRequiredService<ConfigManager>()
+            .GetConfiguration<GeneralConfig>().Logging;
 
         // Create the logs directory
         string logsPath = Path.Combine(pathProvider.GetConfigPath(), "logs");
@@ -58,8 +72,7 @@ public static class LoggingDI
         List<string> instanceNames = [InstanceType.Sonarr.ToString(), InstanceType.Radarr.ToString(), InstanceType.Lidarr.ToString()];
         int arrPadding = instanceNames.Max(x => x.Length) + 2;
 
-        // Set the minimum log level
-        LogEventLevel level = config?.LogLevel ?? LogEventLevel.Information;
+        // Log level is controlled by the LoggingConfigManager's level switch
 
         // Apply padding values to templates
         string consoleTemplate = consoleOutputTemplate
@@ -72,9 +85,9 @@ public static class LoggingDI
             .Replace("JOB_PAD", jobPadding.ToString())
             .Replace("ARR_PAD", arrPadding.ToString());
 
-        // Configure base logger
+        // Configure base logger with dynamic level control
         logConfig
-            .MinimumLevel.Is(level)
+            .MinimumLevel.ControlledBy(levelSwitch)
             .Enrich.FromLogContext()
             .WriteTo.Console(new ExpressionTemplate(consoleTemplate, theme: TemplateTheme.Literate));
 

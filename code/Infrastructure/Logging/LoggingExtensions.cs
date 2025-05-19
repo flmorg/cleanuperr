@@ -17,7 +17,8 @@ public static class LoggingExtensions
     /// <returns>Enriched logger instance</returns>
     public static ILogger WithCategory(this ILogger logger, string category)
     {
-        return logger.BeginScope(new Dictionary<string, object> { ["Category"] = category });
+        logger.BeginScope(new Dictionary<string, object> { ["Category"] = category });
+        return logger;
     }
     
     /// <summary>
@@ -28,7 +29,8 @@ public static class LoggingExtensions
     /// <returns>Enriched logger instance</returns>
     public static ILogger WithJob(this ILogger logger, string jobName)
     {
-        return logger.BeginScope(new Dictionary<string, object> { ["JobName"] = jobName });
+        logger.BeginScope(new Dictionary<string, object> { ["JobName"] = jobName });
+        return logger;
     }
     
     /// <summary>
@@ -39,7 +41,8 @@ public static class LoggingExtensions
     /// <returns>Enriched logger instance</returns>
     public static ILogger WithInstance(this ILogger logger, string instanceName)
     {
-        return logger.BeginScope(new Dictionary<string, object> { ["InstanceName"] = instanceName });
+        logger.BeginScope(new Dictionary<string, object> { ["InstanceName"] = instanceName });
+        return logger;
     }
     
     /// <summary>

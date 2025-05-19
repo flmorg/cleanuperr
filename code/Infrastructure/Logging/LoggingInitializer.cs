@@ -1,7 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
+using System.Collections;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using Serilog.Core;
 
 namespace Infrastructure.Logging;
 
@@ -20,26 +19,21 @@ public class LoggingInitializer : BackgroundService
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Find and initialize any deferred sinks
-        var deferredSink = Log.Logger as ILoggerPropertyEnricher;
-        
-        if (deferredSink != null)
-        {
-            var sinks = deferredSink.GetType()
+        var deferredSink = Log.Logger;
+
+        if (deferredSink.GetType()
                 .GetProperty("Sinks", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.GetValue(deferredSink) as System.Collections.IEnumerable;
-            
-            if (sinks != null)
+                ?.GetValue(deferredSink) is IEnumerable sinks)
+        {
+            foreach (var sink in sinks)
             {
-                foreach (var sink in sinks)
+                if (sink is DeferredSignalRSink deferredSignalRSink)
                 {
-                    if (sink is DeferredSignalRSink deferredSignalRSink)
-                    {
-                        deferredSignalRSink.Initialize(_serviceProvider);
-                    }
+                    deferredSignalRSink.Initialize(_serviceProvider);
                 }
             }
         }
-        
+
         // We only need to run this once at startup
         return Task.CompletedTask;
     }

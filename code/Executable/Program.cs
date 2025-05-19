@@ -8,7 +8,12 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddApiServices();
 
-builder.Logging.AddLogging(builder.Configuration, builder.Services.BuildServiceProvider());
+// Register services needed for logging first
+builder.Services.AddSingleton<Infrastructure.Logging.LoggingConfigManager>();
+
+// Add logging with proper service provider
+var serviceProvider = builder.Services.BuildServiceProvider();
+await builder.Logging.AddLogging(serviceProvider);
 
 var app = builder.Build();
 
