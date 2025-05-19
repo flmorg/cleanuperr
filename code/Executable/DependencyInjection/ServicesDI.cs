@@ -1,5 +1,6 @@
 using Infrastructure.Interceptors;
 using Infrastructure.Services;
+using Infrastructure.Services.Interfaces;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;

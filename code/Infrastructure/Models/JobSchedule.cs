@@ -1,3 +1,5 @@
+using Infrastructure.Utilities;
+
 namespace Infrastructure.Models;
 
 /// <summary>

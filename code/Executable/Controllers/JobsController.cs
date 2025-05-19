@@ -60,7 +60,7 @@ public class JobsController : ControllerBase
         try
         {
             // Get the schedule from the request body if provided
-            JobSchedule jobSchedule = scheduleRequest?.Schedule;
+            JobSchedule jobSchedule = scheduleRequest.Schedule;
             
             var result = await _jobManagementService.StartJob(jobType, jobSchedule);
             
