@@ -9,6 +9,11 @@ namespace Infrastructure.Configuration;
 public interface IConfigurationProvider
 {
     /// <summary>
+    /// Checks if a configuration file exists.
+    /// </summary>
+    bool FileExists(string fileName);
+    
+    /// <summary>
     /// Reads a configuration from storage asynchronously. Returns a default instance if the configuration doesn't exist.
     /// </summary>
     Task<T> ReadConfigurationAsync<T>(string fileName) where T : class, new();

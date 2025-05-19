@@ -70,7 +70,7 @@ public class ConfigManager : IConfigManager
         {
             try
             {
-                if (File.Exists(path))
+                if (_configProvider.FileExists(path))
                 {
                     continue;
                 }

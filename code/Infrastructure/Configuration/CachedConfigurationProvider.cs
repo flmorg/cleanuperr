@@ -48,6 +48,11 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
 
         _logger.LogInformation("Initialized cached configuration provider for directory: {directory}", _configDirectory);
     }
+    
+    public bool FileExists(string fileName)
+    {
+        return _baseProvider.FileExists(fileName);
+    }
 
     public T ReadConfiguration<T>(string fileName) where T : class, new()
     {

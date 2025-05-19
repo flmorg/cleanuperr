@@ -11,26 +11,26 @@ namespace Infrastructure.Configuration;
 public class JsonConfigurationProvider : IConfigurationProvider
 {
     private readonly ILogger<JsonConfigurationProvider> _logger;
-    private readonly string _configDirectory;
+    private readonly string _settingsDirectory;
     private readonly Dictionary<string, SemaphoreSlim> _fileLocks = new();
     private readonly JsonSerializerOptions _serializerOptions;
 
     public JsonConfigurationProvider(ILogger<JsonConfigurationProvider> logger)
     {
         _logger = logger;
-        _configDirectory = ConfigurationPathProvider.GetSettingsPath();
+        _settingsDirectory = ConfigurationPathProvider.GetSettingsPath();
         
         // Create directory if it doesn't exist
-        if (!Directory.Exists(_configDirectory))
+        if (!Directory.Exists(_settingsDirectory))
         {
             try
             {
-                Directory.CreateDirectory(_configDirectory);
-                _logger.LogInformation("Created configuration directory: {directory}", _configDirectory);
+                Directory.CreateDirectory(_settingsDirectory);
+                _logger.LogInformation("Created configuration directory: {directory}", _settingsDirectory);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create configuration directory: {directory}", _configDirectory);
+                _logger.LogError(ex, "Failed to create configuration directory: {directory}", _settingsDirectory);
                 throw;
             }
         }
@@ -64,7 +64,13 @@ public class JsonConfigurationProvider : IConfigurationProvider
     /// </summary>
     private string GetFullPath(string fileName)
     {
-        return Path.Combine(_configDirectory, fileName);
+        return Path.Combine(_settingsDirectory, fileName);
+    }
+    
+    public bool FileExists(string fileName)
+    {
+        string fullPath = GetFullPath(fileName);
+        return File.Exists(fullPath);
     }
 
     /// <summary>
@@ -671,13 +677,13 @@ public class JsonConfigurationProvider : IConfigurationProvider
     {
         try
         {
-            return Directory.GetFiles(_configDirectory, "*.json")
+            return Directory.GetFiles(_settingsDirectory, "*.json")
                 .Select(Path.GetFileName)
                 .Where(f => !f.EndsWith(".bak"));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing configuration files in {directory}", _configDirectory);
+            _logger.LogError(ex, "Error listing configuration files in {directory}", _settingsDirectory);
             return Enumerable.Empty<string>();
         }
     }
