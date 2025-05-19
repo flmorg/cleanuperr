@@ -7,11 +7,11 @@ namespace Infrastructure.Logging;
 /// </summary>
 public class LogHub : Hub
 {
-    private readonly LogBuffer _logBuffer;
+    private readonly SignalRLogSink _logSink;
     
-    public LogHub(LogBuffer logBuffer)
+    public LogHub(SignalRLogSink logSink)
     {
-        _logBuffer = logBuffer;
+        _logSink = logSink;
     }
     
     /// <summary>
@@ -19,7 +19,7 @@ public class LogHub : Hub
     /// </summary>
     public async Task RequestRecentLogs()
     {
-        foreach (var logEvent in _logBuffer.GetRecentLogs())
+        foreach (var logEvent in _logSink.GetRecentLogs())
         {
             await Clients.Caller.SendAsync("ReceiveLog", logEvent);
         }

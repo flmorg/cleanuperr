@@ -1,5 +1,7 @@
 using System.Collections;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Infrastructure.Logging;
@@ -10,31 +12,34 @@ namespace Infrastructure.Logging;
 public class LoggingInitializer : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly ILogger<LoggingInitializer> _logger;
     
-    public LoggingInitializer(IServiceProvider serviceProvider)
+    public LoggingInitializer(IServiceProvider serviceProvider, ILogger<LoggingInitializer> logger)
     {
         _serviceProvider = serviceProvider;
+        _logger = logger;
     }
     
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Find and initialize any deferred sinks
-        var deferredSink = Log.Logger;
-
-        if (deferredSink.GetType()
-                .GetProperty("Sinks", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.GetValue(deferredSink) is IEnumerable sinks)
+        try
         {
-            foreach (var sink in sinks)
+            // Short delay to ensure SignalR is fully initialized
+            await Task.Delay(1000, stoppingToken);
+            
+            // Get the SignalRLogSink and initialize it
+            _logger.LogDebug("Initializing SignalR logging");
+            if (_serviceProvider.GetService<SignalRLogSink>() is { } sink)
             {
-                if (sink is DeferredSignalRSink deferredSignalRSink)
-                {
-                    deferredSignalRSink.Initialize(_serviceProvider);
-                }
+                sink.Initialize();
+                _logger.LogInformation("SignalR logging initialized successfully");
             }
         }
-
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize SignalR logging");
+        }
+        
         // We only need to run this once at startup
-        return Task.CompletedTask;
     }
 }

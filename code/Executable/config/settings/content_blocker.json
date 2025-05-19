@@ -6,17 +6,17 @@
   "ignored_downloads_path": "",
   "sonarr": {
     "enabled": false,
-    "type": 0,
+    "type": "Blacklist",
     "path": null
   },
   "radarr": {
     "enabled": false,
-    "type": 0,
+    "type": "Blacklist",
     "path": null
   },
   "lidarr": {
     "enabled": false,
-    "type": 0,
+    "type": "Blacklist",
     "path": null
   }
 }

@@ -7,9 +7,6 @@ public static class ConfigurationExtensions
 {
     public static IServiceCollection AddConfigurationServices(this IServiceCollection services)
     {
-        // Register path provider to handle Docker vs local environment
-        services.AddSingleton<ConfigurationPathProvider>();
-        
         // Register the base JSON provider
         services.AddSingleton<JsonConfigurationProvider>();
         

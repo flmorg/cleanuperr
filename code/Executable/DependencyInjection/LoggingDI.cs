@@ -1,15 +1,9 @@
-using Common.Configuration.General;
-using Common.Configuration.Logging;
 using Domain.Enums;
 using Infrastructure.Configuration;
-using Infrastructure.Logging;
 using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.QueueCleaner;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.AspNetCore.SignalR;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
 using Serilog.Templates;
 using Serilog.Templates.Themes;
@@ -18,40 +12,15 @@ namespace Executable.DependencyInjection;
 
 public static class LoggingDI
 {
-    public static ILoggingBuilder AddLogging(this ILoggingBuilder builder, IServiceProvider serviceProvider)
+    public static ILoggingBuilder AddLogging(this ILoggingBuilder builder)
     {
-        // Register LoggingConfigManager as a singleton
-        serviceProvider.GetRequiredService<IServiceCollection>()
-            .TryAddSingleton<LoggingConfigManager>();
+        Log.Logger = GetDefaultLoggerConfiguration().CreateLogger();
         
-        // Get LoggingConfigManager (will be created if not already registered)
-        var configManager = serviceProvider.GetRequiredService<LoggingConfigManager>();
-        
-        
-        // Get the dynamic level switch for controlling log levels
-        var levelSwitch = configManager.GetLevelSwitch();
-        
-        // Get the configuration path provider
-        var pathProvider = serviceProvider.GetRequiredService<ConfigurationPathProvider>();
-        
-        // Get logging config from the config manager
-        var config = serviceProvider.GetRequiredService<ConfigManager>()
-            .GetConfiguration<GeneralConfig>().Logging;
+        return builder.ClearProviders().AddSerilog();
+    }
 
-        // Create the logs directory
-        string logsPath = Path.Combine(pathProvider.GetConfigPath(), "logs");
-        if (!Directory.Exists(logsPath))
-        {
-            try
-            {
-                Directory.CreateDirectory(logsPath);
-            }
-            catch (Exception exception)
-            {
-                throw new Exception($"Failed to create log directory | {logsPath}", exception);
-            }
-        }
-
+    public static LoggerConfiguration GetDefaultLoggerConfiguration()
+    {
         LoggerConfiguration logConfig = new();
         const string categoryTemplate = "{#if Category is not null} {Concat('[',Category,']'),CAT_PAD}{#end}";
         const string jobNameTemplate = "{#if JobName is not null} {Concat('[',JobName,']'),JOB_PAD}{#end}";
@@ -87,9 +56,24 @@ public static class LoggingDI
 
         // Configure base logger with dynamic level control
         logConfig
-            .MinimumLevel.ControlledBy(levelSwitch)
+            // .MinimumLevel.ControlledBy(levelSwitch)
+            .MinimumLevel.Is(LogEventLevel.Information)
             .Enrich.FromLogContext()
             .WriteTo.Console(new ExpressionTemplate(consoleTemplate, theme: TemplateTheme.Literate));
+        
+        // Create the logs directory
+        string logsPath = Path.Combine(ConfigurationPathProvider.GetConfigPath(), "logs");
+        if (!Directory.Exists(logsPath))
+        {
+            try
+            {
+                Directory.CreateDirectory(logsPath);
+            }
+            catch (Exception exception)
+            {
+                throw new Exception($"Failed to create log directory | {logsPath}", exception);
+            }
+        }
 
         // Add main log file
         logConfig.WriteTo.File(
@@ -100,47 +84,14 @@ public static class LoggingDI
             rollOnFileSizeLimit: true
         );
 
-        // Add category-specific log files
-        foreach (var category in categories)
-        {
-            logConfig.WriteTo.Logger(lc => lc
-                .Filter.ByIncludingOnly(e =>
-                    e.Properties.TryGetValue("Category", out var prop) &&
-                    prop.ToString().Contains(category, StringComparison.OrdinalIgnoreCase))
-                .WriteTo.File(
-                    path: Path.Combine(logsPath, $"{category.ToLower()}-.txt"),
-                    formatter: new ExpressionTemplate(fileTemplate),
-                    fileSizeLimitBytes: 5L * 1024 * 1024,
-                    rollingInterval: RollingInterval.Day,
-                    rollOnFileSizeLimit: true
-                )
-            );
-        }
-
-        // Configure SignalR log sink if enabled
-        if (config?.SignalR?.Enabled != false)
-        {
-            var bufferSize = config?.SignalR?.BufferSize ?? 100;
-            
-            // Create and register LogBuffer
-            var logBuffer = new LogBuffer(bufferSize);
-            serviceProvider.GetRequiredService<IServiceCollection>().AddSingleton(logBuffer);
-            
-            // Create a log sink for SignalR
-            logConfig.WriteTo.Sink(new DeferredSignalRSink());
-        }
-        
-        Log.Logger = logConfig
+        logConfig
             .MinimumLevel.Override("MassTransit", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
             .MinimumLevel.Override("Microsoft.Extensions.Http", LogEventLevel.Warning)
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
-            .Enrich.WithProperty("ApplicationName", "cleanuperr")
-            .CreateLogger();
-        
-        return builder
-            .ClearProviders()
-            .AddSerilog(dispose: true);
+            .Enrich.WithProperty("ApplicationName", "cleanuperr");
+
+        return logConfig;
     }
 }

@@ -1,5 +1,7 @@
 using Executable;
 using Executable.DependencyInjection;
+using Infrastructure.Logging;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,14 +10,35 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddApiServices();
 
+// Register SignalR - ensure this is before logging initialization
+builder.Services.AddSignalR();
+
 // Register services needed for logging first
-builder.Services.AddSingleton<Infrastructure.Logging.LoggingConfigManager>();
+builder.Services
+    .AddSingleton<LoggingConfigManager>()
+    .AddSingleton<SignalRLogSink>();
 
 // Add logging with proper service provider
-var serviceProvider = builder.Services.BuildServiceProvider();
-await builder.Logging.AddLogging(serviceProvider);
+builder.Logging.AddLogging();
 
 var app = builder.Build();
+
+// Get LoggingConfigManager (will be created if not already registered)
+var configManager = app.Services.GetRequiredService<LoggingConfigManager>();
+        
+// Get the dynamic level switch for controlling log levels
+var levelSwitch = configManager.GetLevelSwitch();
+            
+// Get the SignalRLogSink instance
+var signalRSink = app.Services.GetRequiredService<SignalRLogSink>();
+
+var logConfig = LoggingDI.GetDefaultLoggerConfiguration();
+logConfig.MinimumLevel.ControlledBy(levelSwitch);
+        
+// Add to Serilog pipeline
+logConfig.WriteTo.Sink(signalRSink);
+
+Log.Logger = logConfig.CreateLogger();
 
 // Configure the HTTP request pipeline
 app.ConfigureApi();

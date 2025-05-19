@@ -15,10 +15,10 @@ public class JsonConfigurationProvider : IConfigurationProvider
     private readonly Dictionary<string, SemaphoreSlim> _fileLocks = new();
     private readonly JsonSerializerOptions _serializerOptions;
 
-    public JsonConfigurationProvider(ILogger<JsonConfigurationProvider> logger, ConfigurationPathProvider pathProvider)
+    public JsonConfigurationProvider(ILogger<JsonConfigurationProvider> logger)
     {
         _logger = logger;
-        _configDirectory = pathProvider.GetSettingsPath();
+        _configDirectory = ConfigurationPathProvider.GetSettingsPath();
         
         // Create directory if it doesn't exist
         if (!Directory.Exists(_configDirectory))

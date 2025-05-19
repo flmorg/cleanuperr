@@ -32,12 +32,11 @@ public class ConfigManager : IConfigManager
 
     public ConfigManager(
         ILogger<ConfigManager> logger,
-        IConfigurationProvider configProvider,
-        ConfigurationPathProvider pathProvider)
+        IConfigurationProvider configProvider)
     {
         _logger = logger;
         _configProvider = configProvider;
-        string settingsPath = pathProvider.GetSettingsPath();
+        string settingsPath = ConfigurationPathProvider.GetSettingsPath();
         
         // _generalConfigFile = Path.Combine(settingsPath, "general.json");
         // _sonarrConfigFile = Path.Combine(settingsPath, "sonarr.json");
@@ -52,16 +51,16 @@ public class ConfigManager : IConfigManager
         
         _settingsPaths = new()
         {
-            { typeof(GeneralConfig), Path.Combine(settingsPath, "general.json") },
-            { typeof(SonarrConfig), Path.Combine(settingsPath, "sonarr.json") },
-            { typeof(RadarrConfig), Path.Combine(settingsPath, "radarr.json") },
-            { typeof(LidarrConfig), Path.Combine(settingsPath, "lidarr.json") },
-            { typeof(ContentBlockerConfig), Path.Combine(settingsPath, "content_blocker.json") },
-            { typeof(QueueCleanerConfig), Path.Combine(settingsPath, "queue_cleaner.json") },
-            { typeof(DownloadCleanerConfig), Path.Combine(settingsPath, "download_cleaner.json") },
-            { typeof(DownloadClientConfig), Path.Combine(settingsPath, "download_client.json") },
-            { typeof(IgnoredDownloadsConfig), Path.Combine(settingsPath, "ignored_downloads.json") },
-            { typeof(NotificationsConfig), Path.Combine(settingsPath, "notifications.json") }
+            { typeof(GeneralConfig), "general.json" },
+            { typeof(SonarrConfig), "sonarr.json" },
+            { typeof(RadarrConfig), "radarr.json" },
+            { typeof(LidarrConfig), "lidarr.json" },
+            { typeof(ContentBlockerConfig), "content_blocker.json" },
+            { typeof(QueueCleanerConfig), "queue_cleaner.json" },
+            { typeof(DownloadCleanerConfig), "download_cleaner.json" },
+            { typeof(DownloadClientConfig), "download_client.json" },
+            { typeof(IgnoredDownloadsConfig), "ignored_downloads.json" },
+            { typeof(NotificationsConfig), "notifications.json" }
         };
     }
 

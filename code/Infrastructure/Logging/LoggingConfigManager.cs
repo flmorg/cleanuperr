@@ -11,11 +11,11 @@ namespace Infrastructure.Logging;
 /// </summary>
 public class LoggingConfigManager
 {
-    private readonly ConfigManager _configManager;
+    private readonly IConfigManager _configManager;
     private readonly LoggingLevelSwitch _levelSwitch;
     private readonly ILogger<LoggingConfigManager> _logger;
     
-    public LoggingConfigManager(ConfigManager configManager, ILogger<LoggingConfigManager> logger)
+    public LoggingConfigManager(IConfigManager configManager, ILogger<LoggingConfigManager> logger)
     {
         _configManager = configManager;
         _logger = logger;

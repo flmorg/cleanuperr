@@ -1,0 +1,24 @@
+{
+  "notifiarr": {
+    "api_key": null,
+    "channel_id": null,
+    "on_failed_import_strike": false,
+    "on_stalled_strike": false,
+    "on_slow_strike": false,
+    "on_queue_item_deleted": false,
+    "on_download_cleaned": false,
+    "on_category_changed": false,
+    "is_enabled": false
+  },
+  "apprise": {
+    "url": null,
+    "key": null,
+    "on_failed_import_strike": false,
+    "on_stalled_strike": false,
+    "on_slow_strike": false,
+    "on_queue_item_deleted": false,
+    "on_download_cleaned": false,
+    "on_category_changed": false,
+    "is_enabled": false
+  }
+}

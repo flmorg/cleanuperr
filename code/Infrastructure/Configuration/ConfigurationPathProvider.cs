@@ -1,17 +1,39 @@
-using Microsoft.Extensions.Hosting;
-
 namespace Infrastructure.Configuration;
 
 /// <summary>
 /// Provides the appropriate configuration path based on the runtime environment.
 /// Uses '/config' for Docker containers and a relative 'config' path for normal environments.
 /// </summary>
-public class ConfigurationPathProvider
+public static class ConfigurationPathProvider
 {
-    private readonly string _configPath;
-    private readonly string _settingsPath;
+    private static string? _configPath;
+    private static string? _settingsPath;
     
-    public ConfigurationPathProvider(IHostEnvironment environment)
+    static ConfigurationPathProvider()
+    {
+        try
+        {
+            string configPath = InitializeConfigPath();
+            
+            if (!Directory.Exists(configPath))
+            {
+                Directory.CreateDirectory(configPath);
+            }
+            
+            string settingsPath = InitializeSettingsPath();
+            
+            if (!Directory.Exists(settingsPath))
+            {
+                Directory.CreateDirectory(settingsPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to create configuration directories: {ex.Message}", ex);
+        }
+    }
+
+    private static string InitializeConfigPath()
     {
         // Check if running in Docker container
         bool isInContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
@@ -24,37 +46,30 @@ public class ConfigurationPathProvider
         else
         {
             // Use path relative to app for normal environment
-            _configPath = Path.Combine(environment.ContentRootPath, "config");
+            _configPath = "config";
         }
-        
-        // Create settings path as a subdirectory
-        _settingsPath = Path.Combine(_configPath, "settings");
-        
-        // Ensure directories exist
-        EnsureDirectoriesExist();
+
+        return _configPath;
+    }
+
+    private static string InitializeSettingsPath()
+    {
+        if (string.IsNullOrEmpty(_settingsPath))
+        {
+            string configPath = _configPath ?? InitializeConfigPath();
+            _settingsPath = Path.Combine(configPath, "settings");
+        }
+
+        return _settingsPath;
     }
     
-    public string GetConfigPath() => _configPath;
-    
-    public string GetSettingsPath() => _settingsPath;
-    
-    private void EnsureDirectoriesExist()
+    public static string GetConfigPath()
     {
-        try
-        {
-            if (!Directory.Exists(_configPath))
-            {
-                Directory.CreateDirectory(_configPath);
-            }
-            
-            if (!Directory.Exists(_settingsPath))
-            {
-                Directory.CreateDirectory(_settingsPath);
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to create configuration directories: {ex.Message}", ex);
-        }
+        return _configPath ?? InitializeConfigPath();
+    }
+
+    public static string GetSettingsPath()
+    {
+        return _settingsPath ?? InitializeConfigPath();
     }
 }
