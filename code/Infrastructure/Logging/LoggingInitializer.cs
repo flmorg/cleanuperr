@@ -22,22 +22,18 @@ public class LoggingInitializer : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        try
+        while (true)
         {
-            // Short delay to ensure SignalR is fully initialized
-            await Task.Delay(1000, stoppingToken);
-            
-            // Get the SignalRLogSink and initialize it
-            _logger.LogDebug("Initializing SignalR logging");
-            if (_serviceProvider.GetService<SignalRLogSink>() is { } sink)
+            try
             {
-                // sink.Initialize();
-                _logger.LogInformation("SignalR logging initialized successfully");
+                throw new Exception("eroare e ceva ce multa lume n-are, ye");
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to initialize SignalR logging");
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "test");
+            }
+            
+            await Task.Delay(30000, stoppingToken);
         }
         
         // We only need to run this once at startup
