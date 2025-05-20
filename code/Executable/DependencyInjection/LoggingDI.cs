@@ -56,7 +56,6 @@ public static class LoggingDI
 
         // Configure base logger with dynamic level control
         logConfig
-            // .MinimumLevel.ControlledBy(levelSwitch)
             .MinimumLevel.Is(LogEventLevel.Information)
             .Enrich.FromLogContext()
             .WriteTo.Console(new ExpressionTemplate(consoleTemplate, theme: TemplateTheme.Literate));

@@ -1,0 +1,84 @@
+.layout-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  transition: background-color 0.2s, color 0.2s;
+
+  &.dark-mode {
+    // Dark mode variables are applied via documentElement.classList.add('dark')
+    // which affects PrimeNG components through CSS variables
+    color-scheme: dark;
+  }
+
+  .top-bar {
+    background-color: var(--surface-card);
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+    padding: 0.5rem 1.5rem;
+    border-bottom: 1px solid var(--surface-border);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      
+      .app-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-left: 0.5rem;
+      }
+    }
+
+    .theme-switch {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      i {
+        font-size: 1.25rem;
+        color: var(--text-color-secondary);
+      }
+      
+      .pi-sun {
+        color: var(--yellow-500);
+      }
+      
+      .pi-moon {
+        color: var(--blue-500);
+      }
+    }
+  }
+
+  .layout-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+
+    .layout-content-inner {
+      flex: 1;
+      border-radius: var(--border-radius);
+    }
+  }
+}
+
+// Media queries for responsiveness
+@media screen and (max-width: 768px) {
+  .layout-wrapper {
+    .top-bar {
+      padding: 0.5rem 1rem;
+
+      .app-name {
+        font-size: 1.2rem;
+      }
+    }
+
+    .layout-content {
+      padding: 1rem;
+    }
+  }
+}

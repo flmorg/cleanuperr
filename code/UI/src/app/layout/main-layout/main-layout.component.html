@@ -1,1 +1,24 @@
-<p>main-layout works!</p>
+<div class="layout-wrapper" [ngClass]="{'dark-mode': darkMode()}">
+  <!-- Top Bar -->
+  <p-toolbar styleClass="top-bar">
+    <div class="p-toolbar-group-start">
+      <div class="logo-container">
+        <span class="app-name">CleanupErr</span>
+      </div>
+    </div>
+    <div class="p-toolbar-group-end">
+      <div class="theme-switch">
+        <i class="pi pi-sun"></i>
+        <p-inputSwitch [ngModel]="darkMode()" (onChange)="toggleDarkMode($event)"></p-inputSwitch>
+        <i class="pi pi-moon"></i>
+      </div>
+    </div>
+  </p-toolbar>
+
+  <!-- Main Content -->
+  <div class="layout-content">
+    <div class="layout-content-inner">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

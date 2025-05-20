@@ -31,7 +31,7 @@ public class LoggingInitializer : BackgroundService
             _logger.LogDebug("Initializing SignalR logging");
             if (_serviceProvider.GetService<SignalRLogSink>() is { } sink)
             {
-                sink.Initialize();
+                // sink.Initialize();
                 _logger.LogInformation("SignalR logging initialized successfully");
             }
         }

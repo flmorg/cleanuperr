@@ -1,7 +1,5 @@
 using Infrastructure.Health;
 using Infrastructure.Logging;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 
 namespace Executable.DependencyInjection;

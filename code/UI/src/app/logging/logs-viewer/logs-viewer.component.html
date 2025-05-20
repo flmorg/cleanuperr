@@ -8,8 +8,8 @@
   <p-card>
     <ng-template pTemplate="header">
       <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-        <div class="flex align-items-center gap-2">
-          <h2 class="m-0">Application Logs</h2>
+        <div class="flex align-items-center">
+          <h2>Application Logs</h2>
           <p-tag [severity]="isConnected() ? 'success' : 'danger'" 
                 [value]="isConnected() ? 'Connected' : 'Disconnected'"></p-tag>
         </div>

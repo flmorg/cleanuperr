@@ -1,7 +1,5 @@
 using System.Text;
 using Common.Configuration.Arr;
-using Common.Configuration.Logging;
-using Common.Configuration.QueueCleaner;
 using Domain.Models.Arr;
 using Domain.Models.Arr.Queue;
 using Domain.Models.Lidarr;

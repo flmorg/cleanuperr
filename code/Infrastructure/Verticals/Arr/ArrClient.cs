@@ -1,6 +1,5 @@
 using Common.Attributes;
 using Common.Configuration.Arr;
-using Common.Configuration.Logging;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Domain.Enums;
