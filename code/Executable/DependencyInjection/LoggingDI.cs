@@ -80,7 +80,8 @@ public static class LoggingDI
             formatter: new ExpressionTemplate(fileTemplate),
             fileSizeLimitBytes: 10L * 1024 * 1024,
             rollingInterval: RollingInterval.Day,
-            rollOnFileSizeLimit: true
+            rollOnFileSizeLimit: true,
+            shared: true
         );
 
         logConfig

@@ -76,7 +76,7 @@ public class SignalRLogSink : ILogEventSink
         while (_logBuffer.Count > _bufferSize && _logBuffer.TryDequeue(out _)) { }
     }
     
-    private string GetPropertyValue(LogEvent logEvent, string propertyName, string defaultValue = null)
+    private static string? GetPropertyValue(LogEvent logEvent, string propertyName, string? defaultValue = null)
     {
         if (logEvent.Properties.TryGetValue(propertyName, out var value))
         {
