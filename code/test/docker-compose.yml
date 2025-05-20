@@ -171,6 +171,17 @@ services:
       - 8787:8787
     restart: unless-stopped
 
+  huntarr:
+    image: huntarr/huntarr:latest
+    container_name: huntarr
+    environment:
+      - TZ=Europe/London
+    volumes:
+      - ./data/huntarr/config:/config
+    ports:
+      - 9705:9705
+    restart: unless-stopped
+
   cleanuperr:
     image: ghcr.io/flmorg/cleanuperr:latest
     container_name: cleanuperr

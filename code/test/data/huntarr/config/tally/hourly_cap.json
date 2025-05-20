@@ -1,0 +1,20 @@
+{
+  "sonarr": {
+    "api_hits": 0
+  },
+  "radarr": {
+    "api_hits": 0
+  },
+  "lidarr": {
+    "api_hits": 0
+  },
+  "readarr": {
+    "api_hits": 0
+  },
+  "whisparr": {
+    "api_hits": 0
+  },
+  "eros": {
+    "api_hits": 0
+  }
+}

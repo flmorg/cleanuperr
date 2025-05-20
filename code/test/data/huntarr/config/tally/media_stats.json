@@ -1,0 +1,30 @@
+{
+  "sonarr": {
+    "hunted": 0,
+    "upgraded": 0
+  },
+  "radarr": {
+    "hunted": 0,
+    "upgraded": 0
+  },
+  "lidarr": {
+    "hunted": 0,
+    "upgraded": 0
+  },
+  "readarr": {
+    "hunted": 0,
+    "upgraded": 0
+  },
+  "whisparr": {
+    "hunted": 0,
+    "upgraded": 0
+  },
+  "eros": {
+    "hunted": 0,
+    "upgraded": 0
+  },
+  "swaparr": {
+    "hunted": 0,
+    "upgraded": 0
+  }
+}

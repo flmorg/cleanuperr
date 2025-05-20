@@ -1,0 +1,16 @@
+{
+  "order": [
+    "sonarr",
+    "radarr",
+    "readarr",
+    "lidarr",
+    "whisparr",
+    "eros"
+  ],
+  "sonarr": [],
+  "radarr": [],
+  "readarr": [],
+  "lidarr": [],
+  "whisparr": [],
+  "eros": []
+}

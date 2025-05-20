@@ -1,0 +1,8 @@
+{
+  "enabled": false,
+  "max_strikes": 3,
+  "max_download_time": "2h",
+  "ignore_above_size": "25GB",
+  "remove_from_client": true,
+  "dry_run": false
+}
