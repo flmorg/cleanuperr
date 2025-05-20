@@ -4,7 +4,7 @@
   flex-direction: column;
   background-color: var(--surface-ground);
   color: var(--text-color);
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.3s ease;
 
   &.dark-mode {
     // Dark mode variables are applied via documentElement.classList.add('dark')
@@ -13,42 +13,133 @@
   }
 
   .top-bar {
-    background-color: var(--surface-card);
+    background-color: var(--surface-card) !important;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
-    padding: 0.5rem 1.5rem;
-    border-bottom: 1px solid var(--surface-border);
     position: sticky;
     top: 0;
-    z-index: 999;
+    z-index: 1000;
+  }
 
-    .logo-container {
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .app-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .theme-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    .pi-sun {
+      color: var(--yellow-500);
+    }
+    
+    .pi-moon {
+      color: var(--indigo-300);
+    }
+  }
+
+  .layout-main {
+    display: flex;
+    flex: 1;
+    position: relative;
+  }
+
+  .sidebar-toggle-mobile {
+    display: none;
+    margin-right: 0.5rem;
+  }
+
+  // Desktop Sidebar
+  .sidebar {
+    width: 240px;
+    background-color: var(--surface-overlay);
+    border-right: 1px solid var(--surface-border);
+    height: calc(100vh - 4rem); // Adjust based on your toolbar height
+    position: sticky;
+    top: 4rem; // Toolbar height
+    z-index: 998;
+    transition: width 0.3s;
+    
+    .sidebar-content {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      height: 100%;
       
-      .app-name {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-left: 0.5rem;
+      .sidebar-logo {
+        display: flex;
+        justify-content: center;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--surface-border);
+        
+        .app-logo {
+          width: 40px;
+          height: 40px;
+          background-color: var(--primary-color);
+          color: var(--primary-color-text);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 18px;
+        }
       }
     }
+  }
 
-    .theme-switch {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+  .menu-list {
+    list-style: none;
+    padding: 0.5rem;
+    margin: 0;
+    
+    .menu-item {
+      margin-bottom: 0.25rem;
       
-      i {
-        font-size: 1.25rem;
-        color: var(--text-color-secondary);
-      }
-      
-      .pi-sun {
-        color: var(--yellow-500);
-      }
-      
-      .pi-moon {
-        color: var(--blue-500);
+      a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        color: var(--text-color);
+        text-decoration: none;
+        transition: all 0.2s;
+        gap: 0.75rem;
+        
+        &:hover {
+          background-color: var(--surface-hover);
+        }
+        
+        &.active-menu-link {
+          background-color: var(--primary-100);
+          color: var(--primary-color);
+          font-weight: 500;
+          
+          i {
+            color: var(--primary-color);
+          }
+        }
+        
+        i {
+          font-size: 1.2rem;
+          color: var(--text-color-secondary);
+        }
+        
+        .badge {
+          margin-left: auto;
+          background-color: var(--primary-color);
+          color: var(--primary-color-text);
+          padding: 0.25rem 0.5rem;
+          border-radius: 8px;
+          font-size: 0.75rem;
+        }
       }
     }
   }
@@ -57,8 +148,10 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    min-height: calc(100vh - 4rem);
     padding: 1.5rem;
-
+    
     .layout-content-inner {
       flex: 1;
       border-radius: var(--border-radius);

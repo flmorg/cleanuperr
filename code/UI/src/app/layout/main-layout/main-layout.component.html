@@ -2,6 +2,12 @@
   <!-- Top Bar -->
   <p-toolbar styleClass="top-bar">
     <div class="p-toolbar-group-start">
+      <button pButton 
+        class="p-button-text p-button-rounded sidebar-toggle-mobile" 
+        icon="pi pi-bars" 
+        (click)="toggleMobileSidebar()"
+        aria-label="Toggle menu">
+      </button>
       <div class="logo-container">
         <span class="app-name">CleanupErr</span>
       </div>
@@ -15,10 +21,51 @@
     </div>
   </p-toolbar>
 
-  <!-- Main Content -->
-  <div class="layout-content">
-    <div class="layout-content-inner">
-      <router-outlet></router-outlet>
+  <!-- Sidebar for Mobile -->
+  <p-sidebar [visible]="mobileSidebarVisible()" (visibleChange)="mobileSidebarVisible.set($event)" position="left" styleClass="mobile-sidebar">
+    <div class="sidebar-content">
+      <div class="sidebar-header">
+        <h3>CleanupErr</h3>
+      </div>
+      <div class="sidebar-menu">
+        <ul class="menu-list">
+          <li *ngFor="let item of menuItems" class="menu-item">
+            <a [routerLink]="item.route" routerLinkActive="active-menu-link" [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}" 
+               (click)="toggleMobileSidebar()">
+              <i class="{{item.icon}}"></i>
+              <span>{{item.label}}</span>
+              <span class="badge" *ngIf="item.badge">{{item.badge}}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </p-sidebar>
+
+  <div class="layout-main">
+    <!-- Sidebar for Desktop -->
+    <div class="sidebar">
+      <div class="sidebar-content">
+        <div class="sidebar-logo">
+          <span class="app-logo">CE</span>
+        </div>
+        <ul class="menu-list">
+          <li *ngFor="let item of menuItems" class="menu-item">
+            <a [routerLink]="item.route" routerLinkActive="active-menu-link" [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}">
+              <i class="{{item.icon}}"></i>
+              <span>{{item.label}}</span>
+              <span class="badge" *ngIf="item.badge">{{item.badge}}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="layout-content">
+      <div class="layout-content-inner">
+        <router-outlet></router-outlet>
+      </div>
     </div>
   </div>
 </div>

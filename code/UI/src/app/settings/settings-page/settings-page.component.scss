@@ -1,0 +1,32 @@
+.settings-container {
+  padding: 1.5rem;
+  
+  h1 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+  
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    
+    label {
+      font-weight: 500;
+      margin-right: 1rem;
+    }
+    
+    input {
+      max-width: 300px;
+    }
+  }
+  
+  .button-container {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+}

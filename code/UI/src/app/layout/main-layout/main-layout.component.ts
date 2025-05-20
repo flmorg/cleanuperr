@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 // PrimeNG Imports
@@ -7,6 +7,15 @@ import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { FormsModule } from '@angular/forms';
+import { MenuModule } from 'primeng/menu';
+import { SidebarModule } from 'primeng/sidebar';
+
+interface MenuItem {
+  label: string;
+  icon: string;
+  route: string;
+  badge?: string;
+}
 
 @Component({
   selector: 'app-main-layout',
@@ -14,16 +23,28 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
     ButtonModule,
     ToolbarModule,
     InputSwitchModule,
-    FormsModule
+    FormsModule,
+    MenuModule,
+    SidebarModule
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
 })
 export class MainLayoutComponent {
   darkMode = signal<boolean>(false);
+  menuItems: MenuItem[] = [
+    { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
+    { label: 'Logs', icon: 'pi pi-list', route: '/logs' },
+    { label: 'Settings', icon: 'pi pi-cog', route: '/settings' }
+  ];
+  
+  // Mobile menu state
+  mobileSidebarVisible = signal<boolean>(false);
   
   constructor() {
     // Initialize theme based on system preference
@@ -44,5 +65,9 @@ export class MainLayoutComponent {
       documentElement.classList.remove('dark');
       documentElement.style.colorScheme = 'light';
     }
+  }
+  
+  toggleMobileSidebar(): void {
+    this.mobileSidebarVisible.update(value => !value);
   }
 }

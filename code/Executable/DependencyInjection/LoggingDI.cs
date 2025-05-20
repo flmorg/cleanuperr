@@ -41,8 +41,6 @@ public static class LoggingDI
         List<string> instanceNames = [InstanceType.Sonarr.ToString(), InstanceType.Radarr.ToString(), InstanceType.Lidarr.ToString()];
         int arrPadding = instanceNames.Max(x => x.Length) + 2;
 
-        // Log level is controlled by the LoggingConfigManager's level switch
-
         // Apply padding values to templates
         string consoleTemplate = consoleOutputTemplate
             .Replace("CAT_PAD", catPadding.ToString())

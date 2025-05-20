@@ -1,0 +1,38 @@
+<div class="dashboard-container">
+  <h1>Dashboard</h1>
+  
+  <div class="grid">
+    <div class="col-12 md:col-6 lg:col-4">
+      <p-card header="Logs Summary" subheader="Recent logging activity">
+        <div class="card-content">
+          <p>Monitor your application logs and error statuses.</p>
+          <div class="card-footer">
+            <button pButton label="View Logs" icon="pi pi-list" routerLink="/logs"></button>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    
+    <div class="col-12 md:col-6 lg:col-4">
+      <p-card header="System Status" subheader="Current health status">
+        <div class="card-content">
+          <p>All systems operational</p>
+          <div class="card-footer">
+            <button pButton label="Details" icon="pi pi-server" class="p-button-outlined"></button>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    
+    <div class="col-12 md:col-6 lg:col-4">
+      <p-card header="Available Updates" subheader="System updates">
+        <div class="card-content">
+          <p>Your application is up to date.</p>
+          <div class="card-footer">
+            <button pButton label="Check for Updates" icon="pi pi-refresh" class="p-button-secondary"></button>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>

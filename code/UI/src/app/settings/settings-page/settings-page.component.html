@@ -1,0 +1,41 @@
+<div class="settings-container">
+  <h1>Settings</h1>
+  
+  <p-accordion [multiple]="true" [activeIndex]="[0]">
+    <p-accordionTab header="API Connection Settings">
+      <div class="field-row">
+        <label for="apiUrl">API URL</label>
+        <input id="apiUrl" type="text" pInputText [(ngModel)]="apiUrl" />
+      </div>
+    </p-accordionTab>
+    
+    <p-accordionTab header="Logging Settings">
+      <div class="field-row">
+        <label for="enableLogs">Enable Logging</label>
+        <p-inputSwitch id="enableLogs" [(ngModel)]="enableLogs"></p-inputSwitch>
+      </div>
+      
+      <div class="field-row">
+        <label for="enableNotifications">Show Log Notifications</label>
+        <p-inputSwitch id="enableNotifications" [(ngModel)]="enableNotifications"></p-inputSwitch>
+      </div>
+    </p-accordionTab>
+    
+    <p-accordionTab header="UI Settings">
+      <div class="field-row">
+        <label for="autoRefresh">Auto-refresh Logs</label>
+        <p-inputSwitch id="autoRefresh" [(ngModel)]="autoRefresh"></p-inputSwitch>
+      </div>
+      
+      <div class="field-row" *ngIf="autoRefresh">
+        <label for="refreshInterval">Refresh Interval (seconds)</label>
+        <input id="refreshInterval" type="number" pInputText [(ngModel)]="refreshInterval" min="5" max="300" />
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+  
+  <div class="button-container">
+    <button pButton label="Save Changes" icon="pi pi-save" class="p-button-success"></button>
+    <button pButton label="Reset to Defaults" icon="pi pi-refresh" class="p-button-secondary p-button-outlined"></button>
+  </div>
+</div>

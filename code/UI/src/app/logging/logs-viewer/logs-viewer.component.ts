@@ -14,8 +14,9 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
-// Services
-import { LogEntry, SignalrService } from '../../core/services/signalr.service';
+// Services & Models
+import { LogHubService } from '../../core/services/log-hub.service';
+import { LogEntry } from '../../core/models/signalr.models';
 
 @Component({
   selector: 'app-logs-viewer',
@@ -34,12 +35,12 @@ import { LogEntry, SignalrService } from '../../core/services/signalr.service';
     TooltipModule,
     ProgressSpinnerModule
   ],
-  providers: [SignalrService],
+  providers: [LogHubService],
   templateUrl: './logs-viewer.component.html',
   styleUrl: './logs-viewer.component.scss'
 })
 export class LogsViewerComponent implements OnInit, OnDestroy {
-  private signalrService = inject(SignalrService);
+  private logHubService = inject(LogHubService);
   private destroy$ = new Subject<void>();
   
   // Signals for reactive state
@@ -87,18 +88,18 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   
   ngOnInit(): void {
     // Connect to SignalR hub
-    this.signalrService.startConnection()
-      .catch((error: Error) => console.error('Failed to connect to SignalR hub:', error));
+    this.logHubService.startConnection()
+      .catch((error: Error) => console.error('Failed to connect to log hub:', error));
     
     // Subscribe to logs
-    this.signalrService.getLogs()
+    this.logHubService.getLogs()
       .pipe(takeUntil(this.destroy$))
       .subscribe((logs: LogEntry[]) => {
         this.logs.set(logs);
       });
     
     // Subscribe to connection status
-    this.signalrService.getConnectionStatus()
+    this.logHubService.getConnectionStatus()
       .pipe(takeUntil(this.destroy$))
       .subscribe((status: boolean) => {
         this.isConnected.set(status);
@@ -150,7 +151,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   }
   
   refresh(): void {
-    this.signalrService.requestRecentLogs();
+    this.logHubService.requestRecentLogs();
   }
   
   hasJobInfo(): boolean {
