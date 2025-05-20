@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
-import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -22,9 +22,6 @@ import { LogEntry, SignalrService } from '../../core/services/signalr.service';
   standalone: true,
   imports: [
     NgIf,
-    NgFor,
-    NgClass,
-    AsyncPipe,
     DatePipe,
     FormsModule,
     TableModule,

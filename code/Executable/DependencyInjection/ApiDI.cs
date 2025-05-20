@@ -42,6 +42,9 @@ public static class ApiDI
 
     public static WebApplication ConfigureApi(this WebApplication app)
     {
+        app.UseCors("SignalRPolicy");
+        app.UseRouting();
+
         // Configure middleware pipeline for API
         if (app.Environment.IsDevelopment())
         {
@@ -59,8 +62,8 @@ public static class ApiDI
         app.MapControllers();
         
         // Map SignalR hubs
-        app.MapHub<HealthStatusHub>("/hubs/health");
-        app.MapHub<LogHub>("/hubs/logs");
+        app.MapHub<HealthStatusHub>("/api/hubs/health");
+        app.MapHub<LogHub>("/api/hubs/logs");
 
         return app;
     }

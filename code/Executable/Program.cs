@@ -10,6 +10,18 @@ builder.Services
     .AddInfrastructure(builder.Configuration)
     .AddApiServices();
 
+// Add CORS before SignalR
+builder.Services.AddCors(options => 
+{
+    options.AddPolicy("SignalRPolicy", policy => 
+    {
+        policy.WithOrigins("http://localhost:4200") // Your Angular URL
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // Required for SignalR auth
+    });
+});
+
 // Register SignalR - ensure this is before logging initialization
 builder.Services.AddSignalR();
 

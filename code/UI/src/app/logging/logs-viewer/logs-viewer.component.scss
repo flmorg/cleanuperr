@@ -1,0 +1,137 @@
+.logs-container {
+  min-height: 85vh;
+  margin-bottom: 2rem;
+  background-color: var(--surface-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  padding: 1.5rem;
+
+  .filter-container {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--surface-border);
+  }
+
+  ::ng-deep {
+    // Table overrides
+    .p-datatable {
+      .p-datatable-header {
+        background-color: var(--surface-section);
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+        padding: 1rem;
+      }
+
+      .p-datatable-thead > tr > th {
+        background-color: var(--surface-section);
+        color: var(--text-color);
+        border-color: var(--surface-border);
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+      }
+
+      .p-datatable-tbody > tr {
+        &:nth-child(even) {
+          background-color: var(--surface-ground);
+        }
+
+        > td {
+          padding: 0.75rem 1rem;
+          border-color: var(--surface-border);
+        }
+      }
+
+      .p-paginator {
+        background-color: var(--surface-section);
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+        border-color: var(--surface-border);
+      }
+    }
+
+    // Exception handling
+    .exception-row {
+      background-color: var(--surface-hover) !important;
+      margin: 0;
+    }
+
+    .exception-cell {
+      padding: 0 !important;
+    }
+
+    .exception-content {
+      padding: 0.75rem 1rem;
+      background-color: var(--surface-hover);
+      font-family: var(--font-family-monospace, monospace);
+      white-space: pre-wrap;
+      font-size: 0.85rem;
+      overflow: auto;
+      max-height: 200px;
+      color: var(--text-color);
+      border-top: 1px dashed var(--surface-border);
+    }
+    
+    // Tag styling
+    .p-tag {
+      font-weight: 600;
+      border-radius: var(--border-radius);
+
+      &.p-tag-danger {
+        background-color: var(--red-500);
+        color: var(--red-50);
+      }
+      
+      &.p-tag-warning {
+        background-color: var(--yellow-500);
+        color: var(--yellow-900);
+      }
+      
+      &.p-tag-info {
+        background-color: var(--blue-500);
+        color: var(--blue-50);
+      }
+      
+      &.p-tag-success {
+        background-color: var(--green-500);
+        color: var(--green-50);
+      }
+    }
+
+    // Dropdowns and inputs
+    .p-dropdown {
+      min-width: 180px;
+      border-radius: var(--border-radius);
+    }
+
+    .p-input-icon-left {
+      width: 100%;
+      max-width: 300px;
+
+      input {
+        border-radius: var(--border-radius);
+        width: 100%;
+      }
+    }
+
+    // Button styling
+    .p-button {
+      border-radius: var(--border-radius);
+      
+      &.p-button-outlined {
+        background-color: transparent;
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        
+        &:hover {
+          background-color: var(--primary-50);
+        }
+      }
+    }
+
+    // Refresh button container
+    .refresh-container {
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+}
