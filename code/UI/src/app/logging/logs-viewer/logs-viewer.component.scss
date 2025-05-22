@@ -177,6 +177,29 @@
       .p-dropdown-label {
         padding: 0.5rem 0.75rem;
       }
+
+      /* Fix for consistent height dropdowns */
+      &.fixed-height-dropdown {
+        .p-dropdown-label {
+          display: flex;
+          align-items: center;
+          height: 2.5rem; /* Fixed height for consistency */
+        }
+
+        .level-indicator {
+          display: flex;
+          align-items: center;
+          height: 100%;
+        }
+
+        /* Ensure tags inside dropdowns maintain proper sizing */
+        .level-tag {
+          padding: 0.25rem 0.5rem;
+          font-size: 0.85rem;
+          height: auto;
+          line-height: 1;
+        }
+      }
     }
 
     .p-input-icon-left {

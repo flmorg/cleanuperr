@@ -31,21 +31,23 @@
         <!-- Level Filter -->
         <p-dropdown [options]="levels()" placeholder="Filter by level" 
                   [showClear]="true" (onChange)="onLevelFilterChange($event.value)" 
-                  styleClass="level-dropdown" [disabled]="!isConnected()">
+                  styleClass="fixed-height-dropdown" [disabled]="!isConnected()">
           <ng-template pTemplate="selectedItem">
-            <div class="flex align-items-center gap-2" *ngIf="levelFilter()">
-              <p-tag [severity]="getSeverity(levelFilter() || '')" [value]="levelFilter() || ''"></p-tag>
+            <div class="level-indicator" *ngIf="levelFilter()">
+              <p-tag [severity]="getSeverity(levelFilter() || '')" [value]="levelFilter() || ''" styleClass="level-tag"></p-tag>
             </div>
           </ng-template>
           <ng-template let-level pTemplate="item">
-            <p-tag [severity]="getSeverity(level.value)" [value]="level.label"></p-tag>
+            <div class="level-indicator">
+              <p-tag [severity]="getSeverity(level.value)" [value]="level.label" styleClass="level-tag"></p-tag>
+            </div>
           </ng-template>
         </p-dropdown>
 
         <!-- Category Filter -->
         <p-dropdown [options]="categories()" placeholder="Filter by category" 
                   [showClear]="true" (onChange)="onCategoryFilterChange($event.value)"
-                  styleClass="category-dropdown" [disabled]="!isConnected()">
+                  styleClass="fixed-height-dropdown" [disabled]="!isConnected()">
         </p-dropdown>
       </div>
 
