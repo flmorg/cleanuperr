@@ -1,37 +1,218 @@
-<div class="dashboard-container">
-  <h1>Dashboard</h1>
+<div class="dashboard-container content-section">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h1 class="m-0">Dashboard</h1>
+    <p-button icon="pi pi-sync" styleClass="p-button-text" label="Refresh" (onClick)="refreshDashboard()"></p-button>
+  </div>
   
-  <div class="grid">
+  <!-- Status Overview -->
+  <div class="grid grid-container">
+    <div class="col-12 md:col-6 xl:col-3">
+      <div class="overview-box bg-primary">
+        <div class="overview-icon">
+          <i class="pi pi-bolt"></i>
+        </div>
+        <div class="overview-data">
+          <div class="overview-value">System Status</div>
+          <div class="overview-label">Operational</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 md:col-6 xl:col-3">
+      <div class="overview-box bg-success">
+        <div class="overview-icon">
+          <i class="pi pi-server"></i>
+        </div>
+        <div class="overview-data">
+          <div class="overview-value">Services</div>
+          <div class="overview-label">All Running</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 md:col-6 xl:col-3">
+      <div class="overview-box bg-warning">
+        <div class="overview-icon">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <div class="overview-data">
+          <div class="overview-value">Warnings</div>
+          <div class="overview-label">0 Warnings</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12 md:col-6 xl:col-3">
+      <div class="overview-box bg-danger">
+        <div class="overview-icon">
+          <i class="pi pi-times-circle"></i>
+        </div>
+        <div class="overview-data">
+          <div class="overview-value">Errors</div>
+          <div class="overview-label">0 Errors</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main Cards -->
+  <div class="grid grid-container">
     <div class="col-12 md:col-6 lg:col-4">
-      <p-card header="Logs Summary" subheader="Recent logging activity">
+      <p-card styleClass="dashboard-card">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div>
+              <h2 class="card-title m-0">Logs Summary</h2>
+              <span class="card-subtitle">Recent logging activity</span>
+            </div>
+            <i class="pi pi-list text-xl"></i>
+          </div>
+        </ng-template>
         <div class="card-content">
-          <p>Monitor your application logs and error statuses.</p>
+          <div class="mb-3">
+            <div class="flex align-items-center mb-2">
+              <i class="pi pi-check-circle text-success mr-2"></i>
+              <span class="font-medium">Info Logs</span>
+              <span class="ml-auto font-medium">24</span>
+            </div>
+            <p-progressBar [value]="30" styleClass="mb-2" [style]="{'height': '8px'}"></p-progressBar>
+          </div>
+          
+          <div class="mb-3">
+            <div class="flex align-items-center mb-2">
+              <i class="pi pi-exclamation-triangle text-warning mr-2"></i>
+              <span class="font-medium">Warning Logs</span>
+              <span class="ml-auto font-medium">10</span>
+            </div>
+            <p-progressBar [value]="12" styleClass="mb-2" [style]="{'height': '8px'}" [styleClass]="'warning-progress'"></p-progressBar>
+          </div>
+          
+          <div class="mb-3">
+            <div class="flex align-items-center mb-2">
+              <i class="pi pi-times-circle text-danger mr-2"></i>
+              <span class="font-medium">Error Logs</span>
+              <span class="ml-auto font-medium">3</span>
+            </div>
+            <p-progressBar [value]="5" styleClass="mb-2" [style]="{'height': '8px'}" [styleClass]="'danger-progress'"></p-progressBar>
+          </div>
+          
           <div class="card-footer">
-            <button pButton label="View Logs" icon="pi pi-list" routerLink="/logs"></button>
+            <button pButton label="View All Logs" icon="pi pi-arrow-right" routerLink="/logs" iconPos="right"></button>
           </div>
         </div>
       </p-card>
     </div>
     
     <div class="col-12 md:col-6 lg:col-4">
-      <p-card header="System Status" subheader="Current health status">
+      <p-card styleClass="dashboard-card">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div>
+              <h2 class="card-title m-0">System Status</h2>
+              <span class="card-subtitle">Current health status</span>
+            </div>
+            <i class="pi pi-shield text-xl"></i>
+          </div>
+        </ng-template>
         <div class="card-content">
-          <p>All systems operational</p>
+          <div class="status-item mb-3 flex align-items-center">
+            <span class="status-indicator active mr-2"></span>
+            <div class="flex-1">
+              <div class="font-medium">API Service</div>
+              <div class="text-sm text-color-secondary">Running since 2 days</div>
+            </div>
+            <p-tag severity="success" value="Active"></p-tag>
+          </div>
+          
+          <div class="status-item mb-3 flex align-items-center">
+            <span class="status-indicator active mr-2"></span>
+            <div class="flex-1">
+              <div class="font-medium">Log Hub</div>
+              <div class="text-sm text-color-secondary">Connected</div>
+            </div>
+            <p-tag severity="success" value="Active"></p-tag>
+          </div>
+          
+          <div class="status-item mb-3 flex align-items-center">
+            <span class="status-indicator active mr-2"></span>
+            <div class="flex-1">
+              <div class="font-medium">Database</div>
+              <div class="text-sm text-color-secondary">Operational</div>
+            </div>
+            <p-tag severity="success" value="Active"></p-tag>
+          </div>
+          
           <div class="card-footer">
-            <button pButton label="Details" icon="pi pi-server" class="p-button-outlined"></button>
+            <button pButton label="System Details" icon="pi pi-server" class="p-button-outlined"></button>
           </div>
         </div>
       </p-card>
     </div>
     
     <div class="col-12 md:col-6 lg:col-4">
-      <p-card header="Available Updates" subheader="System updates">
+      <p-card styleClass="dashboard-card">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div>
+              <h2 class="card-title m-0">Updates & Info</h2>
+              <span class="card-subtitle">System updates</span>
+            </div>
+            <i class="pi pi-info-circle text-xl"></i>
+          </div>
+        </ng-template>
         <div class="card-content">
-          <p>Your application is up to date.</p>
+          <div class="update-item mb-3 p-2 border-round surface-hover flex align-items-center">
+            <i class="pi pi-check-circle text-success mr-2"></i>
+            <div>
+              <div class="font-medium">System up to date</div>
+              <div class="text-sm text-color-secondary">Latest version installed</div>
+            </div>
+          </div>
+          
+          <div class="update-item mb-3 p-2 border-round surface-hover flex align-items-center">
+            <i class="pi pi-calendar mr-2"></i>
+            <div>
+              <div class="font-medium">Last scan</div>
+              <div class="text-sm text-color-secondary">Today at 10:30 AM</div>
+            </div>
+          </div>
+          
+          <div class="update-item mb-3 p-2 border-round surface-hover flex align-items-center">
+            <i class="pi pi-history mr-2"></i>
+            <div>
+              <div class="font-medium">Next scan scheduled</div>
+              <div class="text-sm text-color-secondary">Tomorrow at 02:00 AM</div>
+            </div>
+          </div>
+          
           <div class="card-footer">
             <button pButton label="Check for Updates" icon="pi pi-refresh" class="p-button-secondary"></button>
           </div>
         </div>
+      </p-card>
+    </div>
+  </div>
+  
+  <!-- Recent Activity Section -->
+  <div class="grid">
+    <div class="col-12">
+      <p-card styleClass="dashboard-card" header="Recent Activity">
+        <p-timeline [value]="activityItems" styleClass="activity-timeline">
+          <ng-template pTemplate="content" let-item>
+            <div class="activity-item p-2">
+              <div class="font-medium">{{item.title}}</div>
+              <div class="text-sm text-color-secondary">{{item.description}}</div>
+              <div class="text-xs mt-2">{{item.time}}</div>
+            </div>
+          </ng-template>
+          <ng-template pTemplate="opposite" let-item>
+            <div class="activity-icon-container">
+              <span class="activity-icon" [ngClass]="item.iconClass">
+                <i [class]="item.icon"></i>
+              </span>
+            </div>
+          </ng-template>
+        </p-timeline>
       </p-card>
     </div>
   </div>

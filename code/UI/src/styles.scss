@@ -1,1 +1,249 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles and PrimeNG theme setup */
+
+/* Import PrimeNG Theme (Lara Light by default) */
+@import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
+
+/* Global Variables */
+:root {
+  --app-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --app-primary: var(--primary-color);
+  --app-card-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+  --app-content-padding: 1.5rem;
+  --app-border-radius: 6px;
+  --app-transition-speed: 0.3s;
+}
+
+/* Base Styles */
+html {
+  font-size: 14px;
+}
+
+body {
+  font-family: var(--app-font-family);
+  margin: 0;
+  padding: 0;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Layout Helpers */
+.content-section {
+  padding: var(--app-content-padding);
+  border-radius: var(--border-radius);
+  background-color: var(--surface-card);
+  box-shadow: var(--app-card-shadow);
+}
+
+.grid-container {
+  margin-bottom: 1rem;
+}
+
+/* PrimeNG Component Customizations */
+
+/* Card styles */
+.p-card {
+  border-radius: var(--border-radius);
+  box-shadow: var(--app-card-shadow) !important;
+  transition: transform var(--app-transition-speed), box-shadow var(--app-transition-speed);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .p-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  .p-card-subtitle {
+    font-weight: 400;
+    color: var(--text-color-secondary);
+    margin-bottom: 1rem;
+  }
+  
+  .p-card-content {
+    padding: 0.5rem 0;
+  }
+  
+  .p-card-footer {
+    padding-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+/* Table styles */
+.p-datatable {
+  .p-datatable-header {
+    background-color: var(--surface-section);
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    padding: 1rem;
+  }
+  
+  .p-datatable-thead > tr > th {
+    background-color: var(--surface-section);
+    color: var(--text-color);
+    border-color: var(--surface-border);
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  
+  .p-datatable-tbody > tr {
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+  
+    &:nth-child(even) {
+      background-color: var(--surface-ground);
+    }
+  
+    > td {
+      padding: 0.75rem 1rem;
+      border-color: var(--surface-border);
+    }
+  }
+  
+  .p-paginator {
+    background-color: var(--surface-section);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    border-color: var(--surface-border);
+  }
+}
+
+/* Button styling */
+.p-button {
+  border-radius: var(--border-radius);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  
+  &:focus {
+    box-shadow: 0 0 0 2px var(--surface-ground), 0 0 0 4px var(--primary-color), 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  &.p-button-outlined {
+    background-color: transparent;
+    
+    &:hover {
+      background-color: var(--primary-50);
+    }
+  }
+  
+  &.p-button-text {
+    background-color: transparent;
+    color: var(--primary-color);
+    border-color: transparent;
+    
+    &:hover {
+      background-color: var(--surface-hover);
+      color: var(--primary-600);
+    }
+  }
+}
+
+/* Form elements */
+.form-field {
+  margin-bottom: 1.5rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+}
+
+.field-row {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  
+  label {
+    min-width: 200px;
+    font-weight: 500;
+  }
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  html {
+    font-size: 13px;
+  }
+  
+  .p-card .p-card-content {
+    padding: 0.25rem 0;
+  }
+  
+  .field-row {
+    flex-direction: column;
+    align-items: flex-start;
+    
+    label {
+      margin-bottom: 0.5rem;
+    }
+  }
+  
+  .p-dropdown {
+    width: 100%;
+  }
+}
+
+.dark-mode {
+  /* Dark mode specific adjustments */
+  .p-button {
+    &.p-button-outlined {
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.03);
+      }
+    }
+  }
+  
+  .content-section {
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
+  }
+  
+  .p-card {
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2) !important;
+    
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    }
+  }
+}

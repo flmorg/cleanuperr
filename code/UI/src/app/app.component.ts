@@ -10,5 +10,5 @@ import { MainLayoutComponent } from './layout/main-layout/main-layout.component'
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'CleanupErr';
+  title = 'Cleanuparr';
 }

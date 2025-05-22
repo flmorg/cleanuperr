@@ -1,41 +1,148 @@
-<div class="settings-container">
-  <h1>Settings</h1>
+<div class="settings-container content-section">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h1 class="m-0">Settings</h1>
+    <div>
+      <button pButton label="Save Changes" icon="pi pi-save" class="p-button-success mr-2" (click)="saveSettings()"></button>
+      <button pButton label="Reset to Defaults" icon="pi pi-refresh" class="p-button-secondary p-button-outlined" (click)="resetToDefaults()"></button>
+    </div>
+  </div>
   
-  <p-accordion [multiple]="true" [activeIndex]="[0]">
-    <p-accordionTab header="API Connection Settings">
-      <div class="field-row">
-        <label for="apiUrl">API URL</label>
-        <input id="apiUrl" type="text" pInputText [(ngModel)]="apiUrl" />
-      </div>
-    </p-accordionTab>
-    
-    <p-accordionTab header="Logging Settings">
-      <div class="field-row">
-        <label for="enableLogs">Enable Logging</label>
-        <p-inputSwitch id="enableLogs" [(ngModel)]="enableLogs"></p-inputSwitch>
-      </div>
+  <div class="grid">
+    <div class="col-12 md:col-6">
+      <p-card header="General Settings" styleClass="settings-card mb-4">
+        <div class="settings-section">
+          <h3 class="settings-section-title">API Connection</h3>
+          
+          <div class="field-row">
+            <label for="apiUrl">API URL</label>
+            <div class="field-input">
+              <span class="p-input-icon-left w-full">
+                <i class="pi pi-link"></i>
+                <input id="apiUrl" type="text" pInputText [(ngModel)]="apiUrl" class="w-full" placeholder="https://api.example.com" />
+              </span>
+              <small class="form-helper-text">The base URL of the Cleanuparr API service</small>
+            </div>
+          </div>
+          
+          <div class="field-row">
+            <label for="apiKey">API Key</label>
+            <div class="field-input">
+              <div class="p-inputgroup">
+                <input id="apiKey" type="password" pInputText [(ngModel)]="apiKey" class="w-full" placeholder="Enter API key" />
+                <button type="button" pButton icon="pi pi-eye" class="p-button-outlined"></button>
+              </div>
+              <small class="form-helper-text">Required for authenticated API requests</small>
+            </div>
+          </div>
+          
+          <div class="field-row">
+            <label for="apiTimeout">Timeout (seconds)</label>
+            <div class="field-input">
+              <p-inputNumber id="apiTimeout" [(ngModel)]="apiTimeout" [min]="5" [max]="120" [showButtons]="true" suffix=" sec" buttonLayout="horizontal" spinnerMode="horizontal" 
+                inputStyleClass="text-right" [step]="5" decrementButtonClass="p-button-secondary" incrementButtonClass="p-button-secondary"></p-inputNumber>
+              <small class="form-helper-text">Maximum time to wait for API responses</small>
+            </div>
+          </div>
+        </div>
+      </p-card>
       
-      <div class="field-row">
-        <label for="enableNotifications">Show Log Notifications</label>
-        <p-inputSwitch id="enableNotifications" [(ngModel)]="enableNotifications"></p-inputSwitch>
-      </div>
-    </p-accordionTab>
+      <p-card header="UI Preferences" styleClass="settings-card">
+        <div class="settings-section">
+          <div class="field-row align-items-center">
+            <label for="theme">Theme</label>
+            <div class="field-input">
+              <div class="flex gap-3 align-items-center">
+                <p-radioButton id="themeLight" name="theme" value="light" [(ngModel)]="theme" inputId="light"></p-radioButton>
+                <label for="light" class="mr-5">Light</label>
+                
+                <p-radioButton id="themeDark" name="theme" value="dark" [(ngModel)]="theme" inputId="dark"></p-radioButton>
+                <label for="dark">Dark</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="field-row align-items-center">
+            <label for="fontSize">UI Font Size</label>
+            <div class="field-input">
+              <p-slider [(ngModel)]="fontSize" [min]="12" [max]="18" class="w-full mb-3"></p-slider>
+              <div class="text-center font-medium">{{ fontSize }}px</div>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
     
-    <p-accordionTab header="UI Settings">
-      <div class="field-row">
-        <label for="autoRefresh">Auto-refresh Logs</label>
-        <p-inputSwitch id="autoRefresh" [(ngModel)]="autoRefresh"></p-inputSwitch>
-      </div>
+    <div class="col-12 md:col-6">
+      <p-card header="Logging Configuration" styleClass="settings-card mb-4">
+        <div class="settings-section">
+          <div class="field-row">
+            <label for="enableLogs">Enable Logging</label>
+            <div class="field-input">
+              <p-inputSwitch id="enableLogs" [(ngModel)]="enableLogs"></p-inputSwitch>
+              <small class="form-helper-text">When enabled, application events will be logged</small>
+            </div>
+          </div>
+          
+          <div class="field-row" [class.field-disabled]="!enableLogs">
+            <label for="logLevel">Log Level</label>
+            <div class="field-input">
+              <p-dropdown id="logLevel" [options]="logLevels" [(ngModel)]="logLevel" optionLabel="label" [disabled]="!enableLogs"
+                placeholder="Select log level" [showClear]="false" styleClass="w-full">
+                <ng-template pTemplate="selectedItem">
+                  <div class="flex align-items-center gap-2" *ngIf="logLevel">
+                    <p-tag [severity]="getSeverity(logLevel.value)" [value]="logLevel.label"></p-tag>
+                  </div>
+                </ng-template>
+                <ng-template let-level pTemplate="item">
+                  <p-tag [severity]="getSeverity(level.value)" [value]="level.label"></p-tag>
+                </ng-template>
+              </p-dropdown>
+              <small class="form-helper-text">Minimum level of logs to capture</small>
+            </div>
+          </div>
+          
+          <div class="field-row" [class.field-disabled]="!enableLogs">
+            <label for="enableNotifications">Show Notifications</label>
+            <div class="field-input">
+              <p-inputSwitch id="enableNotifications" [(ngModel)]="enableNotifications" [disabled]="!enableLogs"></p-inputSwitch>
+              <small class="form-helper-text">Show desktop notifications for important logs</small>
+            </div>
+          </div>
+        </div>
+      </p-card>
       
-      <div class="field-row" *ngIf="autoRefresh">
-        <label for="refreshInterval">Refresh Interval (seconds)</label>
-        <input id="refreshInterval" type="number" pInputText [(ngModel)]="refreshInterval" min="5" max="300" />
-      </div>
-    </p-accordionTab>
-  </p-accordion>
+      <p-card header="Log Viewer Settings" styleClass="settings-card">
+        <div class="settings-section">
+          <div class="field-row">
+            <label for="autoRefresh">Auto-refresh Logs</label>
+            <div class="field-input">
+              <p-inputSwitch id="autoRefresh" [(ngModel)]="autoRefresh"></p-inputSwitch>
+              <small class="form-helper-text">Automatically refresh logs at the specified interval</small>
+            </div>
+          </div>
+          
+          <div class="field-row" [class.field-disabled]="!autoRefresh">
+            <label for="refreshInterval">Refresh Interval</label>
+            <div class="field-input">
+              <p-slider [(ngModel)]="refreshInterval" [min]="5" [max]="60" [disabled]="!autoRefresh" class="w-full mb-3"></p-slider>
+              <div class="text-center font-medium">{{ refreshInterval }} seconds</div>
+            </div>
+          </div>
+          
+          <div class="field-row">
+            <label for="maxLogEntries">Max Log Entries</label>
+            <div class="field-input">
+              <p-dropdown id="maxLogEntries" [options]="maxLogOptions" [(ngModel)]="maxLogEntries" 
+                optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+              <small class="form-helper-text">Maximum number of log entries to display at once</small>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
   
-  <div class="button-container">
-    <button pButton label="Save Changes" icon="pi pi-save" class="p-button-success"></button>
-    <button pButton label="Reset to Defaults" icon="pi pi-refresh" class="p-button-secondary p-button-outlined"></button>
+  <div class="fixed bottom-0 right-0 p-3" *ngIf="showSaveNotification">
+    <p-toast position="bottom-right" key="settings"></p-toast>
   </div>
 </div>
