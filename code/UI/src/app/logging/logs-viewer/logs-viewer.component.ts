@@ -7,7 +7,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { CardModule } from 'primeng/card';
 import { ToolbarModule } from 'primeng/toolbar';
@@ -29,7 +29,7 @@ import { LogEntry } from '../../core/models/signalr.models';
     TableModule,
     InputTextModule,
     ButtonModule,
-    DropdownModule,
+    SelectModule,
     TagModule,
     CardModule,
     ToolbarModule,
@@ -51,7 +51,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   // Filter state
   levelFilter = signal<string | null>(null);
   categoryFilter = signal<string | null>(null);
-  searchFilter = '';
+  searchFilter = signal<string>('');
   
   // Computed values
   filteredLogs = computed(() => {
@@ -66,7 +66,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
     }
     
     if (this.searchFilter) {
-      const search = this.searchFilter.toLowerCase();
+      const search = this.searchFilter().toLowerCase();
       filtered = filtered.filter(log => 
         log.message.toLowerCase().includes(search) ||
         (log.exception && log.exception.toLowerCase().includes(search)));
@@ -112,22 +112,22 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
   
-  onLevelFilterChange(level: string | null): void {
+  onLevelFilterChange(level: string): void {
     this.levelFilter.set(level);
   }
   
-  onCategoryFilterChange(category: string | null): void {
+  onCategoryFilterChange(category: string): void {
     this.categoryFilter.set(category);
   }
   
   onSearchChange(event: Event): void {
-    this.searchFilter = (event.target as HTMLInputElement).value;
+    this.searchFilter.set((event.target as HTMLInputElement).value);
   }
   
   clearFilters(): void {
     this.levelFilter.set(null);
     this.categoryFilter.set(null);
-    this.searchFilter = '';
+    this.searchFilter.set('');
   }
   
   getSeverity(level: string): string {

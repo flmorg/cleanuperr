@@ -1,158 +1,202 @@
 <div class="logs-container">
-  <!-- Connection Status Card - only shown when disconnected -->
-  <p-card *ngIf="!isConnected()" styleClass="mb-3 connection-status-card">
-    <div class="flex flex-column align-items-center gap-3 py-5">
-      <p-progressSpinner styleClass="w-4rem h-4rem" strokeWidth="4" fill="var(--surface-ground)" animationDuration=".5s"></p-progressSpinner>
-      <span class="text-xl font-medium">Connecting to server...</span>
-    </div>
-  </p-card>
-  
-  <!-- Main Logs Card -->
-  <p-card styleClass="logs-card">
-    <!-- Card Header -->
-    <ng-template pTemplate="header">
-      <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-        <div class="flex align-items-center gap-2">
-          <h2 class="m-0">Application Logs</h2>
-          <p-tag [severity]="isConnected() ? 'success' : 'danger'" 
-                [value]="isConnected() ? 'Connected' : 'Disconnected'"
-                [pTooltip]="isConnected() ? 'Connected to log hub' : 'Attempting to reconnect...'" 
-                tooltipPosition="right"></p-tag>
+    <!-- Connection Status Card - only shown when disconnected -->
+    <p-card *ngIf="!isConnected()" styleClass="mb-3 connection-status-card">
+        <div class="flex flex-column align-items-center gap-3 py-5">
+            <p-progressSpinner
+                styleClass="w-4rem h-4rem"
+                strokeWidth="4"
+                fill="var(--surface-ground)"
+                animationDuration=".5s"
+            ></p-progressSpinner>
+            <span class="text-xl font-medium">Connecting to server...</span>
         </div>
-        <button pButton icon="pi pi-refresh" class="p-button-rounded p-button-text" 
-                (click)="refresh()" pTooltip="Refresh logs" 
-                [loading]="false"></button>
-      </div>
-    </ng-template>
+    </p-card>
 
-    <!-- Filters Section -->
-    <div class="filter-container flex align-items-center justify-content-between flex-wrap gap-3">
-      <div class="flex align-items-center gap-2 flex-wrap">
-        <!-- Level Filter -->
-        <p-dropdown [options]="levels()" placeholder="Filter by level" 
-                  [showClear]="true" (onChange)="onLevelFilterChange($event.value)" 
-                  styleClass="fixed-height-dropdown" [disabled]="!isConnected()">
-          <ng-template pTemplate="selectedItem">
-            <div class="level-indicator" *ngIf="levelFilter()">
-              <p-tag [severity]="getSeverity(levelFilter() || '')" [value]="levelFilter() || ''" styleClass="level-tag"></p-tag>
-            </div>
-          </ng-template>
-          <ng-template let-level pTemplate="item">
-            <div class="level-indicator">
-              <p-tag [severity]="getSeverity(level.value)" [value]="level.label" styleClass="level-tag"></p-tag>
-            </div>
-          </ng-template>
-        </p-dropdown>
-
-        <!-- Category Filter -->
-        <p-dropdown [options]="categories()" placeholder="Filter by category" 
-                  [showClear]="true" (onChange)="onCategoryFilterChange($event.value)"
-                  styleClass="fixed-height-dropdown" [disabled]="!isConnected()">
-        </p-dropdown>
-      </div>
-
-      <div class="flex align-items-center gap-2 flex-wrap">
-        <!-- Search Filter -->
-        <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
-          <input type="text" pInputText [(ngModel)]="searchFilter" 
-                (input)="onSearchChange($event)" 
-                placeholder="Search logs" [disabled]="!isConnected()"/>
-        </span>
-
-        <!-- Clear Filters Button -->
-        <button pButton icon="pi pi-filter-slash" 
-                label="Clear Filters" 
-                class="p-button-outlined" 
-                (click)="clearFilters()"
-                [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter)"></button>
-      </div>
-    </div>
-
-    <!-- Logs Table -->
-    <p-table [value]="filteredLogs()" 
-             styleClass="p-datatable-sm logs-table" 
-             [scrollable]="true" 
-             scrollHeight="calc(100vh - 260px)"
-             [paginator]="true" 
-             [rows]="25" 
-             [showCurrentPageReport]="true"
-             [rowsPerPageOptions]="[10, 25, 50, 100]"
-             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} logs"
-             [rowHover]="true"
-             [loading]="!isConnected()">
-
-      <!-- Table Header -->
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="width: 180px">Timestamp</th>
-          <th style="width: 100px">Level</th>
-          <th style="width: 120px">Category</th>
-          <th>Message</th>
-          <th style="width: 120px" *ngIf="hasJobInfo()">Job Name</th>
-          <th style="width: 120px" *ngIf="hasInstanceInfo()">Instance</th>
-        </tr>
-      </ng-template>
-
-      <!-- Table Body -->
-      <ng-template pTemplate="body" let-log>
-        <!-- Log Entry Row -->
-        <tr [ngClass]="{
-            'error-row': log.level === 'Error' || log.level === 'Fatal' || log.level === 'Critical',
-            'warning-row': log.level === 'Warning'
-          }">
-          <td>
-            <span class="font-medium">{{ log.timestamp | date: 'yyyy-MM-dd' }}</span>
-            <div class="text-sm text-color-secondary">{{ log.timestamp | date: 'HH:mm:ss' }}</div>
-          </td>
-          <td>
-            <p-tag [severity]="getSeverity(log.level)" [value]="log.level"></p-tag>
-          </td>
-          <td>
-            <span class="log-category">{{ log.category }}</span>
-          </td>
-          <td>
-            <span [pTooltip]="log.exception ? 'Click to view stack trace' : undefined" 
-                  tooltipPosition="top" 
-                  [tooltipStyleClass]="log.exception ? 'visible' : 'invisible'">
-              {{ log.message }}
-            </span>
-          </td>
-          <td *ngIf="hasJobInfo()" class="font-medium">{{ log.jobName }}</td>
-          <td *ngIf="hasInstanceInfo()" class="text-sm">{{ log.instanceName }}</td>
-        </tr>
-        
-        <!-- Exception Row -->
-        <tr *ngIf="log.exception" class="exception-row">
-          <td [attr.colspan]="hasJobInfo() && hasInstanceInfo() ? 6 : (hasJobInfo() || hasInstanceInfo() ? 5 : 4)" class="exception-cell">
-            <div class="exception-content">
-              <pre>{{ log.exception }}</pre>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-
-      <!-- Empty State -->
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td [attr.colspan]="hasJobInfo() && hasInstanceInfo() ? 6 : (hasJobInfo() || hasInstanceInfo() ? 5 : 4)">
-            <div class="empty-message">
-              <i class="pi pi-inbox"></i>
-              <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">
-                No logs found
-              </div>
-              <p *ngIf="isConnected()">Waiting for new logs or try adjusting your filters</p>
-              <ng-template #disconnectedMessage>
-                <div class="flex flex-column align-items-center gap-3">
-                  <div class="empty-text">Not connected to log hub</div>
-                  <p>Attempting to reconnect to the server...</p>
-                  <p-progressSpinner styleClass="w-3rem h-3rem" strokeWidth="4" fill="var(--surface-ground)" animationDuration=".5s"></p-progressSpinner>
+    <!-- Main Logs Card -->
+    <p-card styleClass="logs-card">
+        <!-- Card Header -->
+        <ng-template pTemplate="header">
+            <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+                <div class="flex align-items-center gap-2">
+                    <h2 class="m-0">Application Logs</h2>
+                    <p-tag
+                        [severity]="isConnected() ? 'success' : 'danger'"
+                        [value]="isConnected() ? 'Connected' : 'Disconnected'"
+                        [pTooltip]="isConnected() ? 'Connected to log hub' : 'Attempting to reconnect...'"
+                        tooltipPosition="right"
+                    ></p-tag>
                 </div>
-              </ng-template>
+                <button
+                    pButton
+                    icon="pi pi-refresh"
+                    class="p-button-rounded p-button-text"
+                    (click)="refresh()"
+                    pTooltip="Refresh logs"
+                    [loading]="false"
+                ></button>
             </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
+        </ng-template>
+
+        <!-- Filters Section -->
+        <div class="filter-container flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="flex align-items-center gap-2 flex-wrap">
+                <i class="pi pi-search"></i>
+
+                <!-- Search Filter -->
+                <span class="p-input-icon-left">
+                    <input
+                        type="text"
+                        pInputText
+                        [(ngModel)]="searchFilter"
+                        (input)="onSearchChange($event)"
+                        placeholder="Search logs"
+                        [disabled]="!isConnected()"
+                    />
+                </span>
+
+                <!-- Level Filter -->
+                <p-select
+                    [options]="levels()"
+                    [(ngModel)]="levelFilter"
+                    placeholder="Filter by level"
+                    [showClear]="true"
+                    (onChange)="onLevelFilterChange($event.value)"
+                    styleClass="level-dropdown"
+                    [disabled]="!isConnected()"
+                >
+                </p-select>
+
+                <!-- Category Filter -->
+                <p-select
+                    [options]="categories()"
+                    [(ngModel)]="categoryFilter"
+                    placeholder="Filter by category"
+                    [showClear]="true"
+                    (onChange)="onCategoryFilterChange($event.value)"
+                    styleClass="category-dropdown"
+                    [disabled]="!isConnected()"
+                >
+                </p-select>
+
+                <!-- Clear Filters Button -->
+                <button
+                    pButton
+                    icon="pi pi-filter-slash"
+                    label="Clear Filters"
+                    class="p-button-outlined"
+                    (click)="clearFilters()"
+                    [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
+                ></button>
+            </div>
+
+            <div class="flex align-items-center gap-2 flex-wrap"></div>
+        </div>
+
+        <!-- Logs Table -->
+        <p-table
+            [value]="filteredLogs()"
+            styleClass="p-datatable-sm logs-table"
+            [scrollable]="true"
+            scrollHeight="calc(100vh - 500px)"
+            [paginator]="true"
+            [rows]="25"
+            [showCurrentPageReport]="true"
+            [rowsPerPageOptions]="[10, 25, 50, 100]"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} logs"
+            [rowHover]="true"
+            [loading]="!isConnected()"
+        >
+            <!-- Table Header -->
+            <ng-template pTemplate="header">
+                <tr>
+                    <th style="width: 180px">Timestamp</th>
+                    <th style="width: 100px">Level</th>
+                    <th style="width: 120px">Category</th>
+                    <th>Message</th>
+                    <th style="width: 120px" *ngIf="hasJobInfo()">Job Name</th>
+                    <th style="width: 120px" *ngIf="hasInstanceInfo()">Instance</th>
+                </tr>
+            </ng-template>
+
+            <!-- Table Body -->
+            <ng-template pTemplate="body" let-log>
+                <!-- Log Entry Row -->
+                <tr
+                    [ngClass]="{
+                        'error-row': log.level === 'Error' || log.level === 'Fatal' || log.level === 'Critical',
+                        'warning-row': log.level === 'Warning'
+                    }"
+                >
+                    <td>
+                        <span class="font-medium">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
+                        <div class="text-sm text-color-secondary">
+                            {{ log.timestamp | date : "HH:mm:ss" }}
+                        </div>
+                    </td>
+                    <td>
+                        <p-tag [severity]="getSeverity(log.level)" [value]="log.level"></p-tag>
+                    </td>
+                    <td>
+                        <span class="log-category">{{ log.category }}</span>
+                    </td>
+                    <td>
+                        <span
+                            [pTooltip]="log.exception ? 'Click to view stack trace' : undefined"
+                            tooltipPosition="top"
+                            [tooltipStyleClass]="log.exception ? 'visible' : 'invisible'"
+                        >
+                            {{ log.message }}
+                        </span>
+                    </td>
+                    <td *ngIf="hasJobInfo()" class="font-medium">{{ log.jobName }}</td>
+                    <td *ngIf="hasInstanceInfo()" class="text-sm">
+                        {{ log.instanceName }}
+                    </td>
+                </tr>
+
+                <!-- Exception Row -->
+                <tr *ngIf="log.exception" class="exception-row">
+                    <td
+                        [attr.colspan]="
+                            hasJobInfo() && hasInstanceInfo() ? 6 : hasJobInfo() || hasInstanceInfo() ? 5 : 4
+                        "
+                        class="exception-cell"
+                    >
+                        <div class="exception-content">
+                            <pre>{{ log.exception }}</pre>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+
+            <!-- Empty State -->
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td
+                        [attr.colspan]="
+                            hasJobInfo() && hasInstanceInfo() ? 6 : hasJobInfo() || hasInstanceInfo() ? 5 : 4
+                        "
+                    >
+                        <div class="empty-message">
+                            <i class="pi pi-inbox"></i>
+                            <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No logs found</div>
+                            <p *ngIf="isConnected()">Waiting for new logs or try adjusting your filters</p>
+                            <ng-template #disconnectedMessage>
+                                <div class="flex flex-column align-items-center gap-3">
+                                    <div class="empty-text">Not connected to log hub</div>
+                                    <p>Attempting to reconnect to the server...</p>
+                                    <p-progressSpinner
+                                        styleClass="w-3rem h-3rem"
+                                        strokeWidth="4"
+                                        fill="var(--surface-ground)"
+                                        animationDuration=".5s"
+                                    ></p-progressSpinner>
+                                </div>
+                            </ng-template>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </p-card>
 </div>
