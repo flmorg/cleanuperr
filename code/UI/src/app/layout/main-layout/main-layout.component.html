@@ -78,34 +78,36 @@
              [dismissible]="true" 
              [showCloseIcon]="false" 
              position="left">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <i class="pi pi-check-circle sidebar-icon"></i>
-        <span class="app-name">Cleanuparr</span>
+    <div class="mobile-sidebar-content" style="display: flex; flex-direction: column; height: 100%;">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <i class="pi pi-check-circle sidebar-icon"></i>
+          <span class="app-name">Cleanuparr</span>
+        </div>
       </div>
-    </div>
-    
-    <!-- Mobile Sidebar Navigation -->
-    <div class="sidebar-nav">
-      <div class="sidebar-section">
-        <h4 class="sidebar-section-title">MENU</h4>
-        <ul>
-          <li *ngFor="let item of menuItems" [class.active]="router.url.includes(item.route)">
-            <a [routerLink]="item.route" (click)="mobileSidebarVisible.set(false)">
-              <i [class]="item.icon"></i>
-              <span>{{ item.label }}</span>
-            </a>
-          </li>
-        </ul>
+      
+      <!-- Mobile Sidebar Navigation -->
+      <div class="sidebar-nav" style="flex: 1; overflow-y: auto;">
+        <div class="sidebar-section">
+          <h4 class="sidebar-section-title">MENU</h4>
+          <ul>
+            <li *ngFor="let item of menuItems" [class.active]="router.url.includes(item.route)">
+              <a [routerLink]="item.route" (click)="mobileSidebarVisible.set(false)">
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-    
-    <!-- Mobile Sponsor Section -->
-    <div class="sponsor-section">
-      <a href="https://github.com/sponsors/username" target="_blank" class="sponsor-link">
-        <i class="pi pi-heart"></i>
-        <span>Sponsor this project</span>
-      </a>
+      
+      <!-- Mobile Sponsor Section -->
+      <div class="sponsor-section" style="margin-top: auto;">
+        <a href="https://github.com/sponsors/username" target="_blank" class="sponsor-link">
+          <i class="pi pi-heart"></i>
+          <span>Sponsor this project</span>
+        </a>
+      </div>
     </div>
   </p-sidebar>
 </div>

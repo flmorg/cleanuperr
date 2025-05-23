@@ -255,6 +255,130 @@ a {
   }
 }
 
+/* PrimeNG Sidebar Override */
+.p-sidebar.mobile-sidebar {
+  background-color: #1a1e27 !important;
+  border: none !important;
+  
+  .p-sidebar-header {
+    display: none !important;
+  }
+  
+  .p-sidebar-content {
+    padding: 0 !important;
+    background-color: #1a1e27 !important;
+    color: #ffffff !important;
+    
+    .sidebar-header {
+      padding: 1.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .sidebar-logo {
+        display: flex;
+        align-items: center;
+        
+        .sidebar-icon {
+          font-size: 1.5rem;
+          color: #ffcc00;
+        }
+        
+        .app-name {
+          font-size: 1.25rem;
+          font-weight: 700;
+          margin-left: 0.5rem;
+          color: #ffffff;
+        }
+      }
+    }
+    
+    .sidebar-nav {
+      padding: 1rem 0;
+      overflow-y: auto;
+      flex: 1;
+      
+      .sidebar-section-title {
+        padding: 0 1rem;
+        margin: 0 0 0.5rem 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 0.5px;
+      }
+      
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        
+        li {
+          a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: background-color 0.2s;
+            
+            &:hover {
+              background-color: rgba(255, 255, 255, 0.05);
+            }
+            
+            i {
+              font-size: 1.25rem;
+              width: 1.5rem;
+              margin-right: 0.75rem;
+              text-align: center;
+            }
+            
+            span {
+              font-size: 0.95rem;
+            }
+          }
+          
+          &.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 3px solid #4299e1;
+            padding-left: calc(1rem - 3px);
+            
+            i {
+              color: #4299e1;
+            }
+          }
+        }
+      }
+    }
+    
+    .sponsor-section {
+      padding: 0.5rem 1rem 1rem;
+      margin-top: auto;
+      
+      .sponsor-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        color: #ffffff;
+        text-decoration: none;
+        transition: background-color 0.2s;
+        
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        i {
+          color: #ff5a5f;
+          margin-right: 0.75rem;
+        }
+      }
+    }
+  }
+}
+
 /* Dark purple theme overrides */
 .dark-mode {
   /* Button styles */
