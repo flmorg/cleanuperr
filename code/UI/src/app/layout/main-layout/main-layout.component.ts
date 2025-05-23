@@ -1,11 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
 import { ToolbarModule } from 'primeng/toolbar';
-import { InputSwitchModule } from 'primeng/inputswitch';
 import { FormsModule } from '@angular/forms';
 import { MenuModule } from 'primeng/menu';
 import { SidebarModule } from 'primeng/sidebar';
@@ -26,10 +26,8 @@ interface MenuItem {
     CommonModule,
     RouterOutlet,
     RouterLink,
-    RouterLinkActive,
     ButtonModule,
     ToolbarModule,
-    InputSwitchModule,
     FormsModule,
     MenuModule,
     SidebarModule,
@@ -40,7 +38,6 @@ interface MenuItem {
   styleUrl: './main-layout.component.scss'
 })
 export class MainLayoutComponent {
-  darkMode = signal<boolean>(false);
   isSidebarCollapsed = signal<boolean>(false);
   
   // Menu items
@@ -53,27 +50,26 @@ export class MainLayoutComponent {
   // Mobile menu state
   mobileSidebarVisible = signal<boolean>(false);
   
-  // Inject router
+  // Inject router and title service
   public router = inject(Router);
+  private titleService = inject(Title);
   
-  constructor() {
-    // Initialize theme based on system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    this.darkMode.set(prefersDark);
-  }
+  constructor() {}
   
-  toggleDarkMode(event: any): void {
-    const isDark = event.checked;
-    this.darkMode.set(isDark);
+  /**
+   * Get the current page title based on the active route
+   */
+  getPageTitle(): string {
+    const currentUrl = this.router.url;
     
-    // Apply theme to document
-    const documentElement = document.documentElement;
-    if (isDark) {
-      documentElement.classList.add('dark');
-      documentElement.style.colorScheme = 'dark';
+    if (currentUrl.includes('/dashboard')) {
+      return 'Dashboard';
+    } else if (currentUrl.includes('/logs')) {
+      return 'Logs';
+    } else if (currentUrl.includes('/settings')) {
+      return 'Settings';
     } else {
-      documentElement.classList.remove('dark');
-      documentElement.style.colorScheme = 'light';
+      return 'Cleanuparr';
     }
   }
   

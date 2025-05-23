@@ -79,9 +79,7 @@
     
     .search-input {
       width: 200px;
-      @media (min-width: 992px) {
-        width: 250px;
-      }
+
       @media (max-width: 576px) {
         width: 100%;
       }
@@ -105,7 +103,6 @@
         
         @media (max-width: 576px) {
           width: 100%;
-          margin-top: 0.5rem;
         }
         
         .p-select-label {
@@ -389,17 +386,6 @@
   align-items: center;
   gap: 0.5rem;
   
-  @media (max-width: 576px) {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.5rem;
-    background-color: var(--surface-card);
-    border-radius: 2rem;
-    padding: 0.25rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 10;
-  }
-  
   .auto-scroll-toggle {
     display: flex;
     align-items: center;
@@ -464,13 +450,6 @@
     width: 100%;
     flex-direction: column;
     align-items: flex-start;
-    
-    .pi-search {
-      position: absolute;
-      left: 0.75rem;
-      top: 0.75rem;
-      z-index: 1;
-    }
     
     .search-input {
       padding-left: 2rem;

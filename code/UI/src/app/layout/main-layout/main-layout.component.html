@@ -1,156 +1,111 @@
-<div class="layout-wrapper" [ngClass]="{'dark-mode': darkMode(), 'sidebar-collapsed': isSidebarCollapsed()}">
-  <!-- Top Bar -->
-  <p-toolbar styleClass="top-bar">
-    <div class="p-toolbar-group-start">
-      <button pButton 
-        class="p-button-text p-button-rounded sidebar-toggle-mobile" 
-        icon="pi pi-bars" 
-        (click)="toggleMobileSidebar()"
-        pRipple
-        aria-label="Toggle menu">
-      </button>
-      <div class="logo-container">
-        <span class="app-name">Cleanuparr</span>
-      </div>
-    </div>
-    <div class="p-toolbar-group-end">
-      <div class="theme-switch">
-        <i class="pi pi-sun"></i>
-        <p-inputSwitch [ngModel]="darkMode()" (onChange)="toggleDarkMode($event)"></p-inputSwitch>
-        <i class="pi pi-moon"></i>
-      </div>
-    </div>
-  </p-toolbar>
-
-  <!-- Sidebar for Mobile -->
-  <p-sidebar [visible]="mobileSidebarVisible()" (visibleChange)="mobileSidebarVisible.set($event)" position="left" styleClass="mobile-sidebar">
-    <div class="sidebar-content">
-      <div class="sidebar-header">
-        <div class="sidebar-logo">
-          <i class="pi pi-bolt sidebar-icon"></i>
-          <h3>Cleanuparr</h3>
-        </div>
-      </div>
-      <p-divider></p-divider>
-      <nav class="sidebar-nav">
-        <!-- Main Navigation Section -->
-        <div class="sidebar-section">
-          <h3 class="sidebar-section-title">Main</h3>
-          <ul>
-            <li [ngClass]="{'active': router.isActive('/dashboard', true)}">
-              <a [routerLink]="['/dashboard']" (click)="mobileSidebarVisible.set(false)">
-                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
-                </svg>
-                <span>Dashboard</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        
-        <!-- Monitoring Section -->
-        <div class="sidebar-section">
-          <h3 class="sidebar-section-title">Monitoring</h3>
-          <ul>
-            <li [ngClass]="{'active': router.isActive('/logs', false)}">
-              <a [routerLink]="['/logs']" (click)="mobileSidebarVisible.set(false)">
-                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"></path>
-                </svg>
-                <span>Logs</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        
-        <!-- Configuration Section -->
-        <div class="sidebar-section">
-          <h3 class="sidebar-section-title">Configuration</h3>
-          <ul>
-            <li [ngClass]="{'active': router.isActive('/settings', false)}">
-              <a [routerLink]="['/settings']" (click)="mobileSidebarVisible.set(false)">
-                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path>
-                </svg>
-                <span>Settings</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-    </div>
-  </p-sidebar>
-
+<div class="layout-wrapper">
+  <!-- Main layout with sidebar and content -->
   <div class="layout-main">
-    <!-- Sidebar for Desktop -->
-    <div class="sidebar" [ngClass]="{'collapsed': isSidebarCollapsed()}">
+    <!-- Desktop Sidebar -->
+    <div class="sidebar" [class.collapsed]="isSidebarCollapsed()">
+      <!-- Sidebar Header -->
       <div class="sidebar-header">
         <div class="sidebar-logo">
-          <i class="pi pi-bolt sidebar-icon"></i>
+          <i class="pi pi-check-circle sidebar-icon"></i>
           <span class="app-name">Cleanuparr</span>
         </div>
-        <button pButton 
-          class="p-button-text p-button-rounded sidebar-toggle" 
-          [icon]="isSidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" 
-          (click)="toggleSidebar()"
-          pRipple
-          aria-label="Toggle sidebar">
-        </button>
       </div>
-      <p-divider></p-divider>
-      <nav class="sidebar-nav">
-        <!-- Main Navigation Section -->
+      
+      <!-- Sidebar Navigation -->
+      <div class="sidebar-nav">
         <div class="sidebar-section">
-          <h3 class="sidebar-section-title">Main</h3>
+          <h4 class="sidebar-section-title">MENU</h4>
           <ul>
-            <li [ngClass]="{'active': router.isActive('/dashboard', true)}">
-              <a [routerLink]="['/dashboard']">
-                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
-                </svg>
-                <span>Dashboard</span>
+            <li *ngFor="let item of menuItems" [class.active]="router.url.includes(item.route)">
+              <a [routerLink]="item.route">
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
               </a>
             </li>
           </ul>
         </div>
-        
-        <!-- Monitoring Section -->
-        <div class="sidebar-section">
-          <h3 class="sidebar-section-title">Monitoring</h3>
-          <ul>
-            <li [ngClass]="{'active': router.isActive('/logs', false)}">
-              <a [routerLink]="['/logs']">
-                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"></path>
-                </svg>
-                <span>Logs</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        
-        <!-- Configuration Section -->
-        <div class="sidebar-section">
-          <h3 class="sidebar-section-title">Configuration</h3>
-          <ul>
-            <li [ngClass]="{'active': router.isActive('/settings', false)}">
-              <a [routerLink]="['/settings']">
-                <svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path>
-                </svg>
-                <span>Settings</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
+      </div>
+      
+      <!-- Sponsor Section -->
+      <div class="sponsor-section">
+        <a href="https://github.com/sponsors/username" target="_blank" class="sponsor-link">
+          <i class="pi pi-heart"></i>
+          <span>Sponsor this project</span>
+        </a>
+      </div>
+      
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button pButton class="p-button-text sidebar-toggle" 
+                [icon]="isSidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" 
+                (click)="isSidebarCollapsed.set(!isSidebarCollapsed())"></button>
+      </div>
     </div>
-
-    <!-- Main Content -->
+    
+    <!-- Content Area -->
     <div class="layout-content">
+      <!-- Content Header / Top Bar -->
+      <div class="content-header">
+        <div class="content-header-left">
+          <button pButton class="p-button-text sidebar-toggle-mobile" 
+                  icon="pi pi-bars" 
+                  (click)="mobileSidebarVisible.set(true)"></button>
+          <h1 class="page-title">{{ getPageTitle() }}</h1>
+        </div>
+        <div class="content-header-right">
+          <div class="version-info">
+            <span class="version-label">Version:</span>
+            <span class="version-number">1.0.0</span>
+          </div>
+          <div class="star-counter">
+            <i class="pi pi-star-fill"></i>
+            <span>123</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Main Content -->
       <div class="layout-content-inner">
         <router-outlet></router-outlet>
       </div>
     </div>
   </div>
+  
+  <!-- Mobile Sidebar -->
+  <p-sidebar styleClass="mobile-sidebar" 
+             [visible]="mobileSidebarVisible()" 
+             (visibleChange)="mobileSidebarVisible.set($event)" 
+             [dismissible]="true" 
+             [showCloseIcon]="false" 
+             position="left">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <i class="pi pi-check-circle sidebar-icon"></i>
+        <span class="app-name">Cleanuparr</span>
+      </div>
+    </div>
+    
+    <!-- Mobile Sidebar Navigation -->
+    <div class="sidebar-nav">
+      <div class="sidebar-section">
+        <h4 class="sidebar-section-title">MENU</h4>
+        <ul>
+          <li *ngFor="let item of menuItems" [class.active]="router.url.includes(item.route)">
+            <a [routerLink]="item.route" (click)="mobileSidebarVisible.set(false)">
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Mobile Sponsor Section -->
+    <div class="sponsor-section">
+      <a href="https://github.com/sponsors/username" target="_blank" class="sponsor-link">
+        <i class="pi pi-heart"></i>
+        <span>Sponsor this project</span>
+      </a>
+    </div>
+  </p-sidebar>
 </div>

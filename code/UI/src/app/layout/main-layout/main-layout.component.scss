@@ -1,487 +1,289 @@
+// Import variables
+
+// Layout wrapper
 .layout-wrapper {
-  min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  min-height: 100vh;
   background-color: var(--surface-ground);
-  color: var(--text-color);
-  transition: all 0.3s ease;
+}
 
-  &.dark-mode {
-    // Dark mode variables are applied via documentElement.classList.add('dark')
-    // which affects PrimeNG components through CSS variables
-    color-scheme: dark;
-  }
-
-  .top-bar {
-    background-color: var(--surface-card) !important;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-  }
-
-  .logo-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .app-name {
-    font-size: 1.25rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-
-  .theme-switch {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    
-    .pi-sun {
-      color: var(--yellow-500);
-    }
-    
-    .pi-moon {
-      color: var(--indigo-300);
-    }
-  }
-
-  .layout-main {
-    display: flex;
-    flex: 1;
-    position: relative;
-  }
-
-  .sidebar-toggle-mobile {
-    display: none;
-    margin-right: 0.5rem;
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1.25rem;
-    
-    .p-button-icon {
-      font-size: 1.25rem;
-    }
-  }
-  
-  .sidebar-toggle {
-    width: 2rem;
-    height: 2rem;
-    color: var(--text-color-secondary);
-    transition: all 0.3s;
-    
-    &:hover {
-      color: var(--primary-color);
-      background-color: var(--surface-hover);
-    }
-  }
-
-  // Desktop Sidebar
-  .sidebar {
-    width: 260px;
-    background-color: var(--surface-overlay);
-    border-right: 1px solid var(--surface-border);
-    height: calc(100vh - 4rem); // Adjust based on your toolbar height
-    position: sticky;
-    top: 4rem; // Toolbar height
-    z-index: 998;
-    transition: all 0.3s ease;
+// Mobile sidebar
+.mobile-sidebar {
+  ::ng-deep .p-sidebar-content {
+    padding: 0;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    scrollbar-width: thin;
+    background-color: #1a1e27;
+    color: #ffffff;
+  }
+}
+
+// Main layout
+.layout-main {
+  display: flex;
+  flex: 1;
+  
+  // Sidebar
+  .sidebar {
+    width: 250px;
+    background-color: #1a1e27;
+    color: #ffffff;
+    transition: width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
     
-    &::-webkit-scrollbar {
-      width: 4px;
+    @media (max-width: 991px) {
+      display: none;
     }
     
-    &::-webkit-scrollbar-thumb {
-      background-color: var(--surface-border);
-      border-radius: 4px;
+    &.collapsed {
+      width: 70px;
+      
+      .app-name,
+      .sidebar-section-title,
+      .sidebar-nav span,
+      .sponsor-link span {
+        display: none;
+      }
+      
+      .sidebar-footer {
+        justify-content: center;
+      }
     }
     
     .sidebar-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 1rem;
-      border-bottom: 1px solid var(--surface-hover);
+      justify-content: center;
+      padding: 1.5rem 1rem;
       
       .sidebar-logo {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
         
         .sidebar-icon {
           font-size: 1.5rem;
-          color: var(--primary-color);
+          color: #ffcc00;
         }
         
         .app-name {
           font-size: 1.25rem;
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          transition: opacity 0.3s ease;
+          font-weight: 700;
+          margin-left: 0.5rem;
+          color: #ffffff;
         }
       }
     }
     
-    // Huntarr-style sidebar navigation
-    .sidebar-nav {
-      padding: 0.5rem 1rem;
-      flex: 1;
-      overflow-y: auto;
+    // Sponsor section
+    .sponsor-section {
+      padding: 0.5rem 1rem 1rem;
       
-      .sidebar-section {
-        margin-bottom: 1.5rem;
+      .sponsor-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        color: #ffffff;
+        text-decoration: none;
+        transition: background-color 0.2s;
         
-        .sidebar-section-title {
-          font-size: 0.85rem;
-          text-transform: uppercase;
-          color: var(--text-color-secondary);
-          margin: 0.5rem 0;
-          padding: 0 0.5rem;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          transition: opacity 0.3s ease;
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
         }
         
-        ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          
-          li {
-            margin-bottom: 0.25rem;
-            border-radius: 8px;
-            
-            &.active a {
-              background-color: var(--primary-100);
-              color: var(--primary-color);
-              
-              .svg-icon {
-                color: var(--primary-color);
-              }
-            }
-            
-            a {
-              display: flex;
-              align-items: center;
-              padding: 0.75rem 0.5rem;
-              color: var(--text-color);
-              text-decoration: none;
-              border-radius: 8px;
-              transition: all 0.2s ease;
-              
-              &:hover {
-                background-color: var(--surface-hover);
-              }
-              
-              .svg-icon {
-                width: 24px;
-                height: 24px;
-                margin-right: 0.75rem;
-                color: var(--text-color-secondary);
-                transition: margin 0.3s ease;
-              }
-              
-              span {
-                font-size: 0.95rem;
-                white-space: nowrap;
-                transition: opacity 0.3s ease;
-              }
-            }
-          }
+        i {
+          color: #ff5a5f;
+          margin-right: 0.75rem;
         }
       }
     }
     
-    // Collapsed state
-    &.collapsed {
-      width: 4.5rem;
+    // Sidebar footer with toggle button
+    .sidebar-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 1rem;
+      margin-top: auto;
       
-      .sidebar-header {
-        padding: 1rem 0.5rem;
-        justify-content: center;
+      .sidebar-toggle {
+        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.1);
         
-        .app-name {
-          opacity: 0;
-          width: 0;
-          margin: 0;
-        }
-        
-        .sidebar-toggle {
-          position: absolute;
-          right: 0.25rem;
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.2);
         }
       }
+    }
+  }
+  
+  // Sidebar navigation
+  .sidebar-nav {
+    padding: 1rem 0;
+    overflow-y: auto;
+    flex: 1;
+    
+    .sidebar-section {
+      margin-bottom: 1.5rem;
       
-      .sidebar-nav {
-        padding: 0.5rem;
+      .sidebar-section-title {
+        padding: 0 1rem;
+        margin: 0 0 0.5rem 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 0.5px;
+      }
+      
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
         
-        .sidebar-section-title {
-          opacity: 0;
-          height: 0;
-          margin: 0;
-          overflow: hidden;
-        }
-        
-        ul li a {
-          justify-content: center;
-          padding: 0.75rem;
-          
-          .svg-icon {
-            margin-right: 0;
+        li {
+          a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: background-color 0.2s;
+            
+            &:hover {
+              background-color: rgba(255, 255, 255, 0.05);
+            }
+            
+            i {
+              font-size: 1.25rem;
+              width: 1.5rem;
+              margin-right: 0.75rem;
+              text-align: center;
+            }
+            
+            span {
+              font-size: 0.95rem;
+            }
           }
           
-          span {
-            opacity: 0;
-            width: 0;
-            margin: 0;
-            overflow: hidden;
+          &.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 3px solid #4299e1;
+            padding-left: calc(1rem - 3px);
+            
+            i {
+              color: #4299e1;
+            }
           }
         }
       }
     }
   }
   
-  // Sidebar collapsed state
-  &.sidebar-collapsed {
-    .sidebar {
-      width: 4.5rem;
-      
-      .sidebar-header {
-        padding: 1rem 0.5rem;
-        justify-content: center;
-                
-        .sidebar-toggle {
-          position: absolute;
-          right: 0.25rem;
-        }
-      }
-      
-      .menu-item {
-        a {
-          justify-content: center;
-          padding: 0.75rem;
-          
-          i {
-            margin-right: 0;
-            font-size: 1.4rem;
-          }
-        }
-      }
-    }
-    
-    .hidden {
-      display: none;
-    }
-  }
-
-  // Menu list styling
-  .menu-list {
-    list-style: none;
-    padding: 0.5rem;
-    margin: 0;
-    
-    .menu-item {
-      margin-bottom: 0.5rem;
-      
-      a {
-        display: flex;
-        align-items: center;
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        color: var(--text-color);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        gap: 0.75rem;
-        
-        &:hover {
-          background-color: var(--surface-hover);
-        }
-        
-        &.active-menu-link {
-          background-color: var(--primary-100);
-          color: var(--primary-color);
-          font-weight: 500;
-          
-          i {
-            color: var(--primary-color);
-          }
-        }
-        
-        i {
-          font-size: 1.2rem;
-          color: var(--text-color-secondary);
-          transition: all 0.2s ease;
-        }
-        
-        .menu-label {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          transition: all 0.2s ease;
-        }
-        
-        .badge {
-          margin-left: auto;
-          background-color: var(--primary-color);
-          color: var(--primary-color-text);
-          padding: 0.25rem 0.5rem;
-          border-radius: 8px;
-          font-size: 0.75rem;
-        }
-      }
-    }
-  }
-
+  // Content area
   .layout-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    min-height: calc(100vh - 4rem);
-    padding: 1.5rem;
+    background-color: #0f1319;
+    color: #ffffff;
+    
+    // Content header/top bar
+    .content-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      
+      .content-header-left {
+        display: flex;
+        align-items: center;
+        
+        .sidebar-toggle-mobile {
+          display: none;
+          margin-right: 1rem;
+          color: #ffffff;
+          background-color: rgba(255, 255, 255, 0.1);
+          
+          @media (max-width: 991px) {
+            display: inline-flex;
+          }
+        }
+        
+        .page-title {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin: 0;
+          color: #ffffff;
+        }
+      }
+      
+      .content-header-right {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        
+        @media (max-width: 768px) {
+          display: none;
+        }
+        
+        .version-info {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          
+          .version-label {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+          }
+          
+          .version-number {
+            font-size: 0.875rem;
+            color: #4299e1;
+            font-weight: 600;
+          }
+        }
+        
+        .star-counter {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          
+          i {
+            color: #ffcc00;
+          }
+          
+          span {
+            font-size: 0.875rem;
+            font-weight: 600;
+          }
+        }
+      }
+    }
     
     .layout-content-inner {
       flex: 1;
-      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      overflow-y: auto;
     }
   }
 }
 
 // Media queries for responsiveness
 @media screen and (max-width: 768px) {
-  .layout-wrapper {
-    .top-bar {
-      padding: 0.5rem 1rem;
-
-      .app-name {
-        font-size: 1.2rem;
-      }
+  .layout-content {
+    .content-header {
+      padding: 0.75rem 1rem;
     }
-
-    .layout-content {
+    
+    .layout-content-inner {
       padding: 1rem;
     }
-    
-    .sidebar {
-      display: none;
-    }
-    
-    .sidebar-toggle-mobile {
-      display: block;
-    }
-  }
-  
-  // Mobile sidebar styling
-  ::ng-deep {
-    .mobile-sidebar {
-      .p-sidebar-header {
-        display: none;
-      }
-      
-      .sidebar-content {
-        padding: 0;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        
-        .sidebar-header {
-          padding: 1rem;
-          border-bottom: 1px solid var(--surface-hover);
-          
-          .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            
-            .sidebar-icon {
-              font-size: 1.5rem;
-              color: var(--primary-color);
-            }
-            
-            h3 {
-              margin: 0;
-              font-size: 1.25rem;
-            }
-          }
-        }
-        
-        .sidebar-nav {
-          padding: 0.5rem 1rem;
-          overflow-y: auto;
-          flex: 1;
-          
-          .sidebar-section {
-            margin-bottom: 1.5rem;
-            
-            .sidebar-section-title {
-              font-size: 0.85rem;
-              text-transform: uppercase;
-              color: var(--text-color-secondary);
-              margin: 0.5rem 0;
-              padding: 0 0.5rem;
-              font-weight: 600;
-              letter-spacing: 0.5px;
-            }
-            
-            ul {
-              list-style: none;
-              padding: 0;
-              margin: 0;
-              
-              li {
-                margin-bottom: 0.5rem;
-                border-radius: 8px;
-                
-                &.active a {
-                  background-color: var(--primary-100);
-                  color: var(--primary-color);
-                  
-                  .svg-icon {
-                    color: var(--primary-color);
-                  }
-                }
-                
-                a {
-                  display: flex;
-                  align-items: center;
-                  padding: 1rem 0.75rem;
-                  color: var(--text-color);
-                  text-decoration: none;
-                  border-radius: 8px;
-                  transition: background-color 0.2s ease;
-                  
-                  &:hover {
-                    background-color: var(--surface-hover);
-                  }
-                  
-                  .svg-icon {
-                    width: 24px;
-                    height: 24px;
-                    margin-right: 1rem;
-                    color: var(--text-color-secondary);
-                  }
-                  
-                  span {
-                    font-size: 1rem;
-                    white-space: nowrap;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  // Utility classes
-  .hidden {
-    display: none;
   }
 }
