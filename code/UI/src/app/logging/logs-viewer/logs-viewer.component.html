@@ -4,13 +4,14 @@
         <!-- Card Header -->
         <ng-template pTemplate="header">
             <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border position-relative">
-                <div class="flex align-items-center gap-2">
+                <div class="flex align-items-center gap-2 header-title-container">
                     <h2 class="m-0">Application Logs</h2>
                     <p-tag
                         [severity]="isConnected() ? 'success' : 'danger'"
                         [value]="isConnected() ? 'Connected' : 'Disconnected'"
                         [pTooltip]="isConnected() ? 'Connected to log hub' : 'Attempting to reconnect...'"
                         tooltipPosition="right"
+                        styleClass="status-tag"
                     ></p-tag>
                 </div>
                 <div class="log-controls flex align-items-center gap-2">
@@ -83,20 +84,24 @@
                     </div>
                 </ng-template>
                 <ng-template pTemplate="end">
-                    <div class="filter-stats" *ngIf="isConnected() && filteredLogs().length > 0">
-                        <span class="text-sm text-color-secondary">
-                            Showing {{ filteredLogs().length }} of {{ logs().length }} logs
-                        </span>
+                    <div class="filter-actions-container">
+                        <div class="filter-actions-wrapper">
+                            <div class="filter-stats" *ngIf="isConnected() && filteredLogs().length > 0">
+                                <span class="text-sm text-color-secondary">
+                                    Showing {{ filteredLogs().length }} of {{ logs().length }} logs
+                                </span>
+                            </div>
+                            <!-- Clear Filters Button -->
+                            <button
+                                pButton
+                                icon="pi pi-filter-slash"
+                                label="Clear Filters"
+                                class="p-button-outlined ml-2 clear-filters-btn"
+                                (click)="clearFilters()"
+                                [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
+                            ></button>
+                        </div>
                     </div>
-                    <!-- Clear Filters Button -->
-                    <button
-                        pButton
-                        icon="pi pi-filter-slash"
-                        label="Clear Filters"
-                        class="p-button-outlined ml-2 clear-filters-btn"
-                        (click)="clearFilters()"
-                        [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
-                    ></button>
                 </ng-template>
             </p-toolbar>
         </div>

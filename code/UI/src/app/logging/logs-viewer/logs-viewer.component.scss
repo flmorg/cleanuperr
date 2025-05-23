@@ -48,13 +48,31 @@
       }
       
       // Fix for mobile layout
-      @media (max-width: 576px) {
+      @media (max-width: 768px) {
         flex-direction: column;
         align-items: stretch;
         
         ::ng-deep .p-toolbar-group-end {
           justify-content: space-between;
           margin-top: 0.5rem;
+        }
+      }
+    }
+    
+    // Filter actions container for better mobile layout
+    .filter-actions-container {
+      width: 100%;
+      
+      .filter-actions-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        
+        @media (max-width: 576px) {
+          flex-direction: column;
+          align-items: flex-start;
         }
       }
     }
@@ -71,15 +89,19 @@
     
     .filter-stats {
       margin-right: 1rem;
+      min-width: 100px;
       @media (max-width: 576px) {
         font-size: 0.75rem;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+        width: 100%;
       }
     }
     
     // Fix for dropdown sizing
     ::ng-deep {
       .p-select {
-        min-width: 180px;
+        min-width: 200px;
         
         @media (max-width: 576px) {
           width: 100%;
@@ -93,7 +115,7 @@
       
       // Fixed width dropdown solution
       .fixed-width-dropdown {
-        width: 180px;
+        width: 200px;
         
         .p-select-label {
           width: 100%;
@@ -239,6 +261,7 @@
           font-family: var(--font-family);
           line-height: 1.5;
           padding: 0 0.5rem;
+          min-width: 200px;
           
           @media (max-width: 768px) {
             width: 100%;
@@ -368,7 +391,7 @@
   
   @media (max-width: 576px) {
     position: absolute;
-    top: 0.5rem;
+    top: 0.75rem;
     right: 0.5rem;
     background-color: var(--surface-card);
     border-radius: 2rem;
@@ -381,17 +404,46 @@
     display: flex;
     align-items: center;
     margin-right: 0.5rem;
+  }
+}
+
+// Header title container and status tag styles
+.header-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  h2 {
+    margin: 0;
+    line-height: 1.2;
+  }
+  
+  ::ng-deep .status-tag {
+    display: flex;
+    align-items: center;
+    height: 1.5rem;
     
-    @media (max-width: 768px) {
-      display: none;
+    .p-tag-value {
+      line-height: 1;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding-right: 3rem;
+    
+    ::ng-deep .status-tag {
+      align-self: flex-start;
     }
   }
 }
 
 // Responsive styles
-@media (max-width: 576px) {
+@media (max-width: 768px) {
   .logs-console {
-    height: calc(100vh - 420px) !important;
+    height: calc(100vh - 400px) !important;
   }
   
   // Improve mobile button layout
@@ -404,6 +456,7 @@
   .p-button-outlined {
     padding: 0.5rem;
     font-size: 0.875rem;
+    width: 100%;
   }
   
   // Improve filter inputs container
@@ -426,7 +479,8 @@
   
   // Improve clear filters button
   .clear-filters-btn {
-    width: auto;
+    width: 100%;
     margin-left: 0 !important;
+    justify-content: center;
   }
 }
