@@ -1,5 +1,5 @@
 1. Whatever I'm asking for, come up with a plan first, debate it and then ask me about it.
-2. My application is written in .NET 9 with C#.
+2. My backend application is written in .NET 9 with C#. My UI interface is written in Angular 19 with PrimeNG and NgRx.
 3. My application is a console application at the moment, but we are trying to make it an API.
 4. My application strives to be more like Huntarr (https://github.com/plexguide/Huntarr.io).
 5. You should focus on the codebase insite the 'code' directory.
