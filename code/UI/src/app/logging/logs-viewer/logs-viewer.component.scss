@@ -63,10 +63,14 @@
     position: relative;
     height: calc(100vh - 330px);
     min-height: 300px;
+    display: block; // Ensure display is set
     
     // Logs list
     .logs-list {
       padding: 0.5rem;
+      display: block;
+      width: 100%;
+      z-index: 1;
     }
     
     // Log entry styling

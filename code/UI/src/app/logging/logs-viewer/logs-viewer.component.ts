@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
-import { DatePipe, NgIf, NgClass } from '@angular/common';
+import { DatePipe, NgIf, NgClass, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -28,6 +28,7 @@ import { LogEntry } from '../../core/models/signalr.models';
   imports: [
     NgIf,
     NgClass,
+    NgFor,
     DatePipe,
     FormsModule,
     TableModule,

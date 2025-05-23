@@ -1,17 +1,4 @@
 <div class="logs-container">
-    <!-- Connection Status Card - only shown when disconnected -->
-    <p-card *ngIf="!isConnected()" styleClass="mb-3 connection-status-card">
-        <div class="flex flex-column align-items-center gap-3 py-5">
-            <p-progressSpinner
-                styleClass="w-4rem h-4rem"
-                strokeWidth="4"
-                fill="var(--surface-ground)"
-                animationDuration=".5s"
-            ></p-progressSpinner>
-            <span class="text-xl font-medium">Connecting to server...</span>
-        </div>
-    </p-card>
-
     <!-- Main Logs Card -->
     <p-card styleClass="logs-card">
         <!-- Card Header -->
@@ -128,70 +115,20 @@
 
         <!-- Console-style Logs View -->
         <div class="logs-console" #logsConsole>
-            <!-- Debug information -->
-            <div class="p-2 border-bottom-1 surface-border" *ngIf="logs().length > 0">
-                <small class="text-color-secondary">Debug: Total logs: {{logs().length}} | Filtered logs: {{filteredLogs().length}} | Connected: {{isConnected() ? 'Yes' : 'No'}}</small>
-            </div>
             
             <!-- Logs List -->
             <div class="logs-list" *ngIf="filteredLogs().length > 0; else emptyLogs">
+                <!-- Simplified log entries for testing visibility -->
                 <div 
                     *ngFor="let log of filteredLogs(); let i = index" 
-                    class="log-entry"
+                    class="log-entry p-3 mb-2"
                     [ngClass]="getLevelClass(log.level)"
                     [id]="'log-' + i"
+                    style="background-color: var(--surface-card); border-radius: 8px;"
                 >
-                    <div class="log-entry-header" (click)="toggleLogExpansion(i)">
-                        <div class="log-timestamp">
-                            <span class="log-date">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
-                            <span class="log-time">{{ log.timestamp | date : "HH:mm:ss.SSS" }}</span>
-                        </div>
-                        <div class="log-level">
-                            <p-tag [severity]="getSeverity(log.level)" [value]="log.level"></p-tag>
-                        </div>
-                        <div class="log-category" *ngIf="log.category">
-                            <span>{{ log.category }}</span>
-                        </div>
-                        <div class="log-message">
-                            <span>{{ log.message }}</span>
-                        </div>
-                        <div class="log-actions">
-                            <button 
-                                pButton 
-                                icon="pi pi-copy" 
-                                class="p-button-text p-button-rounded p-button-sm"
-                                (click)="copyLogEntry(log, $event)"
-                                pTooltip="Copy log"
-                            ></button>
-                            <button 
-                                *ngIf="log.exception"
-                                pButton 
-                                [icon]="expandedLogs[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" 
-                                class="p-button-text p-button-rounded p-button-sm"
-                                pTooltip="{{ expandedLogs[i] ? 'Collapse details' : 'Expand details' }}"
-                                (click)="toggleLogExpansion(i, $event)"
-                            ></button>
-                        </div>
-                    </div>
-                    
-                    <!-- Exception Details -->
-                    <div class="log-details" *ngIf="log.exception && expandedLogs[i]">
-                        <div class="log-exception">
-                            <pre>{{ log.exception }}</pre>
-                        </div>
-                        
-                        <!-- Additional metadata if available -->
-                        <div class="log-metadata" *ngIf="log.jobName || log.instanceName">
-                            <div class="metadata-item" *ngIf="log.jobName">
-                                <span class="metadata-label">Job:</span>
-                                <span class="metadata-value">{{ log.jobName }}</span>
-                            </div>
-                            <div class="metadata-item" *ngIf="log.instanceName">
-                                <span class="metadata-label">Instance:</span>
-                                <span class="metadata-value">{{ log.instanceName }}</span>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="mb-2 font-bold">{{ log.level }} - {{ log.category }}</div>
+                    <div>{{ log.message }}</div>
+                    <div class="mt-2 text-sm text-color-secondary">{{ log.timestamp | date: 'yyyy-MM-dd HH:mm:ss' }}</div>
                 </div>
             </div>
             
