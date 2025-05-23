@@ -1,17 +1,47 @@
 /* Global styles and PrimeNG theme setup */
 
-/* Import PrimeNG Theme (Lara Light by default) */
+/* Import PrimeNG Theme (Lara Dark with Purple accent) */
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
 
 /* Global Variables */
 :root {
+  /* Base application variables */
   --app-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --app-primary: var(--primary-color);
-  --app-card-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+  --app-card-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.12);
   --app-content-padding: 1.5rem;
   --app-border-radius: 6px;
   --app-transition-speed: 0.3s;
+  
+  /* Purple Theme Colors - Default values that will be overridden by ThemeService */
+  --primary-color: #7E57C2;
+  --primary-color-text: #ffffff;
+  --primary-dark: #5E35B1;
+  --primary-light: #B39DDB;
+  
+  /* Dark theme base colors */
+  --surface-ground: #121212;
+  --surface-section: #1E1E1E;
+  --surface-card: #262626;
+  --surface-overlay: #2A2A2A;
+  --surface-border: #383838;
+  
+  --text-color: #F5F5F5;
+  --text-color-secondary: #BDBDBD;
+  --text-color-disabled: #757575;
+  
+  /* App-specific accent colors */
+  --accent-purple-50: #EDE7F6;
+  --accent-purple-100: #D1C4E9;
+  --accent-purple-200: #B39DDB;
+  --accent-purple-300: #9575CD;
+  --accent-purple-400: #7E57C2; /* Main accent */
+  --accent-purple-500: #673AB7;
+  --accent-purple-600: #5E35B1;
+  --accent-purple-700: #512DA8;
+  --accent-purple-800: #4527A0;
+  --accent-purple-900: #311B92;
 }
 
 /* Base Styles */
@@ -225,16 +255,39 @@ a {
   }
 }
 
+/* Dark purple theme overrides */
 .dark-mode {
-  /* Dark mode specific adjustments */
+  /* Button styles */
   .p-button {
-    &.p-button-outlined {
+    &.p-button-primary {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      
       &:hover {
-        background-color: rgba(255, 255, 255, 0.03);
+        background-color: var(--primary-dark);
+        border-color: var(--primary-dark);
+      }
+    }
+    
+    &.p-button-outlined {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      
+      &:hover {
+        background-color: rgba(126, 87, 194, 0.1);
+      }
+    }
+    
+    &.p-button-text {
+      color: var(--primary-color);
+      
+      &:hover {
+        background-color: rgba(126, 87, 194, 0.1);
       }
     }
   }
   
+  /* Card and content styles */
   .content-section {
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
   }
@@ -244,6 +297,60 @@ a {
     
     &:hover {
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    }
+  }
+  
+  /* Selection and focus states */
+  .p-checkbox .p-checkbox-box.p-highlight,
+  .p-radiobutton .p-radiobutton-box.p-highlight {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  /* Accent color for various components */
+  .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight,
+  .p-multiselect-panel .p-multiselect-items .p-multiselect-item.p-highlight,
+  .p-listbox .p-listbox-list .p-listbox-item.p-highlight,
+  .p-dropdown-panel .p-dropdown-items .p-dropdown-item:focus,
+  .p-multiselect-panel .p-multiselect-items .p-multiselect-item:focus,
+  .p-listbox .p-listbox-list .p-listbox-item:focus {
+    background-color: rgba(126, 87, 194, 0.16);
+    color: var(--primary-color);
+  }
+  
+  /* Navigation elements */
+  .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  /* Focus and selection ring */
+  .p-component:focus,
+  .p-inputtext:focus {
+    box-shadow: 0 0 0 1px var(--primary-light);
+    border-color: var(--primary-color);
+  }
+  
+  /* Links */
+  a:not(.p-button) {
+    color: var(--primary-light);
+    
+    &:hover {
+      color: var(--primary-color);
+    }
+  }
+  
+  /* Sidebar and navigation */
+  .sidebar {
+    .sidebar-nav {
+      li.active {
+        background-color: rgba(126, 87, 194, 0.16);
+        border-left-color: var(--primary-color);
+        
+        a {
+          color: var(--primary-color);
+        }
+      }
     }
   }
 }
