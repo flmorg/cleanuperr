@@ -172,8 +172,10 @@
     .sidebar-nav span,
     .sponsor-link span {
       opacity: 1;
+      visibility: visible;
       width: auto;
-      transition: opacity 0.15s ease 0.15s; // Delay the fade in until width has expanded
+      max-width: 200px;
+      transition: opacity 0.2s ease 0.1s, visibility 0s, max-width 0.2s ease, width 0.2s ease; // Delay the fade in until width has expanded
     }
     
     @media (max-width: 991px) {
@@ -188,27 +190,36 @@
       .sidebar-nav span,
       .sponsor-link span {
         opacity: 0;
+        visibility: hidden;
         width: 0;
+        max-width: 0;
+        padding: 0;
+        margin: 0;
         overflow: hidden;
-        transition: opacity 0.1s ease, width 0s ease 0.1s;
+        transition: opacity 0.1s ease, visibility 0s ease 0.1s, max-width 0.2s ease, width 0.2s ease;
       }
       
-      .sidebar-nav li a,
-      .sponsor-section .sponsor-link {
-        padding-left: 0;
-        padding-right: 0;
-        text-align: center;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+      .sidebar-nav li a {
+        padding: 0.75rem 0;
+        justify-content: center;
         
         i {
           margin: 0 auto;
-          width: 24px;
-          height: 24px;
+          width: 100%;
           display: flex;
           justify-content: center;
-          align-items: center;
+        }
+      }
+      
+      .sponsor-section .sponsor-link {
+        padding: 0.75rem 0;
+        justify-content: center;
+        
+        i {
+          margin: 0 auto;
+          width: 100%;
+          display: flex;
+          justify-content: center;
         }
       }
       
