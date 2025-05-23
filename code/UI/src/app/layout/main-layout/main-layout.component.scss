@@ -14,10 +14,11 @@
 
   .top-bar {
     background-color: var(--surface-card) !important;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.15);
     position: sticky;
     top: 0;
     z-index: 1000;
+    border-bottom: 1px solid var(--surface-border);
   }
 
   .logo-container {
@@ -30,21 +31,10 @@
     font-size: 1.25rem;
     font-weight: 600;
     letter-spacing: 0.5px;
+    color: var(--primary-color);
   }
 
-  .theme-switch {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    
-    .pi-sun {
-      color: var(--yellow-500);
-    }
-    
-    .pi-moon {
-      color: var(--indigo-300);
-    }
-  }
+  // Theme switch removed
 
   .layout-main {
     display: flex;
@@ -115,6 +105,7 @@
         .sidebar-icon {
           font-size: 1.5rem;
           color: var(--primary-color);
+          text-shadow: 0 0 10px rgba(126, 87, 194, 0.4);
         }
         
         .app-name {
@@ -157,12 +148,28 @@
             margin-bottom: 0.25rem;
             border-radius: 8px;
             
-            &.active a {
-              background-color: var(--primary-100);
-              color: var(--primary-color);
+            &.active {
+              position: relative;
               
-              .svg-icon {
+              &::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+                background-color: var(--primary-color);
+                border-radius: 0 4px 4px 0;
+              }
+              
+              a {
+                background-color: rgba(126, 87, 194, 0.16);
                 color: var(--primary-color);
+                font-weight: 500;
+                
+                .svg-icon {
+                  color: var(--primary-color);
+                }
               }
             }
             

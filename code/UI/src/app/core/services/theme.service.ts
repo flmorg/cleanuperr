@@ -5,57 +5,60 @@ import { Injectable } from '@angular/core';
 })
 export class ThemeService {
   private readonly THEME_KEY = 'app-theme';
-  private currentTheme: 'light' | 'dark' = 'light';
+  private currentTheme: 'dark' = 'dark'; // Always dark mode
 
   constructor() {
     this.initializeTheme();
   }
 
   initializeTheme(): void {
-    // Check if there's a saved theme preference
-    const savedTheme = localStorage.getItem(this.THEME_KEY);
-    
-    if (savedTheme === 'dark' || savedTheme === 'light') {
-      this.currentTheme = savedTheme;
-    } else {
-      // Check system preference if no saved preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      this.currentTheme = prefersDark ? 'dark' : 'light';
-    }
-    
-    // Apply the theme
-    this.applyTheme(this.currentTheme);
+    // Always use dark theme with purple accent
+    this.applyDarkPurpleTheme();
+    // Save the theme preference
+    localStorage.setItem(this.THEME_KEY, this.currentTheme);
   }
 
-  switchTheme(theme: 'light' | 'dark'): void {
-    this.currentTheme = theme;
-    this.applyTheme(theme);
-    localStorage.setItem(this.THEME_KEY, theme);
-  }
-
-  private applyTheme(theme: 'light' | 'dark'): void {
+  /**
+   * Apply the dark purple theme to the document
+   * This is now the only theme for the application
+   */
+  private applyDarkPurpleTheme(): void {
     const documentElement = document.documentElement;
     
-    if (theme === 'dark') {
-      documentElement.classList.add('dark');
-      documentElement.style.colorScheme = 'dark';
-    } else {
-      documentElement.classList.remove('dark');
-      documentElement.style.colorScheme = 'light';
-    }
+    // Set dark mode
+    documentElement.classList.add('dark');
+    documentElement.style.colorScheme = 'dark';
     
-    // Update PrimeNG theme
+    // Apply custom CSS variables for purple accent
+    documentElement.style.setProperty('--primary-color', '#7E57C2');
+    documentElement.style.setProperty('--primary-color-text', '#ffffff');
+    documentElement.style.setProperty('--primary-dark', '#5E35B1'); 
+    documentElement.style.setProperty('--primary-light', '#B39DDB');
+    
+    // Additional dark theme variables
+    documentElement.style.setProperty('--surface-ground', '#121212');
+    documentElement.style.setProperty('--surface-section', '#1E1E1E');
+    documentElement.style.setProperty('--surface-card', '#262626');
+    documentElement.style.setProperty('--surface-overlay', '#2A2A2A');
+    documentElement.style.setProperty('--surface-border', '#383838');
+    
+    documentElement.style.setProperty('--text-color', '#F5F5F5');
+    documentElement.style.setProperty('--text-color-secondary', '#BDBDBD');
+    documentElement.style.setProperty('--text-color-disabled', '#757575');
+    
+    // Update PrimeNG theme to dark
     const linkElement = document.getElementById('app-theme') as HTMLLinkElement;
     if (linkElement) {
-      linkElement.href = `lara-${theme}.css`;
+      linkElement.href = 'lara-dark.css';
     }
   }
 
-  getCurrentTheme(): 'light' | 'dark' {
+  // Public API methods kept for compatibility
+  getCurrentTheme(): 'dark' {
     return this.currentTheme;
   }
 
   isDarkMode(): boolean {
-    return this.currentTheme === 'dark';
+    return true; // Always dark mode
   }
 }

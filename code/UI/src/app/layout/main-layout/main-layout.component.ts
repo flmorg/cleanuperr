@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 // PrimeNG Imports
@@ -26,7 +26,6 @@ interface MenuItem {
     CommonModule,
     RouterOutlet,
     RouterLink,
-    RouterLinkActive,
     ButtonModule,
     ToolbarModule,
     InputSwitchModule,
@@ -40,7 +39,7 @@ interface MenuItem {
   styleUrl: './main-layout.component.scss'
 })
 export class MainLayoutComponent {
-  darkMode = signal<boolean>(false);
+  // Always use dark mode now
   isSidebarCollapsed = signal<boolean>(false);
   
   // Menu items
@@ -57,24 +56,15 @@ export class MainLayoutComponent {
   public router = inject(Router);
   
   constructor() {
-    // Initialize theme based on system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    this.darkMode.set(prefersDark);
+    // Always use dark mode
+    this.applyDarkTheme();
   }
   
-  toggleDarkMode(event: any): void {
-    const isDark = event.checked;
-    this.darkMode.set(isDark);
-    
-    // Apply theme to document
+  // Apply the dark theme to the document
+  private applyDarkTheme(): void {
     const documentElement = document.documentElement;
-    if (isDark) {
-      documentElement.classList.add('dark');
-      documentElement.style.colorScheme = 'dark';
-    } else {
-      documentElement.classList.remove('dark');
-      documentElement.style.colorScheme = 'light';
-    }
+    documentElement.classList.add('dark');
+    documentElement.style.colorScheme = 'dark';
   }
   
   toggleMobileSidebar(): void {

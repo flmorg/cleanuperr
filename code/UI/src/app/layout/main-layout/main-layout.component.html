@@ -1,4 +1,4 @@
-<div class="layout-wrapper" [ngClass]="{'dark-mode': darkMode(), 'sidebar-collapsed': isSidebarCollapsed()}">
+<div class="layout-wrapper dark-mode" [ngClass]="{'sidebar-collapsed': isSidebarCollapsed()}">
   <!-- Top Bar -->
   <p-toolbar styleClass="top-bar">
     <div class="p-toolbar-group-start">
@@ -14,11 +14,7 @@
       </div>
     </div>
     <div class="p-toolbar-group-end">
-      <div class="theme-switch">
-        <i class="pi pi-sun"></i>
-        <p-inputSwitch [ngModel]="darkMode()" (onChange)="toggleDarkMode($event)"></p-inputSwitch>
-        <i class="pi pi-moon"></i>
-      </div>
+      <!-- Right side toolbar items could go here if needed -->
     </div>
   </p-toolbar>
 
