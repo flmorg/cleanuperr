@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { DatePipe, NgFor, NgIf, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 
 // PrimeNG Imports
@@ -51,6 +51,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   private logHubService = inject(LogHubService);
   private destroy$ = new Subject<void>();
   private clipboard = inject(Clipboard);
+  private search$ = new Subject<string>();
 
   @ViewChild('logsConsole') logsConsole!: ElementRef;
   
@@ -127,6 +128,17 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
       .subscribe((status: boolean) => {
         this.isConnected.set(status);
       });
+      
+    // Setup search debounce (300ms)
+    this.search$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(searchText => {
+        this.searchFilter.set(searchText);
+      });
   }
 
   ngAfterViewChecked(): void {
@@ -149,7 +161,8 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   }
   
   onSearchChange(event: Event): void {
-    this.searchFilter.set((event.target as HTMLInputElement).value);
+    const searchText = (event.target as HTMLInputElement).value;
+    this.search$.next(searchText);
   }
   
   clearFilters(): void {
