@@ -53,6 +53,8 @@
         font-weight: 700;
         margin-left: 0.5rem;
         color: #ffffff;
+        transition: opacity 0.15s ease;
+        white-space: nowrap;
       }
     }
   }
@@ -138,6 +140,10 @@
         color: #ff5a5f;
         margin-right: 0.75rem;
       }
+      
+      span {
+        white-space: nowrap;
+      }
     }
   }
 }
@@ -158,6 +164,17 @@
     height: 100vh;
     position: sticky;
     top: 0;
+    overflow: hidden;
+    
+    // Transitions for text elements in expanded state
+    .app-name,
+    .sidebar-section-title,
+    .sidebar-nav span,
+    .sponsor-link span {
+      opacity: 1;
+      width: auto;
+      transition: opacity 0.15s ease 0.15s; // Delay the fade in until width has expanded
+    }
     
     @media (max-width: 991px) {
       display: none;
@@ -170,7 +187,10 @@
       .sidebar-section-title,
       .sidebar-nav span,
       .sponsor-link span {
-        display: none;
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+        transition: opacity 0.1s ease, width 0s ease 0.1s;
       }
       
       .sidebar-nav li a,
@@ -309,6 +329,8 @@
             
             span {
               font-size: 0.95rem;
+              transition: opacity 0.2s ease, width 0.2s ease;
+              white-space: nowrap;
             }
           }
           
