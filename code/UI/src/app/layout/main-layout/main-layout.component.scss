@@ -173,6 +173,25 @@
         display: none;
       }
       
+      .sidebar-nav li a,
+      .sponsor-section .sponsor-link {
+        padding-left: 0;
+        padding-right: 0;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        
+        i {
+          margin: 0 auto;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      }
+      
       .sidebar-footer {
         justify-content: center;
       }
