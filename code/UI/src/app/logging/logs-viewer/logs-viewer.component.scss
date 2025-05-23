@@ -224,7 +224,7 @@
         }
         
         .log-level {
-          min-width: 80px;
+          width: 5rem;
           
           @media (max-width: 768px) {
             margin-bottom: 0.5rem;
@@ -233,12 +233,10 @@
         
         .log-category {
           background-color: var(--surface-hover);
-          padding: 0.25rem 0.5rem;
           border-radius: 4px;
           font-size: 0.85rem;
           color: var(--text-color-secondary);
-          min-width: 100px;
-          max-width: 150px;
+          width: 5rem;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

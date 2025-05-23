@@ -187,6 +187,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
         return 'info';
       case 'debug':
       case 'trace':
+      case 'verbose':
         return 'success';
       default:
         return 'info';
@@ -224,6 +225,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
       case 'debug':
         return 'level-debug';
       case 'trace':
+      case 'verbose':
         return 'level-trace';
       default:
         return 'level-default';

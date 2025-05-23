@@ -85,7 +85,7 @@ public static class LoggingDI
         logConfig
             .MinimumLevel.Override("MassTransit", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.Extensions.Http", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
             .Enrich.WithProperty("ApplicationName", "cleanuperr");

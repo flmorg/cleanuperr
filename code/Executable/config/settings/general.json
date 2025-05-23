@@ -5,5 +5,5 @@
   "certificate_validation": "Enabled",
   "search_enabled": true,
   "search_delay": 30,
-  "log_level": "Information"
+  "log_level": "Verbose"
 }
