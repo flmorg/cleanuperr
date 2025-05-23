@@ -23,6 +23,10 @@ public class LoggingInitializer : BackgroundService
             }
             catch (Exception exception)
             {
+                _logger.LogCritical("test critical");
+                _logger.LogTrace("test trace");
+                _logger.LogDebug("test debug");
+                _logger.LogWarning("test warn");
                 _logger.LogError(exception, "test");
             }
             

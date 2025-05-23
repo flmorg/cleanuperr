@@ -29,6 +29,10 @@
   .filter-container {
     background-color: var(--surface-section);
     
+    @media (max-width: 576px) {
+      padding: 0.75rem !important;
+    }
+    
     .filter-toolbar {
       background: transparent;
       border: none;
@@ -39,6 +43,18 @@
         @media (max-width: 768px) {
           justify-content: flex-start;
           margin-bottom: 0.5rem;
+          width: 100%;
+        }
+      }
+      
+      // Fix for mobile layout
+      @media (max-width: 576px) {
+        flex-direction: column;
+        align-items: stretch;
+        
+        ::ng-deep .p-toolbar-group-end {
+          justify-content: space-between;
+          margin-top: 0.5rem;
         }
       }
     }
@@ -48,10 +64,48 @@
       @media (min-width: 992px) {
         width: 250px;
       }
+      @media (max-width: 576px) {
+        width: 100%;
+      }
     }
     
     .filter-stats {
       margin-right: 1rem;
+      @media (max-width: 576px) {
+        font-size: 0.75rem;
+      }
+    }
+    
+    // Fix for dropdown sizing
+    ::ng-deep {
+      .p-select {
+        min-width: 180px;
+        
+        @media (max-width: 576px) {
+          width: 100%;
+          margin-top: 0.5rem;
+        }
+        
+        .p-select-label {
+          width: 100%;
+        }
+      }
+      
+      // Fixed width dropdown solution
+      .fixed-width-dropdown {
+        width: 180px;
+        
+        .p-select-label {
+          width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        @media (max-width: 576px) {
+          width: 100%;
+        }
+      }
     }
   }
   
@@ -308,6 +362,21 @@
 
 // Log controls
 .log-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  @media (max-width: 576px) {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: var(--surface-card);
+    border-radius: 2rem;
+    padding: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+  }
+  
   .auto-scroll-toggle {
     display: flex;
     align-items: center;
@@ -322,6 +391,42 @@
 // Responsive styles
 @media (max-width: 576px) {
   .logs-console {
-    height: calc(100vh - 380px) !important;
+    height: calc(100vh - 420px) !important;
+  }
+  
+  // Improve mobile button layout
+  .p-button-rounded.p-button-text {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  // Improve filter button on mobile
+  .p-button-outlined {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  // Improve filter inputs container
+  .filter-inputs-container {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    
+    .pi-search {
+      position: absolute;
+      left: 0.75rem;
+      top: 0.75rem;
+      z-index: 1;
+    }
+    
+    .search-input {
+      padding-left: 2rem;
+    }
+  }
+  
+  // Improve clear filters button
+  .clear-filters-btn {
+    width: auto;
+    margin-left: 0 !important;
   }
 }

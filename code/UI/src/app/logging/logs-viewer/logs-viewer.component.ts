@@ -180,7 +180,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
       case 'critical':
         return 'danger';
       case 'warning':
-        return 'warning';
+        return 'warn';
       case 'information':
       case 'info':
         return 'info';

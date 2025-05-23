@@ -3,7 +3,7 @@
     <p-card styleClass="logs-card">
         <!-- Card Header -->
         <ng-template pTemplate="header">
-            <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border position-relative">
                 <div class="flex align-items-center gap-2">
                     <h2 class="m-0">Application Logs</h2>
                     <p-tag
@@ -44,7 +44,7 @@
         <div class="filter-container p-3 border-bottom-1 surface-border">
             <p-toolbar styleClass="mb-2 filter-toolbar">
                 <ng-template pTemplate="start">
-                    <div class="flex align-items-center gap-2 flex-wrap">
+                    <div class="flex align-items-center gap-2 flex-wrap filter-inputs-container">
                         <!-- Search Filter -->
                         <i class="pi pi-search"></i>
                         <input
@@ -64,7 +64,7 @@
                             placeholder="Filter by level"
                             [showClear]="true"
                             (onChange)="onLevelFilterChange($event.value)"
-                            styleClass="level-dropdown"
+                            styleClass="level-dropdown fixed-width-dropdown"
                             [disabled]="!isConnected()"
                         >
                         </p-select>
@@ -76,7 +76,7 @@
                             placeholder="Filter by category"
                             [showClear]="true"
                             (onChange)="onCategoryFilterChange($event.value)"
-                            styleClass="category-dropdown"
+                            styleClass="category-dropdown fixed-width-dropdown"
                             [disabled]="!isConnected()"
                         >
                         </p-select>
@@ -93,7 +93,7 @@
                         pButton
                         icon="pi pi-filter-slash"
                         label="Clear Filters"
-                        class="p-button-outlined ml-2"
+                        class="p-button-outlined ml-2 clear-filters-btn"
                         (click)="clearFilters()"
                         [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
                     ></button>
