@@ -1,4 +1,4 @@
-<div class="layout-wrapper" [ngClass]="{'dark-mode': darkMode()}">
+<div class="layout-wrapper" [ngClass]="{'dark-mode': darkMode(), 'sidebar-collapsed': isSidebarCollapsed()}">
   <!-- Top Bar -->
   <p-toolbar styleClass="top-bar">
     <div class="p-toolbar-group-start">
@@ -25,15 +25,19 @@
   <p-sidebar [visible]="mobileSidebarVisible()" (visibleChange)="mobileSidebarVisible.set($event)" position="left" styleClass="mobile-sidebar">
     <div class="sidebar-content">
       <div class="sidebar-header">
-        <h3>Cleanuparr</h3>
+        <div class="sidebar-logo">
+          <i class="pi pi-bolt sidebar-icon"></i>
+          <h3>Cleanuparr</h3>
+        </div>
       </div>
+      <p-divider></p-divider>
       <div class="sidebar-menu">
         <ul class="menu-list">
           <li *ngFor="let item of menuItems" class="menu-item">
             <a [routerLink]="item.route" routerLinkActive="active-menu-link" [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}" 
-               (click)="toggleMobileSidebar()">
+               (click)="mobileSidebarVisible.set(false)">
               <i class="{{item.icon}}"></i>
-              <span>{{item.label}}</span>
+              <span class="menu-label">{{item.label}}</span>
               <span class="badge" *ngIf="item.badge">{{item.badge}}</span>
             </a>
           </li>
@@ -45,16 +49,27 @@
   <div class="layout-main">
     <!-- Sidebar for Desktop -->
     <div class="sidebar">
-      <div class="sidebar-content">
+      <div class="sidebar-header">
         <div class="sidebar-logo">
-          <span class="app-logo">Logo</span>
+          <i class="pi pi-bolt sidebar-icon"></i>
+          <span class="app-name" [class.hidden]="isSidebarCollapsed()">Cleanuparr</span>
         </div>
+        <button pButton 
+          class="p-button-text p-button-rounded sidebar-toggle" 
+          [icon]="isSidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" 
+          (click)="toggleSidebar()"
+          pRipple
+          aria-label="Toggle sidebar">
+        </button>
+      </div>
+      <p-divider></p-divider>
+      <div class="sidebar-content">
         <ul class="menu-list">
           <li *ngFor="let item of menuItems" class="menu-item">
             <a [routerLink]="item.route" routerLinkActive="active-menu-link" [routerLinkActiveOptions]="{exact: item.route === '/dashboard'}">
               <i class="{{item.icon}}"></i>
-              <span>{{item.label}}</span>
-              <span class="badge" *ngIf="item.badge">{{item.badge}}</span>
+              <span class="menu-label" [class.hidden]="isSidebarCollapsed()">{{item.label}}</span>
+              <span class="badge" *ngIf="item.badge && !isSidebarCollapsed()">{{item.badge}}</span>
             </a>
           </li>
         </ul>

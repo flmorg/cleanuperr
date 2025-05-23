@@ -9,6 +9,8 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { FormsModule } from '@angular/forms';
 import { MenuModule } from 'primeng/menu';
 import { SidebarModule } from 'primeng/sidebar';
+import { DividerModule } from 'primeng/divider';
+import { RippleModule } from 'primeng/ripple';
 
 interface MenuItem {
   label: string;
@@ -30,13 +32,18 @@ interface MenuItem {
     InputSwitchModule,
     FormsModule,
     MenuModule,
-    SidebarModule
+    SidebarModule,
+    DividerModule,
+    RippleModule
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
 })
 export class MainLayoutComponent {
   darkMode = signal<boolean>(false);
+  isSidebarCollapsed = signal<boolean>(false);
+  
+  // Menu items
   menuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
     { label: 'Logs', icon: 'pi pi-list', route: '/logs' },
@@ -69,5 +76,9 @@ export class MainLayoutComponent {
   
   toggleMobileSidebar(): void {
     this.mobileSidebarVisible.update(value => !value);
+  }
+  
+  toggleSidebar(): void {
+    this.isSidebarCollapsed.update(value => !value);
   }
 }
