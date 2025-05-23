@@ -111,9 +111,6 @@ export class LogsViewerComponent implements OnInit, OnDestroy, AfterViewChecked 
   constructor() {
     // Initialize expandedLogs object
     this.expandedLogs = {};
-    
-    // Add some test logs to ensure the display works
-    this.addTestLogs();
   }
   
   ngOnInit(): void {
@@ -126,17 +123,6 @@ export class LogsViewerComponent implements OnInit, OnDestroy, AfterViewChecked 
       })
       .catch((error: Error) => console.error('Failed to connect to log hub:', error));
     
-    // Subscribe to logs
-    this.logHubService.getLogs()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((logs: LogEntry[]) => {
-        console.log(`Received ${logs.length} logs from service`);
-        this.logs.set(logs);
-        if (this.autoScroll()) {
-          this.scrollToBottom();
-        }
-      });
-    
     // Subscribe to connection status
     this.logHubService.getConnectionStatus()
       .pipe(takeUntil(this.destroy$))
@@ -147,6 +133,18 @@ export class LogsViewerComponent implements OnInit, OnDestroy, AfterViewChecked 
         // Request logs again when connection is established
         if (status) {
           this.logHubService.requestRecentLogs();
+        }
+      });
+    
+    // Subscribe to logs
+    this.logHubService.getLogs()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((logs: LogEntry[]) => {
+        console.log(`Received ${logs.length} logs from service`);
+        // Clear any test logs when we receive real logs
+        this.logs.set(logs);
+        if (this.autoScroll()) {
+          this.scrollToBottom();
         }
       });
   }
@@ -199,10 +197,6 @@ export class LogsViewerComponent implements OnInit, OnDestroy, AfterViewChecked 
       default:
         return 'info';
     }
-  }
-  
-  refresh(): void {
-    this.logHubService.requestRecentLogs();
   }
   
   hasJobInfo(): boolean {
@@ -373,18 +367,13 @@ export class LogsViewerComponent implements OnInit, OnDestroy, AfterViewChecked 
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
+    document.body.appendChild(link); // Required for Firefox
     link.click();
+    document.body.removeChild(link); // Clean up
     
     setTimeout(() => {
       URL.revokeObjectURL(url);
     }, 100);
-  }
-  
-  /**
-   * Clear all logs
-   */
-  clearLogs(): void {
-    this.logs.set([]);
   }
   
   /**
@@ -405,55 +394,5 @@ export class LogsViewerComponent implements OnInit, OnDestroy, AfterViewChecked 
     if (value) {
       this.scrollToBottom();
     }
-  }
-  
-  /**
-   * Add test logs for debugging purposes
-   * This is only used during development to ensure the logs display correctly
-   */
-  private addTestLogs(): void {
-    const testLogs: LogEntry[] = [
-      {
-        timestamp: new Date(),
-        level: 'Information',
-        category: 'Application',
-        message: 'Application started successfully'
-      },
-      {
-        timestamp: new Date(),
-        level: 'Warning',
-        category: 'Database',
-        message: 'Database connection took longer than expected',
-        jobName: 'MaintenanceJob',
-        instanceName: 'Instance01'
-      },
-      {
-        timestamp: new Date(),
-        level: 'Error',
-        category: 'API',
-        message: 'Failed to connect to external service',
-        exception: 'System.Net.Http.HttpRequestException: Connection refused\n   at ExternalService.Connect() in ExternalService.cs:line 45\n   at API.Controllers.ExternalController.Connect() in ExternalController.cs:line 28'
-      },
-      {
-        timestamp: new Date(),
-        level: 'Debug',
-        category: 'Authentication',
-        message: 'User authentication attempt'
-      },
-      {
-        timestamp: new Date(),
-        level: 'Trace',
-        category: 'FileSystem',
-        message: 'File system operations completed',
-        jobName: 'FileProcessingJob',
-        instanceName: 'Worker02'
-      }
-    ];
-    
-    // Set the test logs to display
-    this.logs.set(testLogs);
-    
-    // Mark as connected so UI shows properly
-    this.isConnected.set(true);
   }
 }
