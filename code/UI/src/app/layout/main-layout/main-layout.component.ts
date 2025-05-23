@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 // PrimeNG Imports
@@ -52,6 +52,9 @@ export class MainLayoutComponent {
   
   // Mobile menu state
   mobileSidebarVisible = signal<boolean>(false);
+  
+  // Inject router
+  public router = inject(Router);
   
   constructor() {
     // Initialize theme based on system preference

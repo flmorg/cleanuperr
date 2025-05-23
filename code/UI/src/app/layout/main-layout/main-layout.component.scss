@@ -55,6 +55,13 @@
   .sidebar-toggle-mobile {
     display: none;
     margin-right: 0.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+    
+    .p-button-icon {
+      font-size: 1.25rem;
+    }
   }
   
   .sidebar-toggle {
@@ -116,16 +123,127 @@
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          transition: opacity 0.3s ease;
         }
       }
     }
     
-    .sidebar-content {
-      display: flex;
-      flex-direction: column;
+    // Huntarr-style sidebar navigation
+    .sidebar-nav {
+      padding: 0.5rem 1rem;
       flex: 1;
-      padding: 0.5rem;
       overflow-y: auto;
+      
+      .sidebar-section {
+        margin-bottom: 1.5rem;
+        
+        .sidebar-section-title {
+          font-size: 0.85rem;
+          text-transform: uppercase;
+          color: var(--text-color-secondary);
+          margin: 0.5rem 0;
+          padding: 0 0.5rem;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          transition: opacity 0.3s ease;
+        }
+        
+        ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          
+          li {
+            margin-bottom: 0.25rem;
+            border-radius: 8px;
+            
+            &.active a {
+              background-color: var(--primary-100);
+              color: var(--primary-color);
+              
+              .svg-icon {
+                color: var(--primary-color);
+              }
+            }
+            
+            a {
+              display: flex;
+              align-items: center;
+              padding: 0.75rem 0.5rem;
+              color: var(--text-color);
+              text-decoration: none;
+              border-radius: 8px;
+              transition: all 0.2s ease;
+              
+              &:hover {
+                background-color: var(--surface-hover);
+              }
+              
+              .svg-icon {
+                width: 24px;
+                height: 24px;
+                margin-right: 0.75rem;
+                color: var(--text-color-secondary);
+                transition: margin 0.3s ease;
+              }
+              
+              span {
+                font-size: 0.95rem;
+                white-space: nowrap;
+                transition: opacity 0.3s ease;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Collapsed state
+    &.collapsed {
+      width: 4.5rem;
+      
+      .sidebar-header {
+        padding: 1rem 0.5rem;
+        justify-content: center;
+        
+        .app-name {
+          opacity: 0;
+          width: 0;
+          margin: 0;
+        }
+        
+        .sidebar-toggle {
+          position: absolute;
+          right: 0.25rem;
+        }
+      }
+      
+      .sidebar-nav {
+        padding: 0.5rem;
+        
+        .sidebar-section-title {
+          opacity: 0;
+          height: 0;
+          margin: 0;
+          overflow: hidden;
+        }
+        
+        ul li a {
+          justify-content: center;
+          padding: 0.75rem;
+          
+          .svg-icon {
+            margin-right: 0;
+          }
+          
+          span {
+            opacity: 0;
+            width: 0;
+            margin: 0;
+            overflow: hidden;
+          }
+        }
+      }
     }
   }
   
@@ -269,9 +387,12 @@
       .sidebar-content {
         padding: 0;
         height: 100%;
+        display: flex;
+        flex-direction: column;
         
         .sidebar-header {
           padding: 1rem;
+          border-bottom: 1px solid var(--surface-hover);
           
           .sidebar-logo {
             display: flex;
@@ -286,6 +407,72 @@
             h3 {
               margin: 0;
               font-size: 1.25rem;
+            }
+          }
+        }
+        
+        .sidebar-nav {
+          padding: 0.5rem 1rem;
+          overflow-y: auto;
+          flex: 1;
+          
+          .sidebar-section {
+            margin-bottom: 1.5rem;
+            
+            .sidebar-section-title {
+              font-size: 0.85rem;
+              text-transform: uppercase;
+              color: var(--text-color-secondary);
+              margin: 0.5rem 0;
+              padding: 0 0.5rem;
+              font-weight: 600;
+              letter-spacing: 0.5px;
+            }
+            
+            ul {
+              list-style: none;
+              padding: 0;
+              margin: 0;
+              
+              li {
+                margin-bottom: 0.5rem;
+                border-radius: 8px;
+                
+                &.active a {
+                  background-color: var(--primary-100);
+                  color: var(--primary-color);
+                  
+                  .svg-icon {
+                    color: var(--primary-color);
+                  }
+                }
+                
+                a {
+                  display: flex;
+                  align-items: center;
+                  padding: 1rem 0.75rem;
+                  color: var(--text-color);
+                  text-decoration: none;
+                  border-radius: 8px;
+                  transition: background-color 0.2s ease;
+                  
+                  &:hover {
+                    background-color: var(--surface-hover);
+                  }
+                  
+                  .svg-icon {
+                    width: 24px;
+                    height: 24px;
+                    margin-right: 1rem;
+                    color: var(--text-color-secondary);
+                  }
+                  
+                  span {
+                    font-size: 1rem;
+                    white-space: nowrap;
+                  }
+                }
+              }
             }
           }
         }
