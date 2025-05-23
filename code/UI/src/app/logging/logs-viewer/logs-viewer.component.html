@@ -110,8 +110,19 @@
                     [ngClass]="getLevelClass(log.level)"
                     [id]="'log-' + i"
                 >
-                    <!-- Log Entry Header -->
-                    <div class="log-entry-header" (click)="toggleLogExpansion(i, $event)">
+                    <!-- Log Entry Header - only expandable if has exception or metadata -->
+                    <div class="log-entry-header" [class.expandable]="log.exception || log.jobName || log.instanceName" (click)="(log.exception || log.jobName || log.instanceName) ? toggleLogExpansion(i, $event) : null">
+                        <!-- Actions (Copy button at start) -->
+                        <div class="log-actions log-actions-start">
+                            <button 
+                                pButton 
+                                icon="pi pi-copy" 
+                                class="p-button-rounded p-button-text p-button-sm"
+                                (click)="copyLogEntry(log, $event)"
+                                pTooltip="Copy log"
+                            ></button>
+                        </div>
+                        
                         <!-- Timestamp -->
                         <div class="log-timestamp">
                             <span class="log-date">{{ log.timestamp | date: 'yyyy-MM-dd' }}</span>
@@ -137,15 +148,8 @@
                             {{ log.message }}
                         </div>
                         
-                        <!-- Actions -->
-                        <div class="log-actions">
-                            <button 
-                                pButton 
-                                icon="pi pi-copy" 
-                                class="p-button-rounded p-button-text p-button-sm"
-                                (click)="copyLogEntry(log, $event)"
-                                pTooltip="Copy log"
-                            ></button>
+                        <!-- Dropdown button (only for logs with exception or metadata) -->
+                        <div class="log-actions" *ngIf="log.exception || log.jobName || log.instanceName">
                             <button 
                                 pButton 
                                 [icon]="expandedLogs[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" 
