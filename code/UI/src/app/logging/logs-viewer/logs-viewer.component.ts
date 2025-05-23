@@ -54,6 +54,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   private search$ = new Subject<string>();
 
   @ViewChild('logsConsole') logsConsole!: ElementRef;
+  @ViewChild('exportMenu') exportMenu: any;
   
   // Signals for reactive state
   logs = signal<LogEntry[]>([]);
@@ -280,11 +281,8 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
    * Export logs menu trigger
    */
   exportLogs(event?: MouseEvent): void {
-    if (event && this.exportMenuItems.length > 0) {
-      const menuElement = document.querySelector('p-menu');
-      if (menuElement) {
-        (menuElement as any).toggle(event);
-      }
+    if (event && this.exportMenuItems.length > 0 && this.exportMenu) {
+      this.exportMenu.toggle(event);
     }
   }
   
