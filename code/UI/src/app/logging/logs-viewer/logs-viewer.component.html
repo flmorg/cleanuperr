@@ -1,17 +1,4 @@
 <div class="logs-container">
-    <!-- Connection Status Card - only shown when disconnected -->
-    <p-card *ngIf="!isConnected()" styleClass="mb-3 connection-status-card">
-        <div class="flex flex-column align-items-center gap-3 py-5">
-            <p-progressSpinner
-                styleClass="w-4rem h-4rem"
-                strokeWidth="4"
-                fill="var(--surface-ground)"
-                animationDuration=".5s"
-            ></p-progressSpinner>
-            <span class="text-xl font-medium">Connecting to server...</span>
-        </div>
-    </p-card>
-
     <!-- Main Logs Card -->
     <p-card styleClass="logs-card">
         <!-- Card Header -->
@@ -26,177 +13,203 @@
                         tooltipPosition="right"
                     ></p-tag>
                 </div>
-                <button
-                    pButton
-                    icon="pi pi-refresh"
-                    class="p-button-rounded p-button-text"
-                    (click)="refresh()"
-                    pTooltip="Refresh logs"
-                    [loading]="false"
-                ></button>
+                <div class="log-controls flex align-items-center gap-2">
+                    <div class="auto-scroll-toggle">
+                        <p-inputSwitch
+                            [ngModel]="autoScroll()"
+                            (ngModelChange)="setAutoScroll($event)"
+                            id="autoScrollToggle"
+                        ></p-inputSwitch>
+                        <label for="autoScrollToggle" class="ml-2 text-sm">Auto-scroll</label>
+                    </div>
+                    <button
+                        pButton
+                        icon="pi pi-download"
+                        class="p-button-rounded p-button-text"
+                        (click)="exportLogs($event)"
+                        pTooltip="Export logs"
+                    ></button>
+                    <button
+                        pButton
+                        icon="pi pi-copy"
+                        class="p-button-rounded p-button-text"
+                        (click)="copyLogs()"
+                        pTooltip="Copy logs"
+                    ></button>
+                </div>
             </div>
         </ng-template>
 
         <!-- Filters Section -->
-        <div class="filter-container flex align-items-center justify-content-between flex-wrap gap-3">
-            <div class="flex align-items-center gap-2 flex-wrap">
-                <i class="pi pi-search"></i>
+        <div class="filter-container p-3 border-bottom-1 surface-border">
+            <p-toolbar styleClass="mb-2 filter-toolbar">
+                <ng-template pTemplate="start">
+                    <div class="flex align-items-center gap-2 flex-wrap">
+                        <!-- Search Filter -->
+                        <i class="pi pi-search"></i>
+                        <input
+                            type="text"
+                            pInputText
+                            [ngModel]="searchFilter()"
+                            (input)="onSearchChange($event)"
+                            placeholder="Search logs"
+                            [disabled]="!isConnected()"
+                            class="search-input"
+                        />
 
-                <!-- Search Filter -->
-                <span class="p-input-icon-left">
-                    <input
-                        type="text"
-                        pInputText
-                        [(ngModel)]="searchFilter"
-                        (input)="onSearchChange($event)"
-                        placeholder="Search logs"
-                        [disabled]="!isConnected()"
-                    />
-                </span>
+                        <!-- Level Filter -->
+                        <p-select
+                            [options]="levels()"
+                            [ngModel]="levelFilter()"
+                            placeholder="Filter by level"
+                            [showClear]="true"
+                            (onChange)="onLevelFilterChange($event.value)"
+                            styleClass="level-dropdown"
+                            [disabled]="!isConnected()"
+                        >
+                        </p-select>
 
-                <!-- Level Filter -->
-                <p-select
-                    [options]="levels()"
-                    [(ngModel)]="levelFilter"
-                    placeholder="Filter by level"
-                    [showClear]="true"
-                    (onChange)="onLevelFilterChange($event.value)"
-                    styleClass="level-dropdown"
-                    [disabled]="!isConnected()"
-                >
-                </p-select>
-
-                <!-- Category Filter -->
-                <p-select
-                    [options]="categories()"
-                    [(ngModel)]="categoryFilter"
-                    placeholder="Filter by category"
-                    [showClear]="true"
-                    (onChange)="onCategoryFilterChange($event.value)"
-                    styleClass="category-dropdown"
-                    [disabled]="!isConnected()"
-                >
-                </p-select>
-
-                <!-- Clear Filters Button -->
-                <button
-                    pButton
-                    icon="pi pi-filter-slash"
-                    label="Clear Filters"
-                    class="p-button-outlined"
-                    (click)="clearFilters()"
-                    [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
-                ></button>
-            </div>
-
-            <div class="flex align-items-center gap-2 flex-wrap"></div>
+                        <!-- Category Filter -->
+                        <p-select
+                            [options]="categories()"
+                            [ngModel]="categoryFilter()"
+                            placeholder="Filter by category"
+                            [showClear]="true"
+                            (onChange)="onCategoryFilterChange($event.value)"
+                            styleClass="category-dropdown"
+                            [disabled]="!isConnected()"
+                        >
+                        </p-select>
+                    </div>
+                </ng-template>
+                <ng-template pTemplate="end">
+                    <div class="filter-stats" *ngIf="isConnected() && filteredLogs().length > 0">
+                        <span class="text-sm text-color-secondary">
+                            Showing {{ filteredLogs().length }} of {{ logs().length }} logs
+                        </span>
+                    </div>
+                    <!-- Clear Filters Button -->
+                    <button
+                        pButton
+                        icon="pi pi-filter-slash"
+                        label="Clear Filters"
+                        class="p-button-outlined ml-2"
+                        (click)="clearFilters()"
+                        [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
+                    ></button>
+                </ng-template>
+            </p-toolbar>
         </div>
 
-        <!-- Logs Table -->
-        <p-table
-            [value]="filteredLogs()"
-            styleClass="p-datatable-sm logs-table"
-            [scrollable]="true"
-            scrollHeight="calc(100vh - 500px)"
-            [paginator]="true"
-            [rows]="25"
-            [showCurrentPageReport]="true"
-            [rowsPerPageOptions]="[10, 25, 50, 100]"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} logs"
-            [rowHover]="true"
-            [loading]="!isConnected()"
-        >
-            <!-- Table Header -->
-            <ng-template pTemplate="header">
-                <tr>
-                    <th style="width: 180px">Timestamp</th>
-                    <th style="width: 100px">Level</th>
-                    <th style="width: 120px">Category</th>
-                    <th>Message</th>
-                    <th style="width: 120px" *ngIf="hasJobInfo()">Job Name</th>
-                    <th style="width: 120px" *ngIf="hasInstanceInfo()">Instance</th>
-                </tr>
-            </ng-template>
-
-            <!-- Table Body -->
-            <ng-template pTemplate="body" let-log>
-                <!-- Log Entry Row -->
-                <tr
-                    [ngClass]="{
-                        'error-row': log.level === 'Error' || log.level === 'Fatal' || log.level === 'Critical',
-                        'warning-row': log.level === 'Warning'
-                    }"
+        <!-- Console-style Logs View -->
+        <div class="logs-console" #logsConsole>
+            <!-- Logs List -->
+            <div class="logs-list" *ngIf="filteredLogs().length > 0; else emptyLogs">
+                <div
+                    *ngFor="let log of filteredLogs(); let i = index"
+                    class="log-entry"
+                    [ngClass]="getLevelClass(log.level)"
+                    [id]="'log-' + i"
                 >
-                    <td>
-                        <span class="font-medium">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
-                        <div class="text-sm text-color-secondary">
-                            {{ log.timestamp | date : "HH:mm:ss" }}
-                        </div>
-                    </td>
-                    <td>
-                        <p-tag [severity]="getSeverity(log.level)" [value]="log.level"></p-tag>
-                    </td>
-                    <td>
-                        <span class="log-category">{{ log.category }}</span>
-                    </td>
-                    <td>
-                        <span
-                            [pTooltip]="log.exception ? 'Click to view stack trace' : undefined"
-                            tooltipPosition="top"
-                            [tooltipStyleClass]="log.exception ? 'visible' : 'invisible'"
-                        >
-                            {{ log.message }}
-                        </span>
-                    </td>
-                    <td *ngIf="hasJobInfo()" class="font-medium">{{ log.jobName }}</td>
-                    <td *ngIf="hasInstanceInfo()" class="text-sm">
-                        {{ log.instanceName }}
-                    </td>
-                </tr>
-
-                <!-- Exception Row -->
-                <tr *ngIf="log.exception" class="exception-row">
-                    <td
-                        [attr.colspan]="
-                            hasJobInfo() && hasInstanceInfo() ? 6 : hasJobInfo() || hasInstanceInfo() ? 5 : 4
+                    <!-- Log Entry Header - only expandable if has exception or metadata -->
+                    <div
+                        class="log-entry-header"
+                        [class.expandable]="log.exception || log.jobName || log.instanceName"
+                        (click)="
+                            log.exception || log.jobName || log.instanceName ? toggleLogExpansion(i, $event) : null
                         "
-                        class="exception-cell"
                     >
-                        <div class="exception-content">
+                        <!-- Actions (Copy button at start) -->
+                        <div class="log-actions log-actions-start">
+                            <button
+                                pButton
+                                icon="pi pi-copy"
+                                class="p-button-rounded p-button-text p-button-sm"
+                                (click)="copyLogEntry(log, $event)"
+                                pTooltip="Copy log"
+                            ></button>
+                        </div>
+
+                        <!-- Timestamp -->
+                        <div class="log-timestamp">
+                            <span class="log-date">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
+                            <span class="log-time">{{ log.timestamp | date : "HH:mm:ss.SSS" }}</span>
+                        </div>
+
+                        <!-- Level Tag -->
+                        <div class="log-level">
+                            <p-tag [severity]="getSeverity(log.level)" [value]="log.level" [rounded]="true"></p-tag>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="log-category" *ngIf="log.category">
+                            {{ log.category }}
+                        </div>
+
+                        <!-- Message -->
+                        <div class="log-message">
+                            {{ log.message }}
+                        </div>
+
+                        <!-- Dropdown button (only for logs with exception or metadata) -->
+                        <div class="log-actions" *ngIf="log.exception || log.jobName || log.instanceName">
+                            <button
+                                pButton
+                                [icon]="expandedLogs[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                                class="p-button-rounded p-button-text p-button-sm"
+                                (click)="toggleLogExpansion(i, $event)"
+                                pTooltip="Toggle details"
+                            ></button>
+                        </div>
+                    </div>
+
+                    <!-- Log Details (Expandable) -->
+                    <div class="log-details" *ngIf="expandedLogs[i]">
+                        <!-- Exception -->
+                        <div class="log-exception" *ngIf="log.exception">
                             <pre>{{ log.exception }}</pre>
                         </div>
-                    </td>
-                </tr>
-            </ng-template>
+
+                        <!-- Metadata -->
+                        <div class="log-metadata" *ngIf="log.jobName || log.instanceName">
+                            <div class="metadata-item" *ngIf="log.jobName">
+                                <span class="metadata-label">Job:</span>
+                                <span class="metadata-value">{{ log.jobName }}</span>
+                            </div>
+                            <div class="metadata-item" *ngIf="log.instanceName">
+                                <span class="metadata-label">Instance:</span>
+                                <span class="metadata-value">{{ log.instanceName }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Empty State -->
-            <ng-template pTemplate="emptymessage">
-                <tr>
-                    <td
-                        [attr.colspan]="
-                            hasJobInfo() && hasInstanceInfo() ? 6 : hasJobInfo() || hasInstanceInfo() ? 5 : 4
-                        "
-                    >
-                        <div class="empty-message">
-                            <i class="pi pi-inbox"></i>
-                            <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No logs found</div>
-                            <p *ngIf="isConnected()">Waiting for new logs or try adjusting your filters</p>
-                            <ng-template #disconnectedMessage>
-                                <div class="flex flex-column align-items-center gap-3">
-                                    <div class="empty-text">Not connected to log hub</div>
-                                    <p>Attempting to reconnect to the server...</p>
-                                    <p-progressSpinner
-                                        styleClass="w-3rem h-3rem"
-                                        strokeWidth="4"
-                                        fill="var(--surface-ground)"
-                                        animationDuration=".5s"
-                                    ></p-progressSpinner>
-                                </div>
-                            </ng-template>
-                        </div>
-                    </td>
-                </tr>
+            <ng-template #emptyLogs>
+                <div class="empty-logs">
+                    <div class="empty-message">
+                        <i class="pi pi-inbox empty-icon"></i>
+                        <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No logs found</div>
+                        <p *ngIf="isConnected()">Waiting for new logs or try adjusting your filters</p>
+                        <ng-template #disconnectedMessage>
+                            <div class="flex flex-column align-items-center gap-3">
+                                <div class="empty-text">Not connected to log hub</div>
+                                <p>Attempting to reconnect to the server...</p>
+                                <p-progressSpinner
+                                    styleClass="w-3rem h-3rem"
+                                    strokeWidth="4"
+                                    fill="var(--surface-ground)"
+                                    animationDuration=".5s"
+                                ></p-progressSpinner>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
             </ng-template>
-        </p-table>
+        </div>
+
+        <!-- Export Menu -->
+        <p-menu #exportMenu [popup]="true" [model]="exportMenuItems"></p-menu>
     </p-card>
 </div>

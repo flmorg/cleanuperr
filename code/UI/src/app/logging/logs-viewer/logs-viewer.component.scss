@@ -1,60 +1,327 @@
 .logs-container {
-  margin-bottom: 2rem;
-  height: calc(100vh - 8rem); /* Adjust based on your layout */
+  height: 100%;
   display: flex;
   flex-direction: column;
-
-  /* Filter section styling */  
-  .filter-container {
-    padding: 1rem 0;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid var(--surface-border);
-    transition: background-color var(--app-transition-speed);
-  }
-
-  ::ng-deep {
-    /* Exception handling with improved styling */
-    .exception-cell {
-      padding: 0 !important;
-    }
-
-    .exception-content {
-      padding: 0.75rem 1rem;
-      background-color: var(--surface-hover);
-      font-family: var(--font-family-monospace, monospace);
-      white-space: pre-wrap;
-      font-size: 0.85rem;
-      overflow: auto;
-      max-height: 300px;
-      color: var(--text-color);
-      border-top: 1px dashed var(--surface-border);
-      border-radius: 0 0 var(--border-radius) var(--border-radius);
-      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
-      transition: all 0.3s;
+  
+  .logs-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    
+    ::ng-deep .p-card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
     }
     
-    /* Empty state styling */
-    .empty-message {
-      padding: 2rem;
-      text-align: center;
-      color: var(--text-color-secondary);
+    ::ng-deep .p-card-content {
+      flex: 1;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+  }
+  
+  // Filter controls
+  .filter-container {
+    background-color: var(--surface-section);
+    
+    .filter-toolbar {
+      background: transparent;
+      border: none;
+      padding: 0;
+      
+      ::ng-deep .p-toolbar-group-start,
+      ::ng-deep .p-toolbar-group-end {
+        @media (max-width: 768px) {
+          justify-content: flex-start;
+          margin-bottom: 0.5rem;
+        }
+      }
+    }
+    
+    .search-input {
+      width: 200px;
+      @media (min-width: 992px) {
+        width: 250px;
+      }
+    }
+    
+    .filter-stats {
+      margin-right: 1rem;
+    }
+  }
+  
+  // Console style logs view
+  .logs-console {
+    flex: 1;
+    overflow-y: auto;
+    background-color: var(--surface-ground);
+    position: relative;
+    height: calc(100vh - 330px);
+    min-height: 300px;
+    display: block; // Ensure display is set
+    
+    // Logs list
+    .logs-list {
+      padding: 0.5rem;
+      display: block;
+      width: 100%;
+      z-index: 1;
+    }
+    
+    // Log entry styling
+    .log-entry {
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      background-color: var(--surface-card);
+      transition: all 0.2s ease;
+      
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      
+      // Level-based coloring
+      &.level-error {
+        border-left: 4px solid var(--red-500);
+      }
+      
+      &.level-warning {
+        border-left: 4px solid var(--yellow-500);
+      }
+      
+      &.level-info {
+        border-left: 4px solid var(--blue-500);
+      }
+      
+      &.level-debug {
+        border-left: 4px solid var(--green-500);
+      }
+      
+      &.level-trace {
+        border-left: 4px solid var(--gray-500);
+      }
+      
+      // Log entry header
+      .log-entry-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        
+        &.expandable {
+          cursor: pointer;
+          
+          &:hover {
+            background-color: var(--surface-hover);
+          }
+        }
+        
+        @media (max-width: 768px) {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        
+        .log-timestamp {
+          display: flex;
+          flex-direction: column;
+          min-width: 140px;
+          
+          @media (max-width: 768px) {
+            width: 100%;
+            margin-bottom: 0.5rem;
+          }
+          
+          .log-date {
+            font-size: 0.8rem;
+            color: var(--text-color-secondary);
+          }
+          
+          .log-time {
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 0.9rem;
+          }
+        }
+        
+        .log-level {
+          min-width: 80px;
+          
+          @media (max-width: 768px) {
+            margin-bottom: 0.5rem;
+          }
+        }
+        
+        .log-category {
+          background-color: var(--surface-hover);
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          color: var(--text-color-secondary);
+          min-width: 100px;
+          max-width: 150px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: center;
+          
+          @media (max-width: 768px) {
+            margin-bottom: 0.5rem;
+            max-width: 100%;
+            width: 100%;
+            text-align: left;
+          }
+        }
+        
+        .log-message {
+          flex: 1;
+          word-break: break-word;
+          font-family: var(--font-family);
+          line-height: 1.5;
+          padding: 0 0.5rem;
+          
+          @media (max-width: 768px) {
+            width: 100%;
+            margin-bottom: 0.5rem;
+            padding: 0;
+          }
+        }
+        
+        .log-actions {
+          display: flex;
+          gap: 0.25rem;
+          margin-left: auto;
+          opacity: 0.6;
+          transition: opacity 0.2s ease;
+          
+          @media (max-width: 768px) {
+            width: 100%;
+            justify-content: flex-end;
+          }
+          
+          &.log-actions-start {
+            margin-left: 0;
+            margin-right: 0.5rem;
+            order: -1; /* Ensure it's at the beginning */
+            
+            @media (max-width: 768px) {
+              justify-content: flex-start;
+            }
+          }
+        }
+      }
+      
+      &:hover .log-actions {
+        opacity: 1;
+      }
+      
+      // Log details (expanded view)
+      .log-details {
+        padding: 0.75rem 1rem;
+        background-color: var(--surface-hover);
+        border-top: 1px solid var(--surface-border);
+        
+        .log-exception {
+          margin-bottom: 0.75rem;
+          
+          pre {
+            margin: 0;
+            padding: 0.75rem;
+            background-color: var(--surface-section);
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            color: var(--red-700);
+            white-space: pre-wrap;
+          }
+        }
+        
+        .log-metadata {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          margin-top: 0.5rem;
+          
+          .metadata-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            
+            .metadata-label {
+              font-weight: 600;
+              color: var(--text-color-secondary);
+            }
+            
+            .metadata-value {
+              padding: 0.25rem 0.5rem;
+              background-color: var(--surface-card);
+              border-radius: 4px;
+              font-family: monospace;
+            }
+          }
+        }
+      }
+    }
+    
+    // Empty state
+    .empty-logs {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 300px;
+      height: 100%;
+      padding: 2rem;
+      text-align: center;
       
-      i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
-        color: var(--primary-color);
-      }
-      
-      .empty-text {
-        font-size: 1.2rem;
-        margin-bottom: 1rem;
+      .empty-message {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        
+        .empty-icon {
+          font-size: 3rem;
+          color: var(--text-color-secondary);
+          margin-bottom: 1rem;
+          opacity: 0.5;
+        }
+        
+        .empty-text {
+          font-size: 1.25rem;
+          font-weight: 500;
+          margin-bottom: 0.5rem;
+        }
+        
+        p {
+          color: var(--text-color-secondary);
+        }
       }
     }
+  }
+}
+
+// Log controls
+.log-controls {
+  .auto-scroll-toggle {
+    display: flex;
+    align-items: center;
+    margin-right: 0.5rem;
+    
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+}
+
+// Responsive styles
+@media (max-width: 576px) {
+  .logs-console {
+    height: calc(100vh - 380px) !important;
   }
 }
