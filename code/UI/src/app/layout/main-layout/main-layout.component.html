@@ -3,38 +3,80 @@
   <div class="layout-main">
     <!-- Desktop Sidebar -->
     <div class="sidebar" [class.collapsed]="isSidebarCollapsed()">
-      <!-- Sidebar Header -->
-      <div class="sidebar-header">
-        <div class="sidebar-logo">
-          <i class="pi pi-check-circle sidebar-icon"></i>
-          <span class="app-name">Cleanuparr</span>
+      <div class="sidebar-top-line"></div>
+      
+      <!-- Logo Container -->
+      <div class="logo-container">
+        <div class="logo logo-large">
+          <i class="pi pi-check-circle"></i>
         </div>
+        <div class="logo logo-small">
+          <i class="pi pi-check"></i>
+        </div>
+        <h1>Cleanuparr</h1>
       </div>
       
       <!-- Sidebar Navigation -->
-      <div class="sidebar-nav">
-        <div class="sidebar-section">
-          <h4 class="sidebar-section-title">MENU</h4>
-          <ul>
-            <li *ngFor="let item of menuItems" [class.active]="router.url.includes(item.route)">
-              <a [routerLink]="item.route">
-                <i [class]="item.icon"></i>
+      <nav class="nav-menu">
+        <!-- Project Sponsors Link -->
+        <a href="https://github.com/sponsors/username" class="nav-item sponsor-link" target="_blank" rel="noopener noreferrer">
+          <div class="nav-icon-wrapper heart-icon">
+            <i class="pi pi-heart"></i>
+          </div>
+          <span>Become A Sponsor</span>
+        </a>
+        
+        <!-- Core Navigation Group -->
+        <div class="nav-group" style="margin-top: -10px;">
+          <div class="nav-group-title">Core</div>
+          <a [routerLink]="['/dashboard']" class="nav-item" [class.active]="router.url.includes('/dashboard')">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-home"></i>
+            </div>
+            <span>Dashboard</span>
+          </a>
+          <a [routerLink]="['/logs']" class="nav-item" [class.active]="router.url.includes('/logs')">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-list"></i>
+            </div>
+            <span>Logs</span>
+          </a>
+          <a [routerLink]="['/settings']" class="nav-item" [class.active]="router.url.includes('/settings')">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-cog"></i>
+            </div>
+            <span>Settings</span>
+          </a>
+        </div>
+        
+        <!-- Features Group -->
+        <div class="nav-group">
+          <div class="nav-group-title">Features</div>
+          <ng-container *ngFor="let item of menuItems">
+            <ng-container *ngIf="!['Dashboard', 'Logs', 'Settings'].includes(item.label)">
+              <a [routerLink]="item.route" class="nav-item" [class.active]="router.url.includes(item.route)">
+                <div class="nav-icon-wrapper">
+                  <i [class]="item.icon"></i>
+                </div>
                 <span>{{ item.label }}</span>
               </a>
-            </li>
-          </ul>
+            </ng-container>
+          </ng-container>
         </div>
-      </div>
+        
+        <!-- Resources Group -->
+        <div class="nav-group">
+          <div class="nav-group-title">Resources</div>
+          <a href="https://github.com/username/cleanuparr" class="nav-item" target="_blank" rel="noopener noreferrer">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-github"></i>
+            </div>
+            <span>GitHub Repository</span>
+          </a>
+        </div>
+      </nav>
       
-      <!-- Sponsor Section -->
-      <div class="sponsor-section">
-        <a href="https://github.com/sponsors/username" target="_blank" class="sponsor-link">
-          <i class="pi pi-heart"></i>
-          <span>Sponsor this project</span>
-        </a>
-      </div>
-      
-      <!-- Sidebar Footer -->
+      <!-- Sidebar Footer (Toggle button) -->
       <div class="sidebar-footer">
         <button pButton class="p-button-text sidebar-toggle" 
                 [icon]="isSidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" 
@@ -45,21 +87,41 @@
     <!-- Content Area -->
     <div class="layout-content">
       <!-- Content Header / Top Bar -->
-      <div class="content-header">
-        <div class="content-header-left">
+      <div class="top-bar">
+        <div class="top-color-line"></div>
+        <div class="topbar-section left">
           <button pButton class="p-button-text sidebar-toggle-mobile" 
                   icon="pi pi-bars" 
                   (click)="mobileSidebarVisible.set(true)"></button>
-          <h1 class="page-title">{{ getPageTitle() }}</h1>
+          <div class="page-title">{{ getPageTitle() }}</div>
         </div>
-        <div class="content-header-right">
-          <div class="version-info">
-            <span class="version-label">Version:</span>
-            <span class="version-number">1.0.0</span>
+        <div class="topbar-section center">
+          <div class="version-bar">
+            <div class="version-item">
+              <i class="pi pi-code-branch version-icon"></i>
+              <span>Version <a href="https://github.com/username/cleanuparr/releases" target="_blank"><span id="version-value">1.0.0</span></a></span>
+            </div>
+            <div class="version-divider"></div>
+            <div class="version-item">
+              <i class="pi pi-cloud-download version-icon"></i>
+              <span>Latest: <a href="https://github.com/username/cleanuparr/releases" target="_blank"><span id="latest-version-value">1.0.0</span></a></span>
+            </div>
+            <div class="version-divider"></div>
+            <div class="version-item">
+              <i class="pi pi-star-fill version-icon star-icon"></i>
+              <span><a href="https://github.com/username/cleanuparr" target="_blank"><span id="github-stars-value">123</span></a></span>
+            </div>
+            <div class="version-divider"></div>
+            <div class="version-item">
+              <i class="pi pi-code version-icon"></i>
+              <span class="developer-credit">Developer: <a href="https://github.com/username" target="_blank">Username</a></span>
+            </div>
           </div>
-          <div class="star-counter">
-            <i class="pi pi-star-fill"></i>
-            <span>123</span>
+        </div>
+        <div class="topbar-section right">
+          <div class="user-info" id="userInfoContainer">
+            <span id="username">User</span>
+            <a href="#" id="logoutLink" class="logout-btn"><i class="pi pi-sign-out"></i></a>
           </div>
         </div>
       </div>
@@ -78,36 +140,76 @@
              [dismissible]="true" 
              [showCloseIcon]="false" 
              position="left">
-    <div class="mobile-sidebar-content" style="display: flex; flex-direction: column; height: 100%;">
-      <div class="sidebar-header">
-        <div class="sidebar-logo">
-          <i class="pi pi-check-circle sidebar-icon"></i>
-          <span class="app-name">Cleanuparr</span>
+    <div class="mobile-sidebar-content">
+      <div class="sidebar-top-line"></div>
+      
+      <!-- Logo Container -->
+      <div class="logo-container">
+        <div class="logo logo-small">
+          <i class="pi pi-check"></i>
         </div>
+        <h1>Cleanuparr</h1>
       </div>
       
       <!-- Mobile Sidebar Navigation -->
-      <div class="sidebar-nav" style="flex: 1; overflow-y: auto;">
-        <div class="sidebar-section">
-          <h4 class="sidebar-section-title">MENU</h4>
-          <ul>
-            <li *ngFor="let item of menuItems" [class.active]="router.url.includes(item.route)">
-              <a [routerLink]="item.route" (click)="mobileSidebarVisible.set(false)">
-                <i [class]="item.icon"></i>
+      <nav class="nav-menu">
+        <!-- Project Sponsors Link -->
+        <a href="https://github.com/sponsors/username" class="nav-item sponsor-link" target="_blank" rel="noopener noreferrer">
+          <div class="nav-icon-wrapper heart-icon">
+            <i class="pi pi-heart"></i>
+          </div>
+          <span>Become A Sponsor</span>
+        </a>
+        
+        <!-- Core Navigation Group -->
+        <div class="nav-group" style="margin-top: -10px;">
+          <div class="nav-group-title">Core</div>
+          <a [routerLink]="['/dashboard']" class="nav-item" [class.active]="router.url.includes('/dashboard')" (click)="mobileSidebarVisible.set(false)">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-home"></i>
+            </div>
+            <span>Dashboard</span>
+          </a>
+          <a [routerLink]="['/logs']" class="nav-item" [class.active]="router.url.includes('/logs')" (click)="mobileSidebarVisible.set(false)">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-list"></i>
+            </div>
+            <span>Logs</span>
+          </a>
+          <a [routerLink]="['/settings']" class="nav-item" [class.active]="router.url.includes('/settings')" (click)="mobileSidebarVisible.set(false)">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-cog"></i>
+            </div>
+            <span>Settings</span>
+          </a>
+        </div>
+        
+        <!-- Features Group -->
+        <div class="nav-group">
+          <div class="nav-group-title">Features</div>
+          <ng-container *ngFor="let item of menuItems">
+            <ng-container *ngIf="!['Dashboard', 'Logs', 'Settings'].includes(item.label)">
+              <a [routerLink]="item.route" class="nav-item" [class.active]="router.url.includes(item.route)" (click)="mobileSidebarVisible.set(false)">
+                <div class="nav-icon-wrapper">
+                  <i [class]="item.icon"></i>
+                </div>
                 <span>{{ item.label }}</span>
               </a>
-            </li>
-          </ul>
+            </ng-container>
+          </ng-container>
         </div>
-      </div>
-      
-      <!-- Mobile Sponsor Section -->
-      <div class="sponsor-section" style="margin-top: auto;">
-        <a href="https://github.com/sponsors/username" target="_blank" class="sponsor-link">
-          <i class="pi pi-heart"></i>
-          <span>Sponsor this project</span>
-        </a>
-      </div>
+        
+        <!-- Resources Group -->
+        <div class="nav-group">
+          <div class="nav-group-title">Resources</div>
+          <a href="https://github.com/username/cleanuparr" class="nav-item" target="_blank" rel="noopener noreferrer">
+            <div class="nav-icon-wrapper">
+              <i class="pi pi-github"></i>
+            </div>
+            <span>GitHub Repository</span>
+          </a>
+        </div>
+      </nav>
     </div>
   </p-sidebar>
 </div>
