@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterOutlet, RouterLink } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 
@@ -11,6 +11,9 @@ import { MenuModule } from 'primeng/menu';
 import { SidebarModule } from 'primeng/sidebar';
 import { DividerModule } from 'primeng/divider';
 import { RippleModule } from 'primeng/ripple';
+
+// Custom Components
+import { SidebarContentComponent } from '../sidebar-content/sidebar-content.component';
 
 interface MenuItem {
   label: string;
@@ -25,14 +28,14 @@ interface MenuItem {
   imports: [
     CommonModule,
     RouterOutlet,
-    RouterLink,
     ButtonModule,
     ToolbarModule,
     FormsModule,
     MenuModule,
     SidebarModule,
     DividerModule,
-    RippleModule
+    RippleModule,
+    SidebarContentComponent
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
@@ -57,6 +60,16 @@ export class MainLayoutComponent {
   constructor() {}
   
   /**
+   * Handles mobile navigation click events by closing the sidebar
+   */
+  onMobileNavClick(): void {
+    // Only close sidebar on mobile view
+    if (window.innerWidth <= 768) {
+      this.mobileSidebarVisible.set(false);
+    }
+  }
+  
+  /**
    * Get the current page title based on the active route
    */
   getPageTitle(): string {
@@ -73,10 +86,16 @@ export class MainLayoutComponent {
     }
   }
   
+  /**
+   * Toggle mobile sidebar visibility
+   */
   toggleMobileSidebar(): void {
     this.mobileSidebarVisible.update(value => !value);
   }
   
+  /**
+   * Toggle desktop sidebar collapsed state
+   */
   toggleSidebar(): void {
     this.isSidebarCollapsed.update(value => !value);
   }

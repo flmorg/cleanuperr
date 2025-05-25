@@ -5,76 +5,11 @@
     <div class="sidebar" [class.collapsed]="isSidebarCollapsed()">
       <div class="sidebar-top-line"></div>
       
-      <!-- Logo Container -->
-      <div class="logo-container">
-        <div class="logo logo-large">
-          <i class="pi pi-check-circle"></i>
-        </div>
-        <div class="logo logo-small">
-          <i class="pi pi-check"></i>
-        </div>
-        <h1>Cleanuparr</h1>
-      </div>
-      
-      <!-- Sidebar Navigation -->
-      <nav class="nav-menu">
-        <!-- Project Sponsors Link -->
-        <a href="https://github.com/sponsors/username" class="nav-item sponsor-link" target="_blank" rel="noopener noreferrer">
-          <div class="nav-icon-wrapper heart-icon">
-            <i class="pi pi-heart"></i>
-          </div>
-          <span>Become A Sponsor</span>
-        </a>
-        
-        <!-- Core Navigation Group -->
-        <div class="nav-group" style="margin-top: -10px;">
-          <div class="nav-group-title">Core</div>
-          <a [routerLink]="['/dashboard']" class="nav-item" [class.active]="router.url.includes('/dashboard')">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-home"></i>
-            </div>
-            <span>Dashboard</span>
-          </a>
-          <a [routerLink]="['/logs']" class="nav-item" [class.active]="router.url.includes('/logs')">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-list"></i>
-            </div>
-            <span>Logs</span>
-          </a>
-          <a [routerLink]="['/settings']" class="nav-item" [class.active]="router.url.includes('/settings')">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-cog"></i>
-            </div>
-            <span>Settings</span>
-          </a>
-        </div>
-        
-        <!-- Features Group -->
-        <div class="nav-group">
-          <div class="nav-group-title">Features</div>
-          <ng-container *ngFor="let item of menuItems">
-            <ng-container *ngIf="!['Dashboard', 'Logs', 'Settings'].includes(item.label)">
-              <a [routerLink]="item.route" class="nav-item" [class.active]="router.url.includes(item.route)">
-                <div class="nav-icon-wrapper">
-                  <i [class]="item.icon"></i>
-                </div>
-                <span>{{ item.label }}</span>
-              </a>
-            </ng-container>
-          </ng-container>
-        </div>
-        
-        <!-- Resources Group -->
-        <div class="nav-group">
-          <div class="nav-group-title">Resources</div>
-          <a href="https://github.com/username/cleanuparr" class="nav-item" target="_blank" rel="noopener noreferrer">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-github"></i>
-            </div>
-            <span>GitHub Repository</span>
-          </a>
-        </div>
-      </nav>
+      <!-- Shared Sidebar Content -->
+      <app-sidebar-content 
+        [menuItems]="menuItems" 
+        [isMobile]="false">
+      </app-sidebar-content>
       
       <!-- Sidebar Footer (Toggle button) -->
       <div class="sidebar-footer">
@@ -133,83 +68,23 @@
     </div>
   </div>
   
-  <!-- Mobile Sidebar -->
-  <p-sidebar styleClass="mobile-sidebar" 
-             [visible]="mobileSidebarVisible()" 
-             (visibleChange)="mobileSidebarVisible.set($event)" 
-             [dismissible]="true" 
-             [showCloseIcon]="false" 
-             position="left">
+  <!-- Mobile Sidebar using PrimeNG sidebar component -->
+  <p-sidebar 
+    styleClass="mobile-sidebar" 
+    [visible]="mobileSidebarVisible()" 
+    (visibleChange)="mobileSidebarVisible.set($event)" 
+    [dismissible]="true" 
+    [showCloseIcon]="false" 
+    position="left">
     <div class="mobile-sidebar-content">
       <div class="sidebar-top-line"></div>
       
-      <!-- Logo Container -->
-      <div class="logo-container">
-        <div class="logo logo-small">
-          <i class="pi pi-check"></i>
-        </div>
-        <h1>Cleanuparr</h1>
-      </div>
-      
-      <!-- Mobile Sidebar Navigation -->
-      <nav class="nav-menu">
-        <!-- Project Sponsors Link -->
-        <a href="https://github.com/sponsors/username" class="nav-item sponsor-link" target="_blank" rel="noopener noreferrer">
-          <div class="nav-icon-wrapper heart-icon">
-            <i class="pi pi-heart"></i>
-          </div>
-          <span>Become A Sponsor</span>
-        </a>
-        
-        <!-- Core Navigation Group -->
-        <div class="nav-group" style="margin-top: -10px;">
-          <div class="nav-group-title">Core</div>
-          <a [routerLink]="['/dashboard']" class="nav-item" [class.active]="router.url.includes('/dashboard')" (click)="mobileSidebarVisible.set(false)">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-home"></i>
-            </div>
-            <span>Dashboard</span>
-          </a>
-          <a [routerLink]="['/logs']" class="nav-item" [class.active]="router.url.includes('/logs')" (click)="mobileSidebarVisible.set(false)">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-list"></i>
-            </div>
-            <span>Logs</span>
-          </a>
-          <a [routerLink]="['/settings']" class="nav-item" [class.active]="router.url.includes('/settings')" (click)="mobileSidebarVisible.set(false)">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-cog"></i>
-            </div>
-            <span>Settings</span>
-          </a>
-        </div>
-        
-        <!-- Features Group -->
-        <div class="nav-group">
-          <div class="nav-group-title">Features</div>
-          <ng-container *ngFor="let item of menuItems">
-            <ng-container *ngIf="!['Dashboard', 'Logs', 'Settings'].includes(item.label)">
-              <a [routerLink]="item.route" class="nav-item" [class.active]="router.url.includes(item.route)" (click)="mobileSidebarVisible.set(false)">
-                <div class="nav-icon-wrapper">
-                  <i [class]="item.icon"></i>
-                </div>
-                <span>{{ item.label }}</span>
-              </a>
-            </ng-container>
-          </ng-container>
-        </div>
-        
-        <!-- Resources Group -->
-        <div class="nav-group">
-          <div class="nav-group-title">Resources</div>
-          <a href="https://github.com/username/cleanuparr" class="nav-item" target="_blank" rel="noopener noreferrer">
-            <div class="nav-icon-wrapper">
-              <i class="pi pi-github"></i>
-            </div>
-            <span>GitHub Repository</span>
-          </a>
-        </div>
-      </nav>
+      <!-- Shared Sidebar Content for Mobile -->
+      <app-sidebar-content 
+        [menuItems]="menuItems" 
+        [isMobile]="true"
+        (navItemClicked)="mobileSidebarVisible.set(false)">
+      </app-sidebar-content>
     </div>
   </p-sidebar>
 </div>

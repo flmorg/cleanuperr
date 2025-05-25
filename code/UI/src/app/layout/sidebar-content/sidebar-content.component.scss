@@ -1,0 +1,177 @@
+// Logo container
+.logo-container {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  margin-bottom: 5px;
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+    background-color: rgba(142, 68, 173, 0.1);
+    border: 1px solid rgba(142, 68, 173, 0.3);
+    animation: logo-glow 10s infinite ease-in-out;
+    
+    i {
+      font-size: 20px;
+      color: #a569bd;
+    }
+  }
+  
+  .logo-small {
+    display: none;
+  }
+  
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(to right, #fff, #bbb);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+// Navigation menu
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 0 20px 0;
+  flex: 1;
+  
+  // Sponsor link
+  .sponsor-link {
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(142, 68, 173, 0.15);
+    padding-bottom: 15px !important;
+    
+    .heart-icon i {
+      color: #ff4d6d !important;
+      animation: heart-pulse 7.2s infinite ease-in-out;
+    }
+  }
+  
+  // Nav groups
+  .nav-group {
+    margin-bottom: 15px;
+    
+    .nav-group-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(142, 68, 173, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding: 0 20px 8px;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      border-bottom: 1px solid rgba(142, 68, 173, 0.2);
+      text-shadow: 0 0 10px rgba(142, 68, 173, 0.3);
+    }
+  }
+  
+  // Navigation items
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: #e0e0e0;
+    text-decoration: none;
+    border-radius: 0 6px 6px 0;
+    margin: 2px 0 2px 0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    
+    .nav-icon-wrapper {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 15px;
+      border-radius: 8px;
+      background: rgba(46, 39, 56, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.2s ease;
+      
+      i {
+        font-size: 14px;
+        color: #e0e0e0;
+      }
+    }
+    
+    span {
+      white-space: nowrap;
+      font-size: 14px;
+    }
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background: transparent;
+      transition: all 0.2s ease;
+    }
+    
+    &:hover {
+      background: rgba(142, 68, 173, 0.05);
+      
+      .nav-icon-wrapper {
+        background: rgba(142, 68, 173, 0.2);
+        transform: scale(1.05);
+      }
+      
+      &::before {
+        background: linear-gradient(to bottom, rgba(142, 68, 173, 0.4), rgba(103, 58, 183, 0.4));
+      }
+    }
+    
+    &.active {
+      background: linear-gradient(to right, rgba(142, 68, 173, 0.9), rgba(103, 58, 183, 0.7));
+      box-shadow: 0 2px 10px rgba(142, 68, 173, 0.3);
+      
+      .nav-icon-wrapper {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      
+      &::before {
+        background: #fff;
+      }
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes logo-glow {
+  0% { box-shadow: 0 0 15px #8e44ad, 0 0 5px rgba(142, 68, 173, 0.4); } // Purple
+  20% { box-shadow: 0 0 15px #9b59b6, 0 0 5px rgba(155, 89, 182, 0.4); } // Lighter purple
+  40% { box-shadow: 0 0 15px #673ab7, 0 0 5px rgba(103, 58, 183, 0.4); } // Deep purple
+  60% { box-shadow: 0 0 15px #5e35b1, 0 0 5px rgba(94, 53, 177, 0.4); } // Dark deep purple
+  80% { box-shadow: 0 0 15px #7e57c2, 0 0 5px rgba(126, 87, 194, 0.4); } // Medium purple
+  100% { box-shadow: 0 0 15px #8e44ad, 0 0 5px rgba(142, 68, 173, 0.4); } // Back to purple
+}
+
+@keyframes heart-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
