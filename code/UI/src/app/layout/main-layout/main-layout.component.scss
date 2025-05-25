@@ -24,7 +24,6 @@
   background: linear-gradient(135deg, #2c1a47 0%, #1a0e29 50%, #1e1230 75%, rgba(30, 18, 48, 0.95) 100%);
   border-right: 1px solid rgba(142, 68, 173, 0.15);
   box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
-  transition: width 0.3s ease;
   overflow-y: auto;
   z-index: 10;
   
@@ -39,33 +38,7 @@
   @media (max-width: 768px) {
     display: none;
   }
-  
-  // Collapsed state
-  &.collapsed {
-    width: 70px;
-    min-width: 70px;
-    
-    .logo-large {
-      display: none !important;
-    }
-    
-    .logo-small {
-      display: flex !important;
-    }
-    
-    h1, .nav-item span, .nav-group-title {
-      display: none;
-    }
-    
-    .nav-item {
-      padding: 12px 0 !important;
-      justify-content: center;
-      
-      .nav-icon-wrapper {
-        margin-right: 0 !important;
-      }
-    }
-  }
+}
   
   // Top color line
   .sidebar-top-line {
@@ -227,32 +200,6 @@
       }
     }
   }
-  
-  // Sidebar footer
-  .sidebar-footer {
-    padding: 10px 0;
-    display: flex;
-    justify-content: center;
-    border-top: 1px solid rgba(142, 68, 173, 0.15);
-    
-    .sidebar-toggle {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(255, 255, 255, 0.7);
-      background-color: rgba(142, 68, 173, 0.1);
-      border-radius: 50%;
-      transition: all 0.2s ease;
-      
-      &:hover {
-        background-color: rgba(142, 68, 173, 0.2);
-        color: white;
-      }
-    }
-  }
-}
 
 // Animation keyframes
 @keyframes logo-glow {

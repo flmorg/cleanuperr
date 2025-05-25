@@ -41,8 +41,6 @@ interface MenuItem {
   styleUrl: './main-layout.component.scss'
 })
 export class MainLayoutComponent {
-  isSidebarCollapsed = signal<boolean>(false);
-  
   // Menu items
   menuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
@@ -63,10 +61,7 @@ export class MainLayoutComponent {
    * Handles mobile navigation click events by closing the sidebar
    */
   onMobileNavClick(): void {
-    // Only close sidebar on mobile view
-    if (window.innerWidth <= 768) {
-      this.mobileSidebarVisible.set(false);
-    }
+    this.mobileSidebarVisible.set(false);
   }
   
   /**
@@ -91,12 +86,5 @@ export class MainLayoutComponent {
    */
   toggleMobileSidebar(): void {
     this.mobileSidebarVisible.update(value => !value);
-  }
-  
-  /**
-   * Toggle desktop sidebar collapsed state
-   */
-  toggleSidebar(): void {
-    this.isSidebarCollapsed.update(value => !value);
   }
 }

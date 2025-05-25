@@ -2,7 +2,7 @@
   <!-- Main layout with sidebar and content -->
   <div class="layout-main">
     <!-- Desktop Sidebar -->
-    <div class="sidebar" [class.collapsed]="isSidebarCollapsed()">
+    <div class="sidebar">
       <div class="sidebar-top-line"></div>
       
       <!-- Shared Sidebar Content -->
@@ -10,13 +10,6 @@
         [menuItems]="menuItems" 
         [isMobile]="false">
       </app-sidebar-content>
-      
-      <!-- Sidebar Footer (Toggle button) -->
-      <div class="sidebar-footer">
-        <button pButton class="p-button-text sidebar-toggle" 
-                [icon]="isSidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" 
-                (click)="isSidebarCollapsed.set(!isSidebarCollapsed())"></button>
-      </div>
     </div>
     
     <!-- Content Area -->
