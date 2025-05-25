@@ -12,45 +12,31 @@ export class ThemeService {
   }
 
   initializeTheme(): void {
-    // Always use dark theme with purple accent
-    this.applyDarkPurpleTheme();
+    // Always use dark theme with purple accent from our custom preset
+    this.applyDarkTheme();
     // Save the theme preference
     localStorage.setItem(this.THEME_KEY, this.currentTheme);
   }
 
   /**
-   * Apply the dark purple theme to the document
+   * Apply the dark theme to the document using our Noir preset
    * This is now the only theme for the application
    */
-  private applyDarkPurpleTheme(): void {
+  private applyDarkTheme(): void {
     const documentElement = document.documentElement;
     
     // Set dark mode
     documentElement.classList.add('dark');
     documentElement.style.colorScheme = 'dark';
     
-    // Apply custom CSS variables for purple accent
-    documentElement.style.setProperty('--primary-color', '#7E57C2');
-    documentElement.style.setProperty('--primary-color-text', '#ffffff');
-    documentElement.style.setProperty('--primary-dark', '#5E35B1'); 
-    documentElement.style.setProperty('--primary-light', '#B39DDB');
-    
-    // Additional dark theme variables
-    documentElement.style.setProperty('--surface-ground', '#121212');
-    documentElement.style.setProperty('--surface-section', '#1E1E1E');
-    documentElement.style.setProperty('--surface-card', '#262626');
-    documentElement.style.setProperty('--surface-overlay', '#2A2A2A');
-    documentElement.style.setProperty('--surface-border', '#383838');
-    
-    documentElement.style.setProperty('--text-color', '#F5F5F5');
-    documentElement.style.setProperty('--text-color-secondary', '#BDBDBD');
-    documentElement.style.setProperty('--text-color-disabled', '#757575');
-    
-    // Update PrimeNG theme to dark
+    // Update PrimeNG theme to our custom Noir preset (dark)
     const linkElement = document.getElementById('app-theme') as HTMLLinkElement;
     if (linkElement) {
-      linkElement.href = 'lara-dark.css';
+      linkElement.href = 'noir-dark.css';
     }
+    
+    // Note: We no longer need to set CSS variables manually as they're defined in the Noir preset
+    // The preset handles all the theme colors including the purple accent and dark surfaces
   }
 
   // Public API methods kept for compatibility

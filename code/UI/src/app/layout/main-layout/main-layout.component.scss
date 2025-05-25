@@ -2,9 +2,9 @@
 .layout-wrapper {
   display: flex;
   min-height: 100vh;
-  background-color: #0e0a14; // Darker purple background
-  color: #ffffff;
-  font-family: 'Roboto', sans-serif;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
+  font-family: var(--font-family);
   
   // Layout main container
   .layout-main {
@@ -21,16 +21,16 @@
   width: 260px;
   min-width: 260px;
   height: 100vh;
-  background: linear-gradient(135deg, #2c1a47 0%, #1a0e29 50%, #1e1230 75%, rgba(30, 18, 48, 0.95) 100%);
-  border-right: 1px solid rgba(142, 68, 173, 0.15);
-  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+  background-color: var(--surface-overlay);
+  border-right: 1px solid var(--surface-border);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   z-index: 10;
   
   // Top color line
   .sidebar-top-line {
     height: 3px;
-    background: linear-gradient(to right, #673ab7, #9b59b6);
+    background: var(--primary-color);
     margin-bottom: 10px;
   }
   
@@ -240,7 +240,7 @@
   flex-direction: column;
   height: 100vh;
   overflow-y: auto;
-  background: radial-gradient(circle at center, #1f1334 0%, #160e25 80%, #120b1b 100%);
+  background-color: var(--surface-ground);
   
   // Top bar styling
   .top-bar {
@@ -249,8 +249,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    background: rgba(30, 18, 48, 0.95);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    background-color: var(--surface-card);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: relative;
     z-index: 5;
     
@@ -260,7 +260,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(to right, #673ab7, #9b59b6);
+      background: var(--primary-color);
     }
     
     .topbar-section {
@@ -277,6 +277,7 @@
           display: none;
           align-items: center;
           justify-content: center;
+          color: var(--text-color-secondary);
           
           @media (max-width: 768px) {
             display: flex;
@@ -286,7 +287,7 @@
         .page-title {
           font-size: 18px;
           font-weight: 600;
-          color: #ffffff;
+          color: var(--text-color);
           margin-left: 10px;
         }
       }
@@ -298,9 +299,10 @@
         .version-bar {
           display: flex;
           align-items: center;
-          background: rgba(46, 39, 56, 0.3);
+          background-color: var(--surface-section);
           border-radius: 15px;
           padding: 5px 15px;
+          border: 1px solid var(--surface-border);
           
           .version-item {
             display: flex;
@@ -310,7 +312,7 @@
             .version-icon {
               margin-right: 5px;
               font-size: 14px;
-              color: rgba(142, 68, 173, 0.8);
+              color: var(--primary-color);
             }
             
             .version-text {
@@ -346,10 +348,27 @@
   }
   
   // Main content area
-  .content-container {
+  .layout-content-inner {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    
+    // Add some depth to cards and containers inside the content area
+    ::ng-deep {
+      .p-card,
+      .p-panel,
+      .p-fieldset {
+        background-color: var(--surface-card);
+        border: 1px solid var(--surface-border);
+        border-radius: var(--border-radius);
+        transition: transform 0.2s, box-shadow 0.2s;
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+      }
+    }
   }
 }
 
@@ -357,10 +376,10 @@
 :host ::ng-deep {
   // Mobile sidebar styling
   .p-sidebar.p-component.mobile-sidebar {
-    background: linear-gradient(135deg, #2c1a47 0%, #1a0e29 50%, #1e1230 75%, rgba(30, 18, 48, 0.95) 100%) !important;
+    background-color: var(--surface-overlay) !important;
     border: none !important;
-    color: #ffffff !important;
-    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5) !important;
+    color: var(--text-color) !important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2) !important;
 
     .p-sidebar-header {
       display: none !important;
@@ -374,27 +393,27 @@
   // Override Prime NG button styles
   .p-button {
     &.p-button-text {
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--text-color-secondary);
       
       &:hover {
-        background-color: rgba(142, 68, 173, 0.1);
-        color: white;
+        background-color: var(--surface-hover);
+        color: var(--text-color);
       }
     }
   }
   
   // Card component styling
   .p-card {
-    background: rgba(30, 18, 48, 0.4);
-    border: 1px solid rgba(142, 68, 173, 0.15);
-    border-radius: 8px;
+    background-color: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--border-radius);
     
     .p-card-title {
-      color: white;
+      color: var(--text-color);
     }
     
     .p-card-content {
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--text-color-secondary);
     }
   }
 }
@@ -403,13 +422,13 @@
 .mobile-sidebar-content {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #2c1a47 0%, #1a0e29 50%, #1e1230 75%, rgba(30, 18, 48, 0.95) 100%);
-  color: #ffffff;
+  background-color: var(--surface-overlay);
+  color: var(--text-color);
   height: 100%;
 
   .sidebar-top-line {
     height: 3px;
-    background: linear-gradient(to right, #673ab7, #9b59b6);
+    background: var(--primary-color);
     margin-bottom: 10px;
   }
 
