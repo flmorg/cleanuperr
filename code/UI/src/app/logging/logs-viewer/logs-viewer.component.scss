@@ -388,6 +388,10 @@
     display: flex;
     align-items: center;
     margin-right: 0.5rem;
+
+    ::ng-deep .p-toggleswitch {
+      display: block;
+    }
   }
 }
 
