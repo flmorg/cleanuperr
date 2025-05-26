@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { BaseSignalRService } from './base-signalr.service';
 import { LogEntry, SignalRHubConfig } from '../models/signalr.models';
-// Note: We'll define a fallback API URL if environment is not available yet
-const API_URL = 'http://localhost:5000';
+import { environment } from '../../../environments/environment';
+import * as signalR from '@microsoft/signalr';
 
 /**
  * Service for connecting to the logs SignalR hub
@@ -14,7 +14,7 @@ export class LogHubService extends BaseSignalRService<LogEntry> {
   constructor() {
     // Default configuration for the logs hub
     const config: SignalRHubConfig = {
-      hubUrl: `${API_URL}/api/hubs/logs`,
+      hubUrl: `${environment.apiUrl}/api/hubs/logs`,
       maxReconnectAttempts: 0, // Infinite reconnection attempts
       reconnectDelayMs: 2000,
       bufferSize: 100,
@@ -56,6 +56,3 @@ export class LogHubService extends BaseSignalRService<LogEntry> {
     return this.getMessages();
   }
 }
-
-// Fix missing signalR import
-import * as signalR from '@microsoft/signalr';

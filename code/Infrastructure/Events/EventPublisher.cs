@@ -100,16 +100,8 @@ public class EventPublisher
     {
         try
         {
-            // Send to all clients in Events group
-            await _hubContext.Clients.Group("Events").SendAsync("EventReceived", eventEntity);
-            
-            // Send to severity-specific groups
-            await _hubContext.Clients.Group($"Events_{eventEntity.Severity}")
-                .SendAsync("EventReceived", eventEntity);
-                
-            // Send to type-specific groups
-            await _hubContext.Clients.Group($"Events_{eventEntity.EventType}")
-                .SendAsync("EventReceived", eventEntity);
+            // Send to all connected clients (self-hosted app with single client)
+            await _hubContext.Clients.All.SendAsync("EventReceived", eventEntity);
 
             _logger.LogTrace("Sent event {eventId} to SignalR clients", eventEntity.Id);
         }

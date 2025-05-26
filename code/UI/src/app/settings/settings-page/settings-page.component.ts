@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../environments/environment';
 
 // PrimeNG Components
 import { CardModule } from 'primeng/card';
@@ -49,7 +50,7 @@ interface MaxLogOption {
 })
 export class SettingsPageComponent implements OnInit {
   // API Settings
-  apiUrl = 'http://localhost:5000';
+  apiUrl = environment.apiUrl;
   apiKey = '';
   apiTimeout = 30;
   
@@ -148,7 +149,7 @@ export class SettingsPageComponent implements OnInit {
   
   resetToDefaults() {
     // Reset to default values
-    this.apiUrl = 'http://localhost:5000';
+    this.apiUrl = environment.apiUrl;
     this.apiKey = '';
     this.apiTimeout = 30;
     this.theme = 'light';
@@ -179,5 +180,9 @@ export class SettingsPageComponent implements OnInit {
     // In a real application, we would load settings from local storage or an API
     // For now, we'll just use the default values set in the class
     console.log('Loading settings from storage...');
+  }
+
+  resetApiUrl(): void {
+    this.apiUrl = environment.apiUrl;
   }
 }

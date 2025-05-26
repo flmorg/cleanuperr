@@ -28,7 +28,7 @@ export class SystemHubService extends BaseSignalRService<SystemStatus> {
   constructor() {
     // Default configuration for the system hub
     const config: SignalRHubConfig = {
-      hubUrl: environment.apiUrl ? `${environment.apiUrl}/api/hubs/system` : 'http://localhost:5000/api/hubs/system',
+      hubUrl: `${environment.apiUrl}/api/hubs/system`,
       maxReconnectAttempts: 0, // Infinite reconnection attempts
       reconnectDelayMs: 2000,
       bufferSize: 10, // Only need a few status updates
