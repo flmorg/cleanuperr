@@ -17,6 +17,12 @@
       <PackageReference Include="Mapster" Version="7.4.0" />
       <PackageReference Include="MassTransit" Version="8.3.6" />
       <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.2" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.2" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
       <PackageReference Include="Mono.Unix" Version="7.1.0-final.1.21458.1" />
