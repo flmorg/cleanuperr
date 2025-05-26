@@ -1,0 +1,253 @@
+<div class="events-container">
+    <!-- Main Events Card -->
+    <p-card styleClass="events-card">
+        <!-- Card Header -->
+        <ng-template pTemplate="header">
+            <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border position-relative">
+                <div class="flex align-items-center gap-2 header-title-container">
+                    <h2 class="m-0">System Events</h2>
+                    <p-tag
+                        [severity]="isConnected() ? 'success' : 'danger'"
+                        [value]="isConnected() ? 'Connected' : 'Disconnected'"
+                        [pTooltip]="isConnected() ? 'Connected to event hub' : 'Attempting to reconnect...'"
+                        tooltipPosition="right"
+                        styleClass="status-tag"
+                    ></p-tag>
+                </div>
+                <div class="event-controls flex align-items-center gap-2">
+                    <div class="auto-scroll-toggle">
+                        <p-inputSwitch
+                            [ngModel]="autoScroll()"
+                            (ngModelChange)="setAutoScroll($event)"
+                            id="autoScrollToggle"
+                        ></p-inputSwitch>
+                        <label for="autoScrollToggle" class="ml-2 text-sm">Auto-scroll</label>
+                    </div>
+                    <button
+                        pButton
+                        icon="pi pi-download"
+                        class="p-button-rounded p-button-text"
+                        (click)="exportEvents($event)"
+                        pTooltip="Export events"
+                    ></button>
+                    <button
+                        pButton
+                        icon="pi pi-copy"
+                        class="p-button-rounded p-button-text"
+                        (click)="copyEvents()"
+                        pTooltip="Copy events"
+                    ></button>
+                    <button
+                        pButton
+                        icon="pi pi-refresh"
+                        class="p-button-rounded p-button-text"
+                        (click)="refresh()"
+                        pTooltip="Refresh events"
+                    ></button>
+                </div>
+            </div>
+        </ng-template>
+
+        <!-- Filters Section -->
+        <div class="filter-container p-3 border-bottom-1 surface-border">
+            <p-toolbar styleClass="mb-2 filter-toolbar">
+                <ng-template pTemplate="start">
+                    <div class="flex align-items-center gap-2 flex-wrap filter-inputs-container">
+                        <!-- Search Filter -->
+                        <i class="pi pi-search"></i>
+                        <input
+                            type="text"
+                            pInputText
+                            [ngModel]="searchFilter()"
+                            (input)="onSearchChange($event)"
+                            placeholder="Search events"
+                            [disabled]="!isConnected()"
+                            class="search-input"
+                        />
+
+                        <!-- Severity Filter -->
+                        <p-select
+                            [options]="severities()"
+                            [ngModel]="severityFilter()"
+                            placeholder="Filter by severity"
+                            [showClear]="true"
+                            (onChange)="onSeverityFilterChange($event.value)"
+                            styleClass="severity-dropdown fixed-width-dropdown"
+                            [disabled]="!isConnected()"
+                        >
+                        </p-select>
+
+                        <!-- Event Type Filter -->
+                        <p-select
+                            [options]="eventTypes()"
+                            [ngModel]="eventTypeFilter()"
+                            placeholder="Filter by event type"
+                            [showClear]="true"
+                            (onChange)="onEventTypeFilterChange($event.value)"
+                            styleClass="event-type-dropdown fixed-width-dropdown"
+                            [disabled]="!isConnected()"
+                        >
+                        </p-select>
+
+                        <!-- Source Filter -->
+                        <p-select
+                            [options]="sources()"
+                            [ngModel]="sourceFilter()"
+                            placeholder="Filter by source"
+                            [showClear]="true"
+                            (onChange)="onSourceFilterChange($event.value)"
+                            styleClass="source-dropdown fixed-width-dropdown"
+                            [disabled]="!isConnected()"
+                        >
+                        </p-select>
+                    </div>
+                </ng-template>
+                <ng-template pTemplate="end">
+                    <div class="filter-actions-container">
+                        <div class="filter-actions-wrapper">
+                            <div class="filter-stats" *ngIf="isConnected() && filteredEvents().length > 0">
+                                <span class="text-sm text-color-secondary">
+                                    Showing {{ filteredEvents().length }} of {{ events().length }} events
+                                </span>
+                            </div>
+                            <!-- Clear Filters Button -->
+                            <button
+                                pButton
+                                icon="pi pi-filter-slash"
+                                label="Clear Filters"
+                                class="p-button-outlined ml-2 clear-filters-btn"
+                                (click)="clearFilters()"
+                                [disabled]="!isConnected() || (!severityFilter() && !eventTypeFilter() && !sourceFilter() && !searchFilter())"
+                            ></button>
+                        </div>
+                    </div>
+                </ng-template>
+            </p-toolbar>
+        </div>
+
+        <!-- Console-style Events View -->
+        <div class="events-console" #eventsConsole>
+            <!-- Events List -->
+            <div class="events-list" *ngIf="filteredEvents().length > 0; else emptyEvents">
+                <div
+                    *ngFor="let event of filteredEvents(); let i = index"
+                    class="event-entry"
+                    [ngClass]="getSeverityClass(event.severity)"
+                    [id]="'event-' + i"
+                >
+                    <!-- Event Entry Header - only expandable if has data or correlation ID -->
+                    <div
+                        class="event-entry-header"
+                        [class.expandable]="event.data || event.correlationId"
+                        (click)="
+                            event.data || event.correlationId ? toggleEventExpansion(i, $event) : null
+                        "
+                    >
+                        <!-- Actions (Copy button at start) -->
+                        <div class="event-actions event-actions-start">
+                            <button
+                                pButton
+                                icon="pi pi-copy"
+                                class="p-button-rounded p-button-text p-button-sm"
+                                (click)="copyEventEntry(event, $event)"
+                                pTooltip="Copy event"
+                            ></button>
+                        </div>
+
+                        <!-- Timestamp -->
+                        <div class="event-timestamp">
+                            <span class="event-date">{{ event.timestamp | date : "yyyy-MM-dd" }}</span>
+                            <span class="event-time">{{ event.timestamp | date : "HH:mm:ss.SSS" }}</span>
+                        </div>
+
+                        <!-- Severity Tag -->
+                        <div class="event-severity">
+                            <p-tag [severity]="getSeverity(event.severity)" [value]="event.severity" [rounded]="true"></p-tag>
+                        </div>
+
+                        <!-- Event Type -->
+                        <div class="event-type">
+                            <span class="event-type-badge">{{ event.eventType }}</span>
+                        </div>
+
+                        <!-- Source -->
+                        <div class="event-source">
+                            <span class="event-source-badge">{{ event.source }}</span>
+                        </div>
+
+                        <!-- Message -->
+                        <div class="event-message">
+                            {{ event.message }}
+                        </div>
+
+                        <!-- Correlation ID (if exists) -->
+                        <div class="event-correlation" *ngIf="event.correlationId">
+                            <p-tag 
+                                [value]="event.correlationId" 
+                                severity="secondary" 
+                                [rounded]="true"
+                                styleClass="correlation-tag"
+                                [pTooltip]="'Correlation ID: ' + event.correlationId"
+                            ></p-tag>
+                        </div>
+
+                        <!-- Dropdown button (only for events with data or correlation ID) -->
+                        <div class="event-actions" *ngIf="event.data || event.correlationId">
+                            <button
+                                pButton
+                                [icon]="expandedEvents[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                                class="p-button-rounded p-button-text p-button-sm"
+                                (click)="toggleEventExpansion(i, $event)"
+                                pTooltip="Toggle details"
+                            ></button>
+                        </div>
+                    </div>
+
+                    <!-- Event Details (Expandable) -->
+                    <div class="event-details" *ngIf="expandedEvents[i]">
+                        <!-- Data -->
+                        <div class="event-data" *ngIf="event.data">
+                            <div class="data-label">Data:</div>
+                            <pre class="data-content" *ngIf="isValidJson(event.data)">{{ formatJsonData(event.data) }}</pre>
+                            <div class="data-content" *ngIf="!isValidJson(event.data)">{{ event.data }}</div>
+                        </div>
+
+                        <!-- Correlation Information -->
+                        <div class="event-metadata" *ngIf="event.correlationId">
+                            <div class="metadata-item">
+                                <span class="metadata-label">Correlation ID:</span>
+                                <span class="metadata-value">{{ event.correlationId }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <ng-template #emptyEvents>
+                <div class="empty-events">
+                    <div class="empty-message">
+                        <i class="pi pi-inbox empty-icon"></i>
+                        <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No events found</div>
+                        <p *ngIf="isConnected()">Waiting for new events or try adjusting your filters</p>
+                        <ng-template #disconnectedMessage>
+                            <div class="flex flex-column align-items-center gap-3">
+                                <div class="empty-text">Not connected to event hub</div>
+                                <p>Attempting to reconnect to the server...</p>
+                                <p-progressSpinner
+                                    styleClass="w-3rem h-3rem"
+                                    strokeWidth="4"
+                                    fill="var(--surface-ground)"
+                                    animationDuration=".5s"
+                                ></p-progressSpinner>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+            </ng-template>
+        </div>
+
+        <!-- Export Menu -->
+        <p-menu #exportMenu [popup]="true" [model]="exportMenuItems"></p-menu>
+    </p-card>
+</div> 
