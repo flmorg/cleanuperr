@@ -1,7 +1,7 @@
 ﻿using Common.Configuration.Arr;
-using Domain.Enums;
-using Domain.Models.Arr;
-using Domain.Models.Arr.Queue;
+using Data.Enums;
+using Data.Models.Arr;
+using Data.Models.Arr.Queue;
 
 namespace Infrastructure.Verticals.Arr.Interfaces;
 

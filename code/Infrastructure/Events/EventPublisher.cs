@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using Data;
+using Data.Models.Events;
 
 namespace Infrastructure.Events;
 
@@ -9,12 +11,12 @@ namespace Infrastructure.Events;
 /// </summary>
 public class EventPublisher
 {
-    private readonly EventDbContext _context;
+    private readonly DataContext _context;
     private readonly IHubContext<EventHub> _hubContext;
     private readonly ILogger<EventPublisher> _logger;
 
     public EventPublisher(
-        EventDbContext context, 
+        DataContext context, 
         IHubContext<EventHub> hubContext, 
         ILogger<EventPublisher> logger)
     {
@@ -28,7 +30,7 @@ public class EventPublisher
     /// </summary>
     public async Task PublishAsync(string eventType, string source, string message, string severity = "Info", object? data = null, string? correlationId = null)
     {
-        var eventEntity = new Event
+        var eventEntity = new AppEvent
         {
             EventType = eventType,
             Source = source,
@@ -96,18 +98,18 @@ public class EventPublisher
         await PublishAsync(eventType, "HttpClient", message, severity, data, correlationId);
     }
 
-    private async Task NotifyClientsAsync(Event eventEntity)
+    private async Task NotifyClientsAsync(AppEvent appEventEntity)
     {
         try
         {
             // Send to all connected clients (self-hosted app with single client)
-            await _hubContext.Clients.All.SendAsync("EventReceived", eventEntity);
+            await _hubContext.Clients.All.SendAsync("EventReceived", appEventEntity);
 
-            _logger.LogTrace("Sent event {eventId} to SignalR clients", eventEntity.Id);
+            _logger.LogTrace("Sent event {eventId} to SignalR clients", appEventEntity.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send event {eventId} to SignalR clients", eventEntity.Id);
+            _logger.LogError(ex, "Failed to send event {eventId} to SignalR clients", appEventEntity.Id);
         }
     }
 } 

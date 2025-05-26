@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
 using Common.Attributes;
 using Common.Configuration.Arr;
-using Domain.Enums;
-using Domain.Models.Arr.Queue;
+using Data.Enums;
+using Data.Models.Arr.Queue;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Notifications.Models;

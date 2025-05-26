@@ -5,6 +5,7 @@ using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using Data.Enums;
 
 namespace Executable.Controllers;
 
@@ -143,7 +144,7 @@ public class StatusController : ControllerBase
                 {
                     try
                     {
-                        var sonarrClient = _arrClientFactory.GetClient(Domain.Enums.InstanceType.Sonarr);
+                        var sonarrClient = _arrClientFactory.GetClient(InstanceType.Sonarr);
                         await sonarrClient.TestConnectionAsync(instance);
                         
                         sonarrStatus.Add(new
@@ -178,7 +179,7 @@ public class StatusController : ControllerBase
                 {
                     try
                     {
-                        var radarrClient = _arrClientFactory.GetClient(Domain.Enums.InstanceType.Radarr);
+                        var radarrClient = _arrClientFactory.GetClient(InstanceType.Radarr);
                         await radarrClient.TestConnectionAsync(instance);
                         
                         radarrStatus.Add(new
@@ -213,7 +214,7 @@ public class StatusController : ControllerBase
                 {
                     try
                     {
-                        var lidarrClient = _arrClientFactory.GetClient(Domain.Enums.InstanceType.Lidarr);
+                        var lidarrClient = _arrClientFactory.GetClient(InstanceType.Lidarr);
                         await lidarrClient.TestConnectionAsync(instance);
                         
                         lidarrStatus.Add(new

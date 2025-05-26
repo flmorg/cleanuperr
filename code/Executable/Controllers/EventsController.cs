@@ -1,3 +1,5 @@
+using Data;
+using Data.Models.Events;
 using Infrastructure.Events;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +10,9 @@ namespace Executable.Controllers;
 [Route("api/[controller]")]
 public class EventsController : ControllerBase
 {
-    private readonly EventDbContext _context;
+    private readonly DataContext _context;
 
-    public EventsController(EventDbContext context)
+    public EventsController(DataContext context)
     {
         _context = context;
     }
@@ -19,7 +21,7 @@ public class EventsController : ControllerBase
     /// Gets recent events
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<Event>>> GetEvents(
+    public async Task<ActionResult<List<AppEvent>>> GetEvents(
         [FromQuery] int count = 100,
         [FromQuery] string? severity = null,
         [FromQuery] string? eventType = null,
@@ -50,7 +52,7 @@ public class EventsController : ControllerBase
     /// Gets a specific event by ID
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<Event>> GetEvent(string id)
+    public async Task<ActionResult<AppEvent>> GetEvent(string id)
     {
         var eventEntity = await _context.Events.FindAsync(id);
         
@@ -64,7 +66,7 @@ public class EventsController : ControllerBase
     /// Gets events by correlation ID
     /// </summary>
     [HttpGet("correlation/{correlationId}")]
-    public async Task<ActionResult<List<Event>>> GetEventsByCorrelation(string correlationId)
+    public async Task<ActionResult<List<AppEvent>>> GetEventsByCorrelation(string correlationId)
     {
         var events = await _context.Events
             .Where(e => e.CorrelationId == correlationId)
@@ -107,9 +109,13 @@ public class EventsController : ControllerBase
     [HttpPost("cleanup")]
     public async Task<ActionResult<object>> CleanupOldEvents([FromQuery] int retentionDays = 30)
     {
-        var removedCount = await _context.CleanupOldEventsAsync(retentionDays);
+        var cutoffDate = DateTime.UtcNow.AddDays(-retentionDays);
         
-        return Ok(new { RemovedCount = removedCount, RetentionDays = retentionDays });
+        await _context.Events
+            .Where(e => e.Timestamp < cutoffDate)
+            .ExecuteDeleteAsync();
+        
+        return Ok();
     }
 
     /// <summary>

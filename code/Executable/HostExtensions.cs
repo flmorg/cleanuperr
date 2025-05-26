@@ -1,5 +1,8 @@
 ﻿using System.Reflection;
+using Data;
 using Infrastructure.Configuration;
+using Infrastructure.Events;
+using Microsoft.EntityFrameworkCore;
 
 namespace Executable;
 
@@ -28,6 +31,13 @@ public static class HostExtensions
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to initialize configuration files");
+        }
+        
+        // Apply db migrations
+        var dbContext = host.Services.GetRequiredService<DataContext>();
+        if ((await dbContext.Database.GetPendingMigrationsAsync()).Any())
+        {
+            await dbContext.Database.MigrateAsync();
         }
         
         return host;

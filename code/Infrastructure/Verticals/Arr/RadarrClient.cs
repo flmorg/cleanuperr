@@ -1,8 +1,8 @@
 using System.Text;
 using Common.Configuration.Arr;
-using Domain.Models.Arr;
-using Domain.Models.Arr.Queue;
-using Domain.Models.Radarr;
+using Data.Models.Arr;
+using Data.Models.Arr.Queue;
+using Data.Models.Radarr;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;

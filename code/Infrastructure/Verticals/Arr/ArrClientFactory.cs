@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+﻿using Data.Enums;
 using Infrastructure.Verticals.Arr.Interfaces;
 
 namespace Infrastructure.Verticals.Arr;

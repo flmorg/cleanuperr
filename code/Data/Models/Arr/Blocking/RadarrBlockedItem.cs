@@ -1,0 +1,6 @@
+﻿namespace Data.Models.Arr.Blocking;
+
+public sealed record RadarrBlockedItem : BlockedItem
+{
+    public required long MovieId { get; init; }
+}

@@ -1,4 +1,4 @@
-﻿using Domain.Models.Arr;
+﻿using Data.Models.Arr;
 using Infrastructure.Verticals.DownloadRemover.Models;
 
 namespace Infrastructure.Verticals.DownloadRemover.Interfaces;

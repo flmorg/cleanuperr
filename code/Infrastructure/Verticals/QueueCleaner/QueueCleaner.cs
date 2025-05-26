@@ -1,9 +1,9 @@
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
-using Domain.Enums;
-using Domain.Models.Arr;
-using Domain.Models.Arr.Queue;
+using Data.Enums;
+using Data.Models.Arr;
+using Data.Models.Arr.Queue;
 using Infrastructure.Configuration;
 using Infrastructure.Helpers;
 using Infrastructure.Services;

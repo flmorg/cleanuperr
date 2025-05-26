@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+﻿using Data.Enums;
 
 namespace Infrastructure.Helpers;
 

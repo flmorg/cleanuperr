@@ -1,3 +1,4 @@
+using Infrastructure.Events;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -7,10 +8,12 @@ namespace Infrastructure.Logging;
 public class LoggingInitializer : BackgroundService
 {
     private readonly ILogger<LoggingInitializer> _logger;
+    private readonly EventPublisher _eventPublisher;
     
-    public LoggingInitializer(ILogger<LoggingInitializer> logger)
+    public LoggingInitializer(ILogger<LoggingInitializer> logger, EventPublisher eventPublisher)
     {
         _logger = logger;
+        _eventPublisher = eventPublisher;
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -19,6 +22,12 @@ public class LoggingInitializer : BackgroundService
         {
             try
             {
+                await _eventPublisher.PublishAsync(
+                    "strike",
+                    "test",
+                    "Item '{item}' has been struck {1} times for reason '{stalled}'",
+                    severity: "Warning",
+                    data: new { Hash = "hash", Name = "name", StrikeCount = "1", Type = "stalled" });
                 throw new Exception("test exception");
             }
             catch (Exception exception)

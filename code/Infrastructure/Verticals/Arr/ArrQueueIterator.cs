@@ -1,6 +1,6 @@
 ﻿using Common.Configuration;
 using Common.Configuration.Arr;
-using Domain.Models.Arr.Queue;
+using Data.Models.Arr.Queue;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Microsoft.Extensions.Logging;
 

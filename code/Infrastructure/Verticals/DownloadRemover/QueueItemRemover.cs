@@ -1,8 +1,8 @@
 ﻿using Common.Configuration.Arr;
 using Common.Configuration.General;
-using Domain.Enums;
-using Domain.Models.Arr;
-using Domain.Models.Arr.Queue;
+using Data.Enums;
+using Data.Models.Arr;
+using Data.Models.Arr.Queue;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Context;

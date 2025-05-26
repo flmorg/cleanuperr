@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Common.Configuration.ContentBlocker;
 using Common.Helpers;
-using Domain.Enums;
+using Data.Enums;
 using Infrastructure.Configuration;
 using Infrastructure.Helpers;
 using Microsoft.Extensions.Caching.Memory;

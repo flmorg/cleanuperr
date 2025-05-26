@@ -1,8 +1,8 @@
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadClient;
-using Domain.Enums;
-using Domain.Models.Arr;
-using Domain.Models.Arr.Queue;
+using Data.Enums;
+using Data.Models.Arr;
+using Data.Models.Arr.Queue;
 using Infrastructure.Configuration;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;

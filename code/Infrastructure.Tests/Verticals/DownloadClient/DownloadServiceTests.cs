@@ -1,6 +1,6 @@
 ﻿// using Common.Configuration.DownloadCleaner;
-// using Domain.Enums;
-// using Domain.Models.Cache;
+// using Data.Enums;
+// using Data.Models.Cache;
 // using Infrastructure.Helpers;
 // using Infrastructure.Verticals.Context;
 // using Infrastructure.Verticals.DownloadClient;

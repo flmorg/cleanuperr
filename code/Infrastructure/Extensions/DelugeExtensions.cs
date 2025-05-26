@@ -1,4 +1,4 @@
-﻿using Domain.Models.Deluge.Response;
+﻿using Data.Models.Deluge.Response;
 using Infrastructure.Helpers;
 using Infrastructure.Services;
 

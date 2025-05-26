@@ -1,3 +1,5 @@
+using Data;
+using Infrastructure.Events;
 using Infrastructure.Interceptors;
 using Infrastructure.Services;
 using Infrastructure.Services.Interfaces;
@@ -20,6 +22,9 @@ public static class ServicesDI
 {
     public static IServiceCollection AddServices(this IServiceCollection services) =>
         services
+            .AddTransient<DataContext>()
+            .AddTransient<EventPublisher>()
+            .AddHostedService<EventCleanupService>()
             // API services
             .AddSingleton<IJobManagementService, JobManagementService>()
             // Core services

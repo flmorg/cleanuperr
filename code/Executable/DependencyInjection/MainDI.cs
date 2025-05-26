@@ -1,11 +1,8 @@
 using System.Net;
 using Common.Configuration.General;
-using Common.Helpers;
-using Domain.Models.Arr;
-using Infrastructure.Configuration;
+using Data.Models.Arr;
 using Infrastructure.Health;
 using Infrastructure.Http;
-using Infrastructure.Services;
 using Infrastructure.Verticals.DownloadClient.Factory;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
@@ -14,7 +11,6 @@ using Infrastructure.Verticals.DownloadRemover.Consumers;
 using Infrastructure.Verticals.Notifications.Consumers;
 using Infrastructure.Verticals.Notifications.Models;
 using MassTransit;
-using MassTransit.Configuration;
 using Polly;
 using Polly.Extensions.Http;
 

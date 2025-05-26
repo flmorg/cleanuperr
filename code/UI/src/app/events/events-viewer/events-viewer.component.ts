@@ -20,7 +20,7 @@ import { MenuItem } from 'primeng/api';
 
 // Services & Models
 import { EventHubService } from '../../core/services/event-hub.service';
-import { Event } from '../../core/models/event.models';
+import { Event as EventModel } from '../../core/models/event.models';
 
 @Component({
   selector: 'app-events-viewer',
@@ -57,7 +57,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   @ViewChild('exportMenu') exportMenu: any;
   
   // Signals for reactive state
-  events = signal<Event[]>([]);
+  events = signal<EventModel[]>([]);
   isConnected = signal<boolean>(false);
   autoScroll = signal<boolean>(true);
   expandedEvents: { [key: number]: boolean } = {};
@@ -129,7 +129,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     // Subscribe to events
     this.eventHubService.getEvents()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((events: Event[]) => {
+      .subscribe((events: EventModel[]) => {
         this.events.set(events);
         if (this.autoScroll()) {
           this.scrollToBottom();
@@ -242,9 +242,9 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   /**
    * Toggle expansion of an event entry
    */
-  toggleEventExpansion(index: number, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
+  toggleEventExpansion(index: number, domEvent?: MouseEvent): void {
+    if (domEvent) {
+      domEvent.stopPropagation();
     }
     this.expandedEvents[index] = !this.expandedEvents[index];
   }
@@ -252,8 +252,8 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   /**
    * Copy a specific event entry to clipboard
    */
-  copyEventEntry(event: Event, clickEvent: Event): void {
-    clickEvent.stopPropagation();
+  copyEventEntry(event: EventModel, domEvent: MouseEvent): void {
+    domEvent.stopPropagation();
     
     const timestamp = new Date(event.timestamp).toISOString();
     let content = `[${timestamp}] [${event.severity}] [${event.eventType}] [${event.source}] ${event.message}`;

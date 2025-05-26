@@ -1,3 +1,4 @@
+using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,12 +31,14 @@ public class EventCleanupService : BackgroundService
         {
             try
             {
-                await Task.Delay(_cleanupInterval, stoppingToken);
-                
                 if (stoppingToken.IsCancellationRequested)
+                {
                     break;
+                }
 
                 await PerformCleanupAsync();
+                
+                await Task.Delay(_cleanupInterval, stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -56,39 +59,12 @@ public class EventCleanupService : BackgroundService
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<DataContext>();
 
             var cutoffDate = DateTime.UtcNow.AddDays(-_retentionDays);
-            var oldEventsQuery = context.Events.Where(e => e.Timestamp < cutoffDate);
-            var count = await oldEventsQuery.CountAsync();
-
-            if (count > 0)
-            {
-                _logger.LogInformation("Cleaning up {count} events older than {cutoffDate:yyyy-MM-dd}", count, cutoffDate);
-                
-                // Remove in batches to avoid large transactions
-                const int batchSize = 1000;
-                var totalRemoved = 0;
-
-                while (true)
-                {
-                    var batch = await oldEventsQuery.Take(batchSize).ToListAsync();
-                    if (batch.Count == 0)
-                        break;
-
-                    context.Events.RemoveRange(batch);
-                    await context.SaveChangesAsync();
-                    totalRemoved += batch.Count;
-
-                    _logger.LogTrace("Removed batch of {batchCount} events, total removed: {totalRemoved}", batch.Count, totalRemoved);
-                }
-
-                _logger.LogInformation("Event cleanup completed. Removed {totalRemoved} old events", totalRemoved);
-            }
-            else
-            {
-                _logger.LogTrace("No old events to clean up");
-            }
+            await context.Events
+                .Where(e => e.Timestamp < cutoffDate)
+                .ExecuteDeleteAsync();
         }
         catch (Exception ex)
         {

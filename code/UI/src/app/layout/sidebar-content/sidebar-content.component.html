@@ -34,6 +34,12 @@
       </div>
       <span>Logs</span>
     </a>
+    <a [routerLink]="['/events']" class="nav-item" [class.active]="router.url.includes('/events')" (click)="onNavItemClick()">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-calendar"></i>
+      </div>
+      <span>Events</span>
+    </a>
     <a [routerLink]="['/settings']" class="nav-item" [class.active]="router.url.includes('/settings')" (click)="onNavItemClick()">
       <div class="nav-icon-wrapper">
         <i class="pi pi-cog"></i>
@@ -46,7 +52,7 @@
   <div class="nav-group">
     <div class="nav-group-title">Features</div>
     <ng-container *ngFor="let item of menuItems">
-      <ng-container *ngIf="!['Dashboard', 'Logs', 'Settings'].includes(item.label)">
+      <ng-container *ngIf="!['Dashboard', 'Logs', 'Events', 'Settings'].includes(item.label)">
         <a [routerLink]="item.route" class="nav-item" [class.active]="router.url.includes(item.route)" (click)="onNavItemClick()">
           <div class="nav-icon-wrapper">
             <i [class]="item.icon"></i>

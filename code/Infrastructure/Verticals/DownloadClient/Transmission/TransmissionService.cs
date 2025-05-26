@@ -7,7 +7,7 @@ using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
-using Domain.Enums;
+using Data.Enums;
 using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;

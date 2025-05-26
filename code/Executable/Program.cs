@@ -22,9 +22,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Register SignalR - ensure this is before logging initialization
-builder.Services.AddSignalR();
-
 // Register services needed for logging first
 builder.Services
     .AddSingleton<LoggingConfigManager>()

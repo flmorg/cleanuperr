@@ -1,15 +1,15 @@
 using System.Text;
 using Common.Configuration.Arr;
-using Domain.Models.Arr;
-using Domain.Models.Arr.Queue;
-using Domain.Models.Sonarr;
+using Data.Models.Arr;
+using Data.Models.Arr.Queue;
+using Data.Models.Sonarr;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
 using Infrastructure.Configuration;
 using Newtonsoft.Json;
-using Series = Domain.Models.Sonarr.Series;
+using Series = Data.Models.Sonarr.Series;
 
 namespace Infrastructure.Verticals.Arr;
 
