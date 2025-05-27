@@ -4,6 +4,10 @@ using System.Text.Json;
 using Data;
 using Data.Enums;
 using Data.Models.Events;
+using Infrastructure.Verticals.Notifications;
+using Infrastructure.Verticals.Context;
+using Infrastructure.Interceptors;
+using Common.Attributes;
 
 namespace Infrastructure.Events;
 
@@ -15,19 +19,25 @@ public class EventPublisher
     private readonly DataContext _context;
     private readonly IHubContext<EventHub> _hubContext;
     private readonly ILogger<EventPublisher> _logger;
+    private readonly INotificationPublisher _notificationPublisher;
+    private readonly IDryRunInterceptor _dryRunInterceptor;
 
     public EventPublisher(
         DataContext context, 
         IHubContext<EventHub> hubContext, 
-        ILogger<EventPublisher> logger)
+        ILogger<EventPublisher> logger,
+        INotificationPublisher notificationPublisher,
+        IDryRunInterceptor dryRunInterceptor)
     {
         _context = context;
         _hubContext = hubContext;
         _logger = logger;
+        _notificationPublisher = notificationPublisher;
+        _dryRunInterceptor = dryRunInterceptor;
     }
 
     /// <summary>
-    /// Publishes an event to database and SignalR clients
+    /// Generic method for publishing events to database and SignalR clients
     /// </summary>
     public async Task PublishAsync(EventType eventType, string message, EventSeverity severity, object? data = null, Guid? trackingId = null)
     {
@@ -40,14 +50,106 @@ public class EventPublisher
             TrackingId = trackingId
         };
 
-        // Save to database
-        _context.Events.Add(eventEntity);
-        await _context.SaveChangesAsync();
+        // Save to database with dry run interception
+        await _dryRunInterceptor.InterceptAsync(SaveEventToDatabase, eventEntity);
 
-        // Send to SignalR clients
+        // Always send to SignalR clients (not affected by dry run)
         await NotifyClientsAsync(eventEntity);
 
         _logger.LogTrace("Published event: {eventType}", eventType);
+    }
+
+    /// <summary>
+    /// Publishes a strike event with context data and notifications
+    /// </summary>
+    public async Task PublishStrike(StrikeType strikeType, int strikeCount, string hash, string itemName)
+    {
+        // Determine the appropriate EventType based on StrikeType
+        EventType eventType = strikeType switch
+        {
+            StrikeType.Stalled => EventType.StalledStrike,
+            StrikeType.DownloadingMetadata => EventType.DownloadingMetadataStrike,
+            StrikeType.FailedImport => EventType.FailedImportStrike,
+            StrikeType.SlowSpeed => EventType.SlowSpeedStrike,
+            StrikeType.SlowTime => EventType.SlowTimeStrike,
+        };
+
+        // Publish the event
+        await PublishAsync(
+            eventType,
+            $"Item '{itemName}' has been struck {strikeCount} times for reason '{strikeType}'",
+            EventSeverity.Important,
+            data: new { hash, itemName, strikeCount, strikeType });
+
+        // Send notification (uses ContextProvider internally)
+        await _notificationPublisher.NotifyStrike(strikeType, strikeCount);
+    }
+
+    /// <summary>
+    /// Publishes a queue item deleted event with context data and notifications
+    /// </summary>
+    public async Task PublishQueueItemDeleted(bool removeFromClient, DeleteReason deleteReason)
+    {
+        // Get context data for the event
+        string downloadName = ContextProvider.Get<string>("downloadName") ?? "Unknown";
+        string hash = ContextProvider.Get<string>("hash") ?? "Unknown";
+
+        // Publish the event
+        await PublishAsync(
+            EventType.QueueItemDeleted,
+            $"Deleting item from queue with reason: {deleteReason}",
+            EventSeverity.Important,
+            data: new { downloadName, hash, removeFromClient, deleteReason });
+
+        // Send notification (uses ContextProvider internally)
+        await _notificationPublisher.NotifyQueueItemDeleted(removeFromClient, deleteReason);
+    }
+
+    /// <summary>
+    /// Publishes a download cleaned event with context data and notifications
+    /// </summary>
+    public async Task PublishDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
+    {
+        // Get context data for the event
+        string downloadName = ContextProvider.Get<string>("downloadName") ?? "Unknown";
+        string hash = ContextProvider.Get<string>("hash") ?? "Unknown";
+
+        // Publish the event
+        await PublishAsync(
+            EventType.DownloadCleaned,
+            $"Cleaned item from download client with reason: {reason}",
+            EventSeverity.Important,
+            data: new { downloadName, hash, categoryName, ratio, seedingTime = seedingTime.TotalHours, reason });
+
+        // Send notification (uses ContextProvider internally)
+        await _notificationPublisher.NotifyDownloadCleaned(ratio, seedingTime, categoryName, reason);
+    }
+
+    /// <summary>
+    /// Publishes a category changed event with context data and notifications
+    /// </summary>
+    public async Task PublishCategoryChanged(string oldCategory, string newCategory, bool isTag = false)
+    {
+        // Get context data for the event
+        string downloadName = ContextProvider.Get<string>("downloadName") ?? "Unknown";
+        string hash = ContextProvider.Get<string>("hash") ?? "Unknown";
+
+        // Publish the event
+        await PublishAsync(
+            EventType.CategoryChanged,
+            isTag ? $"Tag '{newCategory}' added to download" : $"Category changed from '{oldCategory}' to '{newCategory}'",
+            EventSeverity.Information,
+            data: new { downloadName, hash, oldCategory, newCategory, isTag });
+
+        // Send notification (uses ContextProvider internally)
+        await _notificationPublisher.NotifyCategoryChanged(oldCategory, newCategory, isTag);
+    }
+
+    [DryRunSafeguard]
+    private async Task SaveEventToDatabase(AppEvent eventEntity)
+    {
+        _context.Events.Add(eventEntity);
+        await _context.SaveChangesAsync();
     }
 
     private async Task NotifyClientsAsync(AppEvent appEventEntity)

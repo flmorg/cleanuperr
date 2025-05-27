@@ -4,7 +4,6 @@ using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Context;
-using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -15,14 +14,12 @@ public sealed class Striker : IStriker
     private readonly ILogger<Striker> _logger;
     private readonly IMemoryCache _cache;
     private readonly MemoryCacheEntryOptions _cacheOptions;
-    private readonly INotificationPublisher _notifier;
     private readonly EventPublisher _eventPublisher;
 
-    public Striker(ILogger<Striker> logger, IMemoryCache cache, INotificationPublisher notifier, EventPublisher eventPublisher)
+    public Striker(ILogger<Striker> logger, IMemoryCache cache, EventPublisher eventPublisher)
     {
         _logger = logger;
         _cache = cache;
-        _notifier = notifier;
         _eventPublisher = eventPublisher;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
@@ -48,12 +45,7 @@ public sealed class Striker : IStriker
         
         _logger.LogInformation("item on strike number {strike} | reason {reason} | {name}", strikeCount, strikeType.ToString(), itemName);
 
-        await _notifier.NotifyStrike(strikeType, strikeCount);
-        await _eventPublisher.PublishAsync(
-            EventType.SlowStrike, // TODO
-            $"Item '{itemName}' has been struck {strikeCount} times for reason '{strikeType}'",
-            EventSeverity.Important,
-            data: new { hash, itemName, strikeCount, strikeType });
+        await _eventPublisher.PublishStrike(strikeType, strikeCount, hash, itemName);
         
         _cache.Set(key, strikeCount, _cacheOptions);
         

@@ -8,6 +8,7 @@ using Common.CustomDataTypes;
 using Common.Exceptions;
 using Data.Enums;
 using Data.Models.Deluge.Response;
+using Infrastructure.Events;
 using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
@@ -35,11 +36,12 @@ public class DelugeService : DownloadService, IDelugeService
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService,
-        IDynamicHttpClientProvider httpClientProvider
+        IDynamicHttpClientProvider httpClientProvider,
+        EventPublisher eventPublisher
     ) : base(
         logger, configManager, cache,
         filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService,
-        httpClientProvider
+        httpClientProvider, eventPublisher
     )
     {
         // Client will be initialized when Initialize() is called with a specific client configuration
@@ -348,7 +350,7 @@ public class DelugeService : DownloadService, IDelugeService
                 download.Name
             );
             
-            await _notifier.NotifyDownloadCleaned(download.Ratio, seedingTime, category.Name, result.Reason);
+            await _eventPublisher.PublishDownloadCleaned(download.Ratio, seedingTime, category.Name, result.Reason);
         }
     }
 
@@ -446,7 +448,7 @@ public class DelugeService : DownloadService, IDelugeService
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
-            await _notifier.NotifyCategoryChanged(download.Label, _downloadCleanerConfig.UnlinkedTargetCategory);
+            await _eventPublisher.PublishCategoryChanged(download.Label, _downloadCleanerConfig.UnlinkedTargetCategory);
             
             download.Label = _downloadCleanerConfig.UnlinkedTargetCategory;
         }

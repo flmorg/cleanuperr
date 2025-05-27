@@ -8,6 +8,7 @@ using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
 using Data.Enums;
+using Infrastructure.Events;
 using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
@@ -57,11 +58,12 @@ public class TransmissionService : DownloadService, ITransmissionService
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService,
-        IDynamicHttpClientProvider httpClientProvider
+        IDynamicHttpClientProvider httpClientProvider,
+        EventPublisher eventPublisher
     ) : base(
         logger, configManager, cache,
         filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService,
-        httpClientProvider
+        httpClientProvider, eventPublisher
     )
     {
         // Client will be initialized when Initialize() is called with a specific client configuration
@@ -360,7 +362,7 @@ public class TransmissionService : DownloadService, ITransmissionService
                 download.Name
             );
 
-            await _notifier.NotifyDownloadCleaned(download.uploadRatio ?? 0, seedingTime, category.Name, result.Reason);
+            await _eventPublisher.PublishDownloadCleaned(download.uploadRatio ?? 0, seedingTime, category.Name, result.Reason);
         }
     }
     
@@ -452,7 +454,7 @@ public class TransmissionService : DownloadService, ITransmissionService
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
-            await _notifier.NotifyCategoryChanged(currentCategory, _downloadCleanerConfig.UnlinkedTargetCategory);
+            await _eventPublisher.PublishCategoryChanged(currentCategory, _downloadCleanerConfig.UnlinkedTargetCategory);
 
             download.DownloadDir = newLocation;
         }

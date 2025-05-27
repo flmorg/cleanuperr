@@ -114,7 +114,7 @@ public abstract class ArrClient : IArrClient
                 record.DownloadId,
                 record.Title,
                 maxStrikes,
-                StrikeType.ImportFailed
+                StrikeType.FailedImport
             );
         }
 

@@ -3,12 +3,12 @@ using Common.Configuration.General;
 using Data.Enums;
 using Data.Models.Arr;
 using Data.Models.Arr.Queue;
+using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadRemover.Interfaces;
 using Infrastructure.Verticals.DownloadRemover.Models;
-using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Infrastructure.Configuration;
 
@@ -19,19 +19,19 @@ public sealed class QueueItemRemover : IQueueItemRemover
     private readonly GeneralConfig _generalConfig;
     private readonly IMemoryCache _cache;
     private readonly ArrClientFactory _arrClientFactory;
-    private readonly INotificationPublisher _notifier;
+    private readonly EventPublisher _eventPublisher;
 
     public QueueItemRemover(
         IConfigManager configManager,
         IMemoryCache cache,
         ArrClientFactory arrClientFactory,
-        INotificationPublisher notifier
+        EventPublisher eventPublisher
     )
     {
         _generalConfig = configManager.GetConfiguration<GeneralConfig>();
         _cache = cache;
         _arrClientFactory = arrClientFactory;
-        _notifier = notifier;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task RemoveQueueItemAsync<T>(QueueItemRemoveRequest<T> request)
@@ -42,11 +42,15 @@ public sealed class QueueItemRemover : IQueueItemRemover
             var arrClient = _arrClientFactory.GetClient(request.InstanceType);
             await arrClient.DeleteQueueItemAsync(request.Instance, request.Record, request.RemoveFromClient, request.DeleteReason);
             
-            // push to context
+            // Set context for EventPublisher
+            ContextProvider.Set("downloadName", request.Record.Title);
+            ContextProvider.Set("hash", request.Record.DownloadId);
             ContextProvider.Set(nameof(QueueRecord), request.Record);
             ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), request.Instance.Url);
             ContextProvider.Set(nameof(InstanceType), request.InstanceType);
-            await _notifier.NotifyQueueItemDeleted(request.RemoveFromClient, request.DeleteReason);
+            
+            // Use the new centralized EventPublisher method
+            await _eventPublisher.PublishQueueItemDeleted(request.RemoveFromClient, request.DeleteReason);
 
             if (!_generalConfig.SearchEnabled)
             {

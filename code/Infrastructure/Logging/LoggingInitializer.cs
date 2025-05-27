@@ -24,7 +24,7 @@ public class LoggingInitializer : BackgroundService
             try
             {
                 await _eventPublisher.PublishAsync(
-                    EventType.SlowStrike,
+                    EventType.SlowSpeedStrike,
                     "test",
                     EventSeverity.Important,
                     data: new { Hash = "hash", Name = "name", StrikeCount = "1", Type = "stalled" });

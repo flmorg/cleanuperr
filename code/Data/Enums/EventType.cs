@@ -4,7 +4,9 @@ public enum EventType
 {
     FailedImportStrike,
     StalledStrike,
-    SlowStrike,
+    DownloadingMetadataStrike,
+    SlowSpeedStrike,
+    SlowTimeStrike,
     QueueItemDeleted,
     DownloadCleaned,
     CategoryChanged

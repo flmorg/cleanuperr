@@ -20,6 +20,7 @@ using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using QBittorrent.Client;
+using Infrastructure.Events;
 
 namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
@@ -37,10 +38,11 @@ public class QBitService : DownloadService, IQBitService
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService,
-        IDynamicHttpClientProvider httpClientProvider
+        IDynamicHttpClientProvider httpClientProvider,
+        EventPublisher eventPublisher
     ) : base(
         logger, configManager, cache, filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService,
-        httpClientProvider
+        httpClientProvider, eventPublisher
     )
     {
         // Client will be initialized when Initialize() is called with a specific client configuration
@@ -394,7 +396,7 @@ public class QBitService : DownloadService, IQBitService
                 download.Name
             );
 
-            await _notifier.NotifyDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
+            await _eventPublisher.PublishDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
         }
     }
 
@@ -517,7 +519,7 @@ public class QBitService : DownloadService, IQBitService
                 download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
             }
 
-            await _notifier.NotifyCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory, _downloadCleanerConfig.UnlinkedUseTag);
+            await _eventPublisher.PublishCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory, _downloadCleanerConfig.UnlinkedUseTag);
         }
     }
 

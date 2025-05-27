@@ -51,7 +51,7 @@ public class NotificationPublisher : INotificationPublisher
                 case StrikeType.DownloadingMetadata:
                     await NotifyInternal(notification.Adapt<StalledStrikeNotification>());
                     break;
-                case StrikeType.ImportFailed:
+                case StrikeType.FailedImport:
                     await NotifyInternal(notification.Adapt<FailedImportStrikeNotification>());
                     break;
                 case StrikeType.SlowSpeed:

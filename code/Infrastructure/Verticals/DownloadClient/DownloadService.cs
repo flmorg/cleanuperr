@@ -9,6 +9,7 @@ using Common.Helpers;
 using Data.Enums;
 using Data.Models.Cache;
 using Infrastructure.Configuration;
+using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Http;
 using Infrastructure.Interceptors;
@@ -34,6 +35,7 @@ public abstract class DownloadService : IDownloadService
     protected readonly IDryRunInterceptor _dryRunInterceptor;
     protected readonly IHardLinkFileService _hardLinkFileService;
     protected readonly IDynamicHttpClientProvider _httpClientProvider;
+    protected readonly EventPublisher _eventPublisher;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
     protected readonly ContentBlockerConfig _contentBlockerConfig;
     protected readonly DownloadCleanerConfig _downloadCleanerConfig;
@@ -53,7 +55,8 @@ public abstract class DownloadService : IDownloadService
         INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService,
-        IDynamicHttpClientProvider httpClientProvider
+        IDynamicHttpClientProvider httpClientProvider,
+        EventPublisher eventPublisher
     )
     {
         _logger = logger;
@@ -65,6 +68,7 @@ public abstract class DownloadService : IDownloadService
         _dryRunInterceptor = dryRunInterceptor;
         _hardLinkFileService = hardLinkFileService;
         _httpClientProvider = httpClientProvider;
+        _eventPublisher = eventPublisher;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
         
