@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule, NgClass, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, throttleTime } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
 // PrimeNG Components
 import { CardModule } from 'primeng/card';
@@ -72,12 +72,9 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     this.logHubService.startConnection()
       .catch((error: Error) => console.error('Failed to connect to log hub:', error));
 
-    // Subscribe to logs with throttling to prevent UI overwhelming
+    // Subscribe to logs
     this.logHubService.getLogs()
-      .pipe(
-        takeUntil(this.destroy$),
-        throttleTime(1000) // Max 1 update per second
-      )
+      .pipe(takeUntil(this.destroy$))
       .subscribe((logs: LogEntry[]) => {
         this.recentLogs.set(logs);
       });
@@ -95,12 +92,9 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     this.eventHubService.startConnection()
       .catch((error: Error) => console.error('Failed to connect to event hub:', error));
 
-    // Subscribe to events with throttling
+    // Subscribe to events
     this.eventHubService.getEvents()
-      .pipe(
-        takeUntil(this.destroy$),
-        throttleTime(1000) // Max 1 update per second
-      )
+      .pipe(takeUntil(this.destroy$))
       .subscribe((events: EventModel[]) => {
         this.recentEvents.set(events);
       });
