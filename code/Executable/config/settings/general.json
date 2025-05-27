@@ -1,9 +1,0 @@
-{
-  "dry_run": false,
-  "http_max_retries": 0,
-  "http_timeout": 100,
-  "certificate_validation": "Enabled",
-  "search_enabled": true,
-  "search_delay": 30,
-  "log_level": "Verbose"
-}

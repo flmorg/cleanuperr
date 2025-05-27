@@ -46,7 +46,7 @@ public static class ConfigurationPathProvider
         else
         {
             // Use path relative to app for normal environment
-            _configPath = "config";
+            _configPath = Path.Combine(AppContext.BaseDirectory, "config");
         }
 
         return _configPath;
