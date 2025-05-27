@@ -51,9 +51,8 @@ export class MainLayoutComponent {
   // Mobile menu state
   mobileSidebarVisible = signal<boolean>(false);
   
-  // Inject router and title service
+  // Inject router
   public router = inject(Router);
-  private titleService = inject(Title);
   
   constructor() {}
   
@@ -62,23 +61,6 @@ export class MainLayoutComponent {
    */
   onMobileNavClick(): void {
     this.mobileSidebarVisible.set(false);
-  }
-  
-  /**
-   * Get the current page title based on the active route
-   */
-  getPageTitle(): string {
-    const currentUrl = this.router.url;
-    
-    if (currentUrl.includes('/dashboard')) {
-      return 'Dashboard';
-    } else if (currentUrl.includes('/logs')) {
-      return 'Logs';
-    } else if (currentUrl.includes('/settings')) {
-      return 'Settings';
-    } else {
-      return 'Cleanuparr';
-    }
   }
   
   /**
