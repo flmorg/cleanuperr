@@ -12,7 +12,6 @@ using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
-using Infrastructure.Verticals.Notifications;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -22,10 +21,9 @@ namespace Infrastructure.Verticals.ContentBlocker;
 
 public sealed class ContentBlocker : GenericHandler
 {
-    private ContentBlockerConfig _config;
+    private readonly ContentBlockerConfig _config;
     private readonly BlocklistProvider _blocklistProvider;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
-    private readonly IConfigManager _configManager;
 
     public ContentBlocker(
         ILogger<ContentBlocker> logger,
@@ -35,16 +33,13 @@ public sealed class ContentBlocker : GenericHandler
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         BlocklistProvider blocklistProvider,
-        INotificationPublisher notifier,
         IIgnoredDownloadsService ignoredDownloadsService,
         DownloadServiceFactory downloadServiceFactory
     ) : base(
         logger, cache, messageBus, 
-        arrClientFactory, arrArrQueueIterator, 
-        downloadServiceFactory, notifier
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory
     )
     {
-        _configManager = configManager;
         _blocklistProvider = blocklistProvider;
         _ignoredDownloadsService = ignoredDownloadsService;
         

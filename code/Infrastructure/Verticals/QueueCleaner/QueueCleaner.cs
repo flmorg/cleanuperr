@@ -25,8 +25,7 @@ namespace Infrastructure.Verticals.QueueCleaner;
 
 public sealed class QueueCleaner : GenericHandler
 {
-    private QueueCleanerConfig _config;
-    private readonly IConfigManager _configManager;
+    private readonly QueueCleanerConfig _config;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly IDownloadClientFactory _downloadClientFactory;
 
@@ -38,16 +37,13 @@ public sealed class QueueCleaner : GenericHandler
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        INotificationPublisher notifier,
         IIgnoredDownloadsService ignoredDownloadsService,
         IDownloadClientFactory downloadClientFactory
     ) : base(
         logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
-        notifier
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory
     )
     {
-        _configManager = configManager;
         _ignoredDownloadsService = ignoredDownloadsService;
         _downloadClientFactory = downloadClientFactory;
         

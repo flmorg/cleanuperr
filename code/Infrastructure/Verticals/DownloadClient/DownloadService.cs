@@ -31,7 +31,6 @@ public abstract class DownloadService : IDownloadService
     protected readonly IFilenameEvaluator _filenameEvaluator;
     protected readonly IStriker _striker;
     protected readonly MemoryCacheEntryOptions _cacheOptions;
-    protected readonly INotificationPublisher _notifier;
     protected readonly IDryRunInterceptor _dryRunInterceptor;
     protected readonly IHardLinkFileService _hardLinkFileService;
     protected readonly IDynamicHttpClientProvider _httpClientProvider;
@@ -52,7 +51,6 @@ public abstract class DownloadService : IDownloadService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService,
         IDynamicHttpClientProvider httpClientProvider,
@@ -64,7 +62,6 @@ public abstract class DownloadService : IDownloadService
         _cache = cache;
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
-        _notifier = notifier;
         _dryRunInterceptor = dryRunInterceptor;
         _hardLinkFileService = hardLinkFileService;
         _httpClientProvider = httpClientProvider;

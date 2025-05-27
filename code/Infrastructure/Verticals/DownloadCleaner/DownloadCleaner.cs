@@ -8,9 +8,7 @@ using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.DownloadClient;
-using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.Jobs;
-using Infrastructure.Verticals.Notifications;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -23,8 +21,6 @@ public sealed class DownloadCleaner : GenericHandler
     private readonly DownloadCleanerConfig _config;
     private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
-    private readonly IConfigManager _configManager;
-    private readonly List<IDownloadService> _downloadServices = [];
     
     private static bool _hardLinkCategoryCreated;
     
@@ -36,15 +32,12 @@ public sealed class DownloadCleaner : GenericHandler
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        INotificationPublisher notifier,
         IIgnoredDownloadsService ignoredDownloadsService
     ) : base(
         logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory,
-        notifier
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory
     )
     {
-        _configManager = configManager;
         _ignoredDownloadsService = ignoredDownloadsService;
         
         _config = configManager.GetConfiguration<DownloadCleanerConfig>();

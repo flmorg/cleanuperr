@@ -26,7 +26,6 @@ public abstract class GenericHandler : IHandler, IDisposable
     protected readonly ArrClientFactory _arrClientFactory;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly DownloadServiceFactory _downloadServiceFactory;
-    protected readonly INotificationPublisher _notifier;
     
     // Collection of download services for use with multiple clients
     protected readonly List<IDownloadService> _downloadServices = new();
@@ -37,8 +36,7 @@ public abstract class GenericHandler : IHandler, IDisposable
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
-        DownloadServiceFactory downloadServiceFactory,
-        INotificationPublisher notifier
+        DownloadServiceFactory downloadServiceFactory
     )
     {
         _logger = logger;
@@ -47,7 +45,6 @@ public abstract class GenericHandler : IHandler, IDisposable
         _arrClientFactory = arrClientFactory;
         _arrArrQueueIterator = arrArrQueueIterator;
         _downloadServiceFactory = downloadServiceFactory;
-        _notifier = notifier;
     }
 
     /// <summary>

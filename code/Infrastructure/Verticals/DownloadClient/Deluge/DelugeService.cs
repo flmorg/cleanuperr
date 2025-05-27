@@ -33,14 +33,13 @@ public class DelugeService : DownloadService, IDelugeService
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
-        INotificationPublisher notifier,
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService,
         IDynamicHttpClientProvider httpClientProvider,
         EventPublisher eventPublisher
     ) : base(
         logger, configManager, cache,
-        filenameEvaluator, striker, notifier, dryRunInterceptor, hardLinkFileService,
+        filenameEvaluator, striker, dryRunInterceptor, hardLinkFileService,
         httpClientProvider, eventPublisher
     )
     {
