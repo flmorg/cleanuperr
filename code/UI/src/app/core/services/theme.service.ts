@@ -5,22 +5,22 @@ import { Injectable } from '@angular/core';
 })
 export class ThemeService {
   private readonly THEME_KEY = 'app-theme';
-  private currentTheme: 'dark' = 'dark'; // Always dark mode
+  private currentTheme = 'dark'; // Always dark mode
 
   constructor() {
     this.initializeTheme();
   }
 
   initializeTheme(): void {
-    // Always use dark theme with purple accent from our custom preset
+    // Apply our custom Noir preset (dark theme with purple primary, emerald secondary)
     this.applyDarkTheme();
     // Save the theme preference
     localStorage.setItem(this.THEME_KEY, this.currentTheme);
   }
 
   /**
-   * Apply the dark theme to the document using our Noir preset
-   * This is now the only theme for the application
+   * Apply the dark theme using our custom Noir preset
+   * The preset handles all colors including purple primary and emerald secondary
    */
   private applyDarkTheme(): void {
     const documentElement = document.documentElement;
@@ -29,17 +29,11 @@ export class ThemeService {
     documentElement.classList.add('dark');
     documentElement.style.colorScheme = 'dark';
     
-    // Update PrimeNG theme to our custom Noir preset (dark)
-    const linkElement = document.getElementById('app-theme') as HTMLLinkElement;
-    if (linkElement) {
-      linkElement.href = 'noir-dark.css';
-    }
-    
-    // Note: We no longer need to set CSS variables manually as they're defined in the Noir preset
-    // The preset handles all the theme colors including the purple accent and dark surfaces
+    // The Noir preset is applied in app.config.ts and handles all theme colors
+    // No need to manually set CSS variables as they're managed by PrimeNG
   }
 
-  // Public API methods kept for compatibility
+  // Public API methods
   getCurrentTheme(): 'dark' {
     return this.currentTheme;
   }

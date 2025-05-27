@@ -1227,24 +1227,6 @@
           }
         }
 
-        // Style PrimeNG buttons with our theme
-        .p-button:not(.p-button-text) {
-          background: linear-gradient(135deg, #8e44ad, #9b59b6);
-          border-color: #8e44ad;
-          box-shadow: 0 2px 5px rgba(142, 68, 173, 0.3);
-
-          &:hover {
-            background: linear-gradient(135deg, #9b59b6, #a569bd);
-            border-color: #9b59b6;
-            box-shadow: 0 4px 8px rgba(142, 68, 173, 0.4);
-          }
-
-          &:active {
-            background: linear-gradient(135deg, #7d3c98, #8e44ad);
-            border-color: #7d3c98;
-            box-shadow: 0 1px 3px rgba(142, 68, 173, 0.3);
-          }
-        }
         @keyframes logo-glow {
           0% { box-shadow: 0 0 15px #8e44ad, 0 0 5px rgba(142, 68, 173, 0.4); } // Purple
           20% { box-shadow: 0 0 15px #9b59b6, 0 0 5px rgba(155, 89, 182, 0.4); } // Lighter purple
