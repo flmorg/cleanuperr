@@ -10,15 +10,18 @@
       <p-card styleClass="dashboard-card h-full">
         <ng-template pTemplate="header">
           <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-            <div>
+            <div class="header-title-container">
               <h2 class="card-title m-0">Recent Logs</h2>
+              <p-tag
+                [severity]="logsConnected() ? 'success' : 'danger'"
+                [value]="logsConnected() ? 'Connected' : 'Disconnected'"
+                [pTooltip]="logsConnected() ? 'Connected to log hub' : 'Attempting to reconnect...'"
+                tooltipPosition="right"
+                styleClass="status-tag"
+              ></p-tag>
               <span class="card-subtitle">Live log stream</span>
             </div>
             <div class="flex align-items-center gap-2">
-              <div class="connection-status" [ngClass]="{'connected': logsConnected(), 'disconnected': !logsConnected()}">
-                <i class="pi" [ngClass]="logsConnected() ? 'pi-circle-fill' : 'pi-circle'"></i>
-                <span class="text-xs">{{logsConnected() ? 'Connected' : 'Disconnected'}}</span>
-              </div>
               <i class="pi pi-list text-xl"></i>
             </div>
           </div>
@@ -73,15 +76,18 @@
       <p-card styleClass="dashboard-card h-full">
         <ng-template pTemplate="header">
           <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-            <div>
+            <div class="header-title-container">
               <h2 class="card-title m-0">Recent Events</h2>
+              <p-tag
+                [severity]="eventsConnected() ? 'success' : 'danger'"
+                [value]="eventsConnected() ? 'Connected' : 'Disconnected'"
+                [pTooltip]="eventsConnected() ? 'Connected to event hub' : 'Attempting to reconnect...'"
+                tooltipPosition="right"
+                styleClass="status-tag"
+              ></p-tag>
               <span class="card-subtitle">Live event stream</span>
             </div>
             <div class="flex align-items-center gap-2">
-              <div class="connection-status" [ngClass]="{'connected': eventsConnected(), 'disconnected': !eventsConnected()}">
-                <i class="pi" [ngClass]="eventsConnected() ? 'pi-circle-fill' : 'pi-circle'"></i>
-                <span class="text-xs">{{eventsConnected() ? 'Connected' : 'Disconnected'}}</span>
-              </div>
               <i class="pi pi-calendar text-xl"></i>
             </div>
           </div>
