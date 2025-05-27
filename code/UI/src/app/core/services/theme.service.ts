@@ -34,7 +34,7 @@ export class ThemeService {
   }
 
   // Public API methods
-  getCurrentTheme(): 'dark' {
+  getCurrentTheme(): string {
     return this.currentTheme;
   }
 

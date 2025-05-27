@@ -2,8 +2,8 @@
 .logo-container {
   display: flex;
   align-items: center;
-  padding: 15px 20px;
-  margin-bottom: 5px;
+  padding: 20px;
+  margin-top: 20px;
   
   .logo {
     display: flex;
@@ -32,8 +32,7 @@
     display: none;
   }
   
-  h1 {
-    font-size: 20px;
+  h2 {
     font-weight: 700;
     margin: 0;
     color: var(--text-color);
@@ -45,14 +44,13 @@
 .nav-menu {
   display: flex;
   flex-direction: column;
-  padding: 5px 0 20px 0;
   flex: 1;
+  gap: 1rem;
   
   // Sponsor link
   .sponsor-link {
+    border-bottom: none;
     margin-bottom: 15px;
-    border-bottom: 1px solid var(--surface-border);
-    padding-bottom: 15px !important;
     
     .heart-icon i {
       color: #ff4d6d !important;
@@ -75,8 +73,7 @@
       text-transform: uppercase;
       letter-spacing: 2px;
       padding: 0 20px 8px;
-      margin-top: 10px;
-      margin-bottom: 5px;
+      margin: 5px 0;
       border-bottom: 1px solid var(--surface-border);
     }
   }
@@ -89,7 +86,6 @@
     color: var(--text-color);
     text-decoration: none;
     border-radius: 0 6px 6px 0;
-    margin: 2px 0 2px 0;
     position: relative;
     overflow: hidden;
     transition: all 0.2s ease;

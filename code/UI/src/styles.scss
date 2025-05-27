@@ -7,7 +7,7 @@
 /* Global Variables */
 :root {
   /* Base application variables */
-  --app-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --app-font-family:  Poppins, sans-serif;
   --app-primary: var(--primary-color);
   --app-card-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.12);
   --app-content-padding: 1.5rem;
@@ -86,14 +86,6 @@ a {
   &:hover {
     text-decoration: underline;
   }
-}
-
-/* Layout Helpers */
-.content-section {
-  padding: var(--app-content-padding);
-  border-radius: var(--border-radius);
-  background-color: var(--surface-card);
-  box-shadow: var(--app-card-shadow);
 }
 
 .grid-container {
@@ -409,11 +401,6 @@ a {
         background-color: rgba(126, 87, 194, 0.1);
       }
     }
-  }
-  
-  /* Card and content styles */
-  .content-section {
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
   }
   
   .p-card {

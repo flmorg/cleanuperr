@@ -1,11 +1,7 @@
 <div class="logs-container">
-    <!-- Main Logs Card -->
-    <p-card styleClass="logs-card">
-        <!-- Card Header -->
-        <ng-template pTemplate="header">
-            <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border position-relative">
+            <div class="flex align-items-center justify-content-between mb-4">
                 <div class="flex align-items-center gap-2 header-title-container">
-                    <h2 class="m-0">Application Logs</h2>
+                    <h1>Application Logs</h1>
                     <p-tag
                         [severity]="isConnected() ? 'success' : 'danger'"
                         [value]="isConnected() ? 'Connected' : 'Disconnected'"
@@ -39,11 +35,10 @@
                     ></button>
                 </div>
             </div>
-        </ng-template>
 
         <!-- Filters Section -->
         <div class="filter-container p-3 border-bottom-1 surface-border">
-            <p-toolbar styleClass="mb-2 filter-toolbar">
+            <p-toolbar styleClass="filter-toolbar">
                 <ng-template pTemplate="start">
                     <div class="flex align-items-center gap-2 flex-wrap filter-inputs-container">
                         <!-- Search Filter -->
@@ -216,5 +211,4 @@
 
         <!-- Export Menu -->
         <p-menu #exportMenu [popup]="true" [model]="exportMenuItems"></p-menu>
-    </p-card>
 </div>

@@ -2,6 +2,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding: 1.5rem;
   
   .events-card {
     height: 100%;
@@ -27,7 +28,7 @@
   
   // Filter controls
   .filter-container {
-    background-color: var(--surface-section);
+    background-color: var(--p-toolbar-background);
     
     @media (max-width: 576px) {
       padding: 0.75rem !important;
@@ -57,6 +58,10 @@
           margin-top: 0.5rem;
         }
       }
+    }
+
+    ::ng-deep .filter-toolbar.p-toolbar{
+      border: none;
     }
     
     // Filter actions container for better mobile layout
@@ -329,8 +334,6 @@
         border-top: 1px solid var(--surface-border);
         
         .event-data {
-          margin-bottom: 0.75rem;
-          
           .data-label {
             font-weight: 600;
             color: var(--text-color-secondary);
