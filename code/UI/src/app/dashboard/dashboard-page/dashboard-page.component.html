@@ -4,215 +4,131 @@
     <p-button icon="pi pi-sync" styleClass="p-button-text" label="Refresh" (onClick)="refreshDashboard()"></p-button>
   </div>
   
-  <!-- Status Overview -->
-  <div class="grid grid-container">
-    <div class="col-12 md:col-6 xl:col-3">
-      <div class="overview-box bg-primary">
-        <div class="overview-icon">
-          <i class="pi pi-bolt"></i>
-        </div>
-        <div class="overview-data">
-          <div class="overview-value">System Status</div>
-          <div class="overview-label">Operational</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-12 md:col-6 xl:col-3">
-      <div class="overview-box bg-success">
-        <div class="overview-icon">
-          <i class="pi pi-server"></i>
-        </div>
-        <div class="overview-data">
-          <div class="overview-value">Services</div>
-          <div class="overview-label">All Running</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-12 md:col-6 xl:col-3">
-      <div class="overview-box bg-warning">
-        <div class="overview-icon">
-          <i class="pi pi-exclamation-triangle"></i>
-        </div>
-        <div class="overview-data">
-          <div class="overview-value">Warnings</div>
-          <div class="overview-label">0 Warnings</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-12 md:col-6 xl:col-3">
-      <div class="overview-box bg-danger">
-        <div class="overview-icon">
-          <i class="pi pi-times-circle"></i>
-        </div>
-        <div class="overview-data">
-          <div class="overview-value">Errors</div>
-          <div class="overview-label">0 Errors</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Main Cards -->
-  <div class="grid grid-container">
-    <div class="col-12 md:col-6 lg:col-4">
-      <p-card styleClass="dashboard-card">
-        <ng-template pTemplate="header">
-          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-            <div>
-              <h2 class="card-title m-0">Logs Summary</h2>
-              <span class="card-subtitle">Recent logging activity</span>
-            </div>
-            <i class="pi pi-list text-xl"></i>
-          </div>
-        </ng-template>
-        <div class="card-content">
-          <div class="mb-3">
-            <div class="flex align-items-center mb-2">
-              <i class="pi pi-check-circle text-success mr-2"></i>
-              <span class="font-medium">Info Logs</span>
-              <span class="ml-auto font-medium">24</span>
-            </div>
-            <p-progressBar [value]="30" styleClass="mb-2" [style]="{'height': '8px'}"></p-progressBar>
-          </div>
-          
-          <div class="mb-3">
-            <div class="flex align-items-center mb-2">
-              <i class="pi pi-exclamation-triangle text-warning mr-2"></i>
-              <span class="font-medium">Warning Logs</span>
-              <span class="ml-auto font-medium">10</span>
-            </div>
-            <p-progressBar [value]="12" styleClass="mb-2" [style]="{'height': '8px'}" [styleClass]="'warning-progress'"></p-progressBar>
-          </div>
-          
-          <div class="mb-3">
-            <div class="flex align-items-center mb-2">
-              <i class="pi pi-times-circle text-danger mr-2"></i>
-              <span class="font-medium">Error Logs</span>
-              <span class="ml-auto font-medium">3</span>
-            </div>
-            <p-progressBar [value]="5" styleClass="mb-2" [style]="{'height': '8px'}" [styleClass]="'danger-progress'"></p-progressBar>
-          </div>
-          
-          <div class="card-footer">
-            <button pButton label="View All Logs" icon="pi pi-arrow-right" routerLink="/logs" iconPos="right"></button>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    
-    <div class="col-12 md:col-6 lg:col-4">
-      <p-card styleClass="dashboard-card">
-        <ng-template pTemplate="header">
-          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-            <div>
-              <h2 class="card-title m-0">System Status</h2>
-              <span class="card-subtitle">Current health status</span>
-            </div>
-            <i class="pi pi-shield text-xl"></i>
-          </div>
-        </ng-template>
-        <div class="card-content">
-          <div class="status-item mb-3 flex align-items-center">
-            <span class="status-indicator active mr-2"></span>
-            <div class="flex-1">
-              <div class="font-medium">API Service</div>
-              <div class="text-sm text-color-secondary">Running since 2 days</div>
-            </div>
-            <p-tag severity="success" value="Active"></p-tag>
-          </div>
-          
-          <div class="status-item mb-3 flex align-items-center">
-            <span class="status-indicator active mr-2"></span>
-            <div class="flex-1">
-              <div class="font-medium">Log Hub</div>
-              <div class="text-sm text-color-secondary">Connected</div>
-            </div>
-            <p-tag severity="success" value="Active"></p-tag>
-          </div>
-          
-          <div class="status-item mb-3 flex align-items-center">
-            <span class="status-indicator active mr-2"></span>
-            <div class="flex-1">
-              <div class="font-medium">Database</div>
-              <div class="text-sm text-color-secondary">Operational</div>
-            </div>
-            <p-tag severity="success" value="Active"></p-tag>
-          </div>
-          
-          <div class="card-footer">
-            <button pButton label="System Details" icon="pi pi-server" class="p-button-outlined"></button>
-          </div>
-        </div>
-      </p-card>
-    </div>
-    
-    <div class="col-12 md:col-6 lg:col-4">
-      <p-card styleClass="dashboard-card">
-        <ng-template pTemplate="header">
-          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-            <div>
-              <h2 class="card-title m-0">Updates & Info</h2>
-              <span class="card-subtitle">System updates</span>
-            </div>
-            <i class="pi pi-info-circle text-xl"></i>
-          </div>
-        </ng-template>
-        <div class="card-content">
-          <div class="update-item mb-3 p-2 border-round surface-hover flex align-items-center">
-            <i class="pi pi-check-circle text-success mr-2"></i>
-            <div>
-              <div class="font-medium">System up to date</div>
-              <div class="text-sm text-color-secondary">Latest version installed</div>
-            </div>
-          </div>
-          
-          <div class="update-item mb-3 p-2 border-round surface-hover flex align-items-center">
-            <i class="pi pi-calendar mr-2"></i>
-            <div>
-              <div class="font-medium">Last scan</div>
-              <div class="text-sm text-color-secondary">Today at 10:30 AM</div>
-            </div>
-          </div>
-          
-          <div class="update-item mb-3 p-2 border-round surface-hover flex align-items-center">
-            <i class="pi pi-history mr-2"></i>
-            <div>
-              <div class="font-medium">Next scan scheduled</div>
-              <div class="text-sm text-color-secondary">Tomorrow at 02:00 AM</div>
-            </div>
-          </div>
-          
-          <div class="card-footer">
-            <button pButton label="Check for Updates" icon="pi pi-refresh" class="p-button-secondary"></button>
-          </div>
-        </div>
-      </p-card>
-    </div>
-  </div>
-  
-  <!-- Recent Activity Section -->
+  <!-- Real-time Cards -->
   <div class="grid">
-    <div class="col-12">
-      <p-card styleClass="dashboard-card" header="Recent Activity">
-        <p-timeline [value]="activityItems" styleClass="activity-timeline">
-          <ng-template pTemplate="content" let-item>
-            <div class="activity-item p-2">
-              <div class="font-medium">{{item.title}}</div>
-              <div class="text-sm text-color-secondary">{{item.description}}</div>
-              <div class="text-xs mt-2">{{item.time}}</div>
+    <!-- Recent Logs Card -->
+    <div class="col-12 lg:col-6">
+      <p-card styleClass="dashboard-card h-full">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div>
+              <h2 class="card-title m-0">Recent Logs</h2>
+              <span class="card-subtitle">Live log stream</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <div class="connection-status" [ngClass]="{'connected': logsConnected(), 'disconnected': !logsConnected()}">
+                <i class="pi" [ngClass]="logsConnected() ? 'pi-circle-fill' : 'pi-circle'"></i>
+                <span class="text-xs">{{logsConnected() ? 'Connected' : 'Disconnected'}}</span>
+              </div>
+              <i class="pi pi-list text-xl"></i>
+            </div>
+          </div>
+        </ng-template>
+        
+        <div class="card-content">
+          <div class="timeline-container" *ngIf="displayLogs().length > 0; else noLogsTemplate">
+            <div class="timeline-item" *ngFor="let log of displayLogs(); let i = index">
+              <div class="timeline-marker">
+                <span class="timeline-icon" [ngClass]="getLogIconClass(log.level)">
+                  <i [class]="getLogIcon(log.level)"></i>
+                </span>
+              </div>
+              <div class="timeline-content">
+                <div class="flex align-items-start justify-content-between mb-1">
+                  <div class="flex align-items-center gap-2">
+                    <p-tag [severity]="getLogSeverity(log.level)" [value]="log.level"></p-tag>
+                    <span class="text-xs text-color-secondary" *ngIf="log.category">{{log.category}}</span>
+                  </div>
+                  <span class="text-xs text-color-secondary">{{log.timestamp | date:'HH:mm:ss'}}</span>
+                </div>
+                <div class="timeline-message" 
+                     [pTooltip]="log.message" 
+                     tooltipPosition="top"
+                     [showDelay]="500">
+                  {{truncateMessage(log.message)}}
+                </div>
+                <div class="text-xs text-color-secondary mt-1" *ngIf="log.jobName">
+                  Job: {{log.jobName}}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noLogsTemplate>
+            <div class="empty-state text-center py-4">
+              <i class="pi pi-list text-4xl text-color-secondary mb-3"></i>
+              <p class="text-color-secondary">No recent logs available</p>
+              <p-progressSpinner *ngIf="!logsConnected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
             </div>
           </ng-template>
-          <ng-template pTemplate="opposite" let-item>
-            <div class="activity-icon-container">
-              <span class="activity-icon" [ngClass]="item.iconClass">
-                <i [class]="item.icon"></i>
-              </span>
+          
+          <div class="card-footer mt-3">
+            <button pButton label="View All Logs" icon="pi pi-arrow-right" routerLink="/logs" iconPos="right" class="p-button-outlined"></button>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    
+    <!-- Recent Events Card -->
+    <div class="col-12 lg:col-6">
+      <p-card styleClass="dashboard-card h-full">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div>
+              <h2 class="card-title m-0">Recent Events</h2>
+              <span class="card-subtitle">Live event stream</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <div class="connection-status" [ngClass]="{'connected': eventsConnected(), 'disconnected': !eventsConnected()}">
+                <i class="pi" [ngClass]="eventsConnected() ? 'pi-circle-fill' : 'pi-circle'"></i>
+                <span class="text-xs">{{eventsConnected() ? 'Connected' : 'Disconnected'}}</span>
+              </div>
+              <i class="pi pi-calendar text-xl"></i>
+            </div>
+          </div>
+        </ng-template>
+        
+        <div class="card-content">
+          <div class="timeline-container" *ngIf="displayEvents().length > 0; else noEventsTemplate">
+            <div class="timeline-item" *ngFor="let event of displayEvents(); let i = index">
+              <div class="timeline-marker">
+                <span class="timeline-icon" [ngClass]="getEventIconClass(event.eventType, event.severity)">
+                  <i [class]="getEventIcon(event.eventType)"></i>
+                </span>
+              </div>
+              <div class="timeline-content">
+                <div class="flex align-items-start justify-content-between mb-1">
+                  <div class="flex align-items-center gap-2">
+                    <p-tag [severity]="getEventSeverity(event.severity)" [value]="event.severity"></p-tag>
+                    <span class="text-xs text-color-secondary">{{formatEventType(event.eventType)}}</span>
+                  </div>
+                  <span class="text-xs text-color-secondary">{{event.timestamp | date:'HH:mm:ss'}}</span>
+                </div>
+                <div class="timeline-message" 
+                     [pTooltip]="event.message" 
+                     tooltipPosition="top"
+                     [showDelay]="500">
+                  {{truncateMessage(event.message)}}
+                </div>
+                <div class="text-xs text-color-secondary mt-1" *ngIf="event.trackingId">
+                  Tracking: {{event.trackingId}}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noEventsTemplate>
+            <div class="empty-state text-center py-4">
+              <i class="pi pi-calendar text-4xl text-color-secondary mb-3"></i>
+              <p class="text-color-secondary">No recent events available</p>
+              <p-progressSpinner *ngIf="!eventsConnected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
             </div>
           </ng-template>
-        </p-timeline>
+          
+          <div class="card-footer mt-3">
+            <button pButton label="View All Events" icon="pi pi-arrow-right" routerLink="/events" iconPos="right" class="p-button-outlined"></button>
+          </div>
+        </div>
       </p-card>
     </div>
   </div>

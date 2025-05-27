@@ -1,5 +1,16 @@
 .dashboard-container {
-  padding: 0;
+  padding: 1.5rem;
+  
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+  
+  .card-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+  }
 
   .grid-container {
     margin-bottom: 2rem;
@@ -78,10 +89,12 @@
     .dashboard-card {
       height: 100%;
       transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--surface-border);
       
       &:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
       
       .p-card-header {
@@ -254,6 +267,215 @@
           padding: 0 0 1.5rem 2rem;
         }
       }
+    }
+  }
+}
+
+// Connection status indicator
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  
+  &.connected {
+    background-color: var(--green-50);
+    color: var(--green-700);
+    
+    .pi {
+      color: var(--green-500);
+    }
+  }
+  
+  &.disconnected {
+    background-color: var(--red-50);
+    color: var(--red-700);
+    
+    .pi {
+      color: var(--red-500);
+    }
+  }
+}
+
+// Timeline styling
+.timeline-container {
+  position: relative;
+  
+  .timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+    position: relative;
+    
+    &:not(:last-child) {
+      &::after {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 2rem;
+        bottom: -0.5rem;
+        width: 2px;
+        background-color: var(--surface-border);
+      }
+    }
+    
+    .timeline-marker {
+      position: relative;
+      z-index: 1;
+      
+      .timeline-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: 2px solid var(--surface-ground);
+        background-color: var(--surface-ground);
+      }
+    }
+    
+    .timeline-content {
+      flex: 1;
+      min-width: 0;
+      
+      .timeline-message {
+        font-size: 0.875rem;
+        line-height: 1.4;
+        color: var(--text-color);
+        word-break: break-word;
+      }
+    }
+  }
+}
+
+// Log icon styling
+.log-icon-error {
+  background-color: var(--red-100);
+  color: var(--red-600);
+  border-color: var(--red-200);
+}
+
+.log-icon-warning {
+  background-color: var(--orange-100);
+  color: var(--orange-600);
+  border-color: var(--orange-200);
+}
+
+.log-icon-info {
+  background-color: var(--blue-100);
+  color: var(--blue-600);
+  border-color: var(--blue-200);
+}
+
+.log-icon-debug {
+  background-color: var(--gray-100);
+  color: var(--gray-600);
+  border-color: var(--gray-200);
+}
+
+.log-icon-default {
+  background-color: var(--surface-100);
+  color: var(--text-color-secondary);
+  border-color: var(--surface-200);
+}
+
+// Event icon styling
+.event-icon-strike {
+  background-color: var(--yellow-100);
+  color: var(--yellow-600);
+  border-color: var(--yellow-200);
+}
+
+.event-icon-strike-error {
+  background-color: var(--red-100);
+  color: var(--red-600);
+  border-color: var(--red-200);
+}
+
+.event-icon-strike-warning {
+  background-color: var(--orange-100);
+  color: var(--orange-600);
+  border-color: var(--orange-200);
+}
+
+.event-icon-error {
+  background-color: var(--red-100);
+  color: var(--red-600);
+  border-color: var(--red-200);
+}
+
+.event-icon-warning {
+  background-color: var(--orange-100);
+  color: var(--orange-600);
+  border-color: var(--orange-200);
+}
+
+.event-icon-info {
+  background-color: var(--blue-100);
+  color: var(--blue-600);
+  border-color: var(--blue-200);
+}
+
+.event-icon-default {
+  background-color: var(--surface-100);
+  color: var(--text-color-secondary);
+  border-color: var(--surface-200);
+}
+
+// Empty state styling
+.empty-state {
+  padding: 2rem 1rem;
+  
+  .pi {
+    opacity: 0.5;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+// Card footer styling
+.card-footer {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 1rem;
+  
+  .p-button {
+    width: 100%;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .timeline-item {
+    gap: 0.5rem;
+    
+    .timeline-marker .timeline-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: 0.75rem;
+    }
+    
+    &:not(:last-child)::after {
+      left: 0.75rem;
+    }
+  }
+  
+  .connection-status {
+    span {
+      display: none;
     }
   }
 }
