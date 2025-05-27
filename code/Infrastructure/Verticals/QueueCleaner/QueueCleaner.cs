@@ -148,8 +148,8 @@ public sealed class QueueCleaner : GenericHandler
                 }
                 
                 // failed import check
-                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate, config.ImportFailedMaxStrikes);
-                DeleteReason deleteReason = downloadCheckResult.ShouldRemove ? downloadCheckResult.DeleteReason : DeleteReason.ImportFailed;
+                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate, config.FailedImportMaxStrikes);
+                DeleteReason deleteReason = downloadCheckResult.ShouldRemove ? downloadCheckResult.DeleteReason : DeleteReason.FailedImport;
 
                 if (!shouldRemoveFromArr && !downloadCheckResult.ShouldRemove)
                 {
@@ -170,7 +170,7 @@ public sealed class QueueCleaner : GenericHandler
                         !_config.SlowDeletePrivate;
     
                     bool shouldKeepDueToDeleteRules = downloadCheckResult.ShouldRemove && (isStalledWithoutPruneFlag || isSlowWithoutPruneFlag);
-                    bool shouldKeepDueToImportRules = shouldRemoveFromArr && !_config.ImportFailedDeletePrivate;
+                    bool shouldKeepDueToImportRules = shouldRemoveFromArr && !_config.FailedImportDeletePrivate;
 
                     if (shouldKeepDueToDeleteRules || shouldKeepDueToImportRules)
                     {

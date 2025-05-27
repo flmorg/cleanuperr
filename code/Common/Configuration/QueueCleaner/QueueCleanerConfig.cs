@@ -16,13 +16,13 @@ public sealed record QueueCleanerConfig : IJobConfig
 
     public string IgnoredDownloadsPath { get; init; } = string.Empty;
     
-    public ushort ImportFailedMaxStrikes { get; init; }
+    public ushort FailedImportMaxStrikes { get; init; }
     
-    public bool ImportFailedIgnorePrivate { get; init; }
+    public bool FailedImportIgnorePrivate { get; init; }
     
-    public bool ImportFailedDeletePrivate { get; init; }
+    public bool FailedImportDeletePrivate { get; init; }
 
-    public IReadOnlyList<string> ImportFailedIgnorePatterns { get; init; } = [];
+    public IReadOnlyList<string> FailedImportIgnorePatterns { get; init; } = [];
     
     public ushort StalledMaxStrikes { get; init; }
     
@@ -56,7 +56,7 @@ public sealed record QueueCleanerConfig : IJobConfig
     
     public void Validate()
     {
-        if (ImportFailedMaxStrikes is > 0 and < 3)
+        if (FailedImportMaxStrikes is > 0 and < 3)
         {
             throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__IMPORT_FAILED_MAX_STRIKES must be 3");
         }

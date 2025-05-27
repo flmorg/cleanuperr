@@ -6,8 +6,7 @@ public abstract class ArrConfig : IConfig
 {
     public bool Enabled { get; init; }
 
-    [ConfigurationKeyName("IMPORT_FAILED_MAX_STRIKES")]
-    public short ImportFailedMaxStrikes { get; init; } = -1;
+    public short FailedImportMaxStrikes { get; init; } = -1;
     
     public List<ArrInstance> Instances { get; init; } = [];
 

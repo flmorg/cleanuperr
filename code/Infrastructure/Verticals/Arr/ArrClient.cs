@@ -74,7 +74,7 @@ public abstract class ArrClient : IArrClient
 
     public virtual async Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload, short arrMaxStrikes)
     {
-        if (_queueCleanerConfig.ImportFailedIgnorePrivate && isPrivateDownload)
+        if (_queueCleanerConfig.FailedImportIgnorePrivate && isPrivateDownload)
         {
             // ignore private trackers
             _logger.LogDebug("skip failed import check | download is private | {name}", record.Title);
@@ -108,7 +108,7 @@ public abstract class ArrClient : IArrClient
                 return false;
             }
             
-            ushort maxStrikes = arrMaxStrikes > 0 ? (ushort)arrMaxStrikes : _queueCleanerConfig.ImportFailedMaxStrikes;
+            ushort maxStrikes = arrMaxStrikes > 0 ? (ushort)arrMaxStrikes : _queueCleanerConfig.FailedImportMaxStrikes;
             
             return await _striker.StrikeAndCheckLimit(
                 record.DownloadId,
@@ -214,7 +214,7 @@ public abstract class ArrClient : IArrClient
     
     private bool HasIgnoredPatterns(QueueRecord record)
     {
-        if (_queueCleanerConfig.ImportFailedIgnorePatterns.Count is 0)
+        if (_queueCleanerConfig.FailedImportIgnorePatterns.Count is 0)
         {
             // no patterns are configured
             return false;
@@ -234,7 +234,7 @@ public abstract class ArrClient : IArrClient
             .ForEach(x => messages.Add(x));
         
         return messages.Any(
-            m => _queueCleanerConfig.ImportFailedIgnorePatterns.Any(
+            m => _queueCleanerConfig.FailedImportIgnorePatterns.Any(
                 p => !string.IsNullOrWhiteSpace(p.Trim()) && m.Contains(p, StringComparison.InvariantCultureIgnoreCase)
             )
         );

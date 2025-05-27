@@ -4,7 +4,7 @@ public enum DeleteReason
 {
     None,
     Stalled,
-    ImportFailed,
+    FailedImport,
     DownloadingMetadata,
     SlowSpeed,
     SlowTime,
