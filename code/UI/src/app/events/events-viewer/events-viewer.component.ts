@@ -65,7 +65,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   // Filter state
   severityFilter = signal<string | null>(null);
   eventTypeFilter = signal<string | null>(null);
-  sourceFilter = signal<string | null>(null);
   searchFilter = signal<string>('');
 
   // Export menu items
@@ -87,18 +86,13 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
       filtered = filtered.filter(event => event.eventType === this.eventTypeFilter());
     }
     
-    if (this.sourceFilter()) {
-      filtered = filtered.filter(event => event.source.includes(this.sourceFilter()!));
-    }
-    
     if (this.searchFilter()) {
       const search = this.searchFilter().toLowerCase();
       filtered = filtered.filter(event => 
         event.message.toLowerCase().includes(search) ||
-        event.source.toLowerCase().includes(search) ||
         event.eventType.toLowerCase().includes(search) ||
         (event.data && event.data.toLowerCase().includes(search)) ||
-        (event.correlationId && event.correlationId.toLowerCase().includes(search)));
+        (event.trackingId && event.trackingId.toLowerCase().includes(search)));
     }
     
     return filtered;
@@ -112,11 +106,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   eventTypes = computed(() => {
     const uniqueTypes = [...new Set(this.events().map(event => event.eventType))];
     return uniqueTypes.map(type => ({ label: type, value: type }));
-  });
-  
-  sources = computed(() => {
-    const uniqueSources = [...new Set(this.events().map(event => event.source))];
-    return uniqueSources.map(source => ({ label: source, value: source }));
   });
   
   constructor() {}
@@ -174,10 +163,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     this.eventTypeFilter.set(eventType);
   }
   
-  onSourceFilterChange(source: string): void {
-    this.sourceFilter.set(source);
-  }
-  
   onSearchChange(event: Event): void {
     const searchText = (event.target as HTMLInputElement).value;
     this.search$.next(searchText);
@@ -186,7 +171,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.severityFilter.set(null);
     this.eventTypeFilter.set(null);
-    this.sourceFilter.set(null);
     this.searchFilter.set('');
   }
   
@@ -195,13 +179,15 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     
     switch (normalizedSeverity) {
       case 'error':
-      case 'critical':
         return 'danger';
       case 'warning':
         return 'warn';
-      case 'info':
       case 'information':
         return 'info';
+      case 'important':
+        return 'warn';
+      case 'test':
+        return 'secondary';
       default:
         return 'secondary';
     }
@@ -215,8 +201,8 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     return this.events().some(event => event.data);
   }
   
-  hasCorrelationInfo(): boolean {
-    return this.events().some(event => event.correlationId);
+  hasTrackingInfo(): boolean {
+    return this.events().some(event => event.trackingId);
   }
 
   /**
@@ -227,13 +213,15 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     
     switch (normalizedSeverity) {
       case 'error':
-      case 'critical':
         return 'severity-error';
       case 'warning':
         return 'severity-warning';
-      case 'info':
       case 'information':
         return 'severity-info';
+      case 'important':
+        return 'severity-warning';
+      case 'test':
+        return 'severity-default';
       default:
         return 'severity-default';
     }
@@ -256,10 +244,10 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     domEvent.stopPropagation();
     
     const timestamp = new Date(event.timestamp).toISOString();
-    let content = `[${timestamp}] [${event.severity}] [${event.eventType}] [${event.source}] ${event.message}`;
+    let content = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
     
-    if (event.correlationId) {
-      content += `\nCorrelation ID: ${event.correlationId}`;
+    if (event.trackingId) {
+      content += `\nTracking ID: ${event.trackingId}`;
     }
     
     if (event.data) {
@@ -278,10 +266,10 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     
     const content = events.map(event => {
       const timestamp = new Date(event.timestamp).toISOString();
-      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] [${event.source}] ${event.message}`;
+      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
       
-      if (event.correlationId) {
-        entry += `\nCorrelation ID: ${event.correlationId}`;
+      if (event.trackingId) {
+        entry += `\nTracking ID: ${event.trackingId}`;
       }
       
       if (event.data) {
@@ -322,19 +310,18 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     if (events.length === 0) return;
     
     // CSV header
-    let csv = 'Timestamp,Severity,EventType,Source,Message,Data,CorrelationId\n';
+    let csv = 'Timestamp,Severity,EventType,Message,Data,TrackingId\n';
     
     // CSV rows
     events.forEach(event => {
       const timestamp = new Date(event.timestamp).toISOString();
       const severity = event.severity || '';
       const eventType = event.eventType ? `"${event.eventType.replace(/"/g, '""')}"` : '';
-      const source = event.source ? `"${event.source.replace(/"/g, '""')}"` : '';
       const message = event.message ? `"${event.message.replace(/"/g, '""')}"` : '';
       const data = event.data ? `"${event.data.replace(/"/g, '""').replace(/\n/g, ' ')}"` : '';
-      const correlationId = event.correlationId ? `"${event.correlationId.replace(/"/g, '""')}"` : '';
+      const trackingId = event.trackingId ? `"${event.trackingId.replace(/"/g, '""')}"` : '';
       
-      csv += `${timestamp},${severity},${eventType},${source},${message},${data},${correlationId}\n`;
+      csv += `${timestamp},${severity},${eventType},${message},${data},${trackingId}\n`;
     });
     
     this.downloadFile(csv, 'text/csv', 'events.csv');
@@ -349,10 +336,10 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     
     const content = events.map(event => {
       const timestamp = new Date(event.timestamp).toISOString();
-      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] [${event.source}] ${event.message}`;
+      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
       
-      if (event.correlationId) {
-        entry += `\nCorrelation ID: ${event.correlationId}`;
+      if (event.trackingId) {
+        entry += `\nTracking ID: ${event.trackingId}`;
       }
       
       if (event.data) {

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Infrastructure.Health;
 using Infrastructure.Logging;
 using Infrastructure.Events;
@@ -10,11 +11,21 @@ public static class ApiDI
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
         // Add API-specific services
-        services.AddControllers();
+        services
+            .AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
         services.AddEndpointsApiExplorer();
         
         // Add SignalR for real-time updates
-        services.AddSignalR();
+        services
+            .AddSignalR()
+            .AddJsonProtocol(options =>
+            {
+                options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });;
         
         // Add health status broadcaster
         services.AddHostedService<HealthStatusBroadcaster>();
@@ -26,12 +37,12 @@ public static class ApiDI
         {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
-                Title = "Cleanuperr API",
+                Title = "Cleanuparr API",
                 Version = "v1",
                 Description = "API for managing media downloads and cleanups",
                 Contact = new OpenApiContact
                 {
-                    Name = "Cleanuperr Team"
+                    Name = "Cleanuparr Team"
                 }
             });
         });

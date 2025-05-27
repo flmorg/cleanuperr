@@ -2,11 +2,10 @@ export interface Event {
   id: string;
   timestamp: string;
   eventType: string;
-  source: string;
   message: string;
   data?: string;
   severity: string;
-  correlationId?: string;
+  trackingId?: string;
 }
 
 export interface EventStats {
@@ -19,7 +18,6 @@ export interface EventStats {
 export interface EventFilter {
   severity?: string;
   eventType?: string;
-  source?: string;
   search?: string;
   count?: number;
 } 

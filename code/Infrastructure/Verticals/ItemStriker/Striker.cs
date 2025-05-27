@@ -50,10 +50,9 @@ public sealed class Striker : IStriker
 
         await _notifier.NotifyStrike(strikeType, strikeCount);
         await _eventPublisher.PublishAsync(
-            "strike",
-            nameof(Striker),
+            EventType.SlowStrike, // TODO
             $"Item '{itemName}' has been struck {strikeCount} times for reason '{strikeType}'",
-            severity: "Warning",
+            EventSeverity.Important,
             data: new { hash, itemName, strikeCount, strikeType });
         
         _cache.Set(key, strikeCount, _cacheOptions);

@@ -1,3 +1,4 @@
+using Data.Enums;
 using Infrastructure.Events;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,10 +24,9 @@ public class LoggingInitializer : BackgroundService
             try
             {
                 await _eventPublisher.PublishAsync(
-                    "strike",
+                    EventType.SlowStrike,
                     "test",
-                    "Item '{item}' has been struck {1} times for reason '{stalled}'",
-                    severity: "Warning",
+                    EventSeverity.Important,
                     data: new { Hash = "hash", Name = "name", StrikeCount = "1", Type = "stalled" });
                 throw new Exception("test exception");
             }

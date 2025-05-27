@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Data.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Models.Events;
@@ -6,25 +7,20 @@ namespace Data.Models.Events;
 /// <summary>
 /// Represents an event in the system
 /// </summary>
-[Index(nameof(Timestamp), IsDescending = new[] { true })]
+[Index(nameof(Timestamp), IsDescending = [true])]
 [Index(nameof(EventType))]
 [Index(nameof(Severity))]
-[Index(nameof(Source))]
+[Index(nameof(Message))]
 public class AppEvent
 {
     [Key]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     
     [Required]
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     
     [Required]
-    [MaxLength(100)]
-    public string EventType { get; set; } = string.Empty;
-    
-    [Required]
-    [MaxLength(100)]
-    public string Source { get; set; } = string.Empty;
+    public EventType EventType { get; set; }
     
     [Required]
     [MaxLength(1000)]
@@ -36,12 +32,10 @@ public class AppEvent
     public string? Data { get; set; }
     
     [Required]
-    [MaxLength(20)]
-    public string Severity { get; set; } = "Info"; // Info, Warning, Error, Critical
+    public required EventSeverity Severity { get; set; }
     
     /// <summary>
     /// Optional correlation ID to link related events
     /// </summary>
-    [MaxLength(50)]
-    public string? CorrelationId { get; set; }
+    public Guid? TrackingId { get; set; }
 } 

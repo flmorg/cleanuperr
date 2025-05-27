@@ -88,18 +88,6 @@
                             [disabled]="!isConnected()"
                         >
                         </p-select>
-
-                        <!-- Source Filter -->
-                        <p-select
-                            [options]="sources()"
-                            [ngModel]="sourceFilter()"
-                            placeholder="Filter by source"
-                            [showClear]="true"
-                            (onChange)="onSourceFilterChange($event.value)"
-                            styleClass="source-dropdown fixed-width-dropdown"
-                            [disabled]="!isConnected()"
-                        >
-                        </p-select>
                     </div>
                 </ng-template>
                 <ng-template pTemplate="end">
@@ -117,7 +105,7 @@
                                 label="Clear Filters"
                                 class="p-button-outlined ml-2 clear-filters-btn"
                                 (click)="clearFilters()"
-                                [disabled]="!isConnected() || (!severityFilter() && !eventTypeFilter() && !sourceFilter() && !searchFilter())"
+                                [disabled]="!isConnected() || (!severityFilter() && !eventTypeFilter() && !searchFilter())"
                             ></button>
                         </div>
                     </div>
@@ -135,12 +123,12 @@
                     [ngClass]="getSeverityClass(event.severity)"
                     [id]="'event-' + i"
                 >
-                    <!-- Event Entry Header - only expandable if has data or correlation ID -->
+                    <!-- Event Entry Header - only expandable if has data or tracking ID -->
                     <div
                         class="event-entry-header"
-                        [class.expandable]="event.data || event.correlationId"
+                        [class.expandable]="event.data || event.trackingId"
                         (click)="
-                            event.data || event.correlationId ? toggleEventExpansion(i, $event) : null
+                            event.data || event.trackingId ? toggleEventExpansion(i, $event) : null
                         "
                     >
                         <!-- Actions (Copy button at start) -->
@@ -170,29 +158,24 @@
                             <span class="event-type-badge">{{ event.eventType }}</span>
                         </div>
 
-                        <!-- Source -->
-                        <div class="event-source">
-                            <span class="event-source-badge">{{ event.source }}</span>
-                        </div>
-
                         <!-- Message -->
                         <div class="event-message">
                             {{ event.message }}
                         </div>
 
-                        <!-- Correlation ID (if exists) -->
-                        <div class="event-correlation" *ngIf="event.correlationId">
+                        <!-- Tracking ID (if exists) -->
+                        <div class="event-tracking" *ngIf="event.trackingId">
                             <p-tag 
-                                [value]="event.correlationId" 
+                                [value]="event.trackingId" 
                                 severity="secondary" 
                                 [rounded]="true"
-                                styleClass="correlation-tag"
-                                [pTooltip]="'Correlation ID: ' + event.correlationId"
+                                styleClass="tracking-tag"
+                                [pTooltip]="'Tracking ID: ' + event.trackingId"
                             ></p-tag>
                         </div>
 
-                        <!-- Dropdown button (only for events with data or correlation ID) -->
-                        <div class="event-actions" *ngIf="event.data || event.correlationId">
+                        <!-- Dropdown button (only for events with data or tracking ID) -->
+                        <div class="event-actions" *ngIf="event.data || event.trackingId">
                             <button
                                 pButton
                                 [icon]="expandedEvents[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
@@ -212,11 +195,11 @@
                             <div class="data-content" *ngIf="!isValidJson(event.data)">{{ event.data }}</div>
                         </div>
 
-                        <!-- Correlation Information -->
-                        <div class="event-metadata" *ngIf="event.correlationId">
+                        <!-- Tracking Information -->
+                        <div class="event-metadata" *ngIf="event.trackingId">
                             <div class="metadata-item">
-                                <span class="metadata-label">Correlation ID:</span>
-                                <span class="metadata-value">{{ event.correlationId }}</span>
+                                <span class="metadata-label">Tracking ID:</span>
+                                <span class="metadata-value">{{ event.trackingId }}</span>
                             </div>
                         </div>
                     </div>

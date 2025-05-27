@@ -1,5 +1,6 @@
 using Data;
 using Data.Models.Events;
+using Data.Enums;
 using Infrastructure.Events;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,20 +25,22 @@ public class EventsController : ControllerBase
     public async Task<ActionResult<List<AppEvent>>> GetEvents(
         [FromQuery] int count = 100,
         [FromQuery] string? severity = null,
-        [FromQuery] string? eventType = null,
-        [FromQuery] string? source = null)
+        [FromQuery] string? eventType = null)
     {
         var query = _context.Events.AsQueryable();
 
         // Apply filters
         if (!string.IsNullOrWhiteSpace(severity))
-            query = query.Where(e => e.Severity == severity);
+        {
+            if (Enum.TryParse<EventSeverity>(severity, true, out var severityEnum))
+                query = query.Where(e => e.Severity == severityEnum);
+        }
 
         if (!string.IsNullOrWhiteSpace(eventType))
-            query = query.Where(e => e.EventType == eventType);
-
-        if (!string.IsNullOrWhiteSpace(source))
-            query = query.Where(e => e.Source.Contains(source));
+        {
+            if (Enum.TryParse<EventType>(eventType, true, out var eventTypeEnum))
+                query = query.Where(e => e.EventType == eventTypeEnum);
+        }
 
         // Order and limit
         var events = await query
@@ -52,7 +55,7 @@ public class EventsController : ControllerBase
     /// Gets a specific event by ID
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<AppEvent>> GetEvent(string id)
+    public async Task<ActionResult<AppEvent>> GetEvent(Guid id)
     {
         var eventEntity = await _context.Events.FindAsync(id);
         
@@ -63,13 +66,13 @@ public class EventsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets events by correlation ID
+    /// Gets events by tracking ID
     /// </summary>
-    [HttpGet("correlation/{correlationId}")]
-    public async Task<ActionResult<List<AppEvent>>> GetEventsByCorrelation(string correlationId)
+    [HttpGet("tracking/{trackingId}")]
+    public async Task<ActionResult<List<AppEvent>>> GetEventsByTracking(Guid trackingId)
     {
         var events = await _context.Events
-            .Where(e => e.CorrelationId == correlationId)
+            .Where(e => e.TrackingId == trackingId)
             .OrderBy(e => e.Timestamp)
             .ToListAsync();
 
@@ -87,11 +90,11 @@ public class EventsController : ControllerBase
             TotalEvents = await _context.Events.CountAsync(),
             EventsBySeverity = await _context.Events
                 .GroupBy(e => e.Severity)
-                .Select(g => new { Severity = g.Key, Count = g.Count() })
+                .Select(g => new { Severity = g.Key.ToString(), Count = g.Count() })
                 .ToListAsync(),
             EventsByType = await _context.Events
                 .GroupBy(e => e.EventType)
-                .Select(g => new { EventType = g.Key, Count = g.Count() })
+                .Select(g => new { EventType = g.Key.ToString(), Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(10)
                 .ToListAsync(),
@@ -119,32 +122,22 @@ public class EventsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets unique event sources
-    /// </summary>
-    [HttpGet("sources")]
-    public async Task<ActionResult<List<string>>> GetEventSources()
-    {
-        var sources = await _context.Events
-            .Select(e => e.Source)
-            .Distinct()
-            .OrderBy(s => s)
-            .ToListAsync();
-
-        return Ok(sources);
-    }
-
-    /// <summary>
     /// Gets unique event types
     /// </summary>
     [HttpGet("types")]
     public async Task<ActionResult<List<string>>> GetEventTypes()
     {
-        var types = await _context.Events
-            .Select(e => e.EventType)
-            .Distinct()
-            .OrderBy(t => t)
-            .ToListAsync();
-
+        var types = Enum.GetNames(typeof(EventType)).ToList();
         return Ok(types);
+    }
+
+    /// <summary>
+    /// Gets unique severities
+    /// </summary>
+    [HttpGet("severities")]
+    public async Task<ActionResult<List<string>>> GetSeverities()
+    {
+        var severities = Enum.GetNames(typeof(EventSeverity)).ToList();
+        return Ok(severities);
     }
 } 
