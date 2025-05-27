@@ -45,8 +45,17 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
   eventsConnected = signal<boolean>(false);
 
   // Computed values for display
-  displayLogs = computed(() => this.recentLogs().slice(-5));
-  displayEvents = computed(() => this.recentEvents().slice(-5));
+  displayLogs = computed(() => {
+    return this.recentLogs()
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Sort chronologically (oldest first)
+      .slice(-5); // Take the last 5 (most recent)
+  });
+  
+  displayEvents = computed(() => {
+    return this.recentEvents()
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Sort chronologically (oldest first)
+      .slice(-5); // Take the last 5 (most recent)
+  });
 
   ngOnInit() {
     this.initializeLogHub();
@@ -104,11 +113,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
       });
   }
 
-  refreshDashboard(): void {
-    console.log('Refreshing dashboard data...');
-    this.logHubService.requestRecentLogs();
-    this.eventHubService.requestRecentEvents(50);
-  }
+
 
   // Log-related methods
   getLogIcon(level: string): string {
