@@ -207,32 +207,6 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Returns the appropriate CSS class based on log level
-   */
-  getLevelClass(level: string): string {
-    const normalizedLevel = level?.toLowerCase() || '';
-    
-    switch (normalizedLevel) {
-      case 'error':
-      case 'fatal':
-      case 'critical':
-        return 'level-error';
-      case 'warning':
-        return 'level-warning';
-      case 'information':
-      case 'info':
-        return 'level-info';
-      case 'debug':
-        return 'level-debug';
-      case 'trace':
-      case 'verbose':
-        return 'level-trace';
-      default:
-        return 'level-default';
-    }
-  }
-
-  /**
    * Toggle expansion of a log entry
    */
   toggleLogExpansion(index: number, event?: Event): void {

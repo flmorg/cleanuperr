@@ -108,7 +108,6 @@
                 <div
                     *ngFor="let log of filteredLogs(); let i = index"
                     class="log-entry"
-                    [ngClass]="getLevelClass(log.level)"
                     [id]="'log-' + i"
                 >
                     <!-- Log Entry Header - only expandable if has exception or metadata -->

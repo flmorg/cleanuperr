@@ -206,28 +206,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Returns the appropriate CSS class based on severity
-   */
-  getSeverityClass(severity: string): string {
-    const normalizedSeverity = severity?.toLowerCase() || '';
-    
-    switch (normalizedSeverity) {
-      case 'error':
-        return 'severity-error';
-      case 'warning':
-        return 'severity-warning';
-      case 'information':
-        return 'severity-info';
-      case 'important':
-        return 'severity-warning';
-      case 'test':
-        return 'severity-default';
-      default:
-        return 'severity-default';
-    }
-  }
-
-  /**
    * Toggle expansion of an event entry
    */
   toggleEventExpansion(index: number, domEvent?: MouseEvent): void {

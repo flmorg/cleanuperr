@@ -164,27 +164,6 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
       
-      // Level-based coloring
-      &.level-error {
-        border-left: 4px solid var(--red-500);
-      }
-      
-      &.level-warning {
-        border-left: 4px solid var(--yellow-500);
-      }
-      
-      &.level-info {
-        border-left: 4px solid var(--blue-500);
-      }
-      
-      &.level-debug {
-        border-left: 4px solid var(--green-500);
-      }
-      
-      &.level-trace {
-        border-left: 4px solid var(--gray-500);
-      }
-      
       // Log entry header
       .log-entry-header {
         display: flex;

@@ -164,23 +164,6 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
       
-      // Severity-based coloring
-      &.severity-error {
-        border-left: 4px solid var(--red-500);
-      }
-      
-      &.severity-warning {
-        border-left: 4px solid var(--yellow-500);
-      }
-      
-      &.severity-info {
-        border-left: 4px solid var(--blue-500);
-      }
-      
-      &.severity-default {
-        border-left: 4px solid var(--gray-500);
-      }
-      
       // Event entry header
       .event-entry-header {
         display: flex;

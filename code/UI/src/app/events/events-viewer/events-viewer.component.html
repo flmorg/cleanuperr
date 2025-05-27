@@ -115,7 +115,6 @@
                 <div
                     *ngFor="let event of filteredEvents(); let i = index"
                     class="event-entry"
-                    [ngClass]="getSeverityClass(event.severity)"
                     [id]="'event-' + i"
                 >
                     <!-- Event Entry Header - only expandable if has data or tracking ID -->
