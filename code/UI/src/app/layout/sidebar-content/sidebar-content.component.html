@@ -1,10 +1,10 @@
 <!-- Logo Container -->
 <div class="logo-container">
   <div class="logo logo-large">
-    <i class="pi pi-check-circle"></i>
+    <img src="icons/128.png" width="40" height="40" alt="Logo">
   </div>
   <div class="logo logo-small">
-    <i class="pi pi-check"></i>
+    <img src="icons/128.png" width="40" height="40" alt="Logo">
   </div>
   <h1>Cleanuparr</h1>
 </div>
@@ -28,18 +28,6 @@
       </div>
       <span>Dashboard</span>
     </a>
-    <a [routerLink]="['/logs']" class="nav-item" [class.active]="router.url.includes('/logs')" (click)="onNavItemClick()">
-      <div class="nav-icon-wrapper">
-        <i class="pi pi-list"></i>
-      </div>
-      <span>Logs</span>
-    </a>
-    <a [routerLink]="['/events']" class="nav-item" [class.active]="router.url.includes('/events')" (click)="onNavItemClick()">
-      <div class="nav-icon-wrapper">
-        <i class="pi pi-calendar"></i>
-      </div>
-      <span>Events</span>
-    </a>
     <a [routerLink]="['/settings']" class="nav-item" [class.active]="router.url.includes('/settings')" (click)="onNavItemClick()">
       <div class="nav-icon-wrapper">
         <i class="pi pi-cog"></i>
@@ -48,11 +36,11 @@
     </a>
   </div>
   
-  <!-- Features Group -->
+  <!-- Activity Group -->
   <div class="nav-group">
-    <div class="nav-group-title">Features</div>
+    <div class="nav-group-title">Activity</div>
     <ng-container *ngFor="let item of menuItems">
-      <ng-container *ngIf="!['Dashboard', 'Logs', 'Events', 'Settings'].includes(item.label)">
+      <ng-container *ngIf="!['Dashboard', 'Settings'].includes(item.label)">
         <a [routerLink]="item.route" class="nav-item" [class.active]="router.url.includes(item.route)" (click)="onNavItemClick()">
           <div class="nav-icon-wrapper">
             <i [class]="item.icon"></i>

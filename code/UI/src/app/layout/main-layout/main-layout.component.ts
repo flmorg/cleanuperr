@@ -45,7 +45,8 @@ export class MainLayoutComponent {
   menuItems: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
     { label: 'Logs', icon: 'pi pi-list', route: '/logs' },
-    { label: 'Settings', icon: 'pi pi-cog', route: '/settings' }
+    { label: 'Settings', icon: 'pi pi-cog', route: '/settings' },
+    { label: 'Events', icon: 'pi pi-calendar', route: '/events' },
   ];
   
   // Mobile menu state
