@@ -20,7 +20,7 @@ import { MenuItem } from 'primeng/api';
 
 // Services & Models
 import { EventHubService } from '../../core/services/event-hub.service';
-import { Event as EventModel } from '../../core/models/event.models';
+import { AppEvent } from '../../core/models/event.models';
 
 @Component({
   selector: 'app-events-viewer',
@@ -28,7 +28,6 @@ import { Event as EventModel } from '../../core/models/event.models';
   imports: [
     NgFor,
     NgIf,
-    NgClass,
     DatePipe,
     FormsModule,
     TableModule,
@@ -57,7 +56,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   @ViewChild('exportMenu') exportMenu: any;
   
   // Signals for reactive state
-  events = signal<EventModel[]>([]);
+  events = signal<AppEvent[]>([]);
   isConnected = signal<boolean>(false);
   autoScroll = signal<boolean>(true);
   expandedEvents: { [key: number]: boolean } = {};
@@ -118,7 +117,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     // Subscribe to events
     this.eventHubService.getEvents()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((events: EventModel[]) => {
+      .subscribe((events: AppEvent[]) => {
         this.events.set(events);
         if (this.autoScroll()) {
           this.scrollToBottom();
@@ -218,7 +217,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   /**
    * Copy a specific event entry to clipboard
    */
-  copyEventEntry(event: EventModel, domEvent: MouseEvent): void {
+  copyEventEntry(event: AppEvent, domEvent: MouseEvent): void {
     domEvent.stopPropagation();
     
     const timestamp = new Date(event.timestamp).toISOString();

@@ -58,7 +58,7 @@ public sealed class QueueCleaner : GenericHandler
     {
         IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
         
-        using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
+        using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
         
         IArrClient arrClient = _arrClientFactory.GetClient(instanceType);
         

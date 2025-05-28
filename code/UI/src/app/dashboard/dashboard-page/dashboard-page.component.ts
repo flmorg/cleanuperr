@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule, NgClass, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, throttleTime } from 'rxjs';
 
 // PrimeNG Components
 import { CardModule } from 'primeng/card';
@@ -14,7 +14,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { LogHubService } from '../../core/services/log-hub.service';
 import { EventHubService } from '../../core/services/event-hub.service';
 import { LogEntry } from '../../core/models/signalr.models';
-import { Event as EventModel } from '../../core/models/event.models';
+import { AppEvent } from '../../core/models/event.models';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -40,7 +40,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
 
   // Signals for reactive state
   recentLogs = signal<LogEntry[]>([]);
-  recentEvents = signal<EventModel[]>([]);
+  recentEvents = signal<AppEvent[]>([]);
   logsConnected = signal<boolean>(false);
   eventsConnected = signal<boolean>(false);
 
@@ -72,9 +72,12 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     this.logHubService.startConnection()
       .catch((error: Error) => console.error('Failed to connect to log hub:', error));
 
-    // Subscribe to logs
+    // Subscribe to logs with throttling to prevent UI overwhelming
     this.logHubService.getLogs()
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        throttleTime(1000) // Max 1 update per second
+      )
       .subscribe((logs: LogEntry[]) => {
         this.recentLogs.set(logs);
       });
@@ -92,10 +95,13 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     this.eventHubService.startConnection()
       .catch((error: Error) => console.error('Failed to connect to event hub:', error));
 
-    // Subscribe to events
+    // Subscribe to events with throttling
     this.eventHubService.getEvents()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((events: EventModel[]) => {
+      .pipe(
+        takeUntil(this.destroy$),
+        throttleTime(1000) // Max 1 update per second
+      )
+      .subscribe((events: AppEvent[]) => {
         this.recentEvents.set(events);
       });
 
@@ -221,6 +227,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     // Other events get standard severity coloring
     switch (normalizedSeverity) {
       case 'error':
+      case 'important':
         return 'event-icon-error';
       case 'warning':
         return 'event-icon-warning';

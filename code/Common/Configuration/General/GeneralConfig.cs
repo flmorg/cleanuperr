@@ -1,6 +1,5 @@
 using Common.Enums;
 using Common.Exceptions;
-using Newtonsoft.Json;
 using Serilog.Events;
 
 namespace Common.Configuration.General;
@@ -13,8 +12,7 @@ public sealed record GeneralConfig : IConfig
     
     public ushort HttpTimeout { get; init; } = 100;
     
-    [JsonProperty("http_validate_cert")]
-    public CertificateValidationType CertificateValidation { get; init; } = CertificateValidationType.Enabled;
+    public CertificateValidationType HttpCertificateValidation { get; init; } = CertificateValidationType.Enabled;
 
     public bool SearchEnabled { get; init; } = true;
     

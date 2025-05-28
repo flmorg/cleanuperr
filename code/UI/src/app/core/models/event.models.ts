@@ -1,6 +1,6 @@
-export interface Event {
+export interface AppEvent {
   id: string;
-  timestamp: string;
+  timestamp: Date;
   eventType: string;
   message: string;
   data?: string;

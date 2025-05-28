@@ -25,10 +25,9 @@ public static class LoggingDI
         LoggerConfiguration logConfig = new();
         const string categoryTemplate = "{#if Category is not null} {Concat('[',Category,']'),CAT_PAD}{#end}";
         const string jobNameTemplate = "{#if JobName is not null} {Concat('[',JobName,']'),JOB_PAD}{#end}";
-        const string instanceNameTemplate = "{#if InstanceName is not null} {Concat('[',InstanceName,']'),ARR_PAD}{#end}";
 
-        const string consoleOutputTemplate = $"[{{@t:yyyy-MM-dd HH:mm:ss.fff}} {{@l:u3}}]{categoryTemplate}{jobNameTemplate}{instanceNameTemplate} {{@m}}\n{{@x}}";
-        const string fileOutputTemplate = $"{{@t:yyyy-MM-dd HH:mm:ss.fff zzz}} [{{@l:u3}}]{categoryTemplate}{jobNameTemplate}{instanceNameTemplate} {{@m:lj}}\n{{@x}}";
+        const string consoleOutputTemplate = $"[{{@t:yyyy-MM-dd HH:mm:ss.fff}} {{@l:u3}}]{jobNameTemplate}{categoryTemplate} {{@m}}\n{{@x}}";
+        const string fileOutputTemplate = $"{{@t:yyyy-MM-dd HH:mm:ss.fff zzz}} [{{@l:u3}}]{jobNameTemplate}{categoryTemplate} {{@m:lj}}\n{{@x}}";
 
         // Determine categories and padding sizes
         List<string> categories = ["SYSTEM", "API", "JOBS", "NOTIFICATIONS"];
@@ -39,19 +38,24 @@ public static class LoggingDI
         int jobPadding = jobNames.Max(x => x.Length) + 2;
 
         // Determine instance name padding
-        List<string> instanceNames = [InstanceType.Sonarr.ToString(), InstanceType.Radarr.ToString(), InstanceType.Lidarr.ToString()];
-        int arrPadding = instanceNames.Max(x => x.Length) + 2;
+        List<string> categoryNames = [
+            InstanceType.Sonarr.ToString(),
+            InstanceType.Radarr.ToString(),
+            InstanceType.Lidarr.ToString(),
+            InstanceType.Readarr.ToString(),
+            InstanceType.Whisparr.ToString(),
+            "SYSTEM"
+        ];
+        int arrPadding = categoryNames.Max(x => x.Length) + 2;
 
         // Apply padding values to templates
         string consoleTemplate = consoleOutputTemplate
-            .Replace("CAT_PAD", catPadding.ToString())
             .Replace("JOB_PAD", jobPadding.ToString())
-            .Replace("ARR_PAD", arrPadding.ToString());
+            .Replace("CAT_PAD", catPadding.ToString());
 
         string fileTemplate = fileOutputTemplate
-            .Replace("CAT_PAD", catPadding.ToString())
             .Replace("JOB_PAD", jobPadding.ToString())
-            .Replace("ARR_PAD", arrPadding.ToString());
+            .Replace("CAT_PAD", catPadding.ToString());
 
         // Configure base logger with dynamic level control
         logConfig

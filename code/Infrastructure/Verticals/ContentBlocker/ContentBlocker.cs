@@ -76,7 +76,7 @@ public sealed class ContentBlocker : GenericHandler
     {
         IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
         
-        using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
+        using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
 
         IArrClient arrClient = _arrClientFactory.GetClient(instanceType);
         BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);

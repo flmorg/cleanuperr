@@ -4,6 +4,7 @@ using Common.Configuration.DownloadClient;
 using Data.Enums;
 using Data.Models.Arr.Queue;
 using Infrastructure.Configuration;
+using Infrastructure.Helpers;
 using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
@@ -248,7 +249,7 @@ public sealed class DownloadCleaner : GenericHandler
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
     {
-        using var _ = LogContext.PushProperty("InstanceName", instanceType.ToString());
+        using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
         
         IArrClient arrClient = _arrClientFactory.GetClient(instanceType);
         

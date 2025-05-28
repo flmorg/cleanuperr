@@ -1,7 +1,9 @@
 using Data.Enums;
 using Infrastructure.Events;
+using Infrastructure.Helpers;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 
 namespace Infrastructure.Logging;
 
@@ -10,6 +12,7 @@ public class LoggingInitializer : BackgroundService
 {
     private readonly ILogger<LoggingInitializer> _logger;
     private readonly EventPublisher _eventPublisher;
+    private readonly Random random = new();
     
     public LoggingInitializer(ILogger<LoggingInitializer> logger, EventPublisher eventPublisher)
     {
@@ -21,10 +24,13 @@ public class LoggingInitializer : BackgroundService
     {
         while (true)
         {
+            using var _ = LogContext.PushProperty(LogProperties.Category,
+                random.Next(0, 100) > 50 ? InstanceType.Sonarr.ToString() : InstanceType.Radarr.ToString());
             try
             {
+                
                 await _eventPublisher.PublishAsync(
-                    EventType.SlowSpeedStrike,
+                    random.Next(0, 100) > 50 ? EventType.DownloadCleaned : EventType.StalledStrike,
                     "test",
                     EventSeverity.Important,
                     data: new { Hash = "hash", Name = "name", StrikeCount = "1", Type = "stalled" });
@@ -39,7 +45,7 @@ public class LoggingInitializer : BackgroundService
                 _logger.LogError(exception, "test");
             }
             
-            await Task.Delay(30000, stoppingToken);
+            await Task.Delay(10000, stoppingToken);
         }
     }
 }

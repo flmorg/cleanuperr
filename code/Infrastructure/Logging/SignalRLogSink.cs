@@ -43,9 +43,8 @@ public class SignalRLogSink : ILogEventSink
                 Level = logEvent.Level.ToString(),
                 Message = stringWriter.ToString(),
                 Exception = logEvent.Exception?.ToString(),
-                Category = GetPropertyValue(logEvent, "Category", "SYSTEM"),
                 JobName = GetPropertyValue(logEvent, "JobName"),
-                InstanceName = GetPropertyValue(logEvent, "InstanceName")
+                Category = GetPropertyValue(logEvent, "Category", "SYSTEM"),
             };
             
             // Add to buffer for new clients

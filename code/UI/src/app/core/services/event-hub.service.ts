@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BaseSignalRService } from './base-signalr.service';
-import { Event } from '../models/event.models';
+import { AppEvent } from '../models/event.models';
 import { SignalRHubConfig } from '../models/signalr.models';
 import { environment } from '../../../environments/environment';
 import * as signalR from '@microsoft/signalr';
@@ -11,7 +11,7 @@ import * as signalR from '@microsoft/signalr';
 @Injectable({
   providedIn: 'root'
 })
-export class EventHubService extends BaseSignalRService<Event> {
+export class EventHubService extends BaseSignalRService<AppEvent> {
   constructor() {
     // Configuration for the events hub
     const config: SignalRHubConfig = {
@@ -33,7 +33,7 @@ export class EventHubService extends BaseSignalRService<Event> {
     super.registerSignalREvents();
 
     // Handle recent events response (bulk load)
-    this.hubConnection.on('RecentEventsReceived', (events: Event[]) => {
+    this.hubConnection.on('RecentEventsReceived', (events: AppEvent[]) => {
       this.messageSubject.next(events);
       console.log(`Received ${events.length} recent events`);
     });
@@ -60,7 +60,7 @@ export class EventHubService extends BaseSignalRService<Event> {
   /**
    * Get the buffered events
    */
-  public getBufferedEvents(): Event[] {
+  public getBufferedEvents(): AppEvent[] {
     return this.getBufferedMessages();
   }
   

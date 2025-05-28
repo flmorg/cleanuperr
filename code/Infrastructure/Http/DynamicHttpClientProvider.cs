@@ -77,7 +77,7 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
         {
             ServerCertificateCustomValidationCallback = (sender, certificate, chain, sslPolicyErrors) =>
                 _certificateValidationService.ShouldByPassValidationError(
-                    httpConfig.CertificateValidation,
+                    httpConfig.HttpCertificateValidation,
                     sender,
                     certificate,
                     chain,

@@ -5,5 +5,6 @@ public enum InstanceType
     Sonarr,
     Radarr,
     Lidarr,
-    Readarr
+    Readarr,
+    Whisparr,
 }
