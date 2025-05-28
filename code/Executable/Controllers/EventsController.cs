@@ -4,6 +4,7 @@ using Data.Enums;
 using Infrastructure.Events;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace Executable.Controllers;
 
@@ -19,14 +20,22 @@ public class EventsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets recent events
+    /// Gets events with pagination and filtering
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<List<AppEvent>>> GetEvents(
-        [FromQuery] int count = 100,
+    public async Task<ActionResult<PaginatedResult<AppEvent>>> GetEvents(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 100,
         [FromQuery] string? severity = null,
-        [FromQuery] string? eventType = null)
+        [FromQuery] string? eventType = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
     {
+        // Validate pagination parameters
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 100;
+        if (pageSize > 1000) pageSize = 1000; // Cap at 1000 for performance
+        
         var query = _context.Events.AsQueryable();
 
         // Apply filters
@@ -41,14 +50,43 @@ public class EventsController : ControllerBase
             if (Enum.TryParse<EventType>(eventType, true, out var eventTypeEnum))
                 query = query.Where(e => e.EventType == eventTypeEnum);
         }
+        
+        // Apply date range filters
+        if (fromDate.HasValue)
+        {
+            query = query.Where(e => e.Timestamp >= fromDate.Value);
+        }
+        
+        if (toDate.HasValue)
+        {
+            query = query.Where(e => e.Timestamp <= toDate.Value);
+        }
 
-        // Order and limit
+        // Count total matching records for pagination
+        var totalCount = await query.CountAsync();
+        
+        // Calculate pagination
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        var skip = (page - 1) * pageSize;
+        
+        // Get paginated data
         var events = await query
             .OrderByDescending(e => e.Timestamp)
-            .Take(Math.Min(count, 1000)) // Cap at 1000
+            .Skip(skip)
+            .Take(pageSize)
             .ToListAsync();
 
-        return Ok(events);
+        // Return paginated result
+        var result = new PaginatedResult<AppEvent>
+        {
+            Items = events,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            TotalPages = totalPages
+        };
+        
+        return Ok(result);
     }
 
     /// <summary>
@@ -140,4 +178,87 @@ public class EventsController : ControllerBase
         var severities = Enum.GetNames(typeof(EventSeverity)).ToList();
         return Ok(severities);
     }
+    /// <summary>
+    /// Gets the latest events for real-time updates
+    /// </summary>
+    [HttpGet("latest")]
+    public async Task<ActionResult<List<AppEvent>>> GetLatestEvents(
+        [FromQuery] int count = 100,
+        [FromQuery] string? severity = null,
+        [FromQuery] string? eventType = null,
+        [FromQuery] DateTime? after = null)
+    {
+        var query = _context.Events.AsQueryable();
+
+        // Apply filters
+        if (!string.IsNullOrWhiteSpace(severity))
+        {
+            if (Enum.TryParse<EventSeverity>(severity, true, out var severityEnum))
+                query = query.Where(e => e.Severity == severityEnum);
+        }
+
+        if (!string.IsNullOrWhiteSpace(eventType))
+        {
+            if (Enum.TryParse<EventType>(eventType, true, out var eventTypeEnum))
+                query = query.Where(e => e.EventType == eventTypeEnum);
+        }
+        
+        // Filter for events after a specific timestamp
+        if (after.HasValue)
+        {
+            query = query.Where(e => e.Timestamp > after.Value);
+        }
+
+        // Order and limit
+        var events = await query
+            .OrderByDescending(e => e.Timestamp)
+            .Take(Math.Min(count, 1000)) // Cap at 1000
+            .ToListAsync();
+
+        return Ok(events);
+    }
 } 
+
+/// <summary>
+/// Represents a paginated result set
+/// </summary>
+/// <typeparam name="T">Type of items in the result</typeparam>
+public class PaginatedResult<T>
+{
+    /// <summary>
+    /// The items in the current page
+    /// </summary>
+    public List<T> Items { get; set; } = new();
+    
+    /// <summary>
+    /// Current page number (1-based)
+    /// </summary>
+    public int Page { get; set; }
+    
+    /// <summary>
+    /// Number of items per page
+    /// </summary>
+    public int PageSize { get; set; }
+    
+    /// <summary>
+    /// Total number of items across all pages
+    /// </summary>
+    public int TotalCount { get; set; }
+    
+    /// <summary>
+    /// Total number of pages
+    /// </summary>
+    public int TotalPages { get; set; }
+    
+    /// <summary>
+    /// Whether there is a previous page
+    /// </summary>
+    [JsonIgnore]
+    public bool HasPrevious => Page > 1;
+    
+    /// <summary>
+    /// Whether there is a next page
+    /// </summary>
+    [JsonIgnore]
+    public bool HasNext => Page < TotalPages;
+}

@@ -1,0 +1,193 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, BehaviorSubject, interval, Subscription, of } from 'rxjs';
+import { tap, switchMap, catchError, share } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+import { AppEvent } from '../models/event.models';
+
+export interface PaginatedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface EventsFilter {
+  page?: number;
+  pageSize?: number;
+  severity?: string;
+  eventType?: string;
+  fromDate?: Date | null;
+  toDate?: Date | null;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class EventsService {
+  private http = inject(HttpClient);
+  private apiUrl = `${environment.apiUrl}/api/events`;
+  
+  // State management
+  private events = new BehaviorSubject<PaginatedResult<AppEvent> | null>(null);
+  private pollingSubscription: Subscription | null = null;
+  private lastEventTimestamp: Date | null = null;
+  private isPolling = false;
+  private pollInterval = 5000; // 5 seconds
+  
+  // Public observables
+  events$ = this.events.asObservable();
+
+  /**
+   * Load events with pagination and filtering
+   */
+  loadEvents(filter: EventsFilter = {}): Observable<PaginatedResult<AppEvent>> {
+    // Set default values if not provided
+    const params = new HttpParams()
+      .set('page', filter.page?.toString() || '1')
+      .set('pageSize', filter.pageSize?.toString() || '100');
+    
+    // Add optional filters if they exist
+    const paramsWithFilters = this.addFiltersToParams(params, filter);
+    
+    return this.http.get<PaginatedResult<AppEvent>>(this.apiUrl, { params: paramsWithFilters })
+      .pipe(
+        tap(result => {
+          this.events.next(result);
+          
+          // Update last event timestamp if there are events
+          if (result.items.length > 0) {
+            const newestEvent = result.items.reduce((prev, current) => {
+              return new Date(current.timestamp) > new Date(prev.timestamp) ? current : prev;
+            });
+            this.lastEventTimestamp = new Date(newestEvent.timestamp);
+          }
+        }),
+        catchError(error => {
+          console.error('Error loading events:', error);
+          return of({
+            items: [],
+            page: filter.page || 1,
+            pageSize: filter.pageSize || 100,
+            totalCount: 0,
+            totalPages: 0
+          });
+        })
+      );
+  }
+
+  /**
+   * Get latest events (for polling)
+   */
+  getLatestEvents(filter: Partial<EventsFilter> = {}): Observable<AppEvent[]> {
+    let params = new HttpParams().set('count', '100');
+    
+    // Add timestamp filter if we have a last event timestamp
+    if (this.lastEventTimestamp) {
+      params = params.set('after', this.lastEventTimestamp.toISOString());
+    }
+    
+    // Add optional filters if they exist
+    params = this.addFiltersToParams(params, filter);
+    
+    return this.http.get<AppEvent[]>(`${this.apiUrl}/latest`, { params })
+      .pipe(
+        tap(newEvents => {
+          if (newEvents.length > 0) {
+            // Update the last event timestamp
+            const newestEvent = newEvents.reduce((prev, current) => {
+              return new Date(current.timestamp) > new Date(prev.timestamp) ? current : prev;
+            });
+            this.lastEventTimestamp = new Date(newestEvent.timestamp);
+            
+            // Update the events list if we already have events loaded
+            const currentEvents = this.events.value;
+            if (currentEvents) {
+              // Combine old and new events, respecting pagination
+              const combinedItems = [...newEvents, ...currentEvents.items]
+                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                .slice(0, currentEvents.pageSize);
+              
+              // Update the events subject
+              this.events.next({
+                ...currentEvents,
+                items: combinedItems,
+                totalCount: currentEvents.totalCount + newEvents.length
+              });
+            }
+          }
+        }),
+        catchError(error => {
+          console.error('Error getting latest events:', error);
+          return of([]);
+        })
+      );
+  }
+
+  /**
+   * Start polling for new events
+   */
+  startPolling(filter: Partial<EventsFilter> = {}): void {
+    if (this.isPolling) {
+      this.stopPolling();
+    }
+    
+    this.isPolling = true;
+    this.pollingSubscription = interval(this.pollInterval)
+      .pipe(
+        switchMap(() => this.getLatestEvents(filter))
+      )
+      .subscribe();
+  }
+
+  /**
+   * Stop polling for new events
+   */
+  stopPolling(): void {
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+      this.pollingSubscription = null;
+    }
+    this.isPolling = false;
+  }
+
+  /**
+   * Helper to add filters to HttpParams
+   */
+  private addFiltersToParams(params: HttpParams, filter: Partial<EventsFilter>): HttpParams {
+    let updatedParams = params;
+    
+    if (filter.severity) {
+      updatedParams = updatedParams.set('severity', filter.severity);
+    }
+    
+    if (filter.eventType) {
+      updatedParams = updatedParams.set('eventType', filter.eventType);
+    }
+    
+    if (filter.fromDate) {
+      updatedParams = updatedParams.set('fromDate', filter.fromDate.toISOString());
+    }
+    
+    if (filter.toDate) {
+      updatedParams = updatedParams.set('toDate', filter.toDate.toISOString());
+    }
+    
+    return updatedParams;
+  }
+
+  /**
+   * Get event types
+   */
+  getEventTypes(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/types`);
+  }
+
+  /**
+   * Get severities
+   */
+  getSeverities(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/severities`);
+  }
+}

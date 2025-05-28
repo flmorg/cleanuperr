@@ -83,6 +83,33 @@
                             [disabled]="!isConnected()"
                         >
                         </p-select>
+                        
+                        <!-- Date Range Filters -->
+                        <p-datePicker 
+                            [ngModel]="fromDate()" 
+                            (ngModelChange)="fromDate.set($event); onDateFilterChange()"
+                            dateFormat="yy-mm-dd"
+                            [showTime]="true"
+                            [timeOnly]="false"
+                            placeholder="Start date"
+                            [showClear]="true"
+                            [showIcon]="true"
+                            [disabled]="!isConnected()"
+                            styleClass="date-filter"
+                        ></p-datePicker>
+                        
+                        <p-datePicker 
+                            [ngModel]="toDate()" 
+                            (ngModelChange)="toDate.set($event); onDateFilterChange()"
+                            dateFormat="yy-mm-dd"
+                            [showTime]="true"
+                            [timeOnly]="false"
+                            placeholder="End date"
+                            [showClear]="true"
+                            [showIcon]="true"
+                            [disabled]="!isConnected()"
+                            styleClass="date-filter"
+                        ></p-datePicker>
                     </div>
                 </ng-template>
                 <ng-template pTemplate="end">
@@ -100,7 +127,7 @@
                                 label="Clear Filters"
                                 class="p-button-outlined ml-2 clear-filters-btn"
                                 (click)="clearFilters()"
-                                [disabled]="!isConnected() || (!severityFilter() && !eventTypeFilter() && !searchFilter())"
+                                [disabled]="!isConnected() || (!severityFilter() && !eventTypeFilter() && !searchFilter() && !fromDate() && !toDate())"
                             ></button>
                         </div>
                     </div>
@@ -205,12 +232,21 @@
                 <div class="empty-events">
                     <div class="empty-message">
                         <i class="pi pi-inbox empty-icon"></i>
-                        <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No events found</div>
-                        <p *ngIf="isConnected()">Waiting for new events or try adjusting your filters</p>
+                        <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">
+                            <span *ngIf="!loading()">No events found</span>
+                            <span *ngIf="loading()">Loading events...</span>
+                        </div>
+                        <p *ngIf="isConnected() && !loading()">Try adjusting your filters</p>
+                        <p-progressSpinner *ngIf="loading()"
+                            styleClass="w-3rem h-3rem"
+                            strokeWidth="4"
+                            fill="var(--surface-ground)"
+                            animationDuration=".5s"
+                        ></p-progressSpinner>
                         <ng-template #disconnectedMessage>
                             <div class="flex flex-column align-items-center gap-3">
-                                <div class="empty-text">Not connected to event hub</div>
-                                <p>Attempting to reconnect to the server...</p>
+                                <div class="empty-text">Not connected to server</div>
+                                <p>Check your network connection and try again</p>
                                 <p-progressSpinner
                                     styleClass="w-3rem h-3rem"
                                     strokeWidth="4"
@@ -224,6 +260,20 @@
             </ng-template>
         </div>
 
+        <!-- Pagination Controls -->
+        <div class="pagination-container p-3 border-top-1 surface-border">
+            <p-paginator 
+                [rows]="pageSize()" 
+                [totalRecords]="totalRecords()" 
+                [rowsPerPageOptions]="[25, 50, 100, 250]" 
+                (onPageChange)="onPageChange($event)" 
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="{first} to {last} of {totalRecords} events"
+                [alwaysShow]="true"
+                styleClass="events-paginator"
+            ></p-paginator>
+        </div>
+
         <!-- Export Menu -->
         <p-menu #exportMenu [popup]="true" [model]="exportMenuItems"></p-menu>
-</div> 
+</div>

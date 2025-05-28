@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { DatePipe, NgFor, NgIf, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 
 // PrimeNG Imports
@@ -17,9 +17,12 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
+import { DatePickerModule } from 'primeng/datepicker';
+import { PaginatorModule } from 'primeng/paginator';
 
 // Services & Models
 import { AppHubService } from '../../core/services/app-hub.service';
+import { EventsService, EventsFilter, PaginatedResult } from '../../core/services/events.service';
 import { AppEvent } from '../../core/models/event.models';
 
 @Component({
@@ -40,31 +43,44 @@ import { AppEvent } from '../../core/models/event.models';
     TooltipModule,
     ProgressSpinnerModule,
     MenuModule,
-    InputSwitchModule
+    InputSwitchModule,
+    DatePickerModule,
+    PaginatorModule
   ],
-  providers: [AppHubService],
+  providers: [AppHubService, EventsService],
   templateUrl: './events-viewer.component.html',
   styleUrl: './events-viewer.component.scss'
 })
 export class EventsViewerComponent implements OnInit, OnDestroy {
-  private appHubService = inject(AppHubService);
+  private appHubService = inject(AppHubService); // Keep for dashboard
+  private eventsService = inject(EventsService);
   private destroy$ = new Subject<void>();
   private clipboard = inject(Clipboard);
   private search$ = new Subject<string>();
+  private pollingSubscription?: Subscription;
 
   @ViewChild('eventsConsole') eventsConsole!: ElementRef;
   @ViewChild('exportMenu') exportMenu: any;
-  
+
   // Signals for reactive state
   events = signal<AppEvent[]>([]);
-  isConnected = signal<boolean>(false);
+  isConnected = signal<boolean>(true); // Always connected with HTTP
   autoScroll = signal<boolean>(true);
   expandedEvents: { [key: number]: boolean } = {};
-  
+  loading = signal<boolean>(false);
+
+  // Pagination
+  currentPage = signal<number>(1);
+  pageSize = signal<number>(50);
+  totalRecords = signal<number>(0);
+  totalPages = signal<number>(0);
+
   // Filter state
   severityFilter = signal<string | null>(null);
   eventTypeFilter = signal<string | null>(null);
   searchFilter = signal<string>('');
+  fromDate = signal<Date | null>(null);
+  toDate = signal<Date | null>(null);
 
   // Export menu items
   exportMenuItems: MenuItem[] = [
@@ -75,107 +91,75 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
 
   // Computed values
   filteredEvents = computed(() => {
-    let filtered = this.events();
-    
-    if (this.severityFilter()) {
-      filtered = filtered.filter(event => event.severity === this.severityFilter());
-    }
-    
-    if (this.eventTypeFilter()) {
-      filtered = filtered.filter(event => event.eventType === this.eventTypeFilter());
-    }
-    
-    if (this.searchFilter()) {
-      const search = this.searchFilter().toLowerCase();
-      filtered = filtered.filter(event => 
-        event.message.toLowerCase().includes(search) ||
-        event.eventType.toLowerCase().includes(search) ||
-        (event.data && event.data.toLowerCase().includes(search)) ||
-        (event.trackingId && event.trackingId.toLowerCase().includes(search)));
-    }
-    
-    return filtered;
+    return this.events();
+    // Note: We no longer need client-side filtering as filtering is done on the server
   });
-  
-  severities = computed(() => {
-    const uniqueSeverities = [...new Set(this.events().map(event => event.severity))];
-    return uniqueSeverities.map(severity => ({ label: severity, value: severity }));
-  });
-  
-  eventTypes = computed(() => {
-    const uniqueTypes = [...new Set(this.events().map(event => event.eventType))];
-    return uniqueTypes.map(type => ({ label: type, value: type }));
-  });
-  
-  constructor() {}
-  
+
+  severities = signal<any[]>([]);
+  eventTypes = signal<any[]>([]);
+
+  constructor() { }
+
   ngOnInit(): void {
-    // Connect to SignalR hub
-    this.appHubService.startConnection()
-      .catch((error: Error) => console.error('Failed to connect to app hub:', error));
-    
-    // Subscribe to events
-    this.appHubService.getEvents()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((events: AppEvent[]) => {
-        this.events.set(events);
-        if (this.autoScroll()) {
-          this.scrollToBottom();
-        }
-      });
-    
-    // Subscribe to connection status
-    this.appHubService.getEventsConnectionStatus()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((status: boolean) => {
-        this.isConnected.set(status);
-      });
-      
-    // Setup search debounce (300ms)
+    // Setup search debounce
     this.search$
       .pipe(
+        takeUntil(this.destroy$),
         debounceTime(300),
-        distinctUntilChanged(),
-        takeUntil(this.destroy$)
+        distinctUntilChanged()
       )
-      .subscribe(searchText => {
-        this.searchFilter.set(searchText);
+      .subscribe(value => {
+        this.searchFilter.set(value);
+        this.loadEvents();
       });
+
+    // Load event types and severities
+    this.loadEventTypes();
+    this.loadSeverities();
+
+    // Initial events load
+    this.loadEvents();
+
+    // Start polling for new events
+    this.startPolling();
   }
 
-  ngAfterViewChecked(): void {
-    if (this.autoScroll() && this.eventsConsole) {
-      this.scrollToBottom();
-    }
-  }
-  
   ngOnDestroy(): void {
+    this.stopPolling();
     this.destroy$.next();
     this.destroy$.complete();
   }
-  
+
   onSeverityFilterChange(severity: string): void {
     this.severityFilter.set(severity);
+    this.currentPage.set(1); // Reset to first page when filter changes
+    this.loadEvents();
   }
-  
+
   onEventTypeFilterChange(eventType: string): void {
     this.eventTypeFilter.set(eventType);
+    this.currentPage.set(1); // Reset to first page when filter changes
+    this.loadEvents();
   }
-  
+
   onSearchChange(event: Event): void {
     const searchText = (event.target as HTMLInputElement).value;
     this.search$.next(searchText);
   }
-  
+
   clearFilters(): void {
     this.severityFilter.set(null);
     this.eventTypeFilter.set(null);
     this.searchFilter.set('');
+    this.fromDate.set(null);
+    this.toDate.set(null);
+    this.currentPage.set(1);
+    this.loadEvents();
   }
-  
+
   getSeverity(severity: string): string {
     const normalizedSeverity = severity?.toLowerCase() || '';
-    
+
     switch (normalizedSeverity) {
       case 'error':
         return 'danger';
@@ -191,176 +175,13 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
         return 'secondary';
     }
   }
-  
-  refresh(): void {
-    this.appHubService.requestRecentEvents();
-  }
-  
-  hasDataInfo(): boolean {
-    return this.events().some(event => event.data);
-  }
-  
-  hasTrackingInfo(): boolean {
-    return this.events().some(event => event.trackingId);
-  }
 
-  /**
-   * Toggle expansion of an event entry
-   */
-  toggleEventExpansion(index: number, domEvent?: MouseEvent): void {
-    if (domEvent) {
-      domEvent.stopPropagation();
-    }
-    this.expandedEvents[index] = !this.expandedEvents[index];
-  }
-  
-  /**
-   * Copy a specific event entry to clipboard
-   */
-  copyEventEntry(event: AppEvent, domEvent: MouseEvent): void {
-    domEvent.stopPropagation();
-    
-    const timestamp = new Date(event.timestamp).toISOString();
-    let content = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
-    
-    if (event.trackingId) {
-      content += `\nTracking ID: ${event.trackingId}`;
-    }
-    
-    if (event.data) {
-      content += `\nData: ${event.data}`;
-    }
-    
-    this.clipboard.copy(content);
-  }
-  
-  /**
-   * Copy all filtered events to clipboard
-   */
-  copyEvents(): void {
-    const events = this.filteredEvents();
-    if (events.length === 0) return;
-    
-    const content = events.map(event => {
-      const timestamp = new Date(event.timestamp).toISOString();
-      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
-      
-      if (event.trackingId) {
-        entry += `\nTracking ID: ${event.trackingId}`;
-      }
-      
-      if (event.data) {
-        entry += `\nData: ${event.data}`;
-      }
-      
-      return entry;
-    }).join('\n\n');
-    
-    this.clipboard.copy(content);
-  }
-  
-  /**
-   * Export events menu trigger
-   */
-  exportEvents(event?: MouseEvent): void {
-    if (event && this.exportMenuItems.length > 0 && this.exportMenu) {
-      this.exportMenu.toggle(event);
-    }
-  }
-  
-  /**
-   * Export events as JSON
-   */
-  exportAsJson(): void {
-    const events = this.filteredEvents();
-    if (events.length === 0) return;
-    
-    const content = JSON.stringify(events, null, 2);
-    this.downloadFile(content, 'application/json', 'events.json');
-  }
-  
-  /**
-   * Export events as CSV
-   */
-  exportAsCsv(): void {
-    const events = this.filteredEvents();
-    if (events.length === 0) return;
-    
-    // CSV header
-    let csv = 'Timestamp,Severity,EventType,Message,Data,TrackingId\n';
-    
-    // CSV rows
-    events.forEach(event => {
-      const timestamp = new Date(event.timestamp).toISOString();
-      const severity = event.severity || '';
-      const eventType = event.eventType ? `"${event.eventType.replace(/"/g, '""')}"` : '';
-      const message = event.message ? `"${event.message.replace(/"/g, '""')}"` : '';
-      const data = event.data ? `"${event.data.replace(/"/g, '""').replace(/\n/g, ' ')}"` : '';
-      const trackingId = event.trackingId ? `"${event.trackingId.replace(/"/g, '""')}"` : '';
-      
-      csv += `${timestamp},${severity},${eventType},${message},${data},${trackingId}\n`;
-    });
-    
-    this.downloadFile(csv, 'text/csv', 'events.csv');
-  }
-  
-  /**
-   * Export events as plain text
-   */
-  exportAsText(): void {
-    const events = this.filteredEvents();
-    if (events.length === 0) return;
-    
-    const content = events.map(event => {
-      const timestamp = new Date(event.timestamp).toISOString();
-      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
-      
-      if (event.trackingId) {
-        entry += `\nTracking ID: ${event.trackingId}`;
-      }
-      
-      if (event.data) {
-        entry += `\nData: ${event.data}`;
-      }
-      
-      return entry;
-    }).join('\n\n');
-    
-    this.downloadFile(content, 'text/plain', 'events.txt');
-  }
-  
-  /**
-   * Helper method to download a file
-   */
-  private downloadFile(content: string, contentType: string, filename: string): void {
-    const blob = new Blob([content], { type: contentType });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link); // Required for Firefox
-    link.click();
-    document.body.removeChild(link); // Clean up
-    
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 100);
-  }
-  
-  /**
-   * Scroll to the bottom of the events container
-   */
-  private scrollToBottom(): void {
-    if (this.eventsConsole && this.eventsConsole.nativeElement) {
-      const element = this.eventsConsole.nativeElement;
-      element.scrollTop = element.scrollHeight;
+  ngAfterViewChecked(): void {
+    if (this.autoScroll() && this.eventsConsole) {
+      this.scrollToBottom();
     }
   }
 
-  /**
-   * Sets the auto-scroll state
-   */
   setAutoScroll(value: boolean): void {
     this.autoScroll.set(value);
     if (value) {
@@ -368,9 +189,112 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Format JSON data for display
-   */
+  private scrollToBottom(): void {
+    if (this.eventsConsole && this.eventsConsole.nativeElement) {
+      const element = this.eventsConsole.nativeElement;
+      element.scrollTop = element.scrollHeight;
+    }
+  }
+
+  loadEvents(): void {
+    this.loading.set(true);
+
+    const filter: EventsFilter = {
+      page: this.currentPage(),
+      pageSize: this.pageSize(),
+      severity: this.severityFilter() || undefined,
+      eventType: this.eventTypeFilter() || undefined,
+      fromDate: this.fromDate(),
+      toDate: this.toDate()
+    };
+
+    this.eventsService.loadEvents(filter)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result: PaginatedResult<AppEvent>) => {
+          this.events.set(result.items);
+          this.totalRecords.set(result.totalCount);
+          this.totalPages.set(result.totalPages);
+          this.loading.set(false);
+
+          // Auto-scroll to bottom if enabled
+          if (this.autoScroll()) {
+            setTimeout(() => this.scrollToBottom(), 0);
+          }
+        },
+        error: (error) => {
+          console.error('Error loading events:', error);
+          this.loading.set(false);
+        }
+      });
+  }
+
+  loadEventTypes(): void {
+    this.eventsService.getEventTypes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(types => {
+        this.eventTypes.set(types.map(type => ({ label: type, value: type })));
+      });
+  }
+
+  loadSeverities(): void {
+    this.eventsService.getSeverities()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(severities => {
+        this.severities.set(severities.map(severity => ({ label: severity, value: severity })));
+      });
+  }
+
+  onPageChange(event: any): void {
+    this.currentPage.set(event.page + 1); // PrimeNG paginator is 0-based
+    this.pageSize.set(event.rows);
+    this.loadEvents();
+  }
+
+  onDateFilterChange(): void {
+    this.currentPage.set(1); // Reset to first page
+    this.loadEvents();
+  }
+
+  startPolling(): void {
+    // Stop any existing polling
+    this.stopPolling();
+
+    // Create filter for polling (only apply type and severity filters, not pagination)
+    const pollingFilter = {
+      severity: this.severityFilter() || undefined,
+      eventType: this.eventTypeFilter() || undefined,
+      fromDate: this.fromDate(),
+      toDate: this.toDate()
+    };
+
+    this.eventsService.startPolling(pollingFilter);
+
+    // Subscribe to events stream to update UI
+    this.pollingSubscription = this.eventsService.events$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(result => {
+        if (result) {
+          this.events.set(result.items);
+          this.totalRecords.set(result.totalCount);
+          this.totalPages.set(result.totalPages);
+
+          // Auto-scroll to bottom if enabled
+          if (this.autoScroll()) {
+            setTimeout(() => this.scrollToBottom(), 0);
+          }
+        }
+      });
+  }
+
+  stopPolling(): void {
+    this.eventsService.stopPolling();
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+      this.pollingSubscription = undefined;
+    }
+  }
+
   formatJsonData(data: string): string {
     try {
       const parsed = JSON.parse(data);
@@ -380,9 +304,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Check if data is valid JSON
-   */
   isValidJson(data: string): boolean {
     try {
       JSON.parse(data);
@@ -391,4 +312,137 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
       return false;
     }
   }
-} 
+
+  copyEventEntry(event: AppEvent, domEvent: MouseEvent): void {
+    domEvent.stopPropagation();
+
+    const timestamp = new Date(event.timestamp).toISOString();
+    let content = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
+
+    if (event.trackingId) {
+      content += `\nTracking ID: ${event.trackingId}`;
+    }
+
+    if (event.data) {
+      content += `\nData: ${event.data}`;
+    }
+
+    this.clipboard.copy(content);
+  }
+
+  copyEvents(): void {
+    const events = this.filteredEvents();
+    if (events.length === 0) return;
+
+    const content = events.map(event => {
+      const timestamp = new Date(event.timestamp).toISOString();
+      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
+
+      if (event.trackingId) {
+        entry += `\nTracking ID: ${event.trackingId}`;
+      }
+
+      if (event.data) {
+        entry += `\nData: ${event.data}`;
+      }
+
+      return entry;
+    }).join('\n\n');
+
+    this.clipboard.copy(content);
+  }
+
+  exportEvents(event?: MouseEvent): void {
+    if (event && this.exportMenuItems.length > 0 && this.exportMenu) {
+      this.exportMenu.toggle(event);
+    }
+  }
+
+  exportAsJson(): void {
+    const events = this.filteredEvents();
+    if (events.length === 0) return;
+
+    const content = JSON.stringify(events, null, 2);
+    this.downloadFile(content, 'application/json', 'events.json');
+  }
+
+  exportAsCsv(): void {
+    const events = this.filteredEvents();
+    if (events.length === 0) return;
+
+    // CSV header
+    let csv = 'Timestamp,Severity,EventType,Message,Data,TrackingId\n';
+
+    // CSV rows
+    events.forEach(event => {
+      const timestamp = new Date(event.timestamp).toISOString();
+      const severity = event.severity || '';
+      const eventType = event.eventType ? `"${event.eventType.replace(/"/g, '""')}"` : '';
+      const message = event.message ? `"${event.message.replace(/"/g, '""')}"` : '';
+      const data = event.data ? `"${event.data.replace(/"/g, '""').replace(/\n/g, ' ')}"` : '';
+      const trackingId = event.trackingId ? `"${event.trackingId.replace(/"/g, '""')}"` : '';
+
+      csv += `${timestamp},${severity},${eventType},${message},${data},${trackingId}\n`;
+    });
+
+    this.downloadFile(csv, 'text/csv', 'events.csv');
+  }
+
+  exportAsText(): void {
+    const events = this.filteredEvents();
+    if (events.length === 0) return;
+
+    const content = events.map(event => {
+      const timestamp = new Date(event.timestamp).toISOString();
+      let entry = `[${timestamp}] [${event.severity}] [${event.eventType}] ${event.message}`;
+
+      if (event.trackingId) {
+        entry += `\nTracking ID: ${event.trackingId}`;
+      }
+
+      if (event.data) {
+        entry += `\nData: ${event.data}`;
+      }
+
+      return entry;
+    }).join('\n\n');
+
+    this.downloadFile(content, 'text/plain', 'events.txt');
+  }
+
+  private downloadFile(content: string, contentType: string, filename: string): void {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link); // Required for Firefox
+    link.click();
+    document.body.removeChild(link); // Clean up
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
+  }
+
+  toggleEventExpansion(index: number, domEvent?: MouseEvent): void {
+    if (domEvent) {
+      domEvent.stopPropagation();
+    }
+    this.expandedEvents[index] = !this.expandedEvents[index];
+  }
+
+  refresh(): void {
+    // Reload events from the server
+    this.loadEvents();
+  }
+
+  hasDataInfo(): boolean {
+    return this.events().some(event => event.data);
+  }
+  
+  hasTrackingInfo(): boolean {
+    return this.events().some(event => event.trackingId);
+  }
+}
