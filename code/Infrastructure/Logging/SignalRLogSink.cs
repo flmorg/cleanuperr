@@ -17,13 +17,11 @@ public class SignalRLogSink : ILogEventSink
     private readonly ILogger<SignalRLogSink> _logger;
     private readonly ConcurrentQueue<object> _logBuffer;
     private readonly int _bufferSize;
-    private readonly IHubContext<LogHub> _logHubContext;
     private readonly IHubContext<AppHub> _appHubContext;
     private readonly MessageTemplateTextFormatter _formatter = new("{Message:l}", CultureInfo.InvariantCulture);
     
-    public SignalRLogSink(ILogger<SignalRLogSink> logger, IHubContext<LogHub> logHubContext, IHubContext<AppHub> appHubContext)
+    public SignalRLogSink(ILogger<SignalRLogSink> logger, IHubContext<AppHub> appHubContext)
     {
-        _logHubContext = logHubContext;
         _appHubContext = appHubContext;
         _logger = logger;
         _bufferSize = 100;
@@ -53,10 +51,7 @@ public class SignalRLogSink : ILogEventSink
             // Add to buffer for new clients
             AddToBuffer(logData);
             
-            // Send to connected clients (legacy hub)
-            _ = _logHubContext.Clients.All.SendAsync("ReceiveLog", logData);
-            
-            // Send to connected clients (new unified hub)
+            // Send to connected clients via the unified hub
             _ = _appHubContext.Clients.All.SendAsync("LogReceived", logData);
         }
         catch (Exception ex)

@@ -74,12 +74,6 @@ public static class ApiDI
         
         // Map SignalR hubs
         app.MapHub<HealthStatusHub>("/api/hubs/health");
-        
-        // Legacy hubs (for backward compatibility)
-        app.MapHub<LogHub>("/api/hubs/logs");
-        app.MapHub<EventHub>("/api/hubs/events");
-        
-        // New unified hub
         app.MapHub<AppHub>("/api/hubs/app");
 
         return app;

@@ -18,7 +18,6 @@ namespace Infrastructure.Events;
 public class EventPublisher
 {
     private readonly DataContext _context;
-    private readonly IHubContext<EventHub> _eventHubContext;
     private readonly IHubContext<AppHub> _appHubContext;
     private readonly ILogger<EventPublisher> _logger;
     private readonly INotificationPublisher _notificationPublisher;
@@ -26,14 +25,12 @@ public class EventPublisher
 
     public EventPublisher(
         DataContext context, 
-        IHubContext<EventHub> eventHubContext,
         IHubContext<AppHub> appHubContext,
         ILogger<EventPublisher> logger,
         INotificationPublisher notificationPublisher,
         IDryRunInterceptor dryRunInterceptor)
     {
         _context = context;
-        _eventHubContext = eventHubContext;
         _appHubContext = appHubContext;
         _logger = logger;
         _notificationPublisher = notificationPublisher;
@@ -160,10 +157,7 @@ public class EventPublisher
     {
         try
         {
-            // Send to all connected clients via the legacy EventHub
-            await _eventHubContext.Clients.All.SendAsync("EventReceived", appEventEntity);
-            
-            // Send to all connected clients via the new unified AppHub
+            // Send to all connected clients via the unified AppHub
             await _appHubContext.Clients.All.SendAsync("EventReceived", appEventEntity);
         }
         catch (Exception ex)
