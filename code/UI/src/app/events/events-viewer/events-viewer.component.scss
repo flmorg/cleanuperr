@@ -410,16 +410,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  
-  .auto-scroll-toggle {
-    display: flex;
-    align-items: center;
-    margin-right: 0.5rem;
-
-    ::ng-deep .p-toggleswitch {
-      display: block;
-    }
-  }
 }
 
 // Header title container and status tag styles

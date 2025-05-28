@@ -64,8 +64,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
 
   // Signals for reactive state
   events = signal<AppEvent[]>([]);
-  isConnected = signal<boolean>(true); // Always connected with HTTP
-  autoScroll = signal<boolean>(true);
+  isConnected = signal<boolean>(false); // Always connected with HTTP
   expandedEvents: { [key: number]: boolean } = {};
   loading = signal<boolean>(false);
 
@@ -176,26 +175,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngAfterViewChecked(): void {
-    if (this.autoScroll() && this.eventsConsole) {
-      this.scrollToBottom();
-    }
-  }
-
-  setAutoScroll(value: boolean): void {
-    this.autoScroll.set(value);
-    if (value) {
-      this.scrollToBottom();
-    }
-  }
-
-  private scrollToBottom(): void {
-    if (this.eventsConsole && this.eventsConsole.nativeElement) {
-      const element = this.eventsConsole.nativeElement;
-      element.scrollTop = element.scrollHeight;
-    }
-  }
-
   loadEvents(): void {
     this.loading.set(true);
 
@@ -216,13 +195,10 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
           this.totalRecords.set(result.totalCount);
           this.totalPages.set(result.totalPages);
           this.loading.set(false);
-
-          // Auto-scroll to bottom if enabled
-          if (this.autoScroll()) {
-            setTimeout(() => this.scrollToBottom(), 0);
-          }
+          this.isConnected.set(true);
         },
         error: (error) => {
+          this.isConnected.set(false);
           console.error('Error loading events:', error);
           this.loading.set(false);
         }
@@ -278,11 +254,6 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
           this.events.set(result.items);
           this.totalRecords.set(result.totalCount);
           this.totalPages.set(result.totalPages);
-
-          // Auto-scroll to bottom if enabled
-          if (this.autoScroll()) {
-            setTimeout(() => this.scrollToBottom(), 0);
-          }
         }
       });
   }

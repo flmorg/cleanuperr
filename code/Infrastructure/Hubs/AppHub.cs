@@ -1,5 +1,4 @@
 using Data;
-using Data.Models.Events;
 using Infrastructure.Logging;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +42,7 @@ public class AppHub : Hub
     /// <summary>
     /// Client requests recent events
     /// </summary>
-    public async Task GetRecentEvents(int count = 50)
+    public async Task GetRecentEvents(int count = 10)
     {
         try
         {

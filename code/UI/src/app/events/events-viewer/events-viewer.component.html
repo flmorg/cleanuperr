@@ -11,14 +11,6 @@
                     ></p-tag>
                 </div>
                 <div class="event-controls flex align-items-center gap-2">
-                    <div class="auto-scroll-toggle">
-                        <p-inputSwitch
-                            [ngModel]="autoScroll()"
-                            (ngModelChange)="setAutoScroll($event)"
-                            id="autoScrollToggle"
-                        ></p-inputSwitch>
-                        <label for="autoScrollToggle" class="ml-2 text-sm">Auto-scroll</label>
-                    </div>
                     <button
                         pButton
                         icon="pi pi-download"
@@ -64,7 +56,7 @@
                         <p-select
                             [options]="severities()"
                             [ngModel]="severityFilter()"
-                            placeholder="Filter by severity"
+                            placeholder="Severity"
                             [showClear]="true"
                             (onChange)="onSeverityFilterChange($event.value)"
                             styleClass="severity-dropdown fixed-width-dropdown"
@@ -76,7 +68,7 @@
                         <p-select
                             [options]="eventTypes()"
                             [ngModel]="eventTypeFilter()"
-                            placeholder="Filter by event type"
+                            placeholder="Event type"
                             [showClear]="true"
                             (onChange)="onEventTypeFilterChange($event.value)"
                             styleClass="event-type-dropdown fixed-width-dropdown"
