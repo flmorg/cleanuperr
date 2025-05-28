@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Globalization;
 using Data.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,8 +17,7 @@ public class AppEvent
 {
     [Key]
     public Guid Id { get; set; } = Guid.CreateVersion7();
-    
-    [Required]
+
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     
     [Required]
