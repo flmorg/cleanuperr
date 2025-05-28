@@ -27,6 +27,11 @@
       color: var(--primary-color);
     }
   }
+
+  .logo-glow {
+    box-shadow: 0 0 10px 6px rgba(89, 16, 185, 0.5);
+    animation: logo-glow 2s infinite ease-in-out;
+  }
   
   .logo-small {
     display: none;
@@ -55,7 +60,8 @@
     .heart-icon i {
       color: #ff4d6d !important;
       transition: all 0.3s ease;
-      
+      text-shadow: 0 0 6px rgba(239, 68, 68, 0.7), 0 0 12px rgba(239, 68, 68, 0.5);
+
       &:hover {
         transform: scale(1.2);
       }
