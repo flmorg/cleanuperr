@@ -8,6 +8,7 @@ using Infrastructure.Verticals.Notifications;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Interceptors;
 using Common.Attributes;
+using Infrastructure.Hubs;
 
 namespace Infrastructure.Events;
 
@@ -17,20 +18,23 @@ namespace Infrastructure.Events;
 public class EventPublisher
 {
     private readonly DataContext _context;
-    private readonly IHubContext<EventHub> _hubContext;
+    private readonly IHubContext<EventHub> _eventHubContext;
+    private readonly IHubContext<AppHub> _appHubContext;
     private readonly ILogger<EventPublisher> _logger;
     private readonly INotificationPublisher _notificationPublisher;
     private readonly IDryRunInterceptor _dryRunInterceptor;
 
     public EventPublisher(
         DataContext context, 
-        IHubContext<EventHub> hubContext, 
+        IHubContext<EventHub> eventHubContext,
+        IHubContext<AppHub> appHubContext,
         ILogger<EventPublisher> logger,
         INotificationPublisher notificationPublisher,
         IDryRunInterceptor dryRunInterceptor)
     {
         _context = context;
-        _hubContext = hubContext;
+        _eventHubContext = eventHubContext;
+        _appHubContext = appHubContext;
         _logger = logger;
         _notificationPublisher = notificationPublisher;
         _dryRunInterceptor = dryRunInterceptor;
@@ -111,8 +115,8 @@ public class EventPublisher
     public async Task PublishDownloadCleaned(double ratio, TimeSpan seedingTime, string categoryName, CleanReason reason)
     {
         // Get context data for the event
-        string downloadName = ContextProvider.Get<string>("downloadName") ?? "Unknown";
-        string hash = ContextProvider.Get<string>("hash") ?? "Unknown";
+        string downloadName = ContextProvider.Get<string>("downloadName");
+        string hash = ContextProvider.Get<string>("hash");
 
         // Publish the event
         await PublishAsync(
@@ -156,8 +160,11 @@ public class EventPublisher
     {
         try
         {
-            // Send to all connected clients (self-hosted app with single client)
-            await _hubContext.Clients.All.SendAsync("EventReceived", appEventEntity);
+            // Send to all connected clients via the legacy EventHub
+            await _eventHubContext.Clients.All.SendAsync("EventReceived", appEventEntity);
+            
+            // Send to all connected clients via the new unified AppHub
+            await _appHubContext.Clients.All.SendAsync("EventReceived", appEventEntity);
         }
         catch (Exception ex)
         {

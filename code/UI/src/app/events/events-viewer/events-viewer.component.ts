@@ -19,7 +19,7 @@ import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 
 // Services & Models
-import { EventHubService } from '../../core/services/event-hub.service';
+import { AppHubService } from '../../core/services/app-hub.service';
 import { AppEvent } from '../../core/models/event.models';
 
 @Component({
@@ -42,12 +42,12 @@ import { AppEvent } from '../../core/models/event.models';
     MenuModule,
     InputSwitchModule
   ],
-  providers: [EventHubService],
+  providers: [AppHubService],
   templateUrl: './events-viewer.component.html',
   styleUrl: './events-viewer.component.scss'
 })
 export class EventsViewerComponent implements OnInit, OnDestroy {
-  private eventHubService = inject(EventHubService);
+  private appHubService = inject(AppHubService);
   private destroy$ = new Subject<void>();
   private clipboard = inject(Clipboard);
   private search$ = new Subject<string>();
@@ -111,11 +111,11 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   
   ngOnInit(): void {
     // Connect to SignalR hub
-    this.eventHubService.startConnection()
-      .catch((error: Error) => console.error('Failed to connect to event hub:', error));
+    this.appHubService.startConnection()
+      .catch((error: Error) => console.error('Failed to connect to app hub:', error));
     
     // Subscribe to events
-    this.eventHubService.getEvents()
+    this.appHubService.getEvents()
       .pipe(takeUntil(this.destroy$))
       .subscribe((events: AppEvent[]) => {
         this.events.set(events);
@@ -125,7 +125,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
       });
     
     // Subscribe to connection status
-    this.eventHubService.getConnectionStatus()
+    this.appHubService.getEventsConnectionStatus()
       .pipe(takeUntil(this.destroy$))
       .subscribe((status: boolean) => {
         this.isConnected.set(status);
@@ -193,7 +193,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   }
   
   refresh(): void {
-    this.eventHubService.requestRecentEvents();
+    this.appHubService.requestRecentEvents();
   }
   
   hasDataInfo(): boolean {

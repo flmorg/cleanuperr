@@ -13,9 +13,9 @@
             <div class="header-title-container">
               <h2 class="card-title m-0">Recent Logs</h2>
               <p-tag
-                [severity]="logsConnected() ? 'success' : 'danger'"
-                [value]="logsConnected() ? 'Connected' : 'Disconnected'"
-                [pTooltip]="logsConnected() ? 'Connected to log hub' : 'Attempting to reconnect...'"
+                [severity]="connected() ? 'success' : 'danger'"
+                [value]="connected() ? 'Connected' : 'Disconnected'"
+                [pTooltip]="connected() ? 'Connected to app hub' : 'Attempting to reconnect...'"
                 tooltipPosition="right"
                 styleClass="status-tag"
               ></p-tag>
@@ -60,7 +60,7 @@
             <div class="empty-state text-center py-4">
               <i class="pi pi-list text-4xl text-color-secondary mb-3"></i>
               <p class="text-color-secondary">No recent logs available</p>
-              <p-progressSpinner *ngIf="!logsConnected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
+              <p-progressSpinner *ngIf="!connected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
             </div>
           </ng-template>
           
@@ -79,9 +79,9 @@
             <div class="header-title-container">
               <h2 class="card-title m-0">Recent Events</h2>
               <p-tag
-                [severity]="eventsConnected() ? 'success' : 'danger'"
-                [value]="eventsConnected() ? 'Connected' : 'Disconnected'"
-                [pTooltip]="eventsConnected() ? 'Connected to event hub' : 'Attempting to reconnect...'"
+                [severity]="connected() ? 'success' : 'danger'"
+                [value]="connected() ? 'Connected' : 'Disconnected'"
+                [pTooltip]="connected() ? 'Connected to app hub' : 'Attempting to reconnect...'"
                 tooltipPosition="right"
                 styleClass="status-tag"
               ></p-tag>
@@ -126,7 +126,7 @@
             <div class="empty-state text-center py-4">
               <i class="pi pi-calendar text-4xl text-color-secondary mb-3"></i>
               <p class="text-color-secondary">No recent events available</p>
-              <p-progressSpinner *ngIf="!eventsConnected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
+              <p-progressSpinner *ngIf="!connected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
             </div>
           </ng-template>
           

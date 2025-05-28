@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule, NgClass, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, throttleTime } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 
 // PrimeNG Components
 import { CardModule } from 'primeng/card';
@@ -11,8 +11,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 // Services & Models
-import { LogHubService } from '../../core/services/log-hub.service';
-import { EventHubService } from '../../core/services/event-hub.service';
+import { AppHubService } from '../../core/services/app-hub.service';
 import { LogEntry } from '../../core/models/signalr.models';
 import { AppEvent } from '../../core/models/event.models';
 
@@ -34,15 +33,13 @@ import { AppEvent } from '../../core/models/event.models';
   styleUrl: './dashboard-page.component.scss'
 })
 export class DashboardPageComponent implements OnInit, OnDestroy {
-  private logHubService = inject(LogHubService);
-  private eventHubService = inject(EventHubService);
+  private appHubService = inject(AppHubService);
   private destroy$ = new Subject<void>();
 
   // Signals for reactive state
   recentLogs = signal<LogEntry[]>([]);
   recentEvents = signal<AppEvent[]>([]);
-  logsConnected = signal<boolean>(false);
-  eventsConnected = signal<boolean>(false);
+  connected = signal<boolean>(false);
 
   // Computed values for display
   displayLogs = computed(() => {
@@ -58,8 +55,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
-    this.initializeLogHub();
-    this.initializeEventHub();
+    this.initializeHub();
   }
 
   ngOnDestroy(): void {
@@ -67,49 +63,30 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private initializeLogHub(): void {
-    // Connect to logs hub
-    this.logHubService.startConnection()
-      .catch((error: Error) => console.error('Failed to connect to log hub:', error));
+  private initializeHub(): void {
+    // Connect to unified hub
+    this.appHubService.startConnection()
+      .catch((error: Error) => console.error('Failed to connect to app hub:', error));
 
-    // Subscribe to logs with throttling to prevent UI overwhelming
-    this.logHubService.getLogs()
-      .pipe(
-        takeUntil(this.destroy$),
-        throttleTime(1000) // Max 1 update per second
-      )
+    // Subscribe to logs
+    this.appHubService.getLogs()
+      .pipe(takeUntil(this.destroy$))
       .subscribe((logs: LogEntry[]) => {
         this.recentLogs.set(logs);
       });
 
-    // Subscribe to connection status
-    this.logHubService.getConnectionStatus()
+    // Subscribe to events
+    this.appHubService.getEvents()
       .pipe(takeUntil(this.destroy$))
-      .subscribe((status: boolean) => {
-        this.logsConnected.set(status);
-      });
-  }
-
-  private initializeEventHub(): void {
-    // Connect to events hub
-    this.eventHubService.startConnection()
-      .catch((error: Error) => console.error('Failed to connect to event hub:', error));
-
-    // Subscribe to events with throttling
-    this.eventHubService.getEvents()
-      .pipe(
-        takeUntil(this.destroy$),
-        throttleTime(1000) // Max 1 update per second
-      )
       .subscribe((events: AppEvent[]) => {
         this.recentEvents.set(events);
       });
 
     // Subscribe to connection status
-    this.eventHubService.getConnectionStatus()
+    this.appHubService.getConnectionStatus()
       .pipe(takeUntil(this.destroy$))
       .subscribe((status: boolean) => {
-        this.eventsConnected.set(status);
+        this.connected.set(status);
       });
   }
 

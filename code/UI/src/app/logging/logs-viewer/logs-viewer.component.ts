@@ -17,7 +17,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { InputSwitchModule } from 'primeng/inputswitch';
 
 // Services & Models
-import { LogHubService } from '../../core/services/log-hub.service';
+import { AppHubService } from '../../core/services/app-hub.service';
 import { LogEntry } from '../../core/models/signalr.models';
 import { MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
@@ -43,12 +43,12 @@ import { MenuItem } from 'primeng/api';
     MenuModule,
     InputSwitchModule
   ],
-  providers: [LogHubService],
+  providers: [AppHubService],
   templateUrl: './logs-viewer.component.html',
   styleUrl: './logs-viewer.component.scss'
 })
 export class LogsViewerComponent implements OnInit, OnDestroy {
-  private logHubService = inject(LogHubService);
+  private appHubService = inject(AppHubService);
   private destroy$ = new Subject<void>();
   private clipboard = inject(Clipboard);
   private search$ = new Subject<string>();
@@ -110,11 +110,11 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   
   ngOnInit(): void {
     // Connect to SignalR hub
-    this.logHubService.startConnection()
-      .catch((error: Error) => console.error('Failed to connect to log hub:', error));
+    this.appHubService.startConnection()
+      .catch((error: Error) => console.error('Failed to connect to app hub:', error));
     
     // Subscribe to logs
-    this.logHubService.getLogs()
+    this.appHubService.getLogs()
       .pipe(takeUntil(this.destroy$))
       .subscribe((logs: LogEntry[]) => {
         this.logs.set(logs);
@@ -124,7 +124,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
       });
     
     // Subscribe to connection status
-    this.logHubService.getConnectionStatus()
+    this.appHubService.getLogsConnectionStatus()
       .pipe(takeUntil(this.destroy$))
       .subscribe((status: boolean) => {
         this.isConnected.set(status);
@@ -195,7 +195,7 @@ export class LogsViewerComponent implements OnInit, OnDestroy {
   }
   
   refresh(): void {
-    this.logHubService.requestRecentLogs();
+    this.appHubService.requestRecentLogs();
   }
   
   hasJobInfo(): boolean {

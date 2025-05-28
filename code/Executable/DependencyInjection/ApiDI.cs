@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Infrastructure.Health;
 using Infrastructure.Logging;
 using Infrastructure.Events;
+using Infrastructure.Hubs;
 using Microsoft.OpenApi.Models;
 
 namespace Executable.DependencyInjection;
@@ -73,8 +74,13 @@ public static class ApiDI
         
         // Map SignalR hubs
         app.MapHub<HealthStatusHub>("/api/hubs/health");
+        
+        // Legacy hubs (for backward compatibility)
         app.MapHub<LogHub>("/api/hubs/logs");
         app.MapHub<EventHub>("/api/hubs/events");
+        
+        // New unified hub
+        app.MapHub<AppHub>("/api/hubs/app");
 
         return app;
     }
