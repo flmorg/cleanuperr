@@ -66,7 +66,7 @@ public class AppHub : Hub
     /// </summary>
     public override async Task OnConnectedAsync()
     {
-        _logger.LogInformation("Client connected to AppHub: {ConnectionId}", Context.ConnectionId);
+        _logger.LogTrace("Client connected to AppHub: {ConnectionId}", Context.ConnectionId);
         await base.OnConnectedAsync();
     }
 
@@ -75,7 +75,7 @@ public class AppHub : Hub
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.LogInformation("Client disconnected from AppHub: {ConnectionId}", Context.ConnectionId);
+        _logger.LogTrace("Client disconnected from AppHub: {ConnectionId}", Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
 }
