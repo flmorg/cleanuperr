@@ -65,6 +65,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   isConnected = signal<boolean>(false);
   expandedEvents: { [key: number]: boolean } = {};
   loading = signal<boolean>(false);
+  hasAttemptedConnection = signal<boolean>(false); // Track if we've attempted to connect
 
   // Pagination
   currentPage = signal<number>(1);
@@ -98,6 +99,9 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   constructor() { }
 
   ngOnInit(): void {
+    // Set initial connection status to false until first successful data load
+    this.isConnected.set(false);
+    
     // Setup search debounce
     this.search$
       .pipe(
@@ -175,19 +179,18 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
 
   loadEvents(): void {
     this.loading.set(true);
+    this.hasAttemptedConnection.set(true);
 
-    // Create filter object
+    // Create filter object with search parameter
     const filter: EventsFilter = {
       page: this.currentPage(),
       pageSize: this.pageSize(),
       severity: this.severityFilter() || undefined,
       eventType: this.eventTypeFilter() || undefined,
       fromDate: this.fromDate(),
-      toDate: this.toDate()
+      toDate: this.toDate(),
+      search: this.searchFilter() || undefined
     };
-    
-    // We can't add search directly to the filter object as it's not in the interface
-    // The server controller would need to be updated to support search
 
     // Fetch events from server
     this.eventsService
@@ -206,6 +209,10 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
           console.error('Error fetching events:', error);
           this.loading.set(false);
           this.isConnected.set(false);
+          
+          // Ensure connection status gets precedence over loading
+          // This helps with the UI flow to show not connected message
+          this.events.set([]);
         }
       });
   }
@@ -249,7 +256,8 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        // Simply reload the events with current filters periodically
+        // Only poll if we're connected to avoid constant error messages
+        // If disconnected, still poll occasionally to check for reconnection
         this.loadEvents();
       });
   }

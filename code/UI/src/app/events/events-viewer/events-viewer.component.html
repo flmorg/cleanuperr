@@ -224,21 +224,19 @@
                 <div class="empty-events">
                     <div class="empty-message">
                         <i class="pi pi-inbox empty-icon"></i>
-                        <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">
-                            <span *ngIf="!loading()">No events found</span>
-                            <span *ngIf="loading()">Loading events...</span>
-                        </div>
-                        <p *ngIf="isConnected() && !loading()">Try adjusting your filters</p>
-                        <p-progressSpinner *ngIf="loading()"
-                            styleClass="w-3rem h-3rem"
-                            strokeWidth="4"
-                            fill="var(--surface-ground)"
-                            animationDuration=".5s"
-                        ></p-progressSpinner>
-                        <ng-template #disconnectedMessage>
+                        <!-- Check connection status first -->
+                        <div *ngIf="!isConnected() && !loading(); else connectedState">
                             <div class="flex flex-column align-items-center gap-3">
                                 <div class="empty-text">Not connected to server</div>
                                 <p>Check your network connection and try again</p>
+                                <!-- No spinner here - we're not actively loading anything -->
+                            </div>
+                        </div>
+                        
+                        <!-- Connected state - either loading or no events -->
+                        <ng-template #connectedState>
+                            <div *ngIf="loading(); else noEvents">
+                                <div class="empty-text">Loading events...</div>
                                 <p-progressSpinner
                                     styleClass="w-3rem h-3rem"
                                     strokeWidth="4"
@@ -246,7 +244,13 @@
                                     animationDuration=".5s"
                                 ></p-progressSpinner>
                             </div>
+                            
+                            <ng-template #noEvents>
+                                <div class="empty-text">No events found</div>
+                                <p>Try adjusting your filters</p>
+                            </ng-template>
                         </ng-template>
+                        <!-- Removed the redundant disconnectedMessage template -->
                     </div>
                 </div>
             </ng-template>

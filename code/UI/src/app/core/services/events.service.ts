@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, Subscription, of } from 'rxjs';
-import { tap, switchMap, catchError, share } from 'rxjs/operators';
+import { Observable, BehaviorSubject, Subscription, of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AppEvent } from '../models/event.models';
 
@@ -20,6 +20,7 @@ export interface EventsFilter {
   eventType?: string;
   fromDate?: Date | null;
   toDate?: Date | null;
+  search?: string;
 }
 
 @Injectable({
@@ -63,16 +64,6 @@ export class EventsService {
             });
             this.lastEventTimestamp = new Date(newestEvent.timestamp);
           }
-        }),
-        catchError(error => {
-          console.error('Error loading events:', error);
-          return of({
-            items: [],
-            page: filter.page || 1,
-            pageSize: filter.pageSize || 100,
-            totalCount: 0,
-            totalPages: 0
-          });
         })
       );
   }
@@ -126,33 +117,6 @@ export class EventsService {
   }
 
   /**
-   * Start polling for new events
-   */
-  startPolling(filter: Partial<EventsFilter> = {}): void {
-    if (this.isPolling) {
-      this.stopPolling();
-    }
-    
-    this.isPolling = true;
-    this.pollingSubscription = interval(this.pollInterval)
-      .pipe(
-        switchMap(() => this.getLatestEvents(filter))
-      )
-      .subscribe();
-  }
-
-  /**
-   * Stop polling for new events
-   */
-  stopPolling(): void {
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-      this.pollingSubscription = null;
-    }
-    this.isPolling = false;
-  }
-
-  /**
    * Helper to add filters to HttpParams
    */
   private addFiltersToParams(params: HttpParams, filter: Partial<EventsFilter>): HttpParams {
@@ -172,6 +136,10 @@ export class EventsService {
     
     if (filter.toDate) {
       updatedParams = updatedParams.set('toDate', filter.toDate.toISOString());
+    }
+    
+    if (filter.search) {
+      updatedParams = updatedParams.set('search', filter.search);
     }
     
     return updatedParams;

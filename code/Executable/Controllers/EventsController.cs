@@ -29,7 +29,8 @@ public class EventsController : ControllerBase
         [FromQuery] string? severity = null,
         [FromQuery] string? eventType = null,
         [FromQuery] DateTime? fromDate = null,
-        [FromQuery] DateTime? toDate = null)
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] string? search = null)
     {
         // Validate pagination parameters
         if (page < 1) page = 1;
@@ -62,6 +63,15 @@ public class EventsController : ControllerBase
             query = query.Where(e => e.Timestamp <= toDate.Value);
         }
 
+        // Apply search filter if provided
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(e =>
+                (e.Message != null && e.Message.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                (e.Data != null && e.Data.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                (e.TrackingId != null && e.TrackingId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase)));
+        }
+
         // Count total matching records for pagination
         var totalCount = await query.CountAsync();
         
@@ -75,6 +85,10 @@ public class EventsController : ControllerBase
             .Skip(skip)
             .Take(pageSize)
             .ToListAsync();
+
+        events = events
+            .OrderBy(e => e.Timestamp)
+            .ToList();
 
         // Return paginated result
         var result = new PaginatedResult<AppEvent>
@@ -178,6 +192,7 @@ public class EventsController : ControllerBase
         var severities = Enum.GetNames(typeof(EventSeverity)).ToList();
         return Ok(severities);
     }
+    
     /// <summary>
     /// Gets the latest events for real-time updates
     /// </summary>
@@ -186,7 +201,8 @@ public class EventsController : ControllerBase
         [FromQuery] int count = 100,
         [FromQuery] string? severity = null,
         [FromQuery] string? eventType = null,
-        [FromQuery] DateTime? after = null)
+        [FromQuery] DateTime? after = null,
+        [FromQuery] string? search = null)
     {
         var query = _context.Events.AsQueryable();
 
@@ -207,6 +223,15 @@ public class EventsController : ControllerBase
         if (after.HasValue)
         {
             query = query.Where(e => e.Timestamp > after.Value);
+        }
+        
+        // Apply search filter if provided
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(e =>
+                (e.Message != null && e.Message.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                (e.Data != null && e.Data.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
+                (e.TrackingId != null && e.TrackingId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase)));
         }
 
         // Order and limit
