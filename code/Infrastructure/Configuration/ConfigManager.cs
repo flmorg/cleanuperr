@@ -1,3 +1,4 @@
+using System.Reflection;
 using Common.Configuration;
 using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
@@ -46,19 +47,23 @@ public class ConfigManager : IConfigManager
         {
             try
             {
+                object? config;
+                
                 if (_configProvider.FileExists(path))
                 {
-                    continue;
+                    config = await ReadConfigurationAsync(type);
                 }
-                
-                var config = Activator.CreateInstance(type);
+                else
+                {
+                    config = Activator.CreateInstance(type);
+                }
 
                 if (config is null)
                 {
                     throw new InvalidOperationException($"Failed to create instance of {type}");
                 }
                 
-                // Create the file with default values
+                // Create the file with default values or migrate to new model
                 await _configProvider.WriteConfigurationAsync(path, config);
             }
             catch (Exception ex)
@@ -67,6 +72,61 @@ public class ConfigManager : IConfigManager
                 throw;
             }
         }
+    }
+
+    private async Task<object?> ReadConfigurationAsync(Type type)
+    {
+        if (type == typeof(GeneralConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<GeneralConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(SonarrConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<SonarrConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(RadarrConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<RadarrConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(LidarrConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<LidarrConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(ContentBlockerConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(QueueCleanerConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<QueueCleanerConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(DownloadCleanerConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<DownloadCleanerConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(DownloadClientConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<DownloadClientConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(IgnoredDownloadsConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(_settingsPaths[type]);
+        }
+        
+        if (type == typeof(NotificationsConfig))
+        {
+            return await _configProvider.ReadConfigurationAsync<NotificationsConfig>(_settingsPaths[type]);
+        }
+        
+        throw new NotSupportedException($"Configuration type {type.Name} is not supported.");
     }
     
     public Task<T> GetConfigurationAsync<T>() where T : class, new()

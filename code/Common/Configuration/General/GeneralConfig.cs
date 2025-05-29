@@ -20,6 +20,8 @@ public sealed record GeneralConfig : IConfig
     
     public LogEventLevel LogLevel { get; set; } = LogEventLevel.Information;
 
+    public string EncryptionKey { get; init; } = Guid.NewGuid().ToString();
+
     public void Validate()
     {
         if (HttpTimeout is 0)

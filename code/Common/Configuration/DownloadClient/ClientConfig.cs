@@ -1,3 +1,5 @@
+using Common.Attributes;
+using Common.Configuration;
 using Common.Enums;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -37,11 +39,13 @@ public sealed record ClientConfig
     /// <summary>
     /// Username for authentication
     /// </summary>
+    [SensitiveData]
     public string Username { get; init; } = string.Empty;
     
     /// <summary>
     /// Password for authentication
     /// </summary>
+    [SensitiveData]
     public string Password { get; init; } = string.Empty;
     
     /// <summary>

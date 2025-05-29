@@ -15,6 +15,7 @@ using Infrastructure.Verticals.DownloadRemover.Interfaces;
 using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Infrastructure.Verticals.QueueCleaner;
+using Infrastructure.Verticals.Security;
 
 namespace Executable.DependencyInjection;
 
@@ -22,6 +23,8 @@ public static class ServicesDI
 {
     public static IServiceCollection AddServices(this IServiceCollection services) =>
         services
+            .AddSingleton<IEncryptionService, AesEncryptionService>()
+            .AddTransient<SensitiveDataJsonConverter>()
             .AddTransient<DataContext>()
             .AddTransient<EventPublisher>()
             .AddHostedService<EventCleanupService>()

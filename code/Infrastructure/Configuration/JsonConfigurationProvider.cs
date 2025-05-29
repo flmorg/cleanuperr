@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using Common.Configuration;
 using Common.Helpers;
+using Infrastructure.Verticals.Security;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Configuration;
@@ -16,7 +18,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
     private readonly Dictionary<string, SemaphoreSlim> _fileLocks = new();
     private readonly JsonSerializerOptions _serializerOptions;
 
-    public JsonConfigurationProvider(ILogger<JsonConfigurationProvider> logger)
+    public JsonConfigurationProvider(ILogger<JsonConfigurationProvider> logger, SensitiveDataJsonConverter sensitiveDataConverter)
     {
         _logger = logger;
         _settingsDirectory = ConfigurationPathProvider.GetSettingsPath();
@@ -43,6 +45,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
             PropertyNameCaseInsensitive = true
         };
         _serializerOptions.Converters.Add(new JsonStringEnumConverter());
+        _serializerOptions.Converters.Add(sensitiveDataConverter);
     }
 
     /// <summary>

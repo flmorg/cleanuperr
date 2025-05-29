@@ -1,4 +1,7 @@
-﻿namespace Common.Configuration.Arr;
+﻿using Common.Attributes;
+using Common.Configuration;
+
+namespace Common.Configuration.Arr;
 
 public sealed class ArrInstance
 {
@@ -8,5 +11,6 @@ public sealed class ArrInstance
     
     public required Uri Url { get; set; }
     
+    [SensitiveData]
     public required string ApiKey { get; set; }
 }
