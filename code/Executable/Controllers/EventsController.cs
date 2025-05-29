@@ -66,10 +66,12 @@ public class EventsController : ControllerBase
         // Apply search filter if provided
         if (!string.IsNullOrWhiteSpace(search))
         {
+            string pattern = DataContext.GetLikePattern(search);
             query = query.Where(e =>
-                (e.Message != null && e.Message.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
-                (e.Data != null && e.Data.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
-                (e.TrackingId != null && e.TrackingId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase)));
+                EF.Functions.Like(e.Message, pattern) ||
+                EF.Functions.Like(e.Data, pattern) ||
+                EF.Functions.Like(e.TrackingId.ToString(), pattern)
+            );
         }
 
         // Count total matching records for pagination
@@ -191,56 +193,6 @@ public class EventsController : ControllerBase
     {
         var severities = Enum.GetNames(typeof(EventSeverity)).ToList();
         return Ok(severities);
-    }
-    
-    /// <summary>
-    /// Gets the latest events for real-time updates
-    /// </summary>
-    [HttpGet("latest")]
-    public async Task<ActionResult<List<AppEvent>>> GetLatestEvents(
-        [FromQuery] int count = 100,
-        [FromQuery] string? severity = null,
-        [FromQuery] string? eventType = null,
-        [FromQuery] DateTime? after = null,
-        [FromQuery] string? search = null)
-    {
-        var query = _context.Events.AsQueryable();
-
-        // Apply filters
-        if (!string.IsNullOrWhiteSpace(severity))
-        {
-            if (Enum.TryParse<EventSeverity>(severity, true, out var severityEnum))
-                query = query.Where(e => e.Severity == severityEnum);
-        }
-
-        if (!string.IsNullOrWhiteSpace(eventType))
-        {
-            if (Enum.TryParse<EventType>(eventType, true, out var eventTypeEnum))
-                query = query.Where(e => e.EventType == eventTypeEnum);
-        }
-        
-        // Filter for events after a specific timestamp
-        if (after.HasValue)
-        {
-            query = query.Where(e => e.Timestamp > after.Value);
-        }
-        
-        // Apply search filter if provided
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            query = query.Where(e =>
-                (e.Message != null && e.Message.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
-                (e.Data != null && e.Data.Contains(search, StringComparison.OrdinalIgnoreCase)) ||
-                (e.TrackingId != null && e.TrackingId.ToString().Contains(search, StringComparison.OrdinalIgnoreCase)));
-        }
-
-        // Order and limit
-        var events = await query
-            .OrderByDescending(e => e.Timestamp)
-            .Take(Math.Min(count, 1000)) // Cap at 1000
-            .ToListAsync();
-
-        return Ok(events);
     }
 } 
 

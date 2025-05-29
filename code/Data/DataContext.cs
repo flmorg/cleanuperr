@@ -38,4 +38,13 @@ public class DataContext : DbContext
             v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
         ) {}
     }
+    
+    public static string GetLikePattern(string input)
+    {
+        input = input.Replace("[", "[[]")
+            .Replace("%", "[%]")
+            .Replace("_", "[_]");
+        
+        return $"%{input}%";
+    }
 } 

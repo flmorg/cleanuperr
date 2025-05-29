@@ -69,54 +69,6 @@ export class EventsService {
   }
 
   /**
-   * Get latest events (for polling)
-   */
-  getLatestEvents(filter: Partial<EventsFilter> = {}): Observable<AppEvent[]> {
-    let params = new HttpParams().set('count', '100');
-    
-    // Add timestamp filter if we have a last event timestamp
-    if (this.lastEventTimestamp) {
-      params = params.set('after', this.lastEventTimestamp.toISOString());
-    }
-    
-    // Add optional filters if they exist
-    params = this.addFiltersToParams(params, filter);
-    
-    return this.http.get<AppEvent[]>(`${this.apiUrl}/latest`, { params })
-      .pipe(
-        tap(newEvents => {
-          if (newEvents.length > 0) {
-            // Update the last event timestamp
-            const newestEvent = newEvents.reduce((prev, current) => {
-              return new Date(current.timestamp) > new Date(prev.timestamp) ? current : prev;
-            });
-            this.lastEventTimestamp = new Date(newestEvent.timestamp);
-            
-            // Update the events list if we already have events loaded
-            const currentEvents = this.events.value;
-            if (currentEvents) {
-              // Combine old and new events, respecting pagination
-              const combinedItems = [...newEvents, ...currentEvents.items]
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-                .slice(0, currentEvents.pageSize);
-              
-              // Update the events subject
-              this.events.next({
-                ...currentEvents,
-                items: combinedItems,
-                totalCount: currentEvents.totalCount + newEvents.length
-              });
-            }
-          }
-        }),
-        catchError(error => {
-          console.error('Error getting latest events:', error);
-          return of([]);
-        })
-      );
-  }
-
-  /**
    * Helper to add filters to HttpParams
    */
   private addFiltersToParams(params: HttpParams, filter: Partial<EventsFilter>): HttpParams {
