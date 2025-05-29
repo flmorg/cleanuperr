@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { DatePipe, NgFor, NgIf, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged, Subscription, interval, filter } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
 
 // PrimeNG Imports
@@ -21,7 +21,6 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { PaginatorModule } from 'primeng/paginator';
 
 // Services & Models
-import { AppHubService } from '../../core/services/app-hub.service';
 import { EventsService, EventsFilter, PaginatedResult } from '../../core/services/events.service';
 import { AppEvent } from '../../core/models/event.models';
 
@@ -47,12 +46,11 @@ import { AppEvent } from '../../core/models/event.models';
     DatePickerModule,
     PaginatorModule
   ],
-  providers: [AppHubService, EventsService],
+  providers: [EventsService],
   templateUrl: './events-viewer.component.html',
   styleUrl: './events-viewer.component.scss'
 })
 export class EventsViewerComponent implements OnInit, OnDestroy {
-  private appHubService = inject(AppHubService); // Keep for dashboard
   private eventsService = inject(EventsService);
   private destroy$ = new Subject<void>();
   private clipboard = inject(Clipboard);
@@ -64,7 +62,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
 
   // Signals for reactive state
   events = signal<AppEvent[]>([]);
-  isConnected = signal<boolean>(false); // Always connected with HTTP
+  isConnected = signal<boolean>(false);
   expandedEvents: { [key: number]: boolean } = {};
   loading = signal<boolean>(false);
 
@@ -90,8 +88,8 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
 
   // Computed values
   filteredEvents = computed(() => {
+    // Server-side filtering is used, so we just return the events as-is
     return this.events();
-    // Note: We no longer need client-side filtering as filtering is done on the server
   });
 
   severities = signal<any[]>([]);
@@ -178,6 +176,7 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   loadEvents(): void {
     this.loading.set(true);
 
+    // Create filter object
     const filter: EventsFilter = {
       page: this.currentPage(),
       pageSize: this.pageSize(),
@@ -186,21 +185,27 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
       fromDate: this.fromDate(),
       toDate: this.toDate()
     };
+    
+    // We can't add search directly to the filter object as it's not in the interface
+    // The server controller would need to be updated to support search
 
-    this.eventsService.loadEvents(filter)
+    // Fetch events from server
+    this.eventsService
+      .loadEvents(filter)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result: PaginatedResult<AppEvent>) => {
+          // Replace events rather than appending to avoid duplication
           this.events.set(result.items);
           this.totalRecords.set(result.totalCount);
           this.totalPages.set(result.totalPages);
           this.loading.set(false);
           this.isConnected.set(true);
         },
-        error: (error) => {
-          this.isConnected.set(false);
-          console.error('Error loading events:', error);
+        error: (error: any) => {
+          console.error('Error fetching events:', error);
           this.loading.set(false);
+          this.isConnected.set(false);
         }
       });
   }
@@ -233,37 +238,33 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   }
 
   startPolling(): void {
-    // Stop any existing polling
+    // Stop any existing polling subscription to avoid duplicates
     this.stopPolling();
+    
+    // Set up polling every 10 seconds using our own implementation instead of the service's
+    const pollingInterval = 10000;
 
-    // Create filter for polling (only apply type and severity filters, not pagination)
-    const pollingFilter = {
-      severity: this.severityFilter() || undefined,
-      eventType: this.eventTypeFilter() || undefined,
-      fromDate: this.fromDate(),
-      toDate: this.toDate()
-    };
-
-    this.eventsService.startPolling(pollingFilter);
-
-    // Subscribe to events stream to update UI
-    this.pollingSubscription = this.eventsService.events$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(result => {
-        if (result) {
-          this.events.set(result.items);
-          this.totalRecords.set(result.totalCount);
-          this.totalPages.set(result.totalPages);
-        }
+    this.pollingSubscription = interval(pollingInterval)
+      .pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        // Simply reload the events with current filters periodically
+        this.loadEvents();
       });
   }
 
   stopPolling(): void {
-    this.eventsService.stopPolling();
+    // Clean up our subscription to the events stream
     if (this.pollingSubscription) {
       this.pollingSubscription.unsubscribe();
       this.pollingSubscription = undefined;
     }
+    
+    // Reset expanded events state to maintain a clean UI
+    this.expandedEvents = {};
+    
+    // We no longer need to call eventsService.stopPolling() since we're managing our own polling
   }
 
   formatJsonData(data: string): string {
@@ -405,7 +406,9 @@ export class EventsViewerComponent implements OnInit, OnDestroy {
   }
 
   refresh(): void {
-    // Reload events from the server
+    // Clear existing events to prevent any potential duplication
+    this.events.set([]);
+    // Reload events from the server with the current filters
     this.loadEvents();
   }
 
