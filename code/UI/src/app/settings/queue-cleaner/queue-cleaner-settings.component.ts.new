@@ -237,45 +237,24 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
 
     // Failed Import settings
     const failedImportEnabled = enabled && config.failedImportMaxStrikes >= 3;
-    if (failedImportEnabled) {
-      this.queueCleanerForm.get("failedImportIgnorePrivate")?.enable(options);
-      this.queueCleanerForm.get("failedImportDeletePrivate")?.enable(options);
-      this.queueCleanerForm.get("failedImportIgnorePatterns")?.enable(options);
-    } else {
-      this.queueCleanerForm.get("failedImportIgnorePrivate")?.disable(options);
-      this.queueCleanerForm.get("failedImportDeletePrivate")?.disable(options);
-      this.queueCleanerForm.get("failedImportIgnorePatterns")?.disable(options);
-    }
+    this.queueCleanerForm.get("failedImportIgnorePrivate")?.setDisabled(!failedImportEnabled, options);
+    this.queueCleanerForm.get("failedImportDeletePrivate")?.setDisabled(!failedImportEnabled, options);
+    this.queueCleanerForm.get("failedImportIgnorePatterns")?.setDisabled(!failedImportEnabled, options);
 
     // Stalled settings
     const stalledEnabled = enabled && config.stalledMaxStrikes >= 3;
-    if (stalledEnabled) {
-      this.queueCleanerForm.get("stalledResetStrikesOnProgress")?.enable(options);
-      this.queueCleanerForm.get("stalledIgnorePrivate")?.enable(options);
-      this.queueCleanerForm.get("stalledDeletePrivate")?.enable(options);
-    } else {
-      this.queueCleanerForm.get("stalledResetStrikesOnProgress")?.disable(options);
-      this.queueCleanerForm.get("stalledIgnorePrivate")?.disable(options);
-      this.queueCleanerForm.get("stalledDeletePrivate")?.disable(options);
-    }
+    this.queueCleanerForm.get("stalledResetStrikesOnProgress")?.setDisabled(!stalledEnabled, options);
+    this.queueCleanerForm.get("stalledIgnorePrivate")?.setDisabled(!stalledEnabled, options);
+    this.queueCleanerForm.get("stalledDeletePrivate")?.setDisabled(!stalledEnabled, options);
 
     // Slow Download settings
     const slowEnabled = enabled && config.slowMaxStrikes >= 3;
-    if (slowEnabled) {
-      this.queueCleanerForm.get("slowResetStrikesOnProgress")?.enable(options);
-      this.queueCleanerForm.get("slowIgnorePrivate")?.enable(options);
-      this.queueCleanerForm.get("slowDeletePrivate")?.enable(options);
-      this.queueCleanerForm.get("slowMinSpeed")?.enable(options);
-      this.queueCleanerForm.get("slowMaxTime")?.enable(options);
-      this.queueCleanerForm.get("slowIgnoreAboveSize")?.enable(options);
-    } else {
-      this.queueCleanerForm.get("slowResetStrikesOnProgress")?.disable(options);
-      this.queueCleanerForm.get("slowIgnorePrivate")?.disable(options);
-      this.queueCleanerForm.get("slowDeletePrivate")?.disable(options);
-      this.queueCleanerForm.get("slowMinSpeed")?.disable(options);
-      this.queueCleanerForm.get("slowMaxTime")?.disable(options);
-      this.queueCleanerForm.get("slowIgnoreAboveSize")?.disable(options);
-    }
+    this.queueCleanerForm.get("slowResetStrikesOnProgress")?.setDisabled(!slowEnabled, options);
+    this.queueCleanerForm.get("slowIgnorePrivate")?.setDisabled(!slowEnabled, options);
+    this.queueCleanerForm.get("slowDeletePrivate")?.setDisabled(!slowEnabled, options);
+    this.queueCleanerForm.get("slowMinSpeed")?.setDisabled(!slowEnabled, options);
+    this.queueCleanerForm.get("slowMaxTime")?.setDisabled(!slowEnabled, options);
+    this.queueCleanerForm.get("slowIgnoreAboveSize")?.setDisabled(!slowEnabled, options);
   }
 
   /**

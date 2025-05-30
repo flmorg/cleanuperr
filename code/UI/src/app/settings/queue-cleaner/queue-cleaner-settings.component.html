@@ -19,16 +19,14 @@
           [min]="1" 
           [max]="59" 
           buttonLayout="horizontal" 
-          inputStyleClass="schedule-value"
-          [disabled]="!queueCleanerForm.get('enabled')?.value">
+          inputStyleClass="schedule-value">
         </p-inputNumber>
         
         <p-selectButton 
           formControlName="type" 
           [options]="scheduleUnitOptions" 
           optionLabel="label" 
-          optionValue="value"
-          [disabled]="!queueCleanerForm.get('enabled')?.value">
+          optionValue="value">
         </p-selectButton>
       </div>
       <small class="form-helper-text">How often the queue cleaner should run</small>
@@ -37,7 +35,7 @@
     <div class="field-row">
       <label class="field-label">Run Sequentially</label>
       <div class="field-input">
-        <p-checkbox formControlName="runSequentially" [binary]="true" inputId="qcRunSequentially" [disabled]="!queueCleanerForm.get('enabled')?.value"></p-checkbox>
+        <p-checkbox formControlName="runSequentially" [binary]="true" inputId="qcRunSequentially"></p-checkbox>
         <small class="form-helper-text">When enabled, jobs will run one after another instead of in parallel</small>
       </div>
     </div>
@@ -45,7 +43,7 @@
     <div class="field-row">
       <label class="field-label">Ignored Downloads Path</label>
       <div class="field-input">
-        <input pInputText formControlName="ignoredDownloadsPath" [disabled]="!queueCleanerForm.get('enabled')?.value" />
+        <input pInputText formControlName="ignoredDownloadsPath" />
         <small class="form-helper-text">Path to the file containing ignored downloads</small>
       </div>
     </div>
@@ -53,7 +51,7 @@
     <!-- Detailed Settings in Accordion -->
     <p-accordion [multiple]="true" styleClass="mt-3">
       <!-- Failed Import Settings -->
-      <p-accordionTab header="Failed Import Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+      <p-accordionTab header="Failed Import Settings">
         <div class="field-row">
           <label class="field-label">Max Strikes</label>
           <div class="field-input">
@@ -71,7 +69,7 @@
         <div class="field-row">
           <label class="field-label">Ignore Private</label>
           <div class="field-input">
-            <p-checkbox formControlName="failedImportIgnorePrivate" [binary]="true" [disabled]="queueCleanerForm.get('failedImportMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="failedImportIgnorePrivate" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, private torrents will be ignored</small>
           </div>
         </div>
@@ -79,7 +77,7 @@
         <div class="field-row">
           <label class="field-label">Delete Private</label>
           <div class="field-input">
-            <p-checkbox formControlName="failedImportDeletePrivate" [binary]="true" [disabled]="queueCleanerForm.get('failedImportMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="failedImportDeletePrivate" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, private torrents will be deleted</small>
           </div>
         </div>
@@ -87,14 +85,14 @@
         <div class="field-row">
           <label class="field-label">Ignore Patterns</label>
           <div class="field-input">
-            <p-chips formControlName="failedImportIgnorePatterns" [disabled]="queueCleanerForm.get('failedImportMaxStrikes')?.value < 3" placeholder="Add pattern and press Enter"></p-chips>
+            <p-chips formControlName="failedImportIgnorePatterns" placeholder="Add pattern and press Enter"></p-chips>
             <small class="form-helper-text">Patterns to ignore (e.g., *sample*)</small>
           </div>
         </div>
       </p-accordionTab>
 
       <!-- Stalled Settings -->
-      <p-accordionTab header="Stalled Download Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+      <p-accordionTab header="Stalled Download Settings">
         <div class="field-row">
           <label class="field-label">Max Strikes</label>
           <div class="field-input">
@@ -112,7 +110,7 @@
         <div class="field-row">
           <label class="field-label">Reset Strikes On Progress</label>
           <div class="field-input">
-            <p-checkbox formControlName="stalledResetStrikesOnProgress" [binary]="true" [disabled]="queueCleanerForm.get('stalledMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="stalledResetStrikesOnProgress" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
           </div>
         </div>
@@ -120,7 +118,7 @@
         <div class="field-row">
           <label class="field-label">Ignore Private</label>
           <div class="field-input">
-            <p-checkbox formControlName="stalledIgnorePrivate" [binary]="true" [disabled]="queueCleanerForm.get('stalledMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="stalledIgnorePrivate" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, private torrents will be ignored</small>
           </div>
         </div>
@@ -128,14 +126,14 @@
         <div class="field-row">
           <label class="field-label">Delete Private</label>
           <div class="field-input">
-            <p-checkbox formControlName="stalledDeletePrivate" [binary]="true" [disabled]="queueCleanerForm.get('stalledMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="stalledDeletePrivate" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, private torrents will be deleted</small>
           </div>
         </div>
       </p-accordionTab>
 
       <!-- Downloading Metadata Settings -->
-      <p-accordionTab header="Downloading Metadata Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+      <p-accordionTab header="Downloading Metadata Settings">
         <div class="field-row">
           <label class="field-label">Max Strikes</label>
           <div class="field-input">
@@ -152,7 +150,7 @@
       </p-accordionTab>
 
       <!-- Slow Download Settings -->
-      <p-accordionTab header="Slow Download Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+      <p-accordionTab header="Slow Download Settings">
         <div class="field-row">
           <label class="field-label">Max Strikes</label>
           <div class="field-input">
@@ -170,7 +168,7 @@
         <div class="field-row">
           <label class="field-label">Reset Strikes On Progress</label>
           <div class="field-input">
-            <p-checkbox formControlName="slowResetStrikesOnProgress" [binary]="true" [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="slowResetStrikesOnProgress" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
           </div>
         </div>
@@ -178,7 +176,7 @@
         <div class="field-row">
           <label class="field-label">Ignore Private</label>
           <div class="field-input">
-            <p-checkbox formControlName="slowIgnorePrivate" [binary]="true" [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="slowIgnorePrivate" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, private torrents will be ignored</small>
           </div>
         </div>
@@ -186,7 +184,7 @@
         <div class="field-row">
           <label class="field-label">Delete Private</label>
           <div class="field-input">
-            <p-checkbox formControlName="slowDeletePrivate" [binary]="true" [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3"></p-checkbox>
+            <p-checkbox formControlName="slowDeletePrivate" [binary]="true"></p-checkbox>
             <small class="form-helper-text">When enabled, private torrents will be deleted</small>
           </div>
         </div>
@@ -196,7 +194,6 @@
           <div class="field-input">
             <app-byte-size-input 
               formControlName="slowMinSpeed" 
-              [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3" 
               [min]="0" 
               placeholder="Enter minimum speed" 
               helpText="Minimum speed threshold for slow downloads (e.g., 100KB/s)">
@@ -212,8 +209,7 @@
               [showButtons]="true" 
               [min]="0" 
               [max]="168" 
-              buttonLayout="horizontal"
-              [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3">
+              buttonLayout="horizontal">
             </p-inputNumber>
             <small class="form-helper-text">Maximum time allowed for slow downloads (in hours)</small>
           </div>
@@ -224,7 +220,6 @@
           <div class="field-input">
             <app-byte-size-input 
               formControlName="slowIgnoreAboveSize" 
-              [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3" 
               [min]="0" 
               placeholder="Enter size threshold" 
               helpText="Size threshold above which slow downloads are ignored">
