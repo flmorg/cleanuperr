@@ -39,467 +39,294 @@ public class ConfigurationController : ControllerBase
     [HttpGet("queue_cleaner")]
     public async Task<IActionResult> GetQueueCleanerConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
-            var dto = config.Adapt<QueueCleanerConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving QueueCleaner configuration");
-            return StatusCode(500, "An error occurred while retrieving QueueCleaner configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
+        var dto = config.Adapt<QueueCleanerConfigDto>();
+        return Ok(dto);
     }
 
     [HttpGet("content_blocker")]
     public async Task<IActionResult> GetContentBlockerConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
-            var dto = config.Adapt<ContentBlockerConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving ContentBlocker configuration");
-            return StatusCode(500, "An error occurred while retrieving ContentBlocker configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
+        var dto = config.Adapt<ContentBlockerConfigDto>();
+        return Ok(dto);
     }
 
     [HttpGet("download_cleaner")]
     public async Task<IActionResult> GetDownloadCleanerConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
-            var dto = config.Adapt<DownloadCleanerConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving DownloadCleaner configuration");
-            return StatusCode(500, "An error occurred while retrieving DownloadCleaner configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
+        var dto = config.Adapt<DownloadCleanerConfigDto>();
+        return Ok(dto);
     }
     
     [HttpGet("download_client")]
     public async Task<IActionResult> GetDownloadClientConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
-            var dto = config.Adapt<DownloadClientConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving DownloadClient configuration");
-            return StatusCode(500, "An error occurred while retrieving DownloadClient configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+        var dto = config.Adapt<DownloadClientConfigDto>();
+        return Ok(dto);
     }
     
     [HttpGet("ignored_downloads")]
     public async Task<IActionResult> GetIgnoredDownloadsConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
-            var dto = config.Adapt<IgnoredDownloadsConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving IgnoredDownloads configuration");
-            return StatusCode(500, "An error occurred while retrieving IgnoredDownloads configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
+        var dto = config.Adapt<IgnoredDownloadsConfigDto>();
+        return Ok(dto);
     }
     
     [HttpGet("general")]
     public async Task<IActionResult> GetGeneralConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<GeneralConfig>();
-            var dto = config.Adapt<GeneralConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving General configuration");
-            return StatusCode(500, "An error occurred while retrieving General configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<GeneralConfig>();
+        var dto = config.Adapt<GeneralConfigDto>();
+        return Ok(dto);
     }
     
     [HttpGet("sonarr")]
     public async Task<IActionResult> GetSonarrConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<SonarrConfig>();
-            var dto = config.Adapt<SonarrConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Sonarr configuration");
-            return StatusCode(500, "An error occurred while retrieving Sonarr configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<SonarrConfig>();
+        var dto = config.Adapt<SonarrConfigDto>();
+        return Ok(dto);
     }
     
     [HttpGet("radarr")]
     public async Task<IActionResult> GetRadarrConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<RadarrConfig>();
-            var dto = config.Adapt<RadarrConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Radarr configuration");
-            return StatusCode(500, "An error occurred while retrieving Radarr configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<RadarrConfig>();
+        var dto = config.Adapt<RadarrConfigDto>();
+        return Ok(dto);
     }
     
     [HttpGet("lidarr")]
     public async Task<IActionResult> GetLidarrConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<LidarrConfig>();
-            var dto = config.Adapt<LidarrConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Lidarr configuration");
-            return StatusCode(500, "An error occurred while retrieving Lidarr configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<LidarrConfig>();
+        var dto = config.Adapt<LidarrConfigDto>();
+        return Ok(dto);
     }
     
     [HttpGet("notifications")]
     public async Task<IActionResult> GetNotificationsConfig()
     {
-        try
-        {
-            var config = await _configManager.GetConfigurationAsync<NotificationsConfig>();
-            var dto = config.Adapt<NotificationsConfigDto>();
-            return Ok(dto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving Notifications configuration");
-            return StatusCode(500, "An error occurred while retrieving Notifications configuration");
-        }
+        var config = await _configManager.GetConfigurationAsync<NotificationsConfig>();
+        var dto = config.Adapt<NotificationsConfigDto>();
+        return Ok(dto);
     }
 
     [HttpPut("queue_cleaner")]
     public async Task<IActionResult> UpdateQueueCleanerConfig([FromBody] QueueCleanerConfigUpdateDto dto)
     {
-        try
+        // Get existing config
+        var config = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
+        
+        // Apply updates from DTO
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config
-            var config = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
-            
-            // Apply updates from DTO
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save QueueCleaner configuration");
-            }
-            
-            _logger.LogInformation("QueueCleaner configuration updated successfully");
-            return Ok(new { Message = "QueueCleaner configuration updated successfully" });
+            return StatusCode(500, "Failed to save QueueCleaner configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating QueueCleaner configuration");
-            return StatusCode(500, "An error occurred while updating QueueCleaner configuration");
-        }
+        
+        return Ok(new { Message = "QueueCleaner configuration updated successfully" });
     }
 
     [HttpPut("content_blocker")]
     public async Task<IActionResult> UpdateContentBlockerConfig([FromBody] ContentBlockerConfigUpdateDto dto)
     {
-        try
+        // Get existing config
+        var config = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
+        
+        // Apply updates from DTO
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config
-            var config = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
-            
-            // Apply updates from DTO
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save ContentBlocker configuration");
-            }
-            
-            _logger.LogInformation("ContentBlocker configuration updated successfully");
-            return Ok(new { Message = "ContentBlocker configuration updated successfully" });
+            return StatusCode(500, "Failed to save ContentBlocker configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating ContentBlocker configuration");
-            return StatusCode(500, "An error occurred while updating ContentBlocker configuration");
-        }
+        
+        return Ok(new { Message = "ContentBlocker configuration updated successfully" });
     }
 
     [HttpPut("download_cleaner")]
     public async Task<IActionResult> UpdateDownloadCleanerConfig([FromBody] DownloadCleanerConfigUpdateDto dto)
     {
-        try
+        // Get existing config
+        var config = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
+        
+        // Apply updates from DTO
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config
-            var config = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
-            
-            // Apply updates from DTO
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save DownloadCleaner configuration");
-            }
-            
-            _logger.LogInformation("DownloadCleaner configuration updated successfully");
-            return Ok(new { Message = "DownloadCleaner configuration updated successfully" });
+            return StatusCode(500, "Failed to save DownloadCleaner configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating DownloadCleaner configuration");
-            return StatusCode(500, "An error occurred while updating DownloadCleaner configuration");
-        }
+        
+        return Ok(new { Message = "DownloadCleaner configuration updated successfully" });
     }
     
     [HttpPut("download_client")]
     public async Task<IActionResult> UpdateDownloadClientConfig([FromBody] DownloadClientConfigUpdateDto dto)
     {
-        try
+        // Get existing config to preserve sensitive data
+        var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+        
+        // Apply updates from DTO, preserving sensitive data if not provided
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config to preserve sensitive data
-            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
-            
-            // Apply updates from DTO, preserving sensitive data if not provided
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save DownloadClient configuration");
-            }
-            
-            _logger.LogInformation("DownloadClient configuration updated successfully");
-            return Ok(new { Message = "DownloadClient configuration updated successfully" });
+            return StatusCode(500, "Failed to save DownloadClient configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating DownloadClient configuration: {Message}", ex.Message);
-            return BadRequest(new { Error = ex.Message });
-        }
+        
+        return Ok(new { Message = "DownloadClient configuration updated successfully" });
     }
     
     [HttpPut("ignored_downloads")]
     public async Task<IActionResult> UpdateIgnoredDownloadsConfig([FromBody] IgnoredDownloadsConfigUpdateDto dto)
     {
-        try
+        // Get existing config
+        var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
+        
+        // Apply updates from DTO
+        dto.Adapt(config);
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config
-            var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
-            
-            // Apply updates from DTO
-            dto.Adapt(config);
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save IgnoredDownloads configuration");
-            }
-            
-            _logger.LogInformation("IgnoredDownloads configuration updated successfully");
-            return Ok(new { Message = "IgnoredDownloads configuration updated successfully" });
+            return StatusCode(500, "Failed to save IgnoredDownloads configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating IgnoredDownloads configuration");
-            return StatusCode(500, "An error occurred while updating IgnoredDownloads configuration");
-        }
+        
+        return Ok(new { Message = "IgnoredDownloads configuration updated successfully" });
     }
     
     [HttpPut("general")]
     public async Task<IActionResult> UpdateGeneralConfig([FromBody] GeneralConfigUpdateDto dto)
     {
-        try
+        // Get existing config to preserve sensitive data
+        var config = await _configManager.GetConfigurationAsync<GeneralConfig>();
+        
+        // Apply updates from DTO, preserving sensitive data if not provided
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config to preserve sensitive data
-            var config = await _configManager.GetConfigurationAsync<GeneralConfig>();
-            
-            // Apply updates from DTO, preserving sensitive data if not provided
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save General configuration");
-            }
-            
-            _logger.LogInformation("General configuration updated successfully");
-            return Ok(new { Message = "General configuration updated successfully" });
+            return StatusCode(500, "Failed to save General configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating General configuration");
-            return StatusCode(500, "An error occurred while updating General configuration");
-        }
+        
+        return Ok(new { Message = "General configuration updated successfully" });
     }
     
     [HttpPut("sonarr")]
     public async Task<IActionResult> UpdateSonarrConfig([FromBody] SonarrConfigUpdateDto dto)
     {
-        try
+        // Get existing config to preserve sensitive data
+        var config = await _configManager.GetConfigurationAsync<SonarrConfig>();
+        
+        // Apply updates from DTO, preserving sensitive data if not provided
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config to preserve sensitive data
-            var config = await _configManager.GetConfigurationAsync<SonarrConfig>();
-            
-            // Apply updates from DTO, preserving sensitive data if not provided
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save Sonarr configuration");
-            }
-            
-            _logger.LogInformation("Sonarr configuration updated successfully");
-            return Ok(new { Message = "Sonarr configuration updated successfully" });
+            return StatusCode(500, "Failed to save Sonarr configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating Sonarr configuration");
-            return StatusCode(500, "An error occurred while updating Sonarr configuration");
-        }
+        
+        return Ok(new { Message = "Sonarr configuration updated successfully" });
     }
     
     [HttpPut("radarr")]
     public async Task<IActionResult> UpdateRadarrConfig([FromBody] RadarrConfigUpdateDto dto)
     {
-        try
+        // Get existing config to preserve sensitive data
+        var config = await _configManager.GetConfigurationAsync<RadarrConfig>();
+        
+        // Apply updates from DTO, preserving sensitive data if not provided
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config to preserve sensitive data
-            var config = await _configManager.GetConfigurationAsync<RadarrConfig>();
-            
-            // Apply updates from DTO, preserving sensitive data if not provided
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save Radarr configuration");
-            }
-            
-            _logger.LogInformation("Radarr configuration updated successfully");
-            return Ok(new { Message = "Radarr configuration updated successfully" });
+            return StatusCode(500, "Failed to save Radarr configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating Radarr configuration");
-            return StatusCode(500, "An error occurred while updating Radarr configuration");
-        }
+        
+        return Ok(new { Message = "Radarr configuration updated successfully" });
     }
     
     [HttpPut("lidarr")]
     public async Task<IActionResult> UpdateLidarrConfig([FromBody] LidarrConfigUpdateDto dto)
     {
-        try
+        // Get existing config to preserve sensitive data
+        var config = await _configManager.GetConfigurationAsync<LidarrConfig>();
+        
+        // Apply updates from DTO, preserving sensitive data if not provided
+        dto.Adapt(config);
+        
+        // Validate the configuration
+        config.Validate();
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config to preserve sensitive data
-            var config = await _configManager.GetConfigurationAsync<LidarrConfig>();
-            
-            // Apply updates from DTO, preserving sensitive data if not provided
-            dto.Adapt(config);
-            
-            // Validate the configuration
-            config.Validate();
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save Lidarr configuration");
-            }
-            
-            _logger.LogInformation("Lidarr configuration updated successfully");
-            return Ok(new { Message = "Lidarr configuration updated successfully" });
+            return StatusCode(500, "Failed to save Lidarr configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating Lidarr configuration");
-            return StatusCode(500, "An error occurred while updating Lidarr configuration");
-        }
+        
+        return Ok(new { Message = "Lidarr configuration updated successfully" });
     }
     
     [HttpPut("notifications")]
     public async Task<IActionResult> UpdateNotificationsConfig([FromBody] NotificationsConfigUpdateDto dto)
     {
-        try
+        // Get existing config to preserve sensitive data
+        var config = await _configManager.GetConfigurationAsync<NotificationsConfig>();
+        
+        // Apply updates from DTO, preserving sensitive data if not provided
+        dto.Adapt(config);
+        
+        // Persist the configuration
+        var result = await _configManager.SaveConfigurationAsync(config);
+        if (!result)
         {
-            // Get existing config to preserve sensitive data
-            var config = await _configManager.GetConfigurationAsync<NotificationsConfig>();
-            
-            // Apply updates from DTO, preserving sensitive data if not provided
-            dto.Adapt(config);
-            
-            // Persist the configuration
-            var result = await _configManager.SaveConfigurationAsync(config);
-            if (!result)
-            {
-                return StatusCode(500, "Failed to save Notifications configuration");
-            }
-            
-            _logger.LogInformation("Notifications configuration updated successfully");
-            return Ok(new { Message = "Notifications configuration updated successfully" });
+            return StatusCode(500, "Failed to save Notifications configuration");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating Notifications configuration");
-            return StatusCode(500, "An error occurred while updating Notifications configuration");
-        }
+        
+        return Ok(new { Message = "Notifications configuration updated successfully" });
     }
-    
-    // TODO add missing configs
-    // TODO do not return passwords
 }
