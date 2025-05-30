@@ -17,7 +17,7 @@ public class DataContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            var dbPath = Path.Combine(ConfigurationPathProvider.GetSettingsPath(), "state.db");
+            var dbPath = Path.Combine(ConfigurationPathProvider.GetSettingsPath(), "cleanuparr.db");
             optionsBuilder.UseSqlite($"Data Source={dbPath}");
         }
     }
