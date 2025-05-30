@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Infrastructure.Health;
 using Infrastructure.Logging;
-using Infrastructure.Events;
+using Executable.Middleware;
 using Infrastructure.Hubs;
 using Microsoft.OpenApi.Models;
 
@@ -53,6 +53,9 @@ public static class ApiDI
 
     public static WebApplication ConfigureApi(this WebApplication app)
     {
+        // Add the global exception handling middleware first
+        app.UseMiddleware<ExceptionMiddleware>();
+        
         app.UseCors("SignalRPolicy");
         app.UseRouting();
 
