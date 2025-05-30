@@ -1,148 +1,260 @@
 <div class="settings-container">
-  <div class="flex align-items-center justify-content-between mb-4">
+  <!-- Toast for notifications -->
+  <p-toast></p-toast>
+  
+  <div class="settings-header">
     <h1>Settings</h1>
-    <div>
-      <button pButton label="Save Changes" icon="pi pi-save" class="p-button-success mr-2" (click)="saveSettings()"></button>
-      <button pButton label="Reset to Defaults" icon="pi pi-refresh" class="p-button-secondary p-button-outlined" (click)="resetToDefaults()"></button>
-    </div>
+    <p>Manage application settings and configurations</p>
   </div>
   
-  <div class="grid">
-    <div class="col-12 md:col-6">
-      <p-card header="General Settings" styleClass="settings-card mb-4">
-        <div class="settings-section">
-          <h3 class="settings-section-title">API Connection</h3>
-          
-          <div class="field-row">
-            <label for="apiUrl">API URL</label>
-            <div class="field-input">
-              <span class="p-input-icon-left w-full">
-                <i class="pi pi-link"></i>
-                <input id="apiUrl" type="text" pInputText [(ngModel)]="apiUrl" class="w-full" placeholder="https://api.example.com" />
-              </span>
-              <small class="form-helper-text">The base URL of the Cleanuparr API service</small>
-            </div>
+  <!-- Queue Cleaner Settings Card -->
+  <div class="col-12 mb-4">
+    <p-card header="Queue Cleaner Configuration" styleClass="settings-card">
+      <form [formGroup]="queueCleanerForm" class="p-fluid">
+        <!-- Main Settings -->
+        <div class="field-row">
+          <label class="field-label">Enable Queue Cleaner</label>
+          <div class="field-input">
+            <p-checkbox formControlName="enabled" [binary]="true" inputId="qcEnabled"></p-checkbox>
+            <small class="form-helper-text">When enabled, the queue cleaner will run according to the schedule</small>
           </div>
-          
-          <div class="field-row">
-            <label for="apiKey">API Key</label>
-            <div class="field-input">
-              <div class="p-inputgroup">
-                <input id="apiKey" type="password" pInputText [(ngModel)]="apiKey" class="w-full" placeholder="Enter API key" />
-                <button type="button" pButton icon="pi pi-eye" class="p-button-outlined"></button>
+        </div>
+
+        <div class="field-row" formGroupName="jobSchedule">
+          <label class="field-label">Run Schedule</label>
+          <div class="field-input schedule-input">
+            <span class="schedule-label">Every</span>
+            <p-inputNumber 
+              formControlName="every" 
+              [showButtons]="true" 
+              [min]="1" 
+              [max]="59" 
+              buttonLayout="horizontal" 
+              inputStyleClass="schedule-value"
+              [disabled]="!queueCleanerForm.get('enabled')?.value">
+            </p-inputNumber>
+            
+            <p-selectButton 
+              formControlName="type" 
+              [options]="scheduleUnitOptions" 
+              optionLabel="label" 
+              optionValue="value"
+              [disabled]="!queueCleanerForm.get('enabled')?.value">
+            </p-selectButton>
+          </div>
+          <small class="form-helper-text">How often the queue cleaner should run</small>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Run Sequentially</label>
+          <div class="field-input">
+            <p-checkbox formControlName="runSequentially" [binary]="true" inputId="qcRunSequentially" [disabled]="!queueCleanerForm.get('enabled')?.value"></p-checkbox>
+            <small class="form-helper-text">When enabled, jobs will run one after another instead of in parallel</small>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Ignored Downloads Path</label>
+          <div class="field-input">
+            <input pInputText formControlName="ignoredDownloadsPath" [disabled]="!queueCleanerForm.get('enabled')?.value" />
+            <small class="form-helper-text">Path to the file containing ignored downloads</small>
+          </div>
+        </div>
+
+        <!-- Detailed Settings in Accordion -->
+        <p-accordion [multiple]="true" styleClass="mt-3">
+          <!-- Failed Import Settings -->
+          <p-accordionTab header="Failed Import Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+            <div class="field-row">
+              <label class="field-label">Max Strikes</label>
+              <div class="field-input">
+                <p-inputNumber 
+                  formControlName="failedImportMaxStrikes" 
+                  [showButtons]="true" 
+                  [min]="0" 
+                  [max]="10" 
+                  buttonLayout="horizontal">
+                </p-inputNumber>
+                <small class="form-helper-text">Number of strikes before action is taken (0 to disable, min 3 to enable)</small>
               </div>
-              <small class="form-helper-text">Required for authenticated API requests</small>
             </div>
-          </div>
-          
-          <div class="field-row">
-            <label for="apiTimeout">Timeout (seconds)</label>
-            <div class="field-input">
-              <p-inputNumber id="apiTimeout" [(ngModel)]="apiTimeout" [min]="5" [max]="120" [showButtons]="true" suffix=" sec" buttonLayout="horizontal" spinnerMode="horizontal" 
-                inputStyleClass="text-right" [step]="5" decrementButtonClass="p-button-secondary" incrementButtonClass="p-button-secondary"></p-inputNumber>
-              <small class="form-helper-text">Maximum time to wait for API responses</small>
-            </div>
-          </div>
-        </div>
-      </p-card>
-      
-      <p-card header="UI Preferences" styleClass="settings-card">
-        <div class="settings-section">
-          <div class="field-row align-items-center">
-            <label for="theme">Theme</label>
-            <div class="field-input">
-              <div class="flex gap-3 align-items-center">
-                <p-radioButton id="themeLight" name="theme" value="light" [(ngModel)]="theme" inputId="light"></p-radioButton>
-                <label for="light" class="mr-5">Light</label>
-                
-                <p-radioButton id="themeDark" name="theme" value="dark" [(ngModel)]="theme" inputId="dark"></p-radioButton>
-                <label for="dark">Dark</label>
+
+            <div class="field-row">
+              <label class="field-label">Ignore Private</label>
+              <div class="field-input">
+                <p-checkbox formControlName="failedImportIgnorePrivate" [binary]="true" [disabled]="queueCleanerForm.get('failedImportMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be ignored</small>
               </div>
             </div>
-          </div>
-          
-          <div class="field-row align-items-center">
-            <label for="fontSize">UI Font Size</label>
-            <div class="field-input">
-              <p-slider [(ngModel)]="fontSize" [min]="12" [max]="18" class="w-full mb-3"></p-slider>
-              <div class="text-center font-medium">{{ fontSize }}px</div>
+
+            <div class="field-row">
+              <label class="field-label">Delete Private</label>
+              <div class="field-input">
+                <p-checkbox formControlName="failedImportDeletePrivate" [binary]="true" [disabled]="queueCleanerForm.get('failedImportMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+              </div>
             </div>
-          </div>
+
+            <div class="field-row">
+              <label class="field-label">Ignore Patterns</label>
+              <div class="field-input">
+                <p-chips formControlName="failedImportIgnorePatterns" [disabled]="queueCleanerForm.get('failedImportMaxStrikes')?.value < 3" placeholder="Add pattern and press Enter"></p-chips>
+                <small class="form-helper-text">Patterns to ignore (e.g., *sample*)</small>
+              </div>
+            </div>
+          </p-accordionTab>
+
+          <!-- Stalled Settings -->
+          <p-accordionTab header="Stalled Download Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+            <div class="field-row">
+              <label class="field-label">Max Strikes</label>
+              <div class="field-input">
+                <p-inputNumber 
+                  formControlName="stalledMaxStrikes" 
+                  [showButtons]="true" 
+                  [min]="0" 
+                  [max]="10" 
+                  buttonLayout="horizontal">
+                </p-inputNumber>
+                <small class="form-helper-text">Number of strikes before action is taken (0 to disable, min 3 to enable)</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Reset Strikes On Progress</label>
+              <div class="field-input">
+                <p-checkbox formControlName="stalledResetStrikesOnProgress" [binary]="true" [disabled]="queueCleanerForm.get('stalledMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Ignore Private</label>
+              <div class="field-input">
+                <p-checkbox formControlName="stalledIgnorePrivate" [binary]="true" [disabled]="queueCleanerForm.get('stalledMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be ignored</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Delete Private</label>
+              <div class="field-input">
+                <p-checkbox formControlName="stalledDeletePrivate" [binary]="true" [disabled]="queueCleanerForm.get('stalledMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+              </div>
+            </div>
+          </p-accordionTab>
+
+          <!-- Downloading Metadata Settings -->
+          <p-accordionTab header="Downloading Metadata Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+            <div class="field-row">
+              <label class="field-label">Max Strikes</label>
+              <div class="field-input">
+                <p-inputNumber 
+                  formControlName="downloadingMetadataMaxStrikes" 
+                  [showButtons]="true" 
+                  [min]="0" 
+                  [max]="10" 
+                  buttonLayout="horizontal">
+                </p-inputNumber>
+                <small class="form-helper-text">Number of strikes before action is taken (0 to disable, min 3 to enable)</small>
+              </div>
+            </div>
+          </p-accordionTab>
+
+          <!-- Slow Download Settings -->
+          <p-accordionTab header="Slow Download Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+            <div class="field-row">
+              <label class="field-label">Max Strikes</label>
+              <div class="field-input">
+                <p-inputNumber 
+                  formControlName="slowMaxStrikes" 
+                  [showButtons]="true" 
+                  [min]="0" 
+                  [max]="10" 
+                  buttonLayout="horizontal">
+                </p-inputNumber>
+                <small class="form-helper-text">Number of strikes before action is taken (0 to disable, min 3 to enable)</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Reset Strikes On Progress</label>
+              <div class="field-input">
+                <p-checkbox formControlName="slowResetStrikesOnProgress" [binary]="true" [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Ignore Private</label>
+              <div class="field-input">
+                <p-checkbox formControlName="slowIgnorePrivate" [binary]="true" [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be ignored</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Delete Private</label>
+              <div class="field-input">
+                <p-checkbox formControlName="slowDeletePrivate" [binary]="true" [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Minimum Speed</label>
+              <div class="field-input">
+                <app-byte-size-input 
+                  formControlName="slowMinSpeed" 
+                  [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3" 
+                  [min]="0" 
+                  placeholder="Enter minimum speed" 
+                  helpText="Minimum speed threshold for slow downloads (e.g., 100KB/s)">
+                </app-byte-size-input>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Maximum Time (hours)</label>
+              <div class="field-input">
+                <p-inputNumber 
+                  formControlName="slowMaxTime" 
+                  [showButtons]="true" 
+                  [min]="0" 
+                  [max]="168" 
+                  buttonLayout="horizontal"
+                  [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3">
+                </p-inputNumber>
+                <small class="form-helper-text">Maximum time allowed for slow downloads (in hours)</small>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label class="field-label">Ignore Above Size</label>
+              <div class="field-input">
+                <app-byte-size-input 
+                  formControlName="slowIgnoreAboveSize" 
+                  [disabled]="queueCleanerForm.get('slowMaxStrikes')?.value < 3" 
+                  [min]="0" 
+                  placeholder="Enter size threshold" 
+                  helpText="Size threshold above which slow downloads are ignored">
+                </app-byte-size-input>
+              </div>
+            </div>
+          </p-accordionTab>
+        </p-accordion>
+
+        <!-- Save & Reset buttons -->
+        <div class="form-actions mt-4">
+          <button pButton type="button" label="Save" icon="pi pi-save" class="p-button-success" 
+            [disabled]="queueCleanerForm.pristine || queueCleanerSaving()"
+            [loading]="queueCleanerSaving()"
+            (click)="saveQueueCleanerConfig()"></button>
+          <button pButton type="button" label="Reset" icon="pi pi-refresh" class="p-button-secondary p-button-outlined ml-2" 
+            (click)="resetQueueCleanerConfig()"></button>
         </div>
-      </p-card>
-    </div>
-    
-    <div class="col-12 md:col-6">
-      <p-card header="Logging Configuration" styleClass="settings-card mb-4">
-        <div class="settings-section">
-          <div class="field-row">
-            <label for="enableLogs">Enable Logging</label>
-            <div class="field-input">
-              <p-inputSwitch id="enableLogs" [(ngModel)]="enableLogs"></p-inputSwitch>
-              <small class="form-helper-text">When enabled, application events will be logged</small>
-            </div>
-          </div>
-          
-          <div class="field-row" [class.field-disabled]="!enableLogs">
-            <label for="logLevel">Log Level</label>
-            <div class="field-input">
-              <p-dropdown id="logLevel" [options]="logLevels" [(ngModel)]="logLevel" optionLabel="label" [disabled]="!enableLogs"
-                placeholder="Select log level" [showClear]="false" styleClass="w-full">
-                <ng-template pTemplate="selectedItem">
-                  <div class="flex align-items-center gap-2" *ngIf="logLevel">
-                    <p-tag [severity]="getSeverity(logLevel.value)" [value]="logLevel.label"></p-tag>
-                  </div>
-                </ng-template>
-                <ng-template let-level pTemplate="item">
-                  <p-tag [severity]="getSeverity(level.value)" [value]="level.label"></p-tag>
-                </ng-template>
-              </p-dropdown>
-              <small class="form-helper-text">Minimum level of logs to capture</small>
-            </div>
-          </div>
-          
-          <div class="field-row" [class.field-disabled]="!enableLogs">
-            <label for="enableNotifications">Show Notifications</label>
-            <div class="field-input">
-              <p-inputSwitch id="enableNotifications" [(ngModel)]="enableNotifications" [disabled]="!enableLogs"></p-inputSwitch>
-              <small class="form-helper-text">Show desktop notifications for important logs</small>
-            </div>
-          </div>
-        </div>
-      </p-card>
-      
-      <p-card header="Log Viewer Settings" styleClass="settings-card">
-        <div class="settings-section">
-          <div class="field-row">
-            <label for="autoRefresh">Auto-refresh Logs</label>
-            <div class="field-input">
-              <p-inputSwitch id="autoRefresh" [(ngModel)]="autoRefresh"></p-inputSwitch>
-              <small class="form-helper-text">Automatically refresh logs at the specified interval</small>
-            </div>
-          </div>
-          
-          <div class="field-row" [class.field-disabled]="!autoRefresh">
-            <label for="refreshInterval">Refresh Interval</label>
-            <div class="field-input">
-              <p-slider [(ngModel)]="refreshInterval" [min]="5" [max]="60" [disabled]="!autoRefresh" class="w-full mb-3"></p-slider>
-              <div class="text-center font-medium">{{ refreshInterval }} seconds</div>
-            </div>
-          </div>
-          
-          <div class="field-row">
-            <label for="maxLogEntries">Max Log Entries</label>
-            <div class="field-input">
-              <p-dropdown id="maxLogEntries" [options]="maxLogOptions" [(ngModel)]="maxLogEntries" 
-                optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
-              <small class="form-helper-text">Maximum number of log entries to display at once</small>
-            </div>
-          </div>
-        </div>
-      </p-card>
-    </div>
-  </div>
-  
-  <div class="fixed bottom-0 right-0 p-3" *ngIf="showSaveNotification">
-    <p-toast position="bottom-right" key="settings"></p-toast>
+      </form>
+    </p-card>
   </div>
 </div>
