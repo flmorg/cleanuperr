@@ -1,0 +1,71 @@
+/* Queue Cleaner Settings Styles */
+
+/* Form layout and structure */
+.field-row {
+  display: flex;
+  margin-bottom: 1.25rem;
+  align-items: flex-start;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.field-label {
+  flex: 0 0 200px;
+  padding-top: 0.5rem;
+  font-weight: 500;
+}
+
+.field-input {
+  flex: 1;
+  max-width: 600px;
+}
+
+.form-helper-text {
+  display: block;
+  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* Schedule input specific styles */
+.schedule-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  .schedule-label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+  }
+  
+  .schedule-value {
+    width: 70px;
+    text-align: center;
+  }
+  
+  ::ng-deep .p-selectbutton {
+    .p-button {
+      padding: 0.5rem 0.75rem;
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .field-row {
+    flex-direction: column;
+  }
+  
+  .field-label {
+    flex: 0 0 auto;
+    margin-bottom: 0.5rem;
+    padding-top: 0;
+  }
+  
+  .field-input {
+    width: 100%;
+    max-width: 100%;
+  }
+}

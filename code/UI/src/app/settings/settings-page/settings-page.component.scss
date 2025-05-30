@@ -1,8 +1,17 @@
 .settings-container {
-  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
   
   .settings-section {
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
+    
+    h2 {
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
     
     &:last-child {
       margin-bottom: 0;
