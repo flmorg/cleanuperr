@@ -30,8 +30,6 @@
   
   // Filter controls
   .filter-container {
-    background-color: var(--p-toolbar-background);
-    
     @media (max-width: 576px) {
       padding: 0.75rem !important;
     }

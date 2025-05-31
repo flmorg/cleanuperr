@@ -182,51 +182,6 @@ a {
   }
 }
 
-/* Table styles */
-.p-datatable {
-  .p-datatable-header {
-    background-color: var(--surface-section);
-    border-top-left-radius: var(--border-radius);
-    border-top-right-radius: var(--border-radius);
-    padding: 1rem;
-  }
-  
-  .p-datatable-thead > tr > th {
-    background-color: var(--surface-section);
-    color: var(--text-color);
-    border-color: var(--surface-border);
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-  
-  .p-datatable-tbody > tr {
-    transition: background-color 0.2s;
-    
-    &:hover {
-      background-color: var(--surface-hover);
-    }
-  
-    &:nth-child(even) {
-      background-color: var(--surface-ground);
-    }
-  
-    > td {
-      padding: 0.75rem 1rem;
-      border-color: var(--surface-border);
-    }
-  }
-  
-  .p-paginator {
-    background-color: var(--surface-section);
-    border-bottom-left-radius: var(--border-radius);
-    border-bottom-right-radius: var(--border-radius);
-    border-color: var(--surface-border);
-  }
-}
-
 /* Button styling */
 .p-button {
   border-radius: var(--border-radius);

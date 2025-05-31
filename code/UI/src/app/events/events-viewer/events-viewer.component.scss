@@ -27,11 +27,14 @@
       overflow: hidden;
     }
   }
+
+  ::ng-deep .p-toolbar,
+  ::ng-deep .p-paginator {
+    background-color: inherit;
+  }
   
   // Filter controls
   .filter-container {
-    background-color: var(--p-toolbar-background);
-    
     @media (max-width: 576px) {
       padding: 0.75rem !important;
     }
@@ -139,10 +142,9 @@
   .events-console {
     flex: 1;
     overflow-y: auto;
-    background-color: var(--surface-ground);
     position: relative;
-    height: calc(100vh - 330px);
-    min-height: 300px;
+    height: 50vh;
+    min-height: 50vh;
     display: block;
     
     // Events list
@@ -449,10 +451,6 @@
 
 // Responsive styles
 @media (max-width: 768px) {
-  .events-console {
-    height: calc(100vh - 450px) !important;
-  }
-  
   // Improve mobile button layout
   .p-button-rounded.p-button-text {
     width: 2.5rem;
