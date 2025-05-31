@@ -1,4 +1,6 @@
 .dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 1.5rem;
   
   .card-title {
@@ -149,22 +151,6 @@
           align-items: center;
           justify-content: center;
           color: white;
-          
-          // &.bg-primary {
-          //   background-color: var(--primary-color);
-          // }
-          
-          // &.bg-success {
-          //   background-color: var(--p-green-500);
-          // }
-          
-          // &.bg-info {
-          //   background-color: var(--blue-500);
-          // }
-          
-          // &.bg-warning {
-          //   background-color: var(--yellow-500);
-          // }
           
           i {
             font-size: 1rem;
