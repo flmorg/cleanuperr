@@ -65,9 +65,9 @@ public static class ApiDI
             app.UseSwagger();
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Cleanuperr API v1");
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Cleanuparr API v1");
                 options.RoutePrefix = "swagger";
-                options.DocumentTitle = "Cleanuperr API Documentation";
+                options.DocumentTitle = "Cleanuparr API Documentation";
             });
         }
 

@@ -11,7 +11,7 @@ public class NotifiarrProvider : NotificationProvider
 
     private const string WarningColor = "f0ad4e";
     private const string ImportantColor = "bb2124";
-    private const string Logo = "https://github.com/flmorg/cleanuperr/blob/main/Logo/48.png?raw=true";
+    private const string Logo = "https://github.com/Cleanuparr/Cleanuparr/blob/main/Logo/48.png?raw=true";
 
     public override NotifiarrConfig Config => _config.Notifiarr;
 

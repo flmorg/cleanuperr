@@ -18,7 +18,7 @@ public sealed record DownloadCleanerConfig : IJobConfig
     
     public string IgnoredDownloadsPath { get; init; } = string.Empty;
 
-    public string UnlinkedTargetCategory { get; init; } = "cleanuperr-unlinked";
+    public string UnlinkedTargetCategory { get; init; } = "cleanuparr-unlinked";
 
     public bool UnlinkedUseTag { get; init; }
 

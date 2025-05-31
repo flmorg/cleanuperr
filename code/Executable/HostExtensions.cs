@@ -16,8 +16,8 @@ public static class HostExtensions
 
         logger.LogInformation(
             version is null
-                ? "cleanuperr version not detected"
-                : $"cleanuperr v{version.Major}.{version.Minor}.{version.Build}"
+                ? "Cleanuparr version not detected"
+                : $"Cleanuparr v{version.Major}.{version.Minor}.{version.Build}"
         );
         
         logger.LogInformation("timezone: {tz}", TimeZoneInfo.Local.DisplayName);

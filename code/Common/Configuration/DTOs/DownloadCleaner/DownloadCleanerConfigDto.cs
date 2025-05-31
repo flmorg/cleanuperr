@@ -33,7 +33,7 @@ public class DownloadCleanerConfigDto
     /// <summary>
     /// Target category for unlinked downloads
     /// </summary>
-    public string UnlinkedTargetCategory { get; set; } = "cleanuperr-unlinked";
+    public string UnlinkedTargetCategory { get; set; } = "cleanuparr-unlinked";
 
     /// <summary>
     /// Whether to use tags instead of categories for unlinked downloads

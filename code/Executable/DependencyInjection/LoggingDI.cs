@@ -79,7 +79,7 @@ public static class LoggingDI
 
         // Add main log file
         logConfig.WriteTo.File(
-            path: Path.Combine(logsPath, "cleanuperr-.txt"),
+            path: Path.Combine(logsPath, "cleanuparr-.txt"),
             formatter: new ExpressionTemplate(fileTemplate),
             fileSizeLimitBytes: 10L * 1024 * 1024,
             rollingInterval: RollingInterval.Day,
@@ -93,7 +93,7 @@ public static class LoggingDI
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Quartz", LogEventLevel.Warning)
             .MinimumLevel.Override("System.Net.Http.HttpClient", LogEventLevel.Error)
-            .Enrich.WithProperty("ApplicationName", "cleanuperr");
+            .Enrich.WithProperty("ApplicationName", "Cleanuparr");
 
         return logConfig;
     }

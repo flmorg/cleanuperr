@@ -9,7 +9,7 @@ public class NotifiarrPayload
 public class NotifiarrNotification
 {
     public bool Update { get; set; }
-    public string Name => "Cleanuperr";
+    public string Name => "Cleanuparr";
     public int? Event { get; set; }
 }
 

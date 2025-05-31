@@ -53,7 +53,7 @@ logger.WithCategory(LoggingCategoryConstants.Jobs)
 
 Logs are stored in the following locations:
 
-- **Main log file**: `{config_path}/logs/cleanuperr-.txt`
+- **Main log file**: `{config_path}/logs/cleanuparr-.txt`
 - **Category logs**: `{config_path}/logs/{category}-.txt` (e.g., `system-.txt`, `api-.txt`)
 
 The log files use rolling file behavior:
