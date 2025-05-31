@@ -18,7 +18,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
     private readonly Dictionary<string, SemaphoreSlim> _fileLocks = new();
     private readonly JsonSerializerOptions _serializerOptions;
 
-    public JsonConfigurationProvider(ILogger<JsonConfigurationProvider> logger, SensitiveDataJsonConverter sensitiveDataConverter)
+    public JsonConfigurationProvider(ILogger<JsonConfigurationProvider> logger)
     {
         _logger = logger;
         _settingsDirectory = ConfigurationPathProvider.GetSettingsPath();
@@ -45,7 +45,6 @@ public class JsonConfigurationProvider : IConfigurationProvider
             PropertyNameCaseInsensitive = true
         };
         _serializerOptions.Converters.Add(new JsonStringEnumConverter());
-        _serializerOptions.Converters.Add(sensitiveDataConverter);
     }
 
     /// <summary>

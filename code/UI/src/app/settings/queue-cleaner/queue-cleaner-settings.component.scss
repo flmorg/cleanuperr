@@ -1,135 +1,52 @@
 /* Queue Cleaner Settings Styles */
 
-.settings-container {
-  padding: 1.5rem;
+/* Card styles matching dashboard */
+::ng-deep .settings-card {
+  height: 100%;
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--surface-border);
   
-  h1 {
-    font-size: 1.5rem;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .p-card-header {
+    padding: 0;
+  }
+  
+  .card-title {
+    font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
   
-  /* Card styles matching dashboard */
-  ::ng-deep {
-    .settings-card {
-      height: 100%;
-      transition: transform 0.3s, box-shadow 0.3s;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-      border: 1px solid var(--surface-border);
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-      
-      .p-card-header {
-        padding: 0;
-      }
-      
-      .card-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-      }
-      
-      .card-subtitle {
-        color: var(--text-color-secondary);
-        font-size: 0.875rem;
-      }
-      
-      .p-card-body {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-      }
-      
-      .p-card-content {
-        flex-grow: 1;
-        padding: 1.5rem;
-        height: 100%;
-      }
-      
-      /* Accordion disabled state */
-      .p-accordion {
-        .p-accordion-tab.p-disabled {
-          opacity: 0.6;
-          
-          .p-accordion-header .p-accordion-header-link {
-            cursor: not-allowed;
-            color: var(--text-color-secondary);
-          }
-        }
-      }
-    }
-  }
-  
-  /* Form layout and structure */
-  .field-row {
-    display: flex;
-    margin-bottom: 1.25rem;
-    align-items: flex-start;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-  
-  .field-label {
-    flex: 0 0 200px;
-    padding-top: 0.5rem;
-    font-weight: 500;
-  }
-  
-  .field-input {
-    flex: 1;
-    max-width: 600px;
-  }
-  
-  .form-helper-text {
-    display: block;
-    margin-top: 0.25rem;
+  .card-subtitle {
     color: var(--text-color-secondary);
-    font-size: 0.85rem;
+    font-size: 0.875rem;
   }
   
-  /* Schedule input specific styles */
-  .schedule-input {
+  .p-card-body {
+    height: 100%;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    
-    .schedule-label {
-      font-weight: 500;
-      margin-right: 0.5rem;
-    }
-    
-    .schedule-value {
-      width: 70px;
-      text-align: center;
-    }
-    
-    ::ng-deep .p-selectbutton {
-      .p-button {
-        padding: 0.5rem 0.75rem;
-      }
-    }
+    flex-direction: column;
+    padding: 0;
   }
   
-  /* Card footer styling */
-  .card-footer {
-    border-top: 1px solid var(--surface-border);
-    padding-top: 1rem;
-    display: flex;
-    gap: 0.5rem;
+  .p-card-content {
+    flex-grow: 1;
+    padding: 1.5rem;
+    height: 100%;
+  }
+  
+  /* Accordion disabled state */
+  .p-accordion .p-accordion-tab.p-disabled {
+    opacity: 0.6;
     
-    .p-button {
-      flex: 1;
-      
-      &:last-child {
-        flex: 0 0 auto;
-      }
+    .p-accordion-header .p-accordion-header-link {
+      cursor: not-allowed;
+      color: var(--text-color-secondary);
     }
   }
 }
@@ -149,28 +66,90 @@
   }
 }
 
+/* Form layout and structure */
+.field-row {
+  display: flex;
+  margin-bottom: 1.25rem;
+  align-items: flex-start;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.field-label {
+  flex: 0 0 200px;
+  padding-top: 0.5rem;
+  font-weight: 500;
+}
+
+.field-input {
+  flex: 1;
+  max-width: 600px;
+}
+
+.form-helper-text {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+
+/* Schedule input specific styles */
+.schedule-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  .schedule-label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+  }
+  
+  .schedule-value {
+    width: 70px;
+    text-align: center;
+  }
+  
+  ::ng-deep .p-selectbutton .p-button {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Card footer styling */
+.card-footer {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  
+  .p-button {
+    flex: 1;
+    
+    &:last-child {
+      flex: 0 0 auto;
+    }
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .settings-container {
-    padding: 1rem;
-    
-    .field-row {
-      flex-direction: column;
-    }
-    
-    .field-label {
-      flex: 0 0 auto;
-      margin-bottom: 0.5rem;
-      padding-top: 0;
-    }
-    
-    .field-input {
-      width: 100%;
-      max-width: 100%;
-    }
-    
-    .card-footer {
-      flex-direction: column;
-    }
+  .field-row {
+    flex-direction: column;
+  }
+  
+  .field-label {
+    flex: 0 0 auto;
+    margin-bottom: 0.5rem;
+    padding-top: 0;
+  }
+  
+  .field-input {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .card-footer {
+    flex-direction: column;
   }
 }
