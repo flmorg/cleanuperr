@@ -36,171 +36,182 @@
     </div>
   </div>
 
-  <!-- Filters Section -->
-  <div class="filter-container p-3 border-bottom-1 surface-border">
-    <p-toolbar styleClass="filter-toolbar">
-      <ng-template pTemplate="start">
-        <div class="flex align-items-center gap-2 flex-wrap filter-inputs-container">
-          <!-- Search Filter -->
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            [ngModel]="searchFilter()"
-            (input)="onSearchChange($event)"
-            placeholder="Search logs"
-            [disabled]="!isConnected()"
-            class="search-input"
-          />
+  <!-- Logs Card -->
+  <p-card styleClass="dashboard-card h-full">
+    <ng-template pTemplate="header">
+      <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+        <div class="header-title-container">
+          <!-- Filters Section -->
+          <div class="filter-container p-3">
+            <p-toolbar styleClass="filter-toolbar">
+              <ng-template pTemplate="start">
+                <div class="flex align-items-center gap-2 flex-wrap filter-inputs-container">
+                  <!-- Search Filter -->
+                  <i class="pi pi-search"></i>
+                  <input
+                    type="text"
+                    pInputText
+                    [ngModel]="searchFilter()"
+                    (input)="onSearchChange($event)"
+                    placeholder="Search logs"
+                    [disabled]="!isConnected()"
+                    class="search-input"
+                  />
 
-          <!-- Level Filter -->
-          <p-select
-            [options]="levels()"
-            [ngModel]="levelFilter()"
-            placeholder="Filter by level"
-            [showClear]="true"
-            (onChange)="onLevelFilterChange($event.value)"
-            styleClass="level-dropdown fixed-width-dropdown"
-            [disabled]="!isConnected()"
-          >
-          </p-select>
+                  <!-- Level Filter -->
+                  <p-select
+                    [options]="levels()"
+                    [ngModel]="levelFilter()"
+                    placeholder="Filter by level"
+                    [showClear]="true"
+                    (onChange)="onLevelFilterChange($event.value)"
+                    styleClass="level-dropdown fixed-width-dropdown"
+                    [disabled]="!isConnected()"
+                  >
+                  </p-select>
 
-          <!-- Category Filter -->
-          <p-select
-            [options]="categories()"
-            [ngModel]="categoryFilter()"
-            placeholder="Filter by category"
-            [showClear]="true"
-            (onChange)="onCategoryFilterChange($event.value)"
-            styleClass="category-dropdown fixed-width-dropdown"
-            [disabled]="!isConnected()"
-          >
-          </p-select>
-        </div>
-      </ng-template>
-      <ng-template pTemplate="end">
-        <div class="filter-actions-container">
-          <div class="filter-actions-wrapper">
-            <div class="filter-stats" *ngIf="isConnected() && filteredLogs().length > 0">
-              <span class="text-sm text-color-secondary">
-                Showing {{ filteredLogs().length }} of {{ logs().length }} logs
-              </span>
-            </div>
-            <!-- Clear Filters Button -->
-            <button
-              pButton
-              icon="pi pi-filter-slash"
-              label="Clear Filters"
-              class="p-button-outlined ml-2 clear-filters-btn"
-              (click)="clearFilters()"
-              [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
-            ></button>
+                  <!-- Category Filter -->
+                  <p-select
+                    [options]="categories()"
+                    [ngModel]="categoryFilter()"
+                    placeholder="Filter by category"
+                    [showClear]="true"
+                    (onChange)="onCategoryFilterChange($event.value)"
+                    styleClass="category-dropdown fixed-width-dropdown"
+                    [disabled]="!isConnected()"
+                  >
+                  </p-select>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="end">
+                <div class="filter-actions-container">
+                  <div class="filter-actions-wrapper">
+                    <div class="filter-stats" *ngIf="isConnected() && filteredLogs().length > 0">
+                      <span class="text-sm text-color-secondary">
+                        Showing {{ filteredLogs().length }} of {{ logs().length }} logs
+                      </span>
+                    </div>
+                    <!-- Clear Filters Button -->
+                    <button
+                      pButton
+                      icon="pi pi-filter-slash"
+                      label="Clear Filters"
+                      class="p-button-outlined ml-2 clear-filters-btn"
+                      (click)="clearFilters()"
+                      [disabled]="!isConnected() || (!levelFilter() && !categoryFilter() && !searchFilter())"
+                    ></button>
+                  </div>
+                </div>
+              </ng-template>
+            </p-toolbar>
           </div>
-        </div>
-      </ng-template>
-    </p-toolbar>
-  </div>
-
-  <!-- Console-style Logs View -->
-  <div class="logs-console" #logsConsole>
-    <!-- Logs List -->
-    <div class="logs-list" *ngIf="filteredLogs().length > 0; else emptyLogs">
-      <div *ngFor="let log of filteredLogs(); let i = index" class="log-entry" [id]="'log-' + i">
-        <!-- Log Entry Header - only expandable if has exception or metadata -->
-        <div
-          class="log-entry-header"
-          [class.expandable]="log.exception || log.jobName || log.instanceName"
-          (click)="log.exception || log.jobName || log.instanceName ? toggleLogExpansion(i, $event) : null"
-        >
-          <!-- Actions (Copy button at start) -->
-          <div class="log-actions log-actions-start">
-            <button
-              pButton
-              icon="pi pi-copy"
-              class="p-button-rounded p-button-text p-button-sm"
-              (click)="copyLogEntry(log, $event)"
-              pTooltip="Copy log"
-            ></button>
-          </div>
-
-          <!-- Timestamp -->
-          <div class="log-timestamp">
-            <span class="log-date">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
-            <span class="log-time">{{ log.timestamp | date : "HH:mm:ss.SSS" }}</span>
-          </div>
-
-          <!-- Level Tag -->
-          <div class="log-level">
-            <p-tag [severity]="getSeverity(log.level)" [value]="log.level" [rounded]="true"></p-tag>
-          </div>
-
-          <!-- Category -->
-          <div class="log-category" *ngIf="log.category">
-            {{ log.category }}
-          </div>
-
-          <!-- Message -->
-          <div class="log-message">
-            {{ log.message }}
-          </div>
-
-          <!-- Dropdown button (only for logs with exception or metadata) -->
-          <div class="log-actions" *ngIf="log.exception || log.jobName || log.instanceName">
-            <button
-              pButton
-              [icon]="expandedLogs[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-              class="p-button-rounded p-button-text p-button-sm"
-              (click)="toggleLogExpansion(i, $event)"
-              pTooltip="Toggle details"
-            ></button>
-          </div>
-        </div>
-
-        <!-- Log Details (Expandable) -->
-        <div class="log-details" *ngIf="expandedLogs[i]">
-          <!-- Exception -->
-          <div class="log-exception" *ngIf="log.exception">
-            <pre>{{ log.exception }}</pre>
-          </div>
-
-          <!-- Metadata -->
-          <div class="log-metadata" *ngIf="log.jobName || log.instanceName">
-            <div class="metadata-item" *ngIf="log.jobName">
-              <span class="metadata-label">Job:</span>
-              <span class="metadata-value">{{ log.jobName }}</span>
-            </div>
-            <div class="metadata-item" *ngIf="log.instanceName">
-              <span class="metadata-label">Instance:</span>
-              <span class="metadata-value">{{ log.instanceName }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <ng-template #emptyLogs>
-      <div class="empty-logs">
-        <div class="empty-message">
-          <i class="pi pi-inbox empty-icon"></i>
-          <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No logs found</div>
-          <p *ngIf="isConnected()">Waiting for new logs or try adjusting your filters</p>
-          <ng-template #disconnectedMessage>
-            <div class="flex flex-column align-items-center gap-3">
-              <div class="empty-text">Not connected to log hub</div>
-              <p>Attempting to reconnect to the server...</p>
-              <p-progressSpinner
-                styleClass="w-3rem h-3rem"
-                strokeWidth="4"
-                fill="var(--surface-ground)"
-                animationDuration=".5s"
-              ></p-progressSpinner>
-            </div>
-          </ng-template>
         </div>
       </div>
     </ng-template>
-  </div>
+
+    <div class="card-content">
+      <!-- Console-style Logs View -->
+      <div class="logs-console" #logsConsole>
+        <!-- Logs List -->
+        <div class="logs-list" *ngIf="filteredLogs().length > 0; else emptyLogs">
+          <div *ngFor="let log of filteredLogs(); let i = index" class="log-entry" [id]="'log-' + i">
+            <!-- Log Entry Header - only expandable if has exception or metadata -->
+            <div
+              class="log-entry-header"
+              [class.expandable]="log.exception || log.jobName || log.instanceName"
+              (click)="log.exception || log.jobName || log.instanceName ? toggleLogExpansion(i, $event) : null"
+            >
+              <!-- Actions (Copy button at start) -->
+              <div class="log-actions log-actions-start">
+                <button
+                  pButton
+                  icon="pi pi-copy"
+                  class="p-button-rounded p-button-text p-button-sm"
+                  (click)="copyLogEntry(log, $event)"
+                  pTooltip="Copy log"
+                ></button>
+              </div>
+
+              <!-- Timestamp -->
+              <div class="log-timestamp">
+                <span class="log-date">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
+                <span class="log-time">{{ log.timestamp | date : "HH:mm:ss.SSS" }}</span>
+              </div>
+
+              <!-- Level Tag -->
+              <div class="log-level">
+                <p-tag [severity]="getSeverity(log.level)" [value]="log.level" [rounded]="true"></p-tag>
+              </div>
+
+              <!-- Category -->
+              <div class="log-category" *ngIf="log.category">
+                {{ log.category }}
+              </div>
+
+              <!-- Message -->
+              <div class="log-message">
+                {{ log.message }}
+              </div>
+
+              <!-- Dropdown button (only for logs with exception or metadata) -->
+              <div class="log-actions" *ngIf="log.exception || log.jobName || log.instanceName">
+                <button
+                  pButton
+                  [icon]="expandedLogs[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                  class="p-button-rounded p-button-text p-button-sm"
+                  (click)="toggleLogExpansion(i, $event)"
+                  pTooltip="Toggle details"
+                ></button>
+              </div>
+            </div>
+
+            <!-- Log Details (Expandable) -->
+            <div class="log-details" *ngIf="expandedLogs[i]">
+              <!-- Exception -->
+              <div class="log-exception" *ngIf="log.exception">
+                <pre>{{ log.exception }}</pre>
+              </div>
+
+              <!-- Metadata -->
+              <div class="log-metadata" *ngIf="log.jobName || log.instanceName">
+                <div class="metadata-item" *ngIf="log.jobName">
+                  <span class="metadata-label">Job:</span>
+                  <span class="metadata-value">{{ log.jobName }}</span>
+                </div>
+                <div class="metadata-item" *ngIf="log.instanceName">
+                  <span class="metadata-label">Instance:</span>
+                  <span class="metadata-value">{{ log.instanceName }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <ng-template #emptyLogs>
+          <div class="empty-logs">
+            <div class="empty-message">
+              <i class="pi pi-inbox empty-icon"></i>
+              <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No logs found</div>
+              <p *ngIf="isConnected()">Waiting for new logs or try adjusting your filters</p>
+              <ng-template #disconnectedMessage>
+                <div class="flex flex-column align-items-center gap-3">
+                  <div class="empty-text">Not connected to log hub</div>
+                  <p>Attempting to reconnect to the server...</p>
+                  <p-progressSpinner
+                    styleClass="w-3rem h-3rem"
+                    strokeWidth="4"
+                    fill="var(--surface-ground)"
+                    animationDuration=".5s"
+                  ></p-progressSpinner>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </p-card>
 
   <!-- Export Menu -->
   <p-menu #exportMenu [popup]="true" [model]="exportMenuItems"></p-menu>

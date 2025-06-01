@@ -33,6 +33,10 @@
     @media (max-width: 576px) {
       padding: 0.75rem !important;
     }
+
+    ::ng-deep .p-toolbar {
+      background-color: inherit;
+    }
     
     .filter-toolbar {
       background: transparent;
@@ -137,10 +141,9 @@
   .logs-console {
     flex: 1;
     overflow-y: auto;
-    background-color: var(--surface-ground);
     position: relative;
-    height: calc(100vh - 330px);
-    min-height: 300px;
+    height: 50vh;
+    min-height: 50vh;
     display: block; // Ensure display is set
     
     // Logs list
