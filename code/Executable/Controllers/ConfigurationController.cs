@@ -169,6 +169,28 @@ public class ConfigurationController : ControllerBase
             await _jobManagementService.StopJob(JobType.QueueCleaner);
         }
     }
+    
+    /// <summary>
+    /// Updates the DownloadCleaner job schedule based on configuration changes
+    /// </summary>
+    /// <param name="config">The DownloadCleaner configuration</param>
+    private async Task UpdateDownloadCleanerJobSchedule(DownloadCleanerConfig config)
+    {
+        if (config.Enabled)
+        {
+            // If the job is enabled, update its schedule with the configured cron expression
+            _logger.LogInformation("DownloadCleaner is enabled, updating job schedule with cron expression: {CronExpression}", config.CronExpression);
+            
+            // Create a Quartz job schedule with the cron expression
+            await _jobManagementService.StartJob(JobType.DownloadCleaner, null, config.CronExpression);
+        }
+        else
+        {
+            // If the job is disabled, stop it
+            _logger.LogInformation("DownloadCleaner is disabled, stopping the job");
+            await _jobManagementService.StopJob(JobType.DownloadCleaner);
+        }
+    }
 
     [HttpPut("content_blocker")]
     public async Task<IActionResult> UpdateContentBlockerConfig([FromBody] ContentBlockerConfigUpdateDto dto)
@@ -210,6 +232,9 @@ public class ConfigurationController : ControllerBase
         {
             return StatusCode(500, "Failed to save DownloadCleaner configuration");
         }
+        
+        // Update the scheduler based on configuration changes
+        await UpdateDownloadCleanerJobSchedule(config);
         
         return Ok(new { Message = "DownloadCleaner configuration updated successfully" });
     }
