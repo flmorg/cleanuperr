@@ -21,10 +21,10 @@ public class JobManagementService : IJobManagementService
         _schedulerFactory = schedulerFactory;
     }
 
-    public async Task<bool> StartJob(JobType jobType, JobSchedule? schedule = null)
+    public async Task<bool> StartJob(JobType jobType, JobSchedule? schedule = null, string? directCronExpression = null)
     {
         string jobName = jobType.ToJobName();
-        string? cronExpression = schedule?.ToCronExpression();
+        string? cronExpression = directCronExpression ?? schedule?.ToCronExpression();
         
         try
         {

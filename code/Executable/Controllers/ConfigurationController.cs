@@ -15,7 +15,9 @@ using Common.Configuration.IgnoredDownloads;
 using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Configuration;
+using Infrastructure.Models;
 using Infrastructure.Services;
+using Infrastructure.Services.Interfaces;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,13 +29,16 @@ public class ConfigurationController : ControllerBase
 {
     private readonly ILogger<ConfigurationController> _logger;
     private readonly IConfigManager _configManager;
+    private readonly IJobManagementService _jobManagementService;
 
     public ConfigurationController(
         ILogger<ConfigurationController> logger,
-        IConfigManager configManager)
+        IConfigManager configManager,
+        IJobManagementService jobManagementService)
     {
         _logger = logger;
         _configManager = configManager;
+        _jobManagementService = jobManagementService;
     }
 
     [HttpGet("queue_cleaner")]
@@ -135,7 +140,34 @@ public class ConfigurationController : ControllerBase
             return StatusCode(500, "Failed to save QueueCleaner configuration");
         }
         
+        // Update the scheduler based on configuration changes
+        await UpdateQueueCleanerJobSchedule(config);
+        
         return Ok(new { Message = "QueueCleaner configuration updated successfully" });
+    }
+    
+    /// <summary>
+    /// Updates the QueueCleaner job schedule based on configuration changes
+    /// </summary>
+    /// <param name="config">The QueueCleaner configuration</param>
+    private async Task UpdateQueueCleanerJobSchedule(QueueCleanerConfig config)
+    {
+        if (config.Enabled)
+        {
+            // If the job is enabled, update its schedule with the configured cron expression
+            _logger.LogInformation("QueueCleaner is enabled, updating job schedule with cron expression: {CronExpression}", config.CronExpression);
+            
+            // Create a Quartz job schedule with the cron expression
+            // Note: This is using the raw cron expression, not creating a JobSchedule object
+            // since QueueCleanerConfig already contains a cron expression
+            await _jobManagementService.StartJob(JobType.QueueCleaner, null, config.CronExpression);
+        }
+        else
+        {
+            // If the job is disabled, stop it
+            _logger.LogInformation("QueueCleaner is disabled, stopping the job");
+            await _jobManagementService.StopJob(JobType.QueueCleaner);
+        }
     }
 
     [HttpPut("content_blocker")]
