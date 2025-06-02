@@ -1,3 +1,4 @@
+using Common.Configuration;
 using Common.Configuration.Arr;
 using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
@@ -16,7 +17,6 @@ using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Configuration;
 using Infrastructure.Models;
-using Infrastructure.Services;
 using Infrastructure.Services.Interfaces;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
@@ -141,57 +141,43 @@ public class ConfigurationController : ControllerBase
         }
         
         // Update the scheduler based on configuration changes
-        await UpdateQueueCleanerJobSchedule(config);
+        await UpdateJobSchedule(config, JobType.QueueCleaner);
         
         return Ok(new { Message = "QueueCleaner configuration updated successfully" });
     }
     
     /// <summary>
-    /// Updates the QueueCleaner job schedule based on configuration changes
+    /// Updates a job schedule based on configuration changes
     /// </summary>
-    /// <param name="config">The QueueCleaner configuration</param>
-    private async Task UpdateQueueCleanerJobSchedule(QueueCleanerConfig config)
+    /// <param name="config">The job configuration</param>
+    /// <param name="jobType">The type of job to update</param>
+    private async Task UpdateJobSchedule(IJobConfig config, JobType jobType)
     {
         if (config.Enabled)
         {
-            // If the job is enabled, update its schedule with the configured cron expression
-            _logger.LogInformation("QueueCleaner is enabled, updating job schedule with cron expression: {CronExpression}", config.CronExpression);
+            // Get the cron expression based on the specific config type
+            if (!string.IsNullOrEmpty(config.CronExpression))
+            {
+                // If the job is enabled, update its schedule with the configured cron expression
+                _logger.LogInformation("{JobName} is enabled, updating job schedule with cron expression: {CronExpression}", 
+                    jobType.ToString(), config.CronExpression);
+                
+                // Create a Quartz job schedule with the cron expression
+                await _jobManagementService.StartJob(jobType, null, config.CronExpression);
+            }
+            else
+            {
+                _logger.LogWarning("{JobName} is enabled, but no cron expression was found in the configuration", jobType.ToString());
+            }
             
-            // Create a Quartz job schedule with the cron expression
-            // Note: This is using the raw cron expression, not creating a JobSchedule object
-            // since QueueCleanerConfig already contains a cron expression
-            await _jobManagementService.StartJob(JobType.QueueCleaner, null, config.CronExpression);
+            return;
         }
-        else
-        {
-            // If the job is disabled, stop it
-            _logger.LogInformation("QueueCleaner is disabled, stopping the job");
-            await _jobManagementService.StopJob(JobType.QueueCleaner);
-        }
+        
+        // If the job is disabled, stop it
+        _logger.LogInformation("{JobName} is disabled, stopping the job", jobType.ToString());
+        await _jobManagementService.StopJob(jobType);
     }
     
-    /// <summary>
-    /// Updates the DownloadCleaner job schedule based on configuration changes
-    /// </summary>
-    /// <param name="config">The DownloadCleaner configuration</param>
-    private async Task UpdateDownloadCleanerJobSchedule(DownloadCleanerConfig config)
-    {
-        if (config.Enabled)
-        {
-            // If the job is enabled, update its schedule with the configured cron expression
-            _logger.LogInformation("DownloadCleaner is enabled, updating job schedule with cron expression: {CronExpression}", config.CronExpression);
-            
-            // Create a Quartz job schedule with the cron expression
-            await _jobManagementService.StartJob(JobType.DownloadCleaner, null, config.CronExpression);
-        }
-        else
-        {
-            // If the job is disabled, stop it
-            _logger.LogInformation("DownloadCleaner is disabled, stopping the job");
-            await _jobManagementService.StopJob(JobType.DownloadCleaner);
-        }
-    }
-
     [HttpPut("content_blocker")]
     public async Task<IActionResult> UpdateContentBlockerConfig([FromBody] ContentBlockerConfigUpdateDto dto)
     {
@@ -234,7 +220,7 @@ public class ConfigurationController : ControllerBase
         }
         
         // Update the scheduler based on configuration changes
-        await UpdateDownloadCleanerJobSchedule(config);
+        await UpdateJobSchedule(config, JobType.DownloadCleaner);
         
         return Ok(new { Message = "DownloadCleaner configuration updated successfully" });
     }
