@@ -3,7 +3,15 @@ import { CommonModule } from "@angular/common";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { QueueCleanerConfigStore } from "./queue-cleaner-config.store";
-import { QueueCleanerConfig, ScheduleUnit, BlocklistType, FailedImportConfig, StalledConfig, SlowConfig, ContentBlockerConfig } from "../../shared/models/queue-cleaner-config.model";
+import {
+  QueueCleanerConfig,
+  ScheduleUnit,
+  BlocklistType,
+  FailedImportConfig,
+  StalledConfig,
+  SlowConfig,
+  ContentBlockerConfig,
+} from "../../shared/models/queue-cleaner-config.model";
 import { SettingsCardComponent } from "../components/settings-card/settings-card.component";
 import { ByteSizeInputComponent } from "../../shared/components/byte-size-input/byte-size-input.component";
 
@@ -38,7 +46,7 @@ import { AutoCompleteModule } from "primeng/autocomplete";
     ToastModule,
     ByteSizeInputComponent,
     SelectModule,
-    AutoCompleteModule
+    AutoCompleteModule,
   ],
   providers: [QueueCleanerConfigStore, MessageService],
   templateUrl: "./queue-cleaner-settings.component.html",
@@ -80,63 +88,63 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
     this.queueCleanerForm = this.formBuilder.group({
       enabled: [false],
       jobSchedule: this.formBuilder.group({
-        every: [{value: 5, disabled: true}, [Validators.required, Validators.min(1)]],
-        type: [{value: ScheduleUnit.Minutes, disabled: true}],
+        every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
+        type: [{ value: ScheduleUnit.Minutes, disabled: true }],
       }),
-      runSequentially: [{value: false, disabled: true}],
-      ignoredDownloadsPath: [{value: "", disabled: true}],
+      runSequentially: [{ value: false, disabled: true }],
+      ignoredDownloadsPath: [{ value: "", disabled: true }],
 
       // Failed Import settings - nested group
       failedImport: this.formBuilder.group({
         maxStrikes: [0, [Validators.min(0)]],
-        ignorePrivate: [{value: false, disabled: true}],
-        deletePrivate: [{value: false, disabled: true}],
-        ignoredPatterns: [{value: [], disabled: true}],
+        ignorePrivate: [{ value: false, disabled: true }],
+        deletePrivate: [{ value: false, disabled: true }],
+        ignoredPatterns: [{ value: [], disabled: true }],
       }),
 
       // Stalled settings - nested group
       stalled: this.formBuilder.group({
         maxStrikes: [0, [Validators.min(0)]],
-        resetStrikesOnProgress: [{value: false, disabled: true}],
-        ignorePrivate: [{value: false, disabled: true}],
-        deletePrivate: [{value: false, disabled: true}],
+        resetStrikesOnProgress: [{ value: false, disabled: true }],
+        ignorePrivate: [{ value: false, disabled: true }],
+        deletePrivate: [{ value: false, disabled: true }],
         downloadingMetadataMaxStrikes: [0, [Validators.min(0)]],
       }),
 
       // Slow Download settings - nested group
       slow: this.formBuilder.group({
         maxStrikes: [0, [Validators.min(0)]],
-        resetStrikesOnProgress: [{value: false, disabled: true}],
-        ignorePrivate: [{value: false, disabled: true}],
-        deletePrivate: [{value: false, disabled: true}],
-        minSpeed: [{value: "", disabled: true}],
-        maxTime: [{value: 0, disabled: true}],
-        ignoreAboveSize: [{value: "", disabled: true}],
+        resetStrikesOnProgress: [{ value: false, disabled: true }],
+        ignorePrivate: [{ value: false, disabled: true }],
+        deletePrivate: [{ value: false, disabled: true }],
+        minSpeed: [{ value: "", disabled: true }],
+        maxTime: [{ value: 0, disabled: true }],
+        ignoreAboveSize: [{ value: "", disabled: true }],
       }),
-      
+
       // Content Blocker settings - nested group
       contentBlocker: this.formBuilder.group({
-        enabled: [{value: false, disabled: true}],
-        ignorePrivate: [{value: false, disabled: true}],
-        deletePrivate: [{value: false, disabled: true}],
+        enabled: [{ value: false, disabled: true }],
+        ignorePrivate: [{ value: false, disabled: true }],
+        deletePrivate: [{ value: false, disabled: true }],
         sonarrBlocklist: this.formBuilder.group({
-          path: [{value: "", disabled: true}],
-          type: [{value: BlocklistType.Blacklist, disabled: true}],
+          path: [{ value: "", disabled: true }],
+          type: [{ value: BlocklistType.Blacklist, disabled: true }],
         }),
         radarrBlocklist: this.formBuilder.group({
-          path: [{value: "", disabled: true}],
-          type: [{value: BlocklistType.Blacklist, disabled: true}],
+          path: [{ value: "", disabled: true }],
+          type: [{ value: BlocklistType.Blacklist, disabled: true }],
         }),
         lidarrBlocklist: this.formBuilder.group({
-          path: [{value: "", disabled: true}],
-          type: [{value: BlocklistType.Blacklist, disabled: true}],
+          path: [{ value: "", disabled: true }],
+          type: [{ value: BlocklistType.Blacklist, disabled: true }],
         }),
       }),
     });
 
     // Set up form control value change subscriptions to manage dependent control states
     this.setupFormValueChangeListeners();
-    
+
     // Create an effect to update the form when the configuration changes
     effect(() => {
       const config = this.queueCleanerConfig();
@@ -147,7 +155,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
           runSequentially: config.runSequentially,
           ignoredDownloadsPath: config.ignoredDownloadsPath,
         };
-        
+
         // Add jobSchedule if it exists
         if (config.jobSchedule) {
           formValues.jobSchedule = {
@@ -155,7 +163,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
             type: config.jobSchedule.type,
           };
         }
-        
+
         // Add Failed Import settings
         if (config.failedImport) {
           formValues.failedImport = {
@@ -164,16 +172,8 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
             deletePrivate: config.failedImport.deletePrivate,
             ignoredPatterns: config.failedImport.ignoredPatterns,
           };
-        } else if (config.failedImportMaxStrikes !== undefined) {
-          // Fall back to legacy flat properties if nested ones don't exist
-          formValues.failedImport = {
-            maxStrikes: config.failedImportMaxStrikes,
-            ignorePrivate: config.failedImportIgnorePrivate,
-            deletePrivate: config.failedImportDeletePrivate,
-            ignoredPatterns: config.failedImportIgnorePatterns || [],
-          };
         }
-        
+
         // Add Stalled settings
         if (config.stalled) {
           formValues.stalled = {
@@ -183,17 +183,8 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
             deletePrivate: config.stalled.deletePrivate,
             downloadingMetadataMaxStrikes: config.stalled.downloadingMetadataMaxStrikes,
           };
-        } else if (config.stalledMaxStrikes !== undefined) {
-          // Fall back to legacy flat properties if nested ones don't exist
-          formValues.stalled = {
-            maxStrikes: config.stalledMaxStrikes,
-            resetStrikesOnProgress: config.stalledResetStrikesOnProgress,
-            ignorePrivate: config.stalledIgnorePrivate,
-            deletePrivate: config.stalledDeletePrivate,
-            downloadingMetadataMaxStrikes: config.downloadingMetadataMaxStrikes || 0,
-          };
         }
-        
+
         // Add Slow Download settings
         if (config.slow) {
           formValues.slow = {
@@ -205,19 +196,8 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
             maxTime: config.slow.maxTime,
             ignoreAboveSize: config.slow.ignoreAboveSize,
           };
-        } else if (config.slowMaxStrikes !== undefined) {
-          // Fall back to legacy flat properties if nested ones don't exist
-          formValues.slow = {
-            maxStrikes: config.slowMaxStrikes,
-            resetStrikesOnProgress: config.slowResetStrikesOnProgress,
-            ignorePrivate: config.slowIgnorePrivate,
-            deletePrivate: config.slowDeletePrivate,
-            minSpeed: config.slowMinSpeed || "",
-            maxTime: config.slowMaxTime || 0,
-            ignoreAboveSize: config.slowIgnoreAboveSize || "",
-          };
         }
-        
+
         // Add Content Blocker settings
         if (config.contentBlocker) {
           formValues.contentBlocker = {
@@ -229,7 +209,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
             lidarrBlocklist: config.contentBlocker.lidarrBlocklist,
           };
         }
-        
+
         // Update the form with the current configuration
         this.queueCleanerForm.patchValue(formValues);
 
@@ -271,11 +251,12 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
    */
   private setupFormValueChangeListeners(): void {
     // Listen to the 'enabled' control changes
-    this.queueCleanerForm.get('enabled')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(enabled => {
+    this.queueCleanerForm
+      .get("enabled")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((enabled) => {
         this.updateMainControlsState(enabled);
-        
+
         // When disabled, close all accordions
         if (!enabled) {
           this.activeAccordionIndices = [];
@@ -283,43 +264,48 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
       });
 
     // Failed import settings
-    this.queueCleanerForm.get('failedImport.maxStrikes')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(strikes => {
-      this.updateFailedImportDependentControls(strikes);
-    });
+    this.queueCleanerForm
+      .get("failedImport.maxStrikes")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((strikes) => {
+        this.updateFailedImportDependentControls(strikes);
+      });
 
     // Stalled settings
-    this.queueCleanerForm.get('stalled.maxStrikes')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(strikes => {
-      this.updateStalledDependentControls(strikes);
-    });
+    this.queueCleanerForm
+      .get("stalled.maxStrikes")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((strikes) => {
+        this.updateStalledDependentControls(strikes);
+      });
 
     // Slow downloads settings
-    this.queueCleanerForm.get('slow.maxStrikes')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(strikes => {
-      this.updateSlowDependentControls(strikes);
-    });
+    this.queueCleanerForm
+      .get("slow.maxStrikes")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((strikes) => {
+        this.updateSlowDependentControls(strikes);
+      });
 
     // Content blocker settings
-    this.queueCleanerForm.get('enabled')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(enabled => {
-      if (enabled) {
-        this.queueCleanerForm.get('contentBlocker.enabled')?.enable();
-      } else {
-        this.queueCleanerForm.get('contentBlocker.enabled')?.disable();
-      }
-    });
+    this.queueCleanerForm
+      .get("enabled")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((enabled) => {
+        if (enabled) {
+          this.queueCleanerForm.get("contentBlocker.enabled")?.enable();
+        } else {
+          this.queueCleanerForm.get("contentBlocker.enabled")?.disable();
+        }
+      });
 
     // Update content blocker dependent controls when enabled changes
-    this.queueCleanerForm.get('contentBlocker.enabled')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(enabled => {
-      this.updateContentBlockerDependentControls(enabled);
-    });
+    this.queueCleanerForm
+      .get("contentBlocker.enabled")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((enabled) => {
+        this.updateContentBlockerDependentControls(enabled);
+      });
   }
 
   /**
@@ -332,24 +318,18 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
     // Check if failed import strikes are set and update dependent controls
     if (config.failedImport?.maxStrikes !== undefined) {
       this.updateFailedImportDependentControls(config.failedImport.maxStrikes);
-    } else if (config.failedImportMaxStrikes !== undefined) { // Fall back to legacy property if needed
-      this.updateFailedImportDependentControls(config.failedImportMaxStrikes);
     }
 
     // Check if stalled strikes are set and update dependent controls
     if (config.stalled?.maxStrikes !== undefined) {
       this.updateStalledDependentControls(config.stalled.maxStrikes);
-    } else if (config.stalledMaxStrikes !== undefined) { // Fall back to legacy property if needed
-      this.updateStalledDependentControls(config.stalledMaxStrikes);
     }
 
     // Check if slow download strikes are set and update dependent controls
     if (config.slow?.maxStrikes !== undefined) {
       this.updateSlowDependentControls(config.slow.maxStrikes);
-    } else if (config.slowMaxStrikes !== undefined) { // Fall back to legacy property if needed
-      this.updateSlowDependentControls(config.slowMaxStrikes);
     }
-    
+
     // Check if content blocker is enabled and update dependent controls
     if (config.contentBlocker?.enabled !== undefined) {
       this.updateContentBlockerDependentControls(config.contentBlocker.enabled);
@@ -361,29 +341,29 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
    */
   private updateMainControlsState(enabled: boolean): void {
     // Common controls
-    const jobScheduleGroup = this.queueCleanerForm.get('jobSchedule') as FormGroup;
+    const jobScheduleGroup = this.queueCleanerForm.get("jobSchedule") as FormGroup;
 
     if (enabled) {
-      jobScheduleGroup.get('every')?.enable({emitEvent: false});
-      jobScheduleGroup.get('type')?.enable({emitEvent: false});
-      this.queueCleanerForm.get('runSequentially')?.enable({emitEvent: false});
-      this.queueCleanerForm.get('ignoredDownloadsPath')?.enable({emitEvent: false});
+      jobScheduleGroup.get("every")?.enable({ emitEvent: false });
+      jobScheduleGroup.get("type")?.enable({ emitEvent: false });
+      this.queueCleanerForm.get("runSequentially")?.enable({ emitEvent: false });
+      this.queueCleanerForm.get("ignoredDownloadsPath")?.enable({ emitEvent: false });
 
       // Update individual config sections only if they are enabled
-      const failedImportMaxStrikes = this.queueCleanerForm.get('failedImport.maxStrikes')?.value;
-      const stalledMaxStrikes = this.queueCleanerForm.get('stalled.maxStrikes')?.value;
-      const slowMaxStrikes = this.queueCleanerForm.get('slow.maxStrikes')?.value;
-      const contentBlockerEnabled = this.queueCleanerForm.get('contentBlocker.enabled')?.value;
+      const failedImportMaxStrikes = this.queueCleanerForm.get("failedImport.maxStrikes")?.value;
+      const stalledMaxStrikes = this.queueCleanerForm.get("stalled.maxStrikes")?.value;
+      const slowMaxStrikes = this.queueCleanerForm.get("slow.maxStrikes")?.value;
+      const contentBlockerEnabled = this.queueCleanerForm.get("contentBlocker.enabled")?.value;
 
       this.updateFailedImportDependentControls(failedImportMaxStrikes);
       this.updateStalledDependentControls(stalledMaxStrikes);
       this.updateSlowDependentControls(slowMaxStrikes);
       this.updateContentBlockerDependentControls(contentBlockerEnabled);
     } else {
-      jobScheduleGroup.get('every')?.disable({emitEvent: false});
-      jobScheduleGroup.get('type')?.disable({emitEvent: false});
-      this.queueCleanerForm.get('runSequentially')?.disable({emitEvent: false});
-      this.queueCleanerForm.get('ignoredDownloadsPath')?.disable({emitEvent: false});
+      jobScheduleGroup.get("every")?.disable({ emitEvent: false });
+      jobScheduleGroup.get("type")?.disable({ emitEvent: false });
+      this.queueCleanerForm.get("runSequentially")?.disable({ emitEvent: false });
+      this.queueCleanerForm.get("ignoredDownloadsPath")?.disable({ emitEvent: false });
 
       // Save current active accordion state before clearing it
       // This will be empty when we collapse all accordions
@@ -397,25 +377,15 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
   private updateFailedImportDependentControls(strikes: number): void {
     const enable = strikes >= 3;
     const options = { onlySelf: true };
-    
+
     if (enable) {
-      this.queueCleanerForm.get('failedImport')?.get('ignorePrivate')?.enable(options);
-      this.queueCleanerForm.get('failedImport')?.get('deletePrivate')?.enable(options);
-      this.queueCleanerForm.get('failedImport')?.get('ignoredPatterns')?.enable(options);
-      
-      // Also enable legacy controls if they exist for backward compatibility
-      this.queueCleanerForm.get('failedImportIgnorePrivate')?.enable(options);
-      this.queueCleanerForm.get('failedImportDeletePrivate')?.enable(options);
-      this.queueCleanerForm.get('failedImportIgnorePatterns')?.enable(options);
+      this.queueCleanerForm.get("failedImport")?.get("ignorePrivate")?.enable(options);
+      this.queueCleanerForm.get("failedImport")?.get("deletePrivate")?.enable(options);
+      this.queueCleanerForm.get("failedImport")?.get("ignoredPatterns")?.enable(options);
     } else {
-      this.queueCleanerForm.get('failedImport')?.get('ignorePrivate')?.disable(options);
-      this.queueCleanerForm.get('failedImport')?.get('deletePrivate')?.disable(options);
-      this.queueCleanerForm.get('failedImport')?.get('ignoredPatterns')?.disable(options);
-      
-      // Also disable legacy controls if they exist
-      this.queueCleanerForm.get('failedImportIgnorePrivate')?.disable(options);
-      this.queueCleanerForm.get('failedImportDeletePrivate')?.disable(options);
-      this.queueCleanerForm.get('failedImportIgnorePatterns')?.disable(options);
+      this.queueCleanerForm.get("failedImport")?.get("ignorePrivate")?.disable(options);
+      this.queueCleanerForm.get("failedImport")?.get("deletePrivate")?.disable(options);
+      this.queueCleanerForm.get("failedImport")?.get("ignoredPatterns")?.disable(options);
     }
   }
 
@@ -425,25 +395,15 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
   private updateStalledDependentControls(strikes: number): void {
     const enable = strikes >= 3;
     const options = { onlySelf: true };
-    
+
     if (enable) {
-      this.queueCleanerForm.get('stalled')?.get('resetStrikesOnProgress')?.enable(options);
-      this.queueCleanerForm.get('stalled')?.get('ignorePrivate')?.enable(options);
-      this.queueCleanerForm.get('stalled')?.get('deletePrivate')?.enable(options);
-      
-      // Also enable legacy controls if they exist for backward compatibility
-      this.queueCleanerForm.get('stalledResetStrikesOnProgress')?.enable(options);
-      this.queueCleanerForm.get('stalledIgnorePrivate')?.enable(options);
-      this.queueCleanerForm.get('stalledDeletePrivate')?.enable(options);
+      this.queueCleanerForm.get("stalled")?.get("resetStrikesOnProgress")?.enable(options);
+      this.queueCleanerForm.get("stalled")?.get("ignorePrivate")?.enable(options);
+      this.queueCleanerForm.get("stalled")?.get("deletePrivate")?.enable(options);
     } else {
-      this.queueCleanerForm.get('stalled')?.get('resetStrikesOnProgress')?.disable(options);
-      this.queueCleanerForm.get('stalled')?.get('ignorePrivate')?.disable(options);
-      this.queueCleanerForm.get('stalled')?.get('deletePrivate')?.disable(options);
-      
-      // Also disable legacy controls if they exist
-      this.queueCleanerForm.get('stalledResetStrikesOnProgress')?.disable(options);
-      this.queueCleanerForm.get('stalledIgnorePrivate')?.disable(options);
-      this.queueCleanerForm.get('stalledDeletePrivate')?.disable(options);
+      this.queueCleanerForm.get("stalled")?.get("resetStrikesOnProgress")?.disable(options);
+      this.queueCleanerForm.get("stalled")?.get("ignorePrivate")?.disable(options);
+      this.queueCleanerForm.get("stalled")?.get("deletePrivate")?.disable(options);
     }
   }
 
@@ -453,78 +413,62 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
   private updateSlowDependentControls(strikes: number): void {
     const enable = strikes >= 3;
     const options = { onlySelf: true };
-    
+
     if (enable) {
-      this.queueCleanerForm.get('slow')?.get('resetStrikesOnProgress')?.enable(options);
-      this.queueCleanerForm.get('slow')?.get('ignorePrivate')?.enable(options);
-      this.queueCleanerForm.get('slow')?.get('deletePrivate')?.enable(options);
-      this.queueCleanerForm.get('slow')?.get('minSpeed')?.enable(options);
-      this.queueCleanerForm.get('slow')?.get('maxTime')?.enable(options);
-      this.queueCleanerForm.get('slow')?.get('ignoreAboveSize')?.enable(options);
-      
-      // Also enable legacy controls if they exist for backward compatibility
-      this.queueCleanerForm.get('slowResetStrikesOnProgress')?.enable(options);
-      this.queueCleanerForm.get('slowIgnorePrivate')?.enable(options);
-      this.queueCleanerForm.get('slowDeletePrivate')?.enable(options);
-      this.queueCleanerForm.get('slowMinSpeed')?.enable(options);
-      this.queueCleanerForm.get('slowMaxTime')?.enable(options);
-      this.queueCleanerForm.get('slowIgnoreAboveSize')?.enable(options);
+      this.queueCleanerForm.get("slow")?.get("resetStrikesOnProgress")?.enable(options);
+      this.queueCleanerForm.get("slow")?.get("ignorePrivate")?.enable(options);
+      this.queueCleanerForm.get("slow")?.get("deletePrivate")?.enable(options);
+      this.queueCleanerForm.get("slow")?.get("minSpeed")?.enable(options);
+      this.queueCleanerForm.get("slow")?.get("maxTime")?.enable(options);
+      this.queueCleanerForm.get("slow")?.get("ignoreAboveSize")?.enable(options);
     } else {
-      this.queueCleanerForm.get('slow')?.get('resetStrikesOnProgress')?.disable(options);
-      this.queueCleanerForm.get('slow')?.get('ignorePrivate')?.disable(options);
-      this.queueCleanerForm.get('slow')?.get('deletePrivate')?.disable(options);
-      this.queueCleanerForm.get('slow')?.get('minSpeed')?.disable(options);
-      this.queueCleanerForm.get('slow')?.get('maxTime')?.disable(options);
-      this.queueCleanerForm.get('slow')?.get('ignoreAboveSize')?.disable(options);
-      
-      // Also disable legacy controls if they exist
-      this.queueCleanerForm.get('slowResetStrikesOnProgress')?.disable(options);
-      this.queueCleanerForm.get('slowIgnorePrivate')?.disable(options);
-      this.queueCleanerForm.get('slowDeletePrivate')?.disable(options);
-      this.queueCleanerForm.get('slowMinSpeed')?.disable(options);
-      this.queueCleanerForm.get('slowMaxTime')?.disable(options);
-      this.queueCleanerForm.get('slowIgnoreAboveSize')?.disable(options);
+      this.queueCleanerForm.get("slow")?.get("resetStrikesOnProgress")?.disable(options);
+      this.queueCleanerForm.get("slow")?.get("ignorePrivate")?.disable(options);
+      this.queueCleanerForm.get("slow")?.get("deletePrivate")?.disable(options);
+      this.queueCleanerForm.get("slow")?.get("minSpeed")?.disable(options);
+      this.queueCleanerForm.get("slow")?.get("maxTime")?.disable(options);
+      this.queueCleanerForm.get("slow")?.get("ignoreAboveSize")?.disable(options);
     }
   }
-  
+
   /**
    * Update the state of Content Blocker dependent controls based on the 'enabled' value
    */
   private updateContentBlockerDependentControls(enabled: boolean): void {
     const options = { onlySelf: true };
-    
+
     if (enabled) {
       // Enable blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('ignorePrivate')?.enable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('deletePrivate')?.enable(options);
-      
+      this.queueCleanerForm.get("contentBlocker")?.get("ignorePrivate")?.enable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("deletePrivate")?.enable(options);
+
       // Enable Sonarr blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('sonarrBlocklist')?.get('path')?.enable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('sonarrBlocklist')?.get('type')?.enable(options);
-      
+      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("path")?.enable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("type")?.enable(options);
+
       // Enable Radarr blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('radarrBlocklist')?.get('path')?.enable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('radarrBlocklist')?.get('type')?.enable(options);
-      
+      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("path")?.enable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("type")?.enable(options);
+
       // Enable Lidarr blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('lidarrBlocklist')?.get('path')?.enable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('lidarrBlocklist')?.get('type')?.enable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("path")?.enable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("type")?.enable(options);
     } else {
       // Disable blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('ignorePrivate')?.disable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('deletePrivate')?.disable(options);
-      
+      this.queueCleanerForm.get("contentBlocker")?.get("ignorePrivate")?.disable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("deletePrivate")?.disable(options);
+
       // Disable Sonarr blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('sonarrBlocklist')?.get('path')?.disable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('sonarrBlocklist')?.get('type')?.disable(options);
-      
+      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("path")?.disable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("type")?.disable(options);
+
       // Disable Radarr blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('radarrBlocklist')?.get('path')?.disable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('radarrBlocklist')?.get('type')?.disable(options);
-      
+      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("path")?.disable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("type")?.disable(options);
+
       // Disable Lidarr blocklist settings
-      this.queueCleanerForm.get('contentBlocker')?.get('lidarrBlocklist')?.get('path')?.disable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('lidarrBlocklist')?.get('type')?.disable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("path")?.disable(options);
+      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("type")?.disable(options);
     }
   }
 
@@ -556,34 +500,13 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
       runSequentially: formValues.runSequentially,
       ignoredDownloadsPath: formValues.ignoredDownloadsPath || "",
 
-      // Legacy flat properties for backward compatibility
-      failedImportMaxStrikes: formValues.failedImport?.maxStrikes,
-      failedImportIgnorePrivate: formValues.failedImport?.ignorePrivate,
-      failedImportDeletePrivate: formValues.failedImport?.deletePrivate,
-      failedImportIgnorePatterns: formValues.failedImport?.ignoredPatterns || [],
-      
-      stalledMaxStrikes: formValues.stalled?.maxStrikes,
-      stalledResetStrikesOnProgress: formValues.stalled?.resetStrikesOnProgress,
-      stalledIgnorePrivate: formValues.stalled?.ignorePrivate,
-      stalledDeletePrivate: formValues.stalled?.deletePrivate,
-      downloadingMetadataMaxStrikes: formValues.stalled?.downloadingMetadataMaxStrikes,
-      
-      slowMaxStrikes: formValues.slow?.maxStrikes,
-      slowResetStrikesOnProgress: formValues.slow?.resetStrikesOnProgress,
-      slowIgnorePrivate: formValues.slow?.ignorePrivate,
-      slowDeletePrivate: formValues.slow?.deletePrivate,
-      slowMinSpeed: formValues.slow?.minSpeed || "",
-      slowMaxTime: formValues.slow?.maxTime,
-      slowIgnoreAboveSize: formValues.slow?.ignoreAboveSize || "",
-
-      // Nested configuration objects
       failedImport: {
         maxStrikes: formValues.failedImport?.maxStrikes || 0,
         ignorePrivate: formValues.failedImport?.ignorePrivate || false,
         deletePrivate: formValues.failedImport?.deletePrivate || false,
         ignoredPatterns: formValues.failedImport?.ignoredPatterns || [],
       },
-      
+
       stalled: {
         maxStrikes: formValues.stalled?.maxStrikes || 0,
         resetStrikesOnProgress: formValues.stalled?.resetStrikesOnProgress || false,
@@ -591,7 +514,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         deletePrivate: formValues.stalled?.deletePrivate || false,
         downloadingMetadataMaxStrikes: formValues.stalled?.downloadingMetadataMaxStrikes || 0,
       },
-      
+
       slow: {
         maxStrikes: formValues.slow?.maxStrikes || 0,
         resetStrikesOnProgress: formValues.slow?.resetStrikesOnProgress || false,
@@ -601,22 +524,22 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         maxTime: formValues.slow?.maxTime || 0,
         ignoreAboveSize: formValues.slow?.ignoreAboveSize || "",
       },
-      
+
       contentBlocker: {
         enabled: formValues.contentBlocker?.enabled || false,
         ignorePrivate: formValues.contentBlocker?.ignorePrivate || false,
         deletePrivate: formValues.contentBlocker?.deletePrivate || false,
         sonarrBlocklist: formValues.contentBlocker?.sonarrBlocklist || {
           path: "",
-          type: BlocklistType.Blacklist
+          type: BlocklistType.Blacklist,
         },
         radarrBlocklist: formValues.contentBlocker?.radarrBlocklist || {
           path: "",
-          type: BlocklistType.Blacklist
+          type: BlocklistType.Blacklist,
         },
         lidarrBlocklist: formValues.contentBlocker?.lidarrBlocklist || {
           path: "",
-          type: BlocklistType.Blacklist
+          type: BlocklistType.Blacklist,
         },
       },
     };
