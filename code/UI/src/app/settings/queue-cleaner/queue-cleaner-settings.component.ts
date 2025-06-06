@@ -18,7 +18,7 @@ import { SelectButtonModule } from "primeng/selectbutton";
 import { ChipsModule } from "primeng/chips";
 import { ToastModule } from "primeng/toast";
 import { MessageService } from "primeng/api";
-import { DropdownModule } from "primeng/dropdown";
+import { SelectModule } from "primeng/select";
 
 @Component({
   selector: "app-queue-cleaner-settings",
@@ -36,7 +36,7 @@ import { DropdownModule } from "primeng/dropdown";
     ChipsModule,
     ToastModule,
     ByteSizeInputComponent,
-    DropdownModule,
+    SelectModule,
   ],
   providers: [QueueCleanerConfigStore, MessageService],
   templateUrl: "./queue-cleaner-settings.component.html",

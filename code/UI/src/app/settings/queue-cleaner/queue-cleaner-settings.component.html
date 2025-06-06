@@ -24,27 +24,29 @@
 
       <div class="field-row" formGroupName="jobSchedule">
         <label class="field-label">Run Schedule</label>
-        <div class="field-input schedule-input">
-          <span class="schedule-label">Every</span>
-          <p-inputNumber
-            formControlName="every"
-            [showButtons]="true"
-            [min]="1"
-            [max]="59"
-            buttonLayout="horizontal"
-            inputStyleClass="schedule-value"
-          >
-          </p-inputNumber>
-
-          <p-selectButton
-            formControlName="type"
-            [options]="scheduleUnitOptions"
-            optionLabel="label"
-            optionValue="value"
-          >
-          </p-selectButton>
+        <div>
+          <div class="field-input schedule-input flex flex-wrap">
+            <span class="schedule-label">Every</span>
+            <p-inputNumber
+              formControlName="every"
+              [showButtons]="true"
+              [min]="1"
+              [max]="59"
+              buttonLayout="horizontal"
+              inputStyleClass="schedule-value"
+            >
+            </p-inputNumber>
+  
+            <p-selectButton
+              formControlName="type"
+              [options]="scheduleUnitOptions"
+              optionLabel="label"
+              optionValue="value"
+            >
+            </p-selectButton>
+          </div>
+          <small class="form-helper-text">How often the queue cleaner should run</small>
         </div>
-        <small class="form-helper-text">How often the queue cleaner should run</small>
       </div>
 
       <div class="field-row">
@@ -298,12 +300,13 @@
               <div class="field-row">
                 <label class="field-label">Blocklist Type</label>
                 <div class="field-input">
-                  <p-dropdown
+                  <p-select
                     formControlName="type"
                     [options]="[{label: 'Blacklist', value: 'Blacklist'}, {label: 'Whitelist', value: 'Whitelist'}]"
                     optionLabel="label"
                     optionValue="value"
-                  ></p-dropdown>
+                    appendTo="body"
+                  ></p-select>
                   <small class="form-helper-text">Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small>
                 </div>
               </div>
@@ -322,12 +325,13 @@
               <div class="field-row">
                 <label class="field-label">Blocklist Type</label>
                 <div class="field-input">
-                  <p-dropdown
+                  <p-select
                     formControlName="type"
                     [options]="[{label: 'Blacklist', value: 'Blacklist'}, {label: 'Whitelist', value: 'Whitelist'}]"
                     optionLabel="label"
                     optionValue="value"
-                  ></p-dropdown>
+                    appendTo="body"
+                  ></p-select>
                   <small class="form-helper-text">Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small>
                 </div>
               </div>
@@ -346,12 +350,13 @@
               <div class="field-row">
                 <label class="field-label">Blocklist Type</label>
                 <div class="field-input">
-                  <p-dropdown
+                  <p-select
                     formControlName="type"
                     [options]="[{label: 'Blacklist', value: 'Blacklist'}, {label: 'Whitelist', value: 'Whitelist'}]"
                     optionLabel="label"
                     optionValue="value"
-                  ></p-dropdown>
+                    appendTo="body"
+                  ></p-select>
                   <small class="form-helper-text">Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small>
                 </div>
               </div>
