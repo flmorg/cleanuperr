@@ -23,11 +23,6 @@ public class QueueCleanerConfigDto
     public bool RunSequentially { get; set; }
 
     /// <summary>
-    /// Path to ignored downloads file
-    /// </summary>
-    public string IgnoredDownloadsPath { get; set; } = string.Empty;
-    
-    /// <summary>
     /// Maximum number of strikes for failed imports
     /// </summary>
     public ushort FailedImportMaxStrikes { get; set; }

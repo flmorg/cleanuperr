@@ -158,22 +158,24 @@ public class ConfigurationController : ControllerBase
             if (!string.IsNullOrEmpty(config.CronExpression))
             {
                 // If the job is enabled, update its schedule with the configured cron expression
-                _logger.LogInformation("{JobName} is enabled, updating job schedule with cron expression: {CronExpression}", 
+                _logger.LogInformation("{name} is enabled, updating job schedule with cron expression: {CronExpression}", 
                     jobType.ToString(), config.CronExpression);
+                
+                _logger.LogCritical("This is a random test log");
                 
                 // Create a Quartz job schedule with the cron expression
                 await _jobManagementService.StartJob(jobType, null, config.CronExpression);
             }
             else
             {
-                _logger.LogWarning("{JobName} is enabled, but no cron expression was found in the configuration", jobType.ToString());
+                _logger.LogWarning("{name} is enabled, but no cron expression was found in the configuration", jobType.ToString());
             }
             
             return;
         }
         
         // If the job is disabled, stop it
-        _logger.LogInformation("{JobName} is disabled, stopping the job", jobType.ToString());
+        _logger.LogInformation("{name} is disabled, stopping the job", jobType.ToString());
         await _jobManagementService.StopJob(jobType);
     }
     

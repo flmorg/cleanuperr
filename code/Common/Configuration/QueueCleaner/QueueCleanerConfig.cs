@@ -12,6 +12,7 @@ public sealed record QueueCleanerConfig : IJobConfig
     
     public string CronExpression { get; init; } = "0 0/5 * * * ?";
     
+    // TODO
     public string IgnoredDownloadsPath { get; init; } = string.Empty;
 
     public FailedImportConfig FailedImport { get; init; } = new();

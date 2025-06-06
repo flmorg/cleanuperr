@@ -34,7 +34,7 @@ public class JobManagementService : IJobManagementService
             // Check if job exists
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogError("Job {jobName} does not exist", jobName);
+                _logger.LogError("Job {name} does not exist", jobName);
                 return false;
             }
 
@@ -86,7 +86,7 @@ public class JobManagementService : IJobManagementService
 
             // Resume the job if it's paused
             await scheduler.ResumeJob(jobKey);
-            _logger.LogInformation("Job {jobName} started successfully", jobName);
+            _logger.LogInformation("Job {name} started successfully", jobName);
             return true;
         }
         catch (Exception ex)
@@ -106,7 +106,7 @@ public class JobManagementService : IJobManagementService
             
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogError("Job {jobName} does not exist", jobName);
+                _logger.LogError("Job {name} does not exist", jobName);
                 return false;
             }
 
@@ -117,7 +117,7 @@ public class JobManagementService : IJobManagementService
                 await scheduler.UnscheduleJob(trigger.Key);
             }
 
-            _logger.LogInformation("Job {jobName} stopped successfully", jobName);
+            _logger.LogInformation("Job {name} stopped successfully", jobName);
             return true;
         }
         catch (Exception ex)
@@ -137,12 +137,12 @@ public class JobManagementService : IJobManagementService
             
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogError("Job {jobName} does not exist", jobName);
+                _logger.LogError("Job {name} does not exist", jobName);
                 return false;
             }
 
             await scheduler.PauseJob(jobKey);
-            _logger.LogInformation("Job {jobName} paused successfully", jobName);
+            _logger.LogInformation("Job {name} paused successfully", jobName);
             return true;
         }
         catch (Exception ex)
@@ -162,17 +162,17 @@ public class JobManagementService : IJobManagementService
             
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogError("Job {jobName} does not exist", jobName);
+                _logger.LogError("Job {name} does not exist", jobName);
                 return false;
             }
 
             await scheduler.ResumeJob(jobKey);
-            _logger.LogInformation("Job {jobName} resumed successfully", jobName);
+            _logger.LogInformation("Job {name} resumed successfully", jobName);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resuming job {jobName}", jobName);
+            _logger.LogError(ex, "Error resuming job {name}", jobName);
             return false;
         }
     }
@@ -247,7 +247,7 @@ public class JobManagementService : IJobManagementService
             
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogError("Job {jobName} does not exist", jobName);
+                _logger.LogError("Job {name} does not exist", jobName);
                 return new JobInfo { Name = jobName, Status = "Not Found" };
             }
 
@@ -290,7 +290,7 @@ public class JobManagementService : IJobManagementService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting job {jobName}", jobName);
+            _logger.LogError(ex, "Error getting job {name}", jobName);
             return new JobInfo { Name = jobName, Status = "Error" };
         }
     }
@@ -310,7 +310,7 @@ public class JobManagementService : IJobManagementService
             
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogError("Job {jobName} does not exist", jobName);
+                _logger.LogError("Job {name} does not exist", jobName);
                 return false;
             }
 
@@ -332,12 +332,12 @@ public class JobManagementService : IJobManagementService
                 await scheduler.ScheduleJob(newTrigger);
             }
             
-            _logger.LogInformation("Job {jobName} schedule updated successfully to {cronExpression}", jobName, cronExpression);
+            _logger.LogInformation("Job {name} schedule updated successfully to {cronExpression}", jobName, cronExpression);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating job {jobName} schedule", jobName);
+            _logger.LogError(ex, "Error updating job {name} schedule", jobName);
             return false;
         }
     }

@@ -188,7 +188,7 @@ public class BackgroundJobManager : IHostedService
         await _scheduler.ScheduleJob(trigger, cancellationToken);
         await _scheduler.ScheduleJob(startupTrigger, cancellationToken);
         
-        _logger.LogInformation("Added job {JobName} with cron expression {CronExpression}", 
+        _logger.LogInformation("Added job {name} with cron expression {CronExpression}", 
             typeName, cronExpression);
     }
     
@@ -215,6 +215,6 @@ public class BackgroundJobManager : IHostedService
         // Add job to scheduler
         await _scheduler.AddJob(jobDetail, true, cancellationToken);
         
-        _logger.LogInformation("Added job {JobName} without trigger (will be chained)", typeName);
+        _logger.LogInformation("Added job {name} without trigger (will be chained)", typeName);
     }
 }
