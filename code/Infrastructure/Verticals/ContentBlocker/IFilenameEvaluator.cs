@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Common.Configuration.ContentBlocker;
+using Common.Configuration.QueueCleaner;
 
 namespace Infrastructure.Verticals.ContentBlocker;
 

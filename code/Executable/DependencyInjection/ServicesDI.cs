@@ -38,7 +38,6 @@ public static class ServicesDI
             .AddTransient<LidarrClient>()
             .AddTransient<ArrClientFactory>()
             .AddTransient<QueueCleaner>()
-            .AddTransient<ContentBlocker>()
             .AddTransient<DownloadCleaner>()
             .AddTransient<IQueueItemRemover, QueueItemRemover>()
             .AddTransient<IFilenameEvaluator, FilenameEvaluator>()

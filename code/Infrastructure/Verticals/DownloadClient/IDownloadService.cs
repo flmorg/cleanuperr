@@ -1,9 +1,11 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.QueueCleaner;
+using Data.Enums;
 using Infrastructure.Interceptors;
+using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
@@ -28,23 +30,8 @@ public interface IDownloadService : IDisposable
     /// </summary>
     /// <param name="hash">The download hash.</param>
     /// <param name="ignoredDownloads">Downloads to ignore from processing.</param>
-    public Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
-
-    /// <summary>
-    /// Blocks unwanted files from being fully downloaded.
-    /// </summary>
-    /// <param name="hash">The torrent hash.</param>
-    /// <param name="blocklistType">The <see cref="BlocklistType"/>.</param>
-    /// <param name="patterns">The patterns to test the files against.</param>
-    /// <param name="regexes">The regexes to test the files against.</param>
-    /// <param name="ignoredDownloads">Downloads to ignore from processing.</param>
-    /// <returns>True if all files have been blocked; otherwise false.</returns>
-    public Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
-        BlocklistType blocklistType,
-        ConcurrentBag<string> patterns,
-        ConcurrentBag<Regex> regexes,
-        IReadOnlyList<string> ignoredDownloads
-    );
+    public Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash,
+        IReadOnlyList<string> ignoredDownloads);
 
     /// <summary>
     /// Fetches all seeding downloads.

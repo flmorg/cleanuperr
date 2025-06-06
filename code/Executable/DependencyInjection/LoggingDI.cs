@@ -29,12 +29,8 @@ public static class LoggingDI
         const string consoleOutputTemplate = $"[{{@t:yyyy-MM-dd HH:mm:ss.fff}} {{@l:u3}}]{jobNameTemplate}{categoryTemplate} {{@m}}\n{{@x}}";
         const string fileOutputTemplate = $"{{@t:yyyy-MM-dd HH:mm:ss.fff zzz}} [{{@l:u3}}]{jobNameTemplate}{categoryTemplate} {{@m:lj}}\n{{@x}}";
 
-        // Determine categories and padding sizes
-        List<string> categories = ["SYSTEM", "API", "JOBS", "NOTIFICATIONS"];
-        int catPadding = categories.Max(x => x.Length) + 2;
-
         // Determine job name padding
-        List<string> jobNames = [nameof(ContentBlocker), nameof(QueueCleaner), nameof(DownloadCleaner)];
+        List<string> jobNames = [nameof(QueueCleaner), nameof(DownloadCleaner)];
         int jobPadding = jobNames.Max(x => x.Length) + 2;
 
         // Determine instance name padding
@@ -46,7 +42,7 @@ public static class LoggingDI
             InstanceType.Whisparr.ToString(),
             "SYSTEM"
         ];
-        int arrPadding = categoryNames.Max(x => x.Length) + 2;
+        int catPadding = categoryNames.Max(x => x.Length) + 2;
 
         // Apply padding values to templates
         string consoleTemplate = consoleOutputTemplate

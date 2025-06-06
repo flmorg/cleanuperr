@@ -1,4 +1,3 @@
-using Common.Configuration.ContentBlocker;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Configuration;

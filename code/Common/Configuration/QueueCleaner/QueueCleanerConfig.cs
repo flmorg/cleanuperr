@@ -12,94 +12,123 @@ public sealed record QueueCleanerConfig : IJobConfig
     
     public string CronExpression { get; init; } = "0 0/5 * * * ?";
     
-    public bool RunSequentially { get; init; }
-
     public string IgnoredDownloadsPath { get; init; } = string.Empty;
-    
-    public ushort FailedImportMaxStrikes { get; init; }
-    
-    public bool FailedImportIgnorePrivate { get; init; }
-    
-    public bool FailedImportDeletePrivate { get; init; }
 
-    public IReadOnlyList<string> FailedImportIgnorePatterns { get; init; } = [];
+    public FailedImportConfig FailedImport { get; init; } = new();
     
-    public ushort StalledMaxStrikes { get; init; }
+    public StalledConfig Stalled { get; init; } = new();
     
-    public bool StalledResetStrikesOnProgress { get; init; }
+    public SlowConfig Slow { get; init; } = new();
     
-    public bool StalledIgnorePrivate { get; init; }
-    
-    public bool StalledDeletePrivate { get; init; }
-    
-    public ushort DownloadingMetadataMaxStrikes { get; init; }
-    
-    public ushort SlowMaxStrikes { get; init; }
-    
-    public bool SlowResetStrikesOnProgress { get; init; }
-
-    public bool SlowIgnorePrivate { get; init; }
-    
-    public bool SlowDeletePrivate { get; init; }
-
-    public string SlowMinSpeed { get; init; } = string.Empty;
-    
-    [JsonIgnore]
-    public ByteSize SlowMinSpeedByteSize => string.IsNullOrEmpty(SlowMinSpeed) ? new ByteSize(0) : ByteSize.Parse(SlowMinSpeed);
-    
-    public double SlowMaxTime { get; init; }
-    
-    public string SlowIgnoreAboveSize { get; init; } = string.Empty;
-    
-    [JsonIgnore]
-    public ByteSize? SlowIgnoreAboveSizeByteSize => string.IsNullOrEmpty(SlowIgnoreAboveSize) ? null : ByteSize.Parse(SlowIgnoreAboveSize);
+    public ContentBlockerConfig ContentBlocker { get; init; } = new();
     
     public void Validate()
     {
-        if (FailedImportMaxStrikes is > 0 and < 3)
-        {
-            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__IMPORT_FAILED_MAX_STRIKES must be 3");
-        }
+        FailedImport.Validate(SectionName);
+        Stalled.Validate(SectionName);
+        Slow.Validate(SectionName);
+        ContentBlocker.Validate();
+    }
+}
 
-        if (StalledMaxStrikes is > 0 and < 3)
+public sealed record FailedImportConfig
+{
+    public ushort MaxStrikes { get; init; }
+    
+    public bool IgnorePrivate { get; init; }
+    
+    public bool DeletePrivate { get; init; }
+
+    public IReadOnlyList<string> IgnoredPatterns { get; init; } = [];
+    
+    public void Validate(string sectionName)
+    {
+        if (MaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__STALLED_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {sectionName.ToUpperInvariant()}__FAILED_IMPORT__MAX_STRIKES must be 3");
+        }
+    }
+}
+
+public sealed record StalledConfig
+{
+    public ushort MaxStrikes { get; init; }
+    
+    public bool ResetStrikesOnProgress { get; init; }
+    
+    public bool IgnorePrivate { get; init; }
+    
+    public bool DeletePrivate { get; init; }
+    
+    public ushort DownloadingMetadataMaxStrikes { get; init; }
+    
+    public void Validate(string sectionName)
+    {
+        if (MaxStrikes is > 0 and < 3)
+        {
+            throw new ValidationException($"the minimum value for {sectionName.ToUpperInvariant()}__STALLED__MAX_STRIKES must be 3");
         }
         
         if (DownloadingMetadataMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__DOWNLOADING_METADATA_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {sectionName.ToUpperInvariant()}__STALLED__DOWNLOADING_METADATA_MAX_STRIKES must be 3");
         }
-        
-        if (SlowMaxStrikes is > 0 and < 3)
+    }
+}
+
+public sealed record SlowConfig
+{
+    public ushort MaxStrikes { get; init; }
+    
+    public bool ResetStrikesOnProgress { get; init; }
+
+    public bool IgnorePrivate { get; init; }
+    
+    public bool DeletePrivate { get; init; }
+
+    public string MinSpeed { get; init; } = string.Empty;
+    
+    [JsonIgnore]
+    public ByteSize MinSpeedByteSize => string.IsNullOrEmpty(MinSpeed) ? new ByteSize(0) : ByteSize.Parse(MinSpeed);
+    
+    public double MaxTime { get; init; }
+    
+    public string IgnoreAboveSize { get; init; } = string.Empty;
+    
+    [JsonIgnore]
+    public ByteSize? IgnoreAboveSizeByteSize => string.IsNullOrEmpty(IgnoreAboveSize) ? null : ByteSize.Parse(IgnoreAboveSize);
+    
+    public void Validate(string sectionName)
+    {
+        if (MaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException($"the minimum value for {SectionName.ToUpperInvariant()}__SLOW_MAX_STRIKES must be 3");
+            throw new ValidationException($"the minimum value for {sectionName.ToUpperInvariant()}__SLOW__MAX_STRIKES must be 3");
         }
 
-        if (SlowMaxStrikes > 0)
+        if (MaxStrikes > 0)
         {
-            bool isSlowSpeedSet = !string.IsNullOrEmpty(SlowMinSpeed);
+            bool isSpeedSet = !string.IsNullOrEmpty(MinSpeed);
 
-            if (isSlowSpeedSet && ByteSize.TryParse(SlowMinSpeed, out _) is false)
+            if (isSpeedSet && ByteSize.TryParse(MinSpeed, out _) is false)
             {
-                throw new ValidationException($"invalid value for {SectionName.ToUpperInvariant()}__SLOW_MIN_SPEED");
+                throw new ValidationException($"invalid value for {sectionName.ToUpperInvariant()}__SLOW__MIN_SPEED");
             }
 
-            if (SlowMaxTime < 0)
+            if (MaxTime < 0)
             {
-                throw new ValidationException($"invalid value for {SectionName.ToUpperInvariant()}__SLOW_MAX_TIME");
+                throw new ValidationException($"invalid value for {sectionName.ToUpperInvariant()}__SLOW__MAX_TIME");
             }
 
-            if (!isSlowSpeedSet && SlowMaxTime is 0)
+            if (!isSpeedSet && MaxTime is 0)
             {
-                throw new ValidationException($"either {SectionName.ToUpperInvariant()}__SLOW_MIN_SPEED or {SectionName.ToUpperInvariant()}__SLOW_MAX_STRIKES must be set");
+                throw new ValidationException($"either {sectionName.ToUpperInvariant()}__SLOW__MIN_SPEED or {sectionName.ToUpperInvariant()}__SLOW__MAX_TIME must be set");
             }
         
-            bool isSlowIgnoreAboveSizeSet = !string.IsNullOrEmpty(SlowIgnoreAboveSize);
+            bool isIgnoreAboveSizeSet = !string.IsNullOrEmpty(IgnoreAboveSize);
         
-            if (isSlowIgnoreAboveSizeSet && ByteSize.TryParse(SlowIgnoreAboveSize, out _) is false)
+            if (isIgnoreAboveSizeSet && ByteSize.TryParse(IgnoreAboveSize, out _) is false)
             {
-                throw new ValidationException($"invalid value for {SectionName.ToUpperInvariant()}__SLOW_IGNORE_ABOVE_SIZE");
+                throw new ValidationException($"invalid value for {sectionName.ToUpperInvariant()}__SLOW__IGNORE_ABOVE_SIZE");
             }
         }
     }

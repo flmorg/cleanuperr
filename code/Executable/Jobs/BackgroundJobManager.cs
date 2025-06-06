@@ -1,15 +1,11 @@
-using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Infrastructure.Configuration;
-using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.QueueCleaner;
-using Microsoft.Extensions.Hosting;
 using Quartz;
-using Quartz.Impl.Matchers;
 using Quartz.Spi;
 
 namespace Executable.Jobs;
@@ -28,8 +24,8 @@ public class BackgroundJobManager : IHostedService
     public BackgroundJobManager(
         ISchedulerFactory schedulerFactory,
         IConfigManager configManager,
-        IServiceProvider serviceProvider,
-        ILogger<BackgroundJobManager> logger)
+        ILogger<BackgroundJobManager> logger
+    )
     {
         _schedulerFactory = schedulerFactory;
         _configManager = configManager;
@@ -78,48 +74,11 @@ public class BackgroundJobManager : IHostedService
         }
         
         // Get configurations from JSON files
-        ContentBlockerConfig? contentBlockerConfig = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
-        QueueCleanerConfig? queueCleanerConfig = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
-        DownloadCleanerConfig? downloadCleanerConfig = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
+        QueueCleanerConfig queueCleanerConfig = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
+        DownloadCleanerConfig downloadCleanerConfig = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
         
-        // Add ContentBlocker job if enabled
-        if (contentBlockerConfig?.Enabled == true)
-        {
-            await AddContentBlockerJob(contentBlockerConfig, cancellationToken);
-        }
-        
-        // Add QueueCleaner job if enabled
-        if (queueCleanerConfig?.Enabled == true)
-        {
-            // Check if we need to chain it after ContentBlocker
-            bool shouldChainAfterContentBlocker = 
-                contentBlockerConfig?.Enabled == true && 
-                queueCleanerConfig.RunSequentially;
-            
-            await AddQueueCleanerJob(queueCleanerConfig, shouldChainAfterContentBlocker, cancellationToken);
-        }
-        
-        // Add DownloadCleaner job if enabled
-        if (downloadCleanerConfig?.Enabled == true)
-        {
-            await AddDownloadCleanerJob(downloadCleanerConfig, cancellationToken);
-        }
-    }
-    
-    /// <summary>
-    /// Adds the ContentBlocker job to the scheduler.
-    /// </summary>
-    public async Task AddContentBlockerJob(ContentBlockerConfig config, CancellationToken cancellationToken = default)
-    {
-        if (!config.Enabled)
-        {
-            return;
-        }
-        
-        await AddJobWithTrigger<ContentBlocker>(
-            config, 
-            config.CronExpression, 
-            cancellationToken);
+        await AddQueueCleanerJob(queueCleanerConfig, cancellationToken);
+        await AddDownloadCleanerJob(downloadCleanerConfig, cancellationToken);
     }
     
     /// <summary>
@@ -127,7 +86,6 @@ public class BackgroundJobManager : IHostedService
     /// </summary>
     public async Task AddQueueCleanerJob(
         QueueCleanerConfig config, 
-        bool chainAfterContentBlocker = false,
         CancellationToken cancellationToken = default)
     {
         if (!config.Enabled)
@@ -135,28 +93,10 @@ public class BackgroundJobManager : IHostedService
             return;
         }
         
-        var jobKey = new JobKey(nameof(QueueCleaner));
-        
-        // If the job should be chained after ContentBlocker, add it without a cron trigger
-        if (chainAfterContentBlocker)
-        {
-            await AddJobWithoutTrigger<QueueCleaner>(cancellationToken);
-            
-            // Add job listener to chain QueueCleaner after ContentBlocker
-            if (_scheduler != null)
-            {
-                var chainListener = new JobChainingListener(nameof(ContentBlocker), nameof(QueueCleaner));
-                _scheduler.ListenerManager.AddJobListener(chainListener, KeyMatcher<JobKey>.KeyEquals(new JobKey(nameof(ContentBlocker))));
-            }
-        }
-        else
-        {
-            // Add job with normal cron trigger
-            await AddJobWithTrigger<QueueCleaner>(
-                config, 
-                config.CronExpression, 
-                cancellationToken);
-        }
+        await AddJobWithTrigger<QueueCleaner>(
+            config, 
+            config.CronExpression, 
+            cancellationToken);
     }
     
     /// <summary>

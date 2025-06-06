@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Common.Configuration.ContentBlocker;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
@@ -17,9 +16,9 @@ using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
-using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
@@ -35,15 +34,16 @@ public abstract class DownloadService : IDownloadService
     protected readonly IHardLinkFileService _hardLinkFileService;
     protected readonly IDynamicHttpClientProvider _httpClientProvider;
     protected readonly EventPublisher _eventPublisher;
+    protected readonly BlocklistProvider _blocklistProvider;
     protected readonly QueueCleanerConfig _queueCleanerConfig;
-    protected readonly ContentBlockerConfig _contentBlockerConfig;
     protected readonly DownloadCleanerConfig _downloadCleanerConfig;
+    protected HttpClient? _httpClient;
+
     
     // Client-specific configuration
     protected ClientConfig _clientConfig;
     
     // HTTP client for this service
-    protected HttpClient? _httpClient;
 
     protected DownloadService(
         ILogger<DownloadService> logger,
@@ -54,7 +54,8 @@ public abstract class DownloadService : IDownloadService
         IDryRunInterceptor dryRunInterceptor,
         IHardLinkFileService hardLinkFileService,
         IDynamicHttpClientProvider httpClientProvider,
-        EventPublisher eventPublisher
+        EventPublisher eventPublisher,
+        BlocklistProvider blocklistProvider
     )
     {
         _logger = logger;
@@ -66,6 +67,7 @@ public abstract class DownloadService : IDownloadService
         _hardLinkFileService = hardLinkFileService;
         _httpClientProvider = httpClientProvider;
         _eventPublisher = eventPublisher;
+        _blocklistProvider = blocklistProvider;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
         
@@ -73,7 +75,6 @@ public abstract class DownloadService : IDownloadService
         _clientConfig = new ClientConfig();
         
         _queueCleanerConfig = _configManager.GetConfiguration<QueueCleanerConfig>();
-        _contentBlockerConfig = _configManager.GetConfiguration<ContentBlockerConfig>();
         _downloadCleanerConfig = _configManager.GetConfiguration<DownloadCleanerConfig>();
     }
     
@@ -99,13 +100,8 @@ public abstract class DownloadService : IDownloadService
 
     public abstract Task LoginAsync();
 
-    public abstract Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads);
-
-    /// <inheritdoc/>
-    public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash,
-        BlocklistType blocklistType,
-        ConcurrentBag<string> patterns,
-        ConcurrentBag<Regex> regexes, IReadOnlyList<string> ignoredDownloads);
+    public abstract Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash,
+        IReadOnlyList<string> ignoredDownloads);
 
     /// <inheritdoc/>
     public abstract Task DeleteDownload(string hash);
@@ -130,7 +126,7 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetStalledStrikesOnProgress(string hash, long downloaded)
     {
-        if (!_queueCleanerConfig.StalledResetStrikesOnProgress)
+        if (!_queueCleanerConfig.Stalled.ResetStrikesOnProgress)
         {
             return;
         }
@@ -148,7 +144,7 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetSlowSpeedStrikesOnProgress(string downloadName, string hash)
     {
-        if (_queueCleanerConfig.SlowResetStrikesOnProgress)
+        if (_queueCleanerConfig.Slow.ResetStrikesOnProgress)
         {
             return;
         }
@@ -166,7 +162,7 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetSlowTimeStrikesOnProgress(string downloadName, string hash)
     {
-        if (_queueCleanerConfig.SlowResetStrikesOnProgress)
+        if (_queueCleanerConfig.Slow.ResetStrikesOnProgress)
         {
             return;
         }
@@ -196,7 +192,7 @@ public abstract class DownloadService : IDownloadService
             _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), downloadName);
             
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowSpeed);
+                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.Slow.MaxStrikes, StrikeType.SlowSpeed);
 
             if (shouldRemove)
             {
@@ -213,7 +209,7 @@ public abstract class DownloadService : IDownloadService
             _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), downloadName);
             
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.SlowMaxStrikes, StrikeType.SlowTime);
+                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.Slow.MaxStrikes, StrikeType.SlowTime);
 
             if (shouldRemove)
             {

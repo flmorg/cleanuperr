@@ -1,4 +1,4 @@
-using Common.Configuration.ContentBlocker;
+using Common.Configuration.QueueCleaner;
 
 namespace Common.Configuration.DTOs.ContentBlocker;
 

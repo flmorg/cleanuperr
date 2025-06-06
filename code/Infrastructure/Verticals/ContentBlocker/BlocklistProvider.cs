@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using Common.Configuration.ContentBlocker;
+using Common.Configuration.QueueCleaner;
 using Common.Helpers;
 using Data.Enums;
 using Infrastructure.Configuration;
@@ -14,8 +14,7 @@ namespace Infrastructure.Verticals.ContentBlocker;
 public sealed class BlocklistProvider
 {
     private readonly ILogger<BlocklistProvider> _logger;
-    private readonly IConfigManager _configManager;
-    private ContentBlockerConfig _contentBlockerConfig;
+    private readonly QueueCleanerConfig _queueCleanerConfig;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
     private bool _initialized;
@@ -28,11 +27,10 @@ public sealed class BlocklistProvider
     )
     {
         _logger = logger;
-        _configManager = configManager;
         _cache = cache;
         _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
         
-        _contentBlockerConfig = _configManager.GetConfiguration<ContentBlockerConfig>();
+        _queueCleanerConfig = configManager.GetConfiguration<QueueCleanerConfig>();
     }
 
     public async Task LoadBlocklistsAsync()
@@ -45,9 +43,9 @@ public sealed class BlocklistProvider
         
         try
         {
-            await LoadPatternsAndRegexesAsync(_contentBlockerConfig.Sonarr, InstanceType.Sonarr);
-            await LoadPatternsAndRegexesAsync(_contentBlockerConfig.Radarr, InstanceType.Radarr);
-            await LoadPatternsAndRegexesAsync(_contentBlockerConfig.Lidarr, InstanceType.Lidarr);
+            await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Sonarr, InstanceType.Sonarr);
+            await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Radarr, InstanceType.Radarr);
+            await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Lidarr, InstanceType.Lidarr);
             
             _initialized = true;
         }
@@ -81,17 +79,12 @@ public sealed class BlocklistProvider
 
     private async Task LoadPatternsAndRegexesAsync(BlocklistSettings blocklistSettings, InstanceType instanceType)
     {
-        if (!blocklistSettings.Enabled)
+        if (string.IsNullOrEmpty(blocklistSettings.BlocklistPath))
         {
             return;
         }
         
-        if (string.IsNullOrEmpty(blocklistSettings.Path))
-        {
-            return;
-        }
-        
-        string[] filePatterns = await ReadContentAsync(blocklistSettings.Path);
+        string[] filePatterns = await ReadContentAsync(blocklistSettings.BlocklistPath);
         
         long startTime = Stopwatch.GetTimestamp();
         ParallelOptions options = new() { MaxDegreeOfParallelism = 5 };
@@ -122,13 +115,13 @@ public sealed class BlocklistProvider
 
         TimeSpan elapsed = Stopwatch.GetElapsedTime(startTime);
 
-        _cache.Set(CacheKeys.BlocklistType(instanceType), blocklistSettings.Type);
+        _cache.Set(CacheKeys.BlocklistType(instanceType), blocklistSettings.BlocklistType);
         _cache.Set(CacheKeys.BlocklistPatterns(instanceType), patterns);
         _cache.Set(CacheKeys.BlocklistRegexes(instanceType), regexes);
         
         _logger.LogDebug("loaded {count} patterns", patterns.Count);
         _logger.LogDebug("loaded {count} regexes", regexes.Count);
-        _logger.LogDebug("blocklist loaded in {elapsed} ms | {path}", elapsed.TotalMilliseconds, blocklistSettings.Path);
+        _logger.LogDebug("blocklist loaded in {elapsed} ms | {path}", elapsed.TotalMilliseconds, blocklistSettings.BlocklistPath);
     }
     
     private async Task<string[]> ReadContentAsync(string path)

@@ -1,0 +1,305 @@
+﻿using Common.Attributes;
+using Common.Configuration.DownloadCleaner;
+using Data.Enums;
+using Infrastructure.Extensions;
+using Infrastructure.Verticals.Context;
+using Microsoft.Extensions.Logging;
+using QBittorrent.Client;
+
+namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
+
+public partial class QBitService
+{
+    /// <inheritdoc/>
+    public override async Task<List<object>?> GetSeedingDownloads()
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        var torrentList = await _client.GetTorrentListAsync(new TorrentListQuery { Filter = TorrentListFilter.Seeding });
+        return torrentList?.Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Cast<object>()
+            .ToList();
+    }
+
+    /// <inheritdoc/>
+    public override List<object>? FilterDownloadsToBeCleanedAsync(List<object>? downloads, List<CleanCategory> categories) =>
+        downloads
+            ?.Cast<TorrentInfo>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Name.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+            .Cast<object>()
+            .ToList();
+
+    /// <inheritdoc/>
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) =>
+        downloads
+            ?.Cast<TorrentInfo>()
+            .Where(x => !string.IsNullOrEmpty(x.Hash))
+            .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
+            .Where(x =>
+            {
+                if (_downloadCleanerConfig.UnlinkedUseTag)
+                {
+                    return !x.Tags.Any(tag => tag.Equals(_downloadCleanerConfig.UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
+                }
+
+                return true;
+            })
+            .Cast<object>()
+            .ToList();
+
+    /// <inheritdoc/>
+    public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
+        HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+
+        foreach (TorrentInfo download in downloads)
+        {
+            if (string.IsNullOrEmpty(download.Hash))
+            {
+                continue;
+            }
+
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(download.Hash);
+
+            if (ignoredDownloads.Count > 0 &&
+                (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads))))
+            {
+                _logger.LogInformation("skip | download is ignored | {name}", download.Name);
+                continue;
+            }
+
+            CleanCategory? category = categoriesToClean
+                .FirstOrDefault(x => download.Category.Equals(x.Name, StringComparison.InvariantCultureIgnoreCase));
+
+            if (category is null)
+            {
+                continue;
+            }
+
+            if (!_downloadCleanerConfig.DeletePrivate)
+            {
+                TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(download.Hash);
+
+                if (torrentProperties is null)
+                {
+                    _logger.LogDebug("failed to find torrent properties in the download client | {name}", download.Name);
+                    return;
+                }
+
+                bool isPrivate = torrentProperties.AdditionalData.TryGetValue("is_private", out var dictValue) &&
+                                 bool.TryParse(dictValue?.ToString(), out bool boolValue)
+                                 && boolValue;
+
+                if (isPrivate)
+                {
+                    _logger.LogDebug("skip | download is private | {name}", download.Name);
+                    continue;
+                }
+            }
+
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+
+            SeedingCheckResult result = ShouldCleanDownload(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category);
+
+            if (!result.ShouldClean)
+            {
+                continue;
+            }
+
+            await _dryRunInterceptor.InterceptAsync(DeleteDownload, download.Hash);
+
+            _logger.LogInformation(
+                "download cleaned | {reason} reached | {name}",
+                result.Reason is CleanReason.MaxRatioReached
+                    ? "MAX_RATIO & MIN_SEED_TIME"
+                    : "MAX_SEED_TIME",
+                download.Name
+            );
+
+            await _eventPublisher.PublishDownloadCleaned(download.Ratio, download.SeedingTime ?? TimeSpan.Zero, category.Name, result.Reason);
+        }
+    }
+
+    public override async Task CreateCategoryAsync(string name)
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        IReadOnlyDictionary<string, Category>? existingCategories = await _client.GetCategoriesAsync();
+
+        if (existingCategories.Any(x => x.Value.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
+        {
+            return;
+        }
+
+        await _dryRunInterceptor.InterceptAsync(CreateCategory, name);
+    }
+
+    public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        if (downloads?.Count is null or 0)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+        {
+            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+        }
+
+        foreach (TorrentInfo download in downloads)
+        {
+            if (string.IsNullOrEmpty(download.Hash))
+            {
+                continue;
+            }
+
+            if (excludedHashes.Any(x => x.Equals(download.Hash, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                _logger.LogDebug("skip | download is used by an arr | {name}", download.Name);
+                continue;
+            }
+
+            IReadOnlyList<TorrentTracker> trackers = await GetTrackersAsync(download.Hash);
+
+            if (ignoredDownloads.Count > 0 &&
+                (download.ShouldIgnore(ignoredDownloads) || trackers.Any(x => x.ShouldIgnore(ignoredDownloads))))
+            {
+                _logger.LogInformation("skip | download is ignored | {name}", download.Name);
+                continue;
+            }
+
+            IReadOnlyList<TorrentContent>? files = await _client.GetTorrentContentsAsync(download.Hash);
+
+            if (files is null)
+            {
+                _logger.LogDebug("failed to find files for {name}", download.Name);
+                continue;
+            }
+
+            ContextProvider.Set("downloadName", download.Name);
+            ContextProvider.Set("hash", download.Hash);
+            bool hasHardlinks = false;
+
+            foreach (TorrentContent file in files)
+            {
+                if (!file.Index.HasValue)
+                {
+                    _logger.LogDebug("skip | file index is null for {name}", download.Name);
+                    hasHardlinks = true;
+                    break;
+                }
+
+                string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.SavePath, file.Name).Split(['\\', '/']));
+
+                if (file.Priority is TorrentContentPriority.Skip)
+                {
+                    _logger.LogDebug("skip | file is not downloaded | {file}", filePath);
+                    continue;
+                }
+
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+
+                if (hardlinkCount < 0)
+                {
+                    _logger.LogDebug("skip | could not get file properties | {file}", filePath);
+                    hasHardlinks = true;
+                    break;
+                }
+
+                if (hardlinkCount > 0)
+                {
+                    hasHardlinks = true;
+                    break;
+                }
+            }
+
+            if (hasHardlinks)
+            {
+                _logger.LogDebug("skip | download has hardlinks | {name}", download.Name);
+                continue;
+            }
+
+            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
+
+            if (_downloadCleanerConfig.UnlinkedUseTag)
+            {
+                _logger.LogInformation("tag added for {name}", download.Name);
+            }
+            else
+            {
+                _logger.LogInformation("category changed for {name}", download.Name);
+                download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
+            }
+
+            await _eventPublisher.PublishCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory, _downloadCleanerConfig.UnlinkedUseTag);
+        }
+    }
+
+    /// <inheritdoc/>
+    [DryRunSafeguard]
+    public override async Task DeleteDownload(string hash)
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        await _client.DeleteAsync([hash], deleteDownloadedData: true);
+    }
+
+    [DryRunSafeguard]
+    protected async Task CreateCategory(string name)
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        await _client.AddCategoryAsync(name);
+    }
+    
+    [DryRunSafeguard]
+    protected virtual async Task ChangeCategory(string hash, string newCategory)
+    {
+        if (_client == null)
+        {
+            throw new InvalidOperationException("QBittorrent client is not initialized");
+        }
+        
+        if (_downloadCleanerConfig.UnlinkedUseTag)
+        {
+            await _client.AddTorrentTagAsync([hash], newCategory);
+            return;
+        }
+
+        await _client.SetTorrentCategoryAsync([hash], newCategory);
+    }
+}

@@ -1,4 +1,4 @@
-﻿namespace Common.Configuration.ContentBlocker;
+﻿namespace Common.Configuration.QueueCleaner;
 
 public enum BlocklistType
 {
