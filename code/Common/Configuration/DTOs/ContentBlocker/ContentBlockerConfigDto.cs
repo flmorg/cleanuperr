@@ -28,11 +28,6 @@ public class ContentBlockerConfigDto
     public bool DeletePrivate { get; set; }
 
     /// <summary>
-    /// Path to ignored downloads file
-    /// </summary>
-    public string IgnoredDownloadsPath { get; set; } = string.Empty;
-    
-    /// <summary>
     /// Sonarr blocklist settings
     /// </summary>
     public BlocklistSettingsDto Sonarr { get; set; } = new();

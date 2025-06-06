@@ -20,7 +20,6 @@ namespace Infrastructure.Verticals.DownloadCleaner;
 public sealed class DownloadCleaner : GenericHandler
 {
     private readonly DownloadCleanerConfig _config;
-    private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly HashSet<string> _excludedHashes = [];
     
     private static bool _hardLinkCategoryCreated;
@@ -32,20 +31,13 @@ public sealed class DownloadCleaner : GenericHandler
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
-        DownloadServiceFactory downloadServiceFactory,
-        IIgnoredDownloadsService ignoredDownloadsService
+        DownloadServiceFactory downloadServiceFactory
     ) : base(
         logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager
     )
     {
-        _ignoredDownloadsService = ignoredDownloadsService;
-        
         _config = configManager.GetConfiguration<DownloadCleanerConfig>();
-        _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
-        _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
-        _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
-        _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
     
     protected override void InitializeDownloadServices()
@@ -107,7 +99,7 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
         
-        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
+        IReadOnlyList<string> ignoredDownloads = _generalConfig.IgnoredDownloads;
         
         // Process each client separately
         var allDownloads = new List<object>();

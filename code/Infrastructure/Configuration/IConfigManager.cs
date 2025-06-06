@@ -1,12 +1,4 @@
-﻿using Common.Configuration.Arr;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.DownloadClient;
-using Common.Configuration.General;
-using Common.Configuration.IgnoredDownloads;
-using Common.Configuration.Notification;
-using Common.Configuration.QueueCleaner;
-
-namespace Infrastructure.Configuration;
+﻿namespace Infrastructure.Configuration;
 
 /// <summary>
 /// Provides configuration management for various components with thread-safe file access.

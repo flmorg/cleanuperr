@@ -22,6 +22,8 @@ public sealed record GeneralConfig : IConfig
 
     public string EncryptionKey { get; init; } = Guid.NewGuid().ToString();
 
+    public List<string> IgnoredDownloads { get; set; } = [];
+
     public void Validate()
     {
         if (HttpTimeout is 0)

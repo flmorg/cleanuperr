@@ -51,6 +51,5 @@ public static class ServicesDI
             .AddTransient<ArrQueueIterator>()
             .AddTransient<DownloadServiceFactory>()
             .AddTransient<IStriker, Striker>()
-            .AddSingleton<BlocklistProvider>()
-            .AddSingleton<IIgnoredDownloadsService, IgnoredDownloadsService>();
+            .AddSingleton<BlocklistProvider>();
 }

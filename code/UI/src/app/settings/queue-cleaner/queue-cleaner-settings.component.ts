@@ -91,8 +91,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
         type: [{ value: ScheduleUnit.Minutes, disabled: true }],
       }),
-      runSequentially: [{ value: false, disabled: true }],
-      ignoredDownloadsPath: [{ value: "", disabled: true }],
 
       // Failed Import settings - nested group
       failedImport: this.formBuilder.group({
@@ -152,8 +150,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         // Build form values for the nested configuration structure
         const formValues: any = {
           enabled: config.enabled,
-          runSequentially: config.runSequentially,
-          ignoredDownloadsPath: config.ignoredDownloadsPath,
         };
 
         // Add jobSchedule if it exists
@@ -346,8 +342,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
     if (enabled) {
       jobScheduleGroup.get("every")?.enable({ emitEvent: false });
       jobScheduleGroup.get("type")?.enable({ emitEvent: false });
-      this.queueCleanerForm.get("runSequentially")?.enable({ emitEvent: false });
-      this.queueCleanerForm.get("ignoredDownloadsPath")?.enable({ emitEvent: false });
 
       // Update individual config sections only if they are enabled
       const failedImportMaxStrikes = this.queueCleanerForm.get("failedImport.maxStrikes")?.value;
@@ -362,8 +356,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
     } else {
       jobScheduleGroup.get("every")?.disable({ emitEvent: false });
       jobScheduleGroup.get("type")?.disable({ emitEvent: false });
-      this.queueCleanerForm.get("runSequentially")?.disable({ emitEvent: false });
-      this.queueCleanerForm.get("ignoredDownloadsPath")?.disable({ emitEvent: false });
 
       // Save current active accordion state before clearing it
       // This will be empty when we collapse all accordions
@@ -497,8 +489,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
       // The cronExpression will be generated from the jobSchedule when saving
       cronExpression: "",
       jobSchedule: formValues.jobSchedule,
-      runSequentially: formValues.runSequentially,
-      ignoredDownloadsPath: formValues.ignoredDownloadsPath || "",
 
       failedImport: {
         maxStrikes: formValues.failedImport?.maxStrikes || 0,
@@ -558,8 +548,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         every: 5,
         type: ScheduleUnit.Minutes,
       },
-      runSequentially: false,
-      ignoredDownloadsPath: "",
 
       // Failed Import settings (nested)
       failedImport: {

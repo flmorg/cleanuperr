@@ -42,6 +42,9 @@ public class GeneralConfigDto
     /// Application log level
     /// </summary>
     public LogEventLevel LogLevel { get; set; } = LogEventLevel.Information;
-    
-    // EncryptionKey is intentionally excluded as it's sensitive data
+
+    /// <summary>
+    /// Ignored downloads list
+    /// </summary>
+    public List<string> IgnoredDownloads { get; set; } = [];
 }

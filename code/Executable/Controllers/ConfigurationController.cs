@@ -4,14 +4,10 @@ using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.DTOs.Arr;
 using Common.Configuration.DTOs.ContentBlocker;
-using Common.Configuration.DTOs.DownloadCleaner;
 using Common.Configuration.DTOs.DownloadClient;
 using Common.Configuration.DTOs.General;
-using Common.Configuration.DTOs.IgnoredDownloads;
 using Common.Configuration.DTOs.Notification;
-using Common.Configuration.DTOs.QueueCleaner;
 using Common.Configuration.General;
-using Common.Configuration.IgnoredDownloads;
 using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Configuration;
@@ -44,24 +40,14 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> GetQueueCleanerConfig()
     {
         var config = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
-        var dto = config.Adapt<QueueCleanerConfigDto>();
-        return Ok(dto);
-    }
-
-    [HttpGet("content_blocker")]
-    public async Task<IActionResult> GetContentBlockerConfig()
-    {
-        var config = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
-        var dto = config.Adapt<ContentBlockerConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
 
     [HttpGet("download_cleaner")]
     public async Task<IActionResult> GetDownloadCleanerConfig()
     {
         var config = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
-        var dto = config.Adapt<DownloadCleanerConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
     
     [HttpGet("download_client")]
@@ -69,14 +55,6 @@ public class ConfigurationController : ControllerBase
     {
         var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
         var dto = config.Adapt<DownloadClientConfigDto>();
-        return Ok(dto);
-    }
-    
-    [HttpGet("ignored_downloads")]
-    public async Task<IActionResult> GetIgnoredDownloadsConfig()
-    {
-        var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
-        var dto = config.Adapt<IgnoredDownloadsConfigDto>();
         return Ok(dto);
     }
     
@@ -121,7 +99,7 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpPut("queue_cleaner")]
-    public async Task<IActionResult> UpdateQueueCleanerConfig([FromBody] QueueCleanerConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateQueueCleanerConfig([FromBody] QueueCleanerConfig dto)
     {
         // Get existing config
         var config = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
@@ -202,7 +180,7 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpPut("download_cleaner")]
-    public async Task<IActionResult> UpdateDownloadCleanerConfig([FromBody] DownloadCleanerConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateDownloadCleanerConfig([FromBody] DownloadCleanerConfig dto)
     {
         // Get existing config
         var config = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
@@ -248,27 +226,8 @@ public class ConfigurationController : ControllerBase
         return Ok(new { Message = "DownloadClient configuration updated successfully" });
     }
     
-    [HttpPut("ignored_downloads")]
-    public async Task<IActionResult> UpdateIgnoredDownloadsConfig([FromBody] IgnoredDownloadsConfigUpdateDto dto)
-    {
-        // Get existing config
-        var config = await _configManager.GetConfigurationAsync<IgnoredDownloadsConfig>();
-        
-        // Apply updates from DTO
-        dto.Adapt(config);
-        
-        // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
-        if (!result)
-        {
-            return StatusCode(500, "Failed to save IgnoredDownloads configuration");
-        }
-        
-        return Ok(new { Message = "IgnoredDownloads configuration updated successfully" });
-    }
-    
     [HttpPut("general")]
-    public async Task<IActionResult> UpdateGeneralConfig([FromBody] GeneralConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateGeneralConfig([FromBody] GeneralConfig dto)
     {
         // Get existing config to preserve sensitive data
         var config = await _configManager.GetConfigurationAsync<GeneralConfig>();

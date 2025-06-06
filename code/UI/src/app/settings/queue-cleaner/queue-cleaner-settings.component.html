@@ -49,22 +49,6 @@
         </div>
       </div>
 
-      <div class="field-row">
-        <label class="field-label">Run Sequentially</label>
-        <div class="field-input">
-          <p-checkbox formControlName="runSequentially" [binary]="true" inputId="qcRunSequentially"></p-checkbox>
-          <small class="form-helper-text">When enabled, jobs will run one after another instead of in parallel</small>
-        </div>
-      </div>
-
-      <div class="field-row">
-        <label class="field-label">Ignored Downloads Path</label>
-        <div class="field-input">
-          <input pInputText formControlName="ignoredDownloadsPath" />
-          <small class="form-helper-text">Path to the file containing ignored downloads</small>
-        </div>
-      </div>
-
       <!-- Detailed Settings in Accordion -->
       <p-accordion [multiple]="true" [value]="activeAccordionIndices" styleClass="mt-3">
         <!-- Failed Import Settings -->

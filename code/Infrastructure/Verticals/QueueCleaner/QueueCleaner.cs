@@ -1,36 +1,26 @@
 using Common.Configuration.Arr;
-using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Data.Enums;
-using Data.Models.Arr;
 using Data.Models.Arr.Queue;
 using Infrastructure.Configuration;
 using Infrastructure.Helpers;
-using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadClient.Factory;
-using Infrastructure.Verticals.DownloadRemover.Models;
 using Infrastructure.Verticals.Jobs;
-using Infrastructure.Verticals.Notifications;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using LogContext = Serilog.Context.LogContext;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using Infrastructure.Verticals.ContentBlocker;
-using BlocklistSettings = Common.Configuration.QueueCleaner.BlocklistSettings;
 
 namespace Infrastructure.Verticals.QueueCleaner;
 
 public sealed class QueueCleaner : GenericHandler
 {
     private readonly QueueCleanerConfig _config;
-    private readonly IIgnoredDownloadsService _ignoredDownloadsService;
     private readonly IDownloadClientFactory _downloadClientFactory;
     private readonly BlocklistProvider _blocklistProvider;
 
@@ -42,23 +32,17 @@ public sealed class QueueCleaner : GenericHandler
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        IIgnoredDownloadsService ignoredDownloadsService,
         IDownloadClientFactory downloadClientFactory,
         BlocklistProvider blocklistProvider
     ) : base(
         logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager
     )
     {
-        _ignoredDownloadsService = ignoredDownloadsService;
         _downloadClientFactory = downloadClientFactory;
         _blocklistProvider = blocklistProvider;
 
         _config = configManager.GetConfiguration<QueueCleanerConfig>();
-        _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
-        _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
-        _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
-        _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
     
     public override async Task ExecuteAsync()
@@ -83,7 +67,7 @@ public sealed class QueueCleaner : GenericHandler
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
     {
-        IReadOnlyList<string> ignoredDownloads = await _ignoredDownloadsService.GetIgnoredDownloadsAsync();
+        IReadOnlyList<string> ignoredDownloads = _generalConfig.IgnoredDownloads;
         
         using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
         

@@ -1,10 +1,8 @@
-using System.Reflection;
 using Common.Configuration;
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
 using Common.Configuration.General;
-using Common.Configuration.IgnoredDownloads;
 using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
@@ -35,7 +33,6 @@ public class ConfigManager : IConfigManager
             { typeof(QueueCleanerConfig), "queue_cleaner.json" },
             { typeof(DownloadCleanerConfig), "download_cleaner.json" },
             { typeof(DownloadClientConfig), "download_client.json" },
-            { typeof(IgnoredDownloadsConfig), "ignored_downloads.json" },
             { typeof(NotificationsConfig), "notifications.json" }
         };
     }
@@ -113,11 +110,6 @@ public class ConfigManager : IConfigManager
         if (type == typeof(DownloadClientConfig))
         {
             return await _configProvider.ReadConfigurationAsync<DownloadClientConfig>(_settingsPaths[type]);
-        }
-        
-        if (type == typeof(IgnoredDownloadsConfig))
-        {
-            return await _configProvider.ReadConfigurationAsync<IgnoredDownloadsConfig>(_settingsPaths[type]);
         }
         
         if (type == typeof(NotificationsConfig))

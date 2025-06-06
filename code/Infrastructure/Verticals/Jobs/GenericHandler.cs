@@ -1,5 +1,6 @@
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadClient;
+using Common.Configuration.General;
 using Data.Enums;
 using Data.Models.Arr;
 using Data.Models.Arr.Queue;
@@ -17,10 +18,11 @@ namespace Infrastructure.Verticals.Jobs;
 public abstract class GenericHandler : IHandler, IDisposable
 {
     protected readonly ILogger<GenericHandler> _logger;
-    protected DownloadClientConfig _downloadClientConfig = new();
-    protected SonarrConfig _sonarrConfig = new();
-    protected RadarrConfig _radarrConfig = new();
-    protected LidarrConfig _lidarrConfig = new();
+    protected readonly GeneralConfig _generalConfig;
+    protected readonly DownloadClientConfig _downloadClientConfig;
+    protected readonly SonarrConfig _sonarrConfig;
+    protected readonly RadarrConfig _radarrConfig;
+    protected readonly LidarrConfig _lidarrConfig;
     protected readonly IMemoryCache _cache;
     protected readonly IBus _messageBus;
     protected readonly ArrClientFactory _arrClientFactory;
@@ -28,7 +30,7 @@ public abstract class GenericHandler : IHandler, IDisposable
     protected readonly DownloadServiceFactory _downloadServiceFactory;
     
     // Collection of download services for use with multiple clients
-    protected readonly List<IDownloadService> _downloadServices = new();
+    protected readonly List<IDownloadService> _downloadServices = [];
 
     protected GenericHandler(
         ILogger<GenericHandler> logger,
@@ -36,7 +38,8 @@ public abstract class GenericHandler : IHandler, IDisposable
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
-        DownloadServiceFactory downloadServiceFactory
+        DownloadServiceFactory downloadServiceFactory,
+        IConfigManager configManager
     )
     {
         _logger = logger;
@@ -45,6 +48,11 @@ public abstract class GenericHandler : IHandler, IDisposable
         _arrClientFactory = arrClientFactory;
         _arrArrQueueIterator = arrArrQueueIterator;
         _downloadServiceFactory = downloadServiceFactory;
+        _generalConfig = configManager.GetConfiguration<GeneralConfig>();
+        _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
+        _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
+        _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
+        _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
 
     /// <summary>

@@ -59,8 +59,6 @@ export interface QueueCleanerConfig {
   enabled: boolean;
   cronExpression: string;
   jobSchedule?: JobSchedule; // UI-only field, not sent to API
-  runSequentially: boolean;
-  ignoredDownloadsPath: string;
   
   // Nested configurations
   failedImport: FailedImportConfig;
