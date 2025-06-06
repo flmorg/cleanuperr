@@ -52,22 +52,51 @@ export class ConfigurationService {
       runSequentially: response.RunSequentially,
       ignoredDownloadsPath: response.IgnoredDownloadsPath || '',
       
-      // Failed Import settings
+      // Create the nested configuration objects
+      failedImport: {
+        maxStrikes: response.FailedImportMaxStrikes,
+        ignorePrivate: response.FailedImportIgnorePrivate,
+        deletePrivate: response.FailedImportDeletePrivate,
+        ignorePatterns: response.FailedImportIgnorePatterns || []
+      },
+      
+      stalled: {
+        maxStrikes: response.StalledMaxStrikes,
+        resetStrikesOnProgress: response.StalledResetStrikesOnProgress,
+        ignorePrivate: response.StalledIgnorePrivate,
+        deletePrivate: response.StalledDeletePrivate,
+        downloadingMetadataMaxStrikes: response.DownloadingMetadataMaxStrikes
+      },
+      
+      slow: {
+        maxStrikes: response.SlowMaxStrikes,
+        resetStrikesOnProgress: response.SlowResetStrikesOnProgress,
+        ignorePrivate: response.SlowIgnorePrivate,
+        deletePrivate: response.SlowDeletePrivate,
+        minSpeed: response.SlowMinSpeed || '',
+        maxTime: response.SlowMaxTime,
+        ignoreAboveSize: response.SlowIgnoreAboveSize || ''
+      },
+      
+      contentBlocker: {
+        enabled: false, // Default values since they're not in the DTO
+        ignorePrivate: false,
+        deletePrivate: false,
+        sonarrBlocklist: { path: '', type: 'Blacklist' as any },
+        radarrBlocklist: { path: '', type: 'Blacklist' as any },
+        lidarrBlocklist: { path: '', type: 'Blacklist' as any }
+      },
+      
+      // Keep legacy flat properties for backward compatibility
       failedImportMaxStrikes: response.FailedImportMaxStrikes,
       failedImportIgnorePrivate: response.FailedImportIgnorePrivate,
       failedImportDeletePrivate: response.FailedImportDeletePrivate,
       failedImportIgnorePatterns: response.FailedImportIgnorePatterns || [],
-      
-      // Stalled settings
       stalledMaxStrikes: response.StalledMaxStrikes,
       stalledResetStrikesOnProgress: response.StalledResetStrikesOnProgress,
       stalledIgnorePrivate: response.StalledIgnorePrivate,
       stalledDeletePrivate: response.StalledDeletePrivate,
-      
-      // Downloading Metadata settings
       downloadingMetadataMaxStrikes: response.DownloadingMetadataMaxStrikes,
-      
-      // Slow Download settings
       slowMaxStrikes: response.SlowMaxStrikes,
       slowResetStrikesOnProgress: response.SlowResetStrikesOnProgress,
       slowIgnorePrivate: response.SlowIgnorePrivate,
@@ -98,6 +127,7 @@ export class ConfigurationService {
     const { jobSchedule, ...rest } = config;
 
     // Convert to PascalCase for backend
+    // Use nested objects if available, fall back to flat properties if needed
     return {
       Enabled: rest.enabled,
       CronExpression: rest.cronExpression,
@@ -105,28 +135,28 @@ export class ConfigurationService {
       IgnoredDownloadsPath: rest.ignoredDownloadsPath,
       
       // Failed Import settings
-      FailedImportMaxStrikes: rest.failedImportMaxStrikes,
-      FailedImportIgnorePrivate: rest.failedImportIgnorePrivate,
-      FailedImportDeletePrivate: rest.failedImportDeletePrivate,
-      FailedImportIgnorePatterns: rest.failedImportIgnorePatterns,
+      FailedImportMaxStrikes: rest.failedImport?.maxStrikes ?? rest.failedImportMaxStrikes,
+      FailedImportIgnorePrivate: rest.failedImport?.ignorePrivate ?? rest.failedImportIgnorePrivate,
+      FailedImportDeletePrivate: rest.failedImport?.deletePrivate ?? rest.failedImportDeletePrivate,
+      FailedImportIgnorePatterns: rest.failedImport?.ignorePatterns ?? rest.failedImportIgnorePatterns,
       
       // Stalled settings
-      StalledMaxStrikes: rest.stalledMaxStrikes,
-      StalledResetStrikesOnProgress: rest.stalledResetStrikesOnProgress,
-      StalledIgnorePrivate: rest.stalledIgnorePrivate,
-      StalledDeletePrivate: rest.stalledDeletePrivate,
+      StalledMaxStrikes: rest.stalled?.maxStrikes ?? rest.stalledMaxStrikes,
+      StalledResetStrikesOnProgress: rest.stalled?.resetStrikesOnProgress ?? rest.stalledResetStrikesOnProgress,
+      StalledIgnorePrivate: rest.stalled?.ignorePrivate ?? rest.stalledIgnorePrivate,
+      StalledDeletePrivate: rest.stalled?.deletePrivate ?? rest.stalledDeletePrivate,
       
       // Downloading Metadata settings
-      DownloadingMetadataMaxStrikes: rest.downloadingMetadataMaxStrikes,
+      DownloadingMetadataMaxStrikes: rest.stalled?.downloadingMetadataMaxStrikes ?? rest.downloadingMetadataMaxStrikes,
       
       // Slow Download settings
-      SlowMaxStrikes: rest.slowMaxStrikes,
-      SlowResetStrikesOnProgress: rest.slowResetStrikesOnProgress,
-      SlowIgnorePrivate: rest.slowIgnorePrivate,
-      SlowDeletePrivate: rest.slowDeletePrivate,
-      SlowMinSpeed: rest.slowMinSpeed,
-      SlowMaxTime: rest.slowMaxTime,
-      SlowIgnoreAboveSize: rest.slowIgnoreAboveSize,
+      SlowMaxStrikes: rest.slow?.maxStrikes ?? rest.slowMaxStrikes,
+      SlowResetStrikesOnProgress: rest.slow?.resetStrikesOnProgress ?? rest.slowResetStrikesOnProgress,
+      SlowIgnorePrivate: rest.slow?.ignorePrivate ?? rest.slowIgnorePrivate,
+      SlowDeletePrivate: rest.slow?.deletePrivate ?? rest.slowDeletePrivate,
+      SlowMinSpeed: rest.slow?.minSpeed ?? rest.slowMinSpeed,
+      SlowMaxTime: rest.slow?.maxTime ?? rest.slowMaxTime,
+      SlowIgnoreAboveSize: rest.slow?.ignoreAboveSize ?? rest.slowIgnoreAboveSize,
     };
   }
 
