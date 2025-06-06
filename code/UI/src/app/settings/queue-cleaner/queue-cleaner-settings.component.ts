@@ -19,6 +19,7 @@ import { ChipsModule } from "primeng/chips";
 import { ToastModule } from "primeng/toast";
 import { MessageService } from "primeng/api";
 import { SelectModule } from "primeng/select";
+import { AutoCompleteModule } from "primeng/autocomplete";
 
 @Component({
   selector: "app-queue-cleaner-settings",
@@ -37,6 +38,7 @@ import { SelectModule } from "primeng/select";
     ToastModule,
     ByteSizeInputComponent,
     SelectModule,
+    AutoCompleteModule
   ],
   providers: [QueueCleanerConfigStore, MessageService],
   templateUrl: "./queue-cleaner-settings.component.html",
@@ -89,7 +91,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         maxStrikes: [0, [Validators.min(0)]],
         ignorePrivate: [{value: false, disabled: true}],
         deletePrivate: [{value: false, disabled: true}],
-        ignorePatterns: [{value: [], disabled: true}],
+        ignoredPatterns: [{value: [], disabled: true}],
       }),
 
       // Stalled settings - nested group
@@ -160,7 +162,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
             maxStrikes: config.failedImport.maxStrikes,
             ignorePrivate: config.failedImport.ignorePrivate,
             deletePrivate: config.failedImport.deletePrivate,
-            ignorePatterns: config.failedImport.ignorePatterns,
+            ignoredPatterns: config.failedImport.ignoredPatterns,
           };
         } else if (config.failedImportMaxStrikes !== undefined) {
           // Fall back to legacy flat properties if nested ones don't exist
@@ -168,7 +170,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
             maxStrikes: config.failedImportMaxStrikes,
             ignorePrivate: config.failedImportIgnorePrivate,
             deletePrivate: config.failedImportDeletePrivate,
-            ignorePatterns: config.failedImportIgnorePatterns || [],
+            ignoredPatterns: config.failedImportIgnorePatterns || [],
           };
         }
         
@@ -399,7 +401,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
     if (enable) {
       this.queueCleanerForm.get('failedImport')?.get('ignorePrivate')?.enable(options);
       this.queueCleanerForm.get('failedImport')?.get('deletePrivate')?.enable(options);
-      this.queueCleanerForm.get('failedImport')?.get('ignorePatterns')?.enable(options);
+      this.queueCleanerForm.get('failedImport')?.get('ignoredPatterns')?.enable(options);
       
       // Also enable legacy controls if they exist for backward compatibility
       this.queueCleanerForm.get('failedImportIgnorePrivate')?.enable(options);
@@ -408,7 +410,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
     } else {
       this.queueCleanerForm.get('failedImport')?.get('ignorePrivate')?.disable(options);
       this.queueCleanerForm.get('failedImport')?.get('deletePrivate')?.disable(options);
-      this.queueCleanerForm.get('failedImport')?.get('ignorePatterns')?.disable(options);
+      this.queueCleanerForm.get('failedImport')?.get('ignoredPatterns')?.disable(options);
       
       // Also disable legacy controls if they exist
       this.queueCleanerForm.get('failedImportIgnorePrivate')?.disable(options);
@@ -558,7 +560,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
       failedImportMaxStrikes: formValues.failedImport?.maxStrikes,
       failedImportIgnorePrivate: formValues.failedImport?.ignorePrivate,
       failedImportDeletePrivate: formValues.failedImport?.deletePrivate,
-      failedImportIgnorePatterns: formValues.failedImport?.ignorePatterns || [],
+      failedImportIgnorePatterns: formValues.failedImport?.ignoredPatterns || [],
       
       stalledMaxStrikes: formValues.stalled?.maxStrikes,
       stalledResetStrikesOnProgress: formValues.stalled?.resetStrikesOnProgress,
@@ -579,7 +581,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         maxStrikes: formValues.failedImport?.maxStrikes || 0,
         ignorePrivate: formValues.failedImport?.ignorePrivate || false,
         deletePrivate: formValues.failedImport?.deletePrivate || false,
-        ignorePatterns: formValues.failedImport?.ignorePatterns || [],
+        ignoredPatterns: formValues.failedImport?.ignoredPatterns || [],
       },
       
       stalled: {
@@ -641,7 +643,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
         maxStrikes: 0,
         ignorePrivate: false,
         deletePrivate: false,
-        ignorePatterns: [],
+        ignoredPatterns: [],
       },
 
       // Stalled settings (nested)

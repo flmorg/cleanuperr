@@ -107,7 +107,14 @@
             <div class="field-row" formGroupName="failedImport">
               <label class="field-label">Ignored Patterns</label>
               <div class="field-input">
-                <p-chips formControlName="ignorePatterns" placeholder="Add pattern and press Enter"></p-chips>
+                <p-autocomplete
+                  formControlName="ignoredPatterns"
+                  multiple
+                  fluid
+                  [typeahead]="false"
+                  placeholder="Add pattern and press Enter"
+                >
+                </p-autocomplete>
                 <small class="form-helper-text"
                   >Failed imports containing these patterns will be skipped (e.g. <code>sample</code>)</small
                 >

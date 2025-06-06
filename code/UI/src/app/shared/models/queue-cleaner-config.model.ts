@@ -24,7 +24,7 @@ export interface FailedImportConfig {
   maxStrikes: number;
   ignorePrivate: boolean;
   deletePrivate: boolean;
-  ignorePatterns: string[];
+  ignoredPatterns: string[];
 }
 
 export interface StalledConfig {
