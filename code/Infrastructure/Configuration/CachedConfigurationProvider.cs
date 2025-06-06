@@ -43,7 +43,7 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
         };
 
         _fileWatcher.Changed += OnFileChanged;
-        _fileWatcher.Created += OnFileChanged;
+        _fileWatcher.Created += OnFileCreated;
         _fileWatcher.Deleted += OnFileDeleted;
         _fileWatcher.Renamed += OnFileRenamed;
 
@@ -282,6 +282,13 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
         _logger.LogInformation("Configuration file changed: {file}", fileName);
         InvalidateCache(fileName);
     }
+
+    private void OnFileCreated(object sender, FileSystemEventArgs e)
+    {
+        var fileName = Path.GetFileName(e.FullPath);
+        _logger.LogInformation("Configuration file created: {file}", fileName);
+        InvalidateCache(fileName);
+    }
     
     private void OnFileDeleted(object sender, FileSystemEventArgs e)
     {
@@ -304,7 +311,7 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
     public void Dispose()
     {
         _fileWatcher.Changed -= OnFileChanged;
-        _fileWatcher.Created -= OnFileChanged;
+        _fileWatcher.Created -= OnFileCreated;
         _fileWatcher.Deleted -= OnFileDeleted;
         _fileWatcher.Renamed -= OnFileRenamed;
         _fileWatcher.Dispose();
