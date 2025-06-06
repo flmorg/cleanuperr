@@ -66,9 +66,9 @@
       </div>
 
       <!-- Detailed Settings in Accordion -->
-      <p-accordion [multiple]="true" styleClass="mt-3" [(activeIndex)]="activeAccordionIndices">
+      <p-accordion [multiple]="true" [value]="activeAccordionIndices" styleClass="mt-3">
         <!-- Failed Import Settings -->
-        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value">
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="0">
           <p-accordion-header>Failed Import Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="failedImport">
@@ -124,7 +124,7 @@
         </p-accordion-panel>
 
         <!-- Stalled Settings -->
-        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value">
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="1">
           <p-accordion-header>Stalled Download Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
@@ -171,7 +171,7 @@
         </p-accordion-panel>
 
         <!-- Downloading Metadata Settings -->
-        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value">
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="2">
           <p-accordion-header>Downloading Metadata Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
@@ -194,7 +194,7 @@
         </p-accordion-panel>
 
         <!-- Slow Download Settings -->
-        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value">
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="3">
           <p-accordion-header>Slow Download Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="slow">
@@ -282,7 +282,7 @@
         </p-accordion-panel>
 
         <!-- Content Blocker Settings -->
-        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value">
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="4">
           <p-accordion-header>Content Blocker Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="contentBlocker">
