@@ -101,10 +101,10 @@
           </div>
 
           <div class="field-row" formGroupName="failedImport">
-            <label class="field-label">Ignore Patterns</label>
+            <label class="field-label">Ignored Patterns</label>
             <div class="field-input">
               <p-chips formControlName="ignorePatterns" placeholder="Add pattern and press Enter"></p-chips>
-              <small class="form-helper-text">Patterns to ignore (e.g., *sample*)</small>
+              <small class="form-helper-text">Failed imports containing these patterns will be skipped (e.g. <code>sample</code>)</small>
             </div>
           </div>
         </p-accordionTab>

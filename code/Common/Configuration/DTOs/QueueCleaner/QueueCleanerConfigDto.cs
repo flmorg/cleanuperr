@@ -18,11 +18,6 @@ public class QueueCleanerConfigDto
     public string CronExpression { get; set; } = "0 0/5 * * * ?";
     
     /// <summary>
-    /// Whether to run jobs sequentially
-    /// </summary>
-    public bool RunSequentially { get; set; }
-
-    /// <summary>
     /// Maximum number of strikes for failed imports
     /// </summary>
     public ushort FailedImportMaxStrikes { get; set; }
