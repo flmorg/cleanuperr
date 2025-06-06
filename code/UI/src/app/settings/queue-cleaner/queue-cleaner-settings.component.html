@@ -64,14 +64,14 @@
       </div>
 
       <!-- Detailed Settings in Accordion -->
-      <p-accordion [multiple]="true" styleClass="mt-3">
+      <p-accordion [multiple]="true" styleClass="mt-3" [(activeIndex)]="activeAccordionIndices">
         <!-- Failed Import Settings -->
         <p-accordionTab header="Failed Import Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
-          <div class="field-row">
+          <div class="field-row" formGroupName="failedImport">
             <label class="field-label">Max Strikes</label>
             <div class="field-input">
               <p-inputNumber
-                formControlName="failedImportMaxStrikes"
+                formControlName="maxStrikes"
                 [showButtons]="true"
                 [min]="0"
                 [max]="10"
@@ -84,26 +84,26 @@
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="failedImport">
             <label class="field-label">Ignore Private</label>
             <div class="field-input">
-              <p-checkbox formControlName="failedImportIgnorePrivate" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, private torrents will be ignored</small>
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="failedImport">
             <label class="field-label">Delete Private</label>
             <div class="field-input">
-              <p-checkbox formControlName="failedImportDeletePrivate" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, private torrents will be deleted</small>
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="failedImport">
             <label class="field-label">Ignore Patterns</label>
             <div class="field-input">
-              <p-chips formControlName="failedImportIgnorePatterns" placeholder="Add pattern and press Enter"></p-chips>
+              <p-chips formControlName="ignorePatterns" placeholder="Add pattern and press Enter"></p-chips>
               <small class="form-helper-text">Patterns to ignore (e.g., *sample*)</small>
             </div>
           </div>
@@ -111,11 +111,11 @@
 
         <!-- Stalled Settings -->
         <p-accordionTab header="Stalled Download Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
-          <div class="field-row">
+          <div class="field-row" formGroupName="stalled">
             <label class="field-label">Max Strikes</label>
             <div class="field-input">
               <p-inputNumber
-                formControlName="stalledMaxStrikes"
+                formControlName="maxStrikes"
                 [showButtons]="true"
                 [min]="0"
                 [max]="10"
@@ -128,26 +128,26 @@
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="stalled">
             <label class="field-label">Reset Strikes On Progress</label>
             <div class="field-input">
-              <p-checkbox formControlName="stalledResetStrikesOnProgress" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="stalled">
             <label class="field-label">Ignore Private</label>
             <div class="field-input">
-              <p-checkbox formControlName="stalledIgnorePrivate" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, private torrents will be ignored</small>
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="stalled">
             <label class="field-label">Delete Private</label>
             <div class="field-input">
-              <p-checkbox formControlName="stalledDeletePrivate" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, private torrents will be deleted</small>
             </div>
           </div>
@@ -155,8 +155,8 @@
 
         <!-- Downloading Metadata Settings -->
         <p-accordionTab header="Downloading Metadata Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
-          <div class="field-row">
-            <label class="field-label">Max Strikes</label>
+          <div class="field-row" formGroupName="stalled">
+            <label class="field-label">Max Strikes for Downloading Metadata</label>
             <div class="field-input">
               <p-inputNumber
                 formControlName="downloadingMetadataMaxStrikes"
@@ -175,11 +175,11 @@
 
         <!-- Slow Download Settings -->
         <p-accordionTab header="Slow Download Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
-          <div class="field-row">
+          <div class="field-row" formGroupName="slow">
             <label class="field-label">Max Strikes</label>
             <div class="field-input">
               <p-inputNumber
-                formControlName="slowMaxStrikes"
+                formControlName="maxStrikes"
                 [showButtons]="true"
                 [min]="0"
                 [max]="10"
@@ -192,35 +192,35 @@
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="slow">
             <label class="field-label">Reset Strikes On Progress</label>
             <div class="field-input">
-              <p-checkbox formControlName="slowResetStrikesOnProgress" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="slow">
             <label class="field-label">Ignore Private</label>
             <div class="field-input">
-              <p-checkbox formControlName="slowIgnorePrivate" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, private torrents will be ignored</small>
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="slow">
             <label class="field-label">Delete Private</label>
             <div class="field-input">
-              <p-checkbox formControlName="slowDeletePrivate" [binary]="true"></p-checkbox>
+              <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
               <small class="form-helper-text">When enabled, private torrents will be deleted</small>
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="slow">
             <label class="field-label">Minimum Speed</label>
             <div class="field-input">
               <app-byte-size-input
-                formControlName="slowMinSpeed"
+                formControlName="minSpeed"
                 [min]="0"
                 placeholder="Enter minimum speed"
                 helpText="Minimum speed threshold for slow downloads (e.g., 100KB/s)"
@@ -229,11 +229,11 @@
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="slow">
             <label class="field-label">Maximum Time (hours)</label>
             <div class="field-input">
               <p-inputNumber
-                formControlName="slowMaxTime"
+                formControlName="maxTime"
                 [showButtons]="true"
                 [min]="0"
                 [max]="168"
@@ -244,16 +244,117 @@
             </div>
           </div>
 
-          <div class="field-row">
+          <div class="field-row" formGroupName="slow">
             <label class="field-label">Ignore Above Size</label>
             <div class="field-input">
               <app-byte-size-input
-                formControlName="slowIgnoreAboveSize"
+                formControlName="ignoreAboveSize"
                 [min]="0"
                 placeholder="Enter size threshold"
                 helpText="Size threshold above which slow downloads are ignored"
               >
               </app-byte-size-input>
+            </div>
+          </div>
+        </p-accordionTab>
+
+        <!-- Content Blocker Settings -->
+        <p-accordionTab header="Content Blocker Settings" [disabled]="!queueCleanerForm.get('enabled')?.value">
+          <div class="field-row" formGroupName="contentBlocker">
+            <label class="field-label">Enable Content Blocker</label>
+            <div class="field-input">
+              <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+              <small class="form-helper-text">When enabled, content blocker will filter downloads based on blocklists</small>
+            </div>
+          </div>
+
+          <div class="field-row" formGroupName="contentBlocker">
+            <label class="field-label">Ignore Private</label>
+            <div class="field-input">
+              <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
+              <small class="form-helper-text">When enabled, private torrents will be ignored</small>
+            </div>
+          </div>
+
+          <div class="field-row" formGroupName="contentBlocker">
+            <label class="field-label">Delete Private</label>
+            <div class="field-input">
+              <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
+              <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+            </div>
+          </div>
+
+          <div formGroupName="contentBlocker">
+            <div formGroupName="sonarrBlocklist" class="mt-4">
+              <h4>Sonarr Blocklist</h4>
+              <div class="field-row">
+                <label class="field-label">Blocklist Path</label>
+                <div class="field-input">
+                  <input pInputText formControlName="path" />
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">Blocklist Type</label>
+                <div class="field-input">
+                  <p-dropdown
+                    formControlName="type"
+                    [options]="[{label: 'Blacklist', value: 'Blacklist'}, {label: 'Whitelist', value: 'Whitelist'}]"
+                    optionLabel="label"
+                    optionValue="value"
+                  ></p-dropdown>
+                  <small class="form-helper-text">Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small>
+                </div>
+              </div>
+            </div>
+
+            <div formGroupName="radarrBlocklist" class="mt-4">
+              <h4>Radarr Blocklist</h4>
+              <div class="field-row">
+                <label class="field-label">Blocklist Path</label>
+                <div class="field-input">
+                  <input pInputText formControlName="path" />
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">Blocklist Type</label>
+                <div class="field-input">
+                  <p-dropdown
+                    formControlName="type"
+                    [options]="[{label: 'Blacklist', value: 'Blacklist'}, {label: 'Whitelist', value: 'Whitelist'}]"
+                    optionLabel="label"
+                    optionValue="value"
+                  ></p-dropdown>
+                  <small class="form-helper-text">Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small>
+                </div>
+              </div>
+            </div>
+
+            <div formGroupName="lidarrBlocklist" class="mt-4">
+              <h4>Lidarr Blocklist</h4>
+              <div class="field-row">
+                <label class="field-label">Blocklist Path</label>
+                <div class="field-input">
+                  <input pInputText formControlName="path" />
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">Blocklist Type</label>
+                <div class="field-input">
+                  <p-dropdown
+                    formControlName="type"
+                    [options]="[{label: 'Blacklist', value: 'Blacklist'}, {label: 'Whitelist', value: 'Whitelist'}]"
+                    optionLabel="label"
+                    optionValue="value"
+                  ></p-dropdown>
+                  <small class="form-helper-text">Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small>
+                </div>
+              </div>
             </div>
           </div>
         </p-accordionTab>

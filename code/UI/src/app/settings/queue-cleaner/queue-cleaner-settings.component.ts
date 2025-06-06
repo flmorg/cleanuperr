@@ -67,6 +67,9 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
   readonly queueCleanerSaving = this.queueCleanerStore.saving;
   readonly queueCleanerError = this.queueCleanerStore.error;
 
+  // Track active accordion tabs
+  activeAccordionIndices: number[] = [];
+
   // Subject for unsubscribing from observables when component is destroyed
   private destroy$ = new Subject<void>();
 
@@ -265,12 +268,17 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
    * Set up listeners for form control value changes to manage dependent control states
    */
   private setupFormValueChangeListeners(): void {
-    // Listen for changes to the enabled control
-    this.queueCleanerForm.get('enabled')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(enabled => {
-      this.updateMainControlsState(enabled);
-    });
+    // Listen to the 'enabled' control changes
+    this.queueCleanerForm.get('enabled')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(enabled => {
+        this.updateMainControlsState(enabled);
+        
+        // When disabled, close all accordions
+        if (!enabled) {
+          this.activeAccordionIndices = [];
+        }
+      });
 
     // Failed import settings
     this.queueCleanerForm.get('failedImport.maxStrikes')?.valueChanges.pipe(
@@ -350,19 +358,34 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
    * Update the state of main controls based on the 'enabled' control value
    */
   private updateMainControlsState(enabled: boolean): void {
-    const options = { onlySelf: true };
+    // Common controls
+    const jobScheduleGroup = this.queueCleanerForm.get('jobSchedule') as FormGroup;
 
     if (enabled) {
-      this.queueCleanerForm.get('jobSchedule')?.enable(options);
-      this.queueCleanerForm.get('runSequentially')?.enable(options);
-      this.queueCleanerForm.get('ignoredDownloadsPath')?.enable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('enabled')?.enable(options);
+      jobScheduleGroup.get('every')?.enable({emitEvent: false});
+      jobScheduleGroup.get('type')?.enable({emitEvent: false});
+      this.queueCleanerForm.get('runSequentially')?.enable({emitEvent: false});
+      this.queueCleanerForm.get('ignoredDownloadsPath')?.enable({emitEvent: false});
+
+      // Update individual config sections only if they are enabled
+      const failedImportMaxStrikes = this.queueCleanerForm.get('failedImport.maxStrikes')?.value;
+      const stalledMaxStrikes = this.queueCleanerForm.get('stalled.maxStrikes')?.value;
+      const slowMaxStrikes = this.queueCleanerForm.get('slow.maxStrikes')?.value;
+      const contentBlockerEnabled = this.queueCleanerForm.get('contentBlocker.enabled')?.value;
+
+      this.updateFailedImportDependentControls(failedImportMaxStrikes);
+      this.updateStalledDependentControls(stalledMaxStrikes);
+      this.updateSlowDependentControls(slowMaxStrikes);
+      this.updateContentBlockerDependentControls(contentBlockerEnabled);
     } else {
-      this.queueCleanerForm.get('jobSchedule')?.disable(options);
-      this.queueCleanerForm.get('runSequentially')?.disable(options);
-      this.queueCleanerForm.get('ignoredDownloadsPath')?.disable(options);
-      this.queueCleanerForm.get('contentBlocker')?.get('enabled')?.disable(options);
-      this.updateContentBlockerDependentControls(false);
+      jobScheduleGroup.get('every')?.disable({emitEvent: false});
+      jobScheduleGroup.get('type')?.disable({emitEvent: false});
+      this.queueCleanerForm.get('runSequentially')?.disable({emitEvent: false});
+      this.queueCleanerForm.get('ignoredDownloadsPath')?.disable({emitEvent: false});
+
+      // Save current active accordion state before clearing it
+      // This will be empty when we collapse all accordions
+      this.activeAccordionIndices = [];
     }
   }
 
