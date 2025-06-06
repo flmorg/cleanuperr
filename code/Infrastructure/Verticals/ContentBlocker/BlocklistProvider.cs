@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using Common.Configuration.QueueCleaner;
 using Common.Helpers;
@@ -17,7 +19,7 @@ public sealed class BlocklistProvider
     private readonly QueueCleanerConfig _queueCleanerConfig;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
-    private bool _initialized;
+    private readonly Dictionary<InstanceType, string> _configHashes = new();
 
     public BlocklistProvider(
         ILogger<BlocklistProvider> logger,
@@ -35,23 +37,59 @@ public sealed class BlocklistProvider
 
     public async Task LoadBlocklistsAsync()
     {
-        if (_initialized)
-        {
-            _logger.LogTrace("blocklists already loaded");
-            return;
-        }
-        
         try
         {
-            await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Sonarr, InstanceType.Sonarr);
-            await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Radarr, InstanceType.Radarr);
-            await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Lidarr, InstanceType.Lidarr);
+            int changedCount = 0;
+            bool isFirstRun = _configHashes.Count == 0;
             
-            _initialized = true;
+            // Check and update Sonarr blocklist if needed
+            string sonarrHash = GenerateSettingsHash(_queueCleanerConfig.ContentBlocker.Sonarr);
+            if (isFirstRun || !_configHashes.TryGetValue(InstanceType.Sonarr, out string? oldSonarrHash) || sonarrHash != oldSonarrHash)
+            {
+                _logger.LogInformation("Loading Sonarr blocklist: {reason}", 
+                    isFirstRun ? "first run" : "configuration changed");
+                
+                await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Sonarr, InstanceType.Sonarr);
+                _configHashes[InstanceType.Sonarr] = sonarrHash;
+                changedCount++;
+            }
+            
+            // Check and update Radarr blocklist if needed
+            string radarrHash = GenerateSettingsHash(_queueCleanerConfig.ContentBlocker.Radarr);
+            if (isFirstRun || !_configHashes.TryGetValue(InstanceType.Radarr, out string? oldRadarrHash) || radarrHash != oldRadarrHash)
+            {
+                _logger.LogInformation("Loading Radarr blocklist: {reason}", 
+                    isFirstRun ? "first run" : "configuration changed");
+                
+                await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Radarr, InstanceType.Radarr);
+                _configHashes[InstanceType.Radarr] = radarrHash;
+                changedCount++;
+            }
+            
+            // Check and update Lidarr blocklist if needed
+            string lidarrHash = GenerateSettingsHash(_queueCleanerConfig.ContentBlocker.Lidarr);
+            if (isFirstRun || !_configHashes.TryGetValue(InstanceType.Lidarr, out string? oldLidarrHash) || lidarrHash != oldLidarrHash)
+            {
+                _logger.LogInformation("Loading Lidarr blocklist: {reason}", 
+                    isFirstRun ? "first run" : "configuration changed");
+                
+                await LoadPatternsAndRegexesAsync(_queueCleanerConfig.ContentBlocker.Lidarr, InstanceType.Lidarr);
+                _configHashes[InstanceType.Lidarr] = lidarrHash;
+                changedCount++;
+            }
+            
+            if (changedCount > 0)
+            {
+                _logger.LogInformation("Successfully loaded {count} blocklists", changedCount);
+            }
+            else
+            {
+                _logger.LogTrace("All blocklists are already up to date");
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            _logger.LogError("failed to load blocklists");
+            _logger.LogError(ex, "Failed to load blocklists");
             throw;
         }
     }
@@ -148,5 +186,18 @@ public sealed class BlocklistProvider
         
         return (await response.Content.ReadAsStringAsync())
             .Split(['\r','\n'], StringSplitOptions.RemoveEmptyEntries);
+    }
+    
+    private string GenerateSettingsHash(BlocklistSettings blocklistSettings)
+    {
+        // Create a string that represents the relevant blocklist configuration
+        var configStr = $"{blocklistSettings.BlocklistPath ?? string.Empty}|{blocklistSettings.BlocklistType}";
+        
+        // Create SHA256 hash of the configuration string
+        using var sha = SHA256.Create();
+        var bytes = Encoding.UTF8.GetBytes(configStr);
+        var hashBytes = sha.ComputeHash(bytes);
+        
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 }
