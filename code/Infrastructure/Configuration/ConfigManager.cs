@@ -29,7 +29,6 @@ public class ConfigManager : IConfigManager
             { typeof(SonarrConfig), "sonarr.json" },
             { typeof(RadarrConfig), "radarr.json" },
             { typeof(LidarrConfig), "lidarr.json" },
-            { typeof(ContentBlockerConfig), "content_blocker.json" },
             { typeof(QueueCleanerConfig), "queue_cleaner.json" },
             { typeof(DownloadCleanerConfig), "download_cleaner.json" },
             { typeof(DownloadClientConfig), "download_client.json" },
@@ -90,11 +89,6 @@ public class ConfigManager : IConfigManager
         if (type == typeof(LidarrConfig))
         {
             return await _configProvider.ReadConfigurationAsync<LidarrConfig>(_settingsPaths[type]);
-        }
-        
-        if (type == typeof(ContentBlockerConfig))
-        {
-            return await _configProvider.ReadConfigurationAsync<ContentBlockerConfig>(_settingsPaths[type]);
         }
         
         if (type == typeof(QueueCleanerConfig))
