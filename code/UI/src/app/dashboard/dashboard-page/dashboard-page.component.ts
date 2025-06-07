@@ -109,7 +109,7 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
       case 'debug':
       case 'trace':
       case 'verbose':
-        return 'pi pi-bug';
+        return 'pi pi-code';
       default:
         return 'pi pi-circle';
     }
