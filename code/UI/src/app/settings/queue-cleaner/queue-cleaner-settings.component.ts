@@ -165,37 +165,23 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         contentBlocker: config.contentBlocker,
       });
 
-      // Update dependent form control states
+      // First ensure content blocker's enabled state gets properly set based on main enabled status
+      if (config.enabled) {
+        this.queueCleanerForm.get("contentBlocker.enabled")?.enable({ emitEvent: false });
+      } else {
+        this.queueCleanerForm.get("contentBlocker.enabled")?.disable({ emitEvent: false });
+      }
+
+      // Then update all other dependent form control states
       this.updateFormControlDisabledStates(config);
       
       // Store original values for dirty checking
       this.storeOriginalValues();
 
-      // Mark form as pristine after loading initial values
+      // Mark form as pristine since we've just loaded the data
       this.queueCleanerForm.markAsPristine();
-
-      // Set up listeners for form value changes
-      this.setupFormValueChangeListeners();
-    });
-
-    // Effect to emit events when save operation completes or errors
-    effect(() => {
-      const error = this.queueCleanerError();
-      if (error) {
-        this.error.emit(error);
-      }
-    });
-
-    effect(() => {
-      const saving = this.queueCleanerSaving();
-      if (saving === false) {
-        // This will run after a save operation is completed (whether successful or not)
-        // We check if there's no error to determine if it was successful
-        if (!this.queueCleanerError()) {
-          this.saved.emit();
-        }
-      }
-    });
+    });   // Set up listeners for form value changes
+    this.setupFormValueChangeListeners();
   }
 
   /**
@@ -245,18 +231,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       ?.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((strikes) => {
         this.updateSlowDependentControls(strikes);
-      });
-
-    // Content blocker settings
-    this.queueCleanerForm
-      .get("enabled")
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((enabled) => {
-        if (enabled) {
-          this.queueCleanerForm.get("contentBlocker.enabled")?.enable();
-        } else {
-          this.queueCleanerForm.get("contentBlocker.enabled")?.disable();
-        }
       });
 
     // Update content blocker dependent controls when enabled changes
@@ -313,6 +287,9 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     if (enabled) {
       jobScheduleGroup.get("every")?.enable({ emitEvent: false });
       jobScheduleGroup.get("type")?.enable({ emitEvent: false });
+      
+      // Enable the content blocker primary checkbox when queue cleaner is enabled
+      this.queueCleanerForm.get("contentBlocker.enabled")?.enable({ emitEvent: false });
 
       // Update individual config sections only if they are enabled
       const failedImportMaxStrikes = this.queueCleanerForm.get("failedImport.maxStrikes")?.value;
@@ -327,6 +304,9 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     } else {
       jobScheduleGroup.get("every")?.disable({ emitEvent: false });
       jobScheduleGroup.get("type")?.disable({ emitEvent: false });
+      
+      // Disable the content blocker primary checkbox when queue cleaner is disabled
+      this.queueCleanerForm.get("contentBlocker.enabled")?.disable({ emitEvent: false });
 
       // Save current active accordion state before clearing it
       // This will be empty when we collapse all accordions
