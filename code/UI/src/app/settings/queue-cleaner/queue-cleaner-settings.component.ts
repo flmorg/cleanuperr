@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { QueueCleanerConfigStore } from "./queue-cleaner-config.store";
+import { CanComponentDeactivate } from "../../core/guards";
 import {
   QueueCleanerConfig,
   ScheduleUnit,
@@ -52,12 +53,15 @@ import { AutoCompleteModule } from "primeng/autocomplete";
   templateUrl: "./queue-cleaner-settings.component.html",
   styleUrls: ["./queue-cleaner-settings.component.scss"],
 })
-export class QueueCleanerSettingsComponent implements OnDestroy {
+export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDeactivate {
   @Output() saved = new EventEmitter<void>();
   @Output() error = new EventEmitter<string>();
 
   // Queue Cleaner Configuration Form
   queueCleanerForm: FormGroup;
+  
+  // Original form values for tracking changes
+  private originalFormValues: any;
 
   // Schedule unit options for job schedules
   scheduleUnitOptions = [
@@ -82,6 +86,13 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
 
   // Subject for unsubscribing from observables when component is destroyed
   private destroy$ = new Subject<void>();
+
+  /**
+   * Check if component can be deactivated (navigation guard)
+   */
+  canDeactivate(): boolean {
+    return !this.queueCleanerForm.dirty;
+  }
 
   constructor() {
     // Initialize the queue cleaner form with proper disabled states
@@ -140,78 +151,31 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
       }),
     });
 
-    // Set up form control value change subscriptions to manage dependent control states
-    this.setupFormValueChangeListeners();
-
     // Create an effect to update the form when the configuration changes
     effect(() => {
       const config = this.queueCleanerConfig();
-      if (config) {
-        // Build form values for the nested configuration structure
-        const formValues: any = {
-          enabled: config.enabled,
-        };
+      if (!config) return;
 
-        // Add jobSchedule if it exists
-        if (config.jobSchedule) {
-          formValues.jobSchedule = {
-            every: config.jobSchedule.every,
-            type: config.jobSchedule.type,
-          };
-        }
+      this.queueCleanerForm.patchValue({
+        enabled: config.enabled,
+        jobSchedule: config.jobSchedule,
+        failedImport: config.failedImport,
+        stalled: config.stalled,
+        slow: config.slow,
+        contentBlocker: config.contentBlocker,
+      });
 
-        // Add Failed Import settings
-        if (config.failedImport) {
-          formValues.failedImport = {
-            maxStrikes: config.failedImport.maxStrikes,
-            ignorePrivate: config.failedImport.ignorePrivate,
-            deletePrivate: config.failedImport.deletePrivate,
-            ignoredPatterns: config.failedImport.ignoredPatterns,
-          };
-        }
+      // Update dependent form control states
+      this.updateFormControlDisabledStates(config);
+      
+      // Store original values for dirty checking
+      this.storeOriginalValues();
 
-        // Add Stalled settings
-        if (config.stalled) {
-          formValues.stalled = {
-            maxStrikes: config.stalled.maxStrikes,
-            resetStrikesOnProgress: config.stalled.resetStrikesOnProgress,
-            ignorePrivate: config.stalled.ignorePrivate,
-            deletePrivate: config.stalled.deletePrivate,
-            downloadingMetadataMaxStrikes: config.stalled.downloadingMetadataMaxStrikes,
-          };
-        }
+      // Mark form as pristine after loading initial values
+      this.queueCleanerForm.markAsPristine();
 
-        // Add Slow Download settings
-        if (config.slow) {
-          formValues.slow = {
-            maxStrikes: config.slow.maxStrikes,
-            resetStrikesOnProgress: config.slow.resetStrikesOnProgress,
-            ignorePrivate: config.slow.ignorePrivate,
-            deletePrivate: config.slow.deletePrivate,
-            minSpeed: config.slow.minSpeed,
-            maxTime: config.slow.maxTime,
-            ignoreAboveSize: config.slow.ignoreAboveSize,
-          };
-        }
-
-        // Add Content Blocker settings
-        if (config.contentBlocker) {
-          formValues.contentBlocker = {
-            enabled: config.contentBlocker.enabled,
-            ignorePrivate: config.contentBlocker.ignorePrivate,
-            deletePrivate: config.contentBlocker.deletePrivate,
-            sonarrBlocklist: config.contentBlocker.sonarrBlocklist,
-            radarrBlocklist: config.contentBlocker.radarrBlocklist,
-            lidarrBlocklist: config.contentBlocker.lidarrBlocklist,
-          };
-        }
-
-        // Update the form with the current configuration
-        this.queueCleanerForm.patchValue(formValues);
-
-        // Update form control disabled states based on the configuration
-        this.updateFormControlDisabledStates(config);
-      }
+      // Set up listeners for form value changes
+      this.setupFormValueChangeListeners();
     });
 
     // Effect to emit events when save operation completes or errors
@@ -302,6 +266,13 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
       .subscribe((enabled) => {
         this.updateContentBlockerDependentControls(enabled);
       });
+  }
+
+  /**
+   * Store original form values for dirty checking
+   */
+  private storeOriginalValues(): void {
+    this.originalFormValues = this.queueCleanerForm.getRawValue();
   }
 
   /**
@@ -469,26 +440,21 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
    */
   saveQueueCleanerConfig(): void {
     if (this.queueCleanerForm.invalid) {
-      // Mark all fields as touched to show validation errors
       this.markFormGroupTouched(this.queueCleanerForm);
-      this.messageService.add({
-        severity: "error",
-        summary: "Validation Error",
-        detail: "Please correct the errors in the form before saving.",
-        life: 5000,
-      });
+      this.error.emit("Please fix validation errors before saving.");
       return;
     }
 
-    // Get the form values
-    const formValues = this.queueCleanerForm.getRawValue(); // Get values including disabled fields
+    const formValues = this.queueCleanerForm.getRawValue();
 
-    // Build the configuration object with nested structure
+    // Create a clean config object from form values
     const config: QueueCleanerConfig = {
       enabled: formValues.enabled,
-      // The cronExpression will be generated from the jobSchedule when saving
-      cronExpression: "",
-      jobSchedule: formValues.jobSchedule,
+      cronExpression: "", // This field is required but will be generated on the backend
+      jobSchedule: {
+        every: formValues.jobSchedule.every,
+        type: formValues.jobSchedule.type,
+      },
 
       failedImport: {
         maxStrikes: formValues.failedImport?.maxStrikes || 0,
@@ -536,12 +502,35 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
 
     // Save the configuration
     this.queueCleanerStore.saveConfig(config);
+    
+    // Setup a one-time check to mark form as pristine after successful save
+    // This pattern works with signals since we're not trying to pipe the signal itself
+    const checkSaveCompletion = () => {
+      const loading = this.queueCleanerLoading();
+      const error = this.queueCleanerError();
+      
+      if (!loading && !error) {
+        // Mark form as pristine after successful save
+        this.queueCleanerForm.markAsPristine();
+        // Update original values reference
+        this.storeOriginalValues();
+      } else if (!loading && error) {
+        // If there's an error, we can stop checking
+        this.destroy$.next();
+      } else {
+        // If still loading, check again in a moment
+        setTimeout(checkSaveCompletion, 100);
+      }
+    };
+    
+    // Start checking for save completion
+    checkSaveCompletion();
   }
 
   /**
    * Reset the queue cleaner configuration form to default values
    */
-  resetQueueCleanerConfig(): void {
+  resetQueueCleanerConfig(): void {  
     this.queueCleanerForm.reset({
       enabled: false,
       jobSchedule: {
@@ -603,6 +592,9 @@ export class QueueCleanerSettingsComponent implements OnDestroy {
     this.updateStalledDependentControls(0);
     this.updateSlowDependentControls(0);
     this.updateContentBlockerDependentControls(false);
+    
+    // Mark form as dirty so the save button is enabled after reset
+    this.queueCleanerForm.markAsDirty();
   }
 
   /**

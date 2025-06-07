@@ -11,6 +11,7 @@ import { MenuModule } from 'primeng/menu';
 import { SidebarModule } from 'primeng/sidebar';
 import { DividerModule } from 'primeng/divider';
 import { RippleModule } from 'primeng/ripple';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 // Custom Components
 import { SidebarContentComponent } from '../sidebar-content/sidebar-content.component';
@@ -35,6 +36,7 @@ interface MenuItem {
     SidebarModule,
     DividerModule,
     RippleModule,
+    ConfirmDialogModule,
     SidebarContentComponent
   ],
   templateUrl: './main-layout.component.html',

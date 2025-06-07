@@ -1,13 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
+import { CanComponentDeactivate } from '../../core/guards';
 
 // PrimeNG Components
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { ButtonModule } from 'primeng/button';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 // Custom Components and Services
 import { QueueCleanerSettingsComponent } from '../queue-cleaner/queue-cleaner-settings.component';
@@ -34,14 +36,15 @@ interface Category {
     CardModule,
     ButtonModule,
     ToastModule,
+    ConfirmDialogModule,
     SettingsCardComponent,
     QueueCleanerSettingsComponent
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
   styleUrl: './settings-page.component.scss'
 })
-export class SettingsPageComponent implements OnInit {
+export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
   logLevels: LogLevel[] = [
     { name: 'Trace', value: 'trace' },
     { name: 'Debug', value: 'debug' },
@@ -69,7 +72,25 @@ export class SettingsPageComponent implements OnInit {
   // Services
   private messageService = inject(MessageService);
   
+  // Reference to the queue cleaner settings component
+  @ViewChild(QueueCleanerSettingsComponent) queueCleanerSettings!: QueueCleanerSettingsComponent;
+
   ngOnInit(): void {
     // Future implementation for other settings sections
+  }
+  
+  /**
+   * Implements CanComponentDeactivate interface
+   * Check if any settings components have unsaved changes
+   */
+  canDeactivate(): boolean {
+    // Check if queue cleaner settings has unsaved changes
+    if (this.queueCleanerSettings?.canDeactivate() === false) {
+      return false;
+    }
+    
+    // Add other settings components checks here in the future
+    
+    return true;
   }
 }
