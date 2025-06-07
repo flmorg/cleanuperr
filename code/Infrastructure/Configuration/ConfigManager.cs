@@ -42,23 +42,20 @@ public class ConfigManager : IConfigManager
         {
             try
             {
-                object? config;
-                
                 if (_configProvider.FileExists(path))
                 {
-                    config = await ReadConfigurationAsync(type);
+                    _logger.LogTrace("Configuration file exists: {path}", path);
+                    return;
                 }
-                else
-                {
-                    config = Activator.CreateInstance(type);
-                }
+
+                object? config = Activator.CreateInstance(type);
 
                 if (config is null)
                 {
                     throw new InvalidOperationException($"Failed to create instance of {type}");
                 }
                 
-                // Create the file with default values or migrate to new model
+                // Create the file with default values
                 await _configProvider.WriteConfigurationAsync(path, config);
             }
             catch (Exception ex)

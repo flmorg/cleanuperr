@@ -225,7 +225,7 @@ public class CachedConfigurationProvider : IConfigurationProvider, IDisposable
     }
 
     // Private helper methods
-    private string GetCacheKey<T>(string fileName)
+    private static string GetCacheKey<T>(string fileName)
     {
         return $"{fileName}_{typeof(T).FullName}";
     }

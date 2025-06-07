@@ -188,7 +188,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
                 var backupPath = $"{fullPath}.bak";
                 try
                 {
-                    File.Copy(fullPath, backupPath, true);
+                    // File.Copy(fullPath, backupPath, true);
                     _logger.LogDebug("Created backup of configuration file: {backup}", backupPath);
                 }
                 catch (Exception ex)
@@ -233,7 +233,7 @@ public class JsonConfigurationProvider : IConfigurationProvider
                 var backupPath = $"{fullPath}.bak";
                 try
                 {
-                    File.Copy(fullPath, backupPath, true);
+                    // File.Copy(fullPath, backupPath, true);
                     _logger.LogDebug("Created backup of configuration file: {backup}", backupPath);
                 }
                 catch (Exception ex)
