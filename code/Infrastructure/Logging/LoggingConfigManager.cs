@@ -36,27 +36,12 @@ public class LoggingConfigManager
     /// Updates the global log level and persists the change to configuration
     /// </summary>
     /// <param name="level">The new log level</param>
-    public async Task SetLogLevel(LogEventLevel level)
+    public void SetLogLevel(LogEventLevel level)
     {
+        _logger.LogCritical("Setting global log level to {level}", level);
+        
         // Change the level in the switch
         _levelSwitch.MinimumLevel = level;
-        
-        _logger.LogInformation("Setting global log level to {level}", level);
-        
-        // Update configuration
-        try 
-        {
-            var config = await _configManager.GetConfigurationAsync<GeneralConfig>();
-
-            config.LogLevel = level;
-            
-            // TODO use SetProp
-            await _configManager.SaveConfigurationAsync(config);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to update log level in configuration");
-        }
     }
     
     /// <summary>

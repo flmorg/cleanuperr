@@ -11,6 +11,7 @@ using Common.Configuration.General;
 using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
 using Infrastructure.Configuration;
+using Infrastructure.Logging;
 using Infrastructure.Models;
 using Infrastructure.Services.Interfaces;
 using Mapster;
@@ -25,15 +26,19 @@ public class ConfigurationController : ControllerBase
     private readonly ILogger<ConfigurationController> _logger;
     private readonly IConfigManager _configManager;
     private readonly IJobManagementService _jobManagementService;
+    private readonly LoggingConfigManager _loggingConfigManager;
 
     public ConfigurationController(
         ILogger<ConfigurationController> logger,
         IConfigManager configManager,
-        IJobManagementService jobManagementService)
+        IJobManagementService jobManagementService,
+        LoggingConfigManager loggingConfigManager
+    )
     {
         _logger = logger;
         _configManager = configManager;
         _jobManagementService = jobManagementService;
+        _loggingConfigManager = loggingConfigManager;
     }
 
     [HttpGet("queue_cleaner")]
@@ -240,6 +245,9 @@ public class ConfigurationController : ControllerBase
         
         // Persist the configuration
         var result = await _configManager.SaveConfigurationAsync(config);
+
+        _loggingConfigManager.SetLogLevel(config.LogLevel);
+        
         if (!result)
         {
             return StatusCode(500, "Failed to save General configuration");
