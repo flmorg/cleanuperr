@@ -5,6 +5,7 @@ using Data.Enums;
 using Data.Models.Arr;
 using Data.Models.Arr.Queue;
 using Infrastructure.Configuration;
+using Infrastructure.Events;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadRemover.Models;
@@ -28,6 +29,7 @@ public abstract class GenericHandler : IHandler, IDisposable
     protected readonly ArrClientFactory _arrClientFactory;
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly DownloadServiceFactory _downloadServiceFactory;
+    private readonly EventPublisher _eventPublisher;
     
     // Collection of download services for use with multiple clients
     protected readonly List<IDownloadService> _downloadServices = [];
@@ -39,7 +41,8 @@ public abstract class GenericHandler : IHandler, IDisposable
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        IConfigManager configManager
+        IConfigManager configManager,
+        EventPublisher eventPublisher
     )
     {
         _logger = logger;
@@ -48,6 +51,7 @@ public abstract class GenericHandler : IHandler, IDisposable
         _arrClientFactory = arrClientFactory;
         _arrArrQueueIterator = arrArrQueueIterator;
         _downloadServiceFactory = downloadServiceFactory;
+        _eventPublisher = eventPublisher;
         _generalConfig = configManager.GetConfiguration<GeneralConfig>();
         _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
         _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
@@ -199,9 +203,9 @@ public abstract class GenericHandler : IHandler, IDisposable
 
             await _messageBus.Publish(removeRequest);
         }
-        
-        _cache.Set(downloadRemovalKey, true);
+
         _logger.LogInformation("item marked for removal | {title} | {url}", record.Title, instance.Url);
+        await _eventPublisher.PublishAsync(EventType.DownloadMarkedForDeletion, "Download marked for deletion", EventSeverity.Important);
     }
     
     protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record, bool isPack = false)

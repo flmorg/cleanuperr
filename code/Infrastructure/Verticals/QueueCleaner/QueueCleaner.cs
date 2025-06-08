@@ -3,6 +3,7 @@ using Common.Configuration.QueueCleaner;
 using Data.Enums;
 using Data.Models.Arr.Queue;
 using Infrastructure.Configuration;
+using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
@@ -33,10 +34,11 @@ public sealed class QueueCleaner : GenericHandler
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
         IDownloadClientFactory downloadClientFactory,
-        BlocklistProvider blocklistProvider
+        BlocklistProvider blocklistProvider,
+        EventPublisher eventPublisher
     ) : base(
         logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager, eventPublisher
     )
     {
         _downloadClientFactory = downloadClientFactory;

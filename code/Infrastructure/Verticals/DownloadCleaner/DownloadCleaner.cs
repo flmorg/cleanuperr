@@ -4,6 +4,7 @@ using Common.Configuration.DownloadClient;
 using Data.Enums;
 using Data.Models.Arr.Queue;
 using Infrastructure.Configuration;
+using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
@@ -31,10 +32,11 @@ public sealed class DownloadCleaner : GenericHandler
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
-        DownloadServiceFactory downloadServiceFactory
+        DownloadServiceFactory downloadServiceFactory,
+        EventPublisher eventPublisher
     ) : base(
         logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager, eventPublisher
     )
     {
         _config = configManager.GetConfiguration<DownloadCleanerConfig>();

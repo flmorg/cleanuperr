@@ -21,7 +21,7 @@ public class GeneralConfigDto
     /// <summary>
     /// HTTP timeout in seconds
     /// </summary>
-    public ushort HttpTimeout { get; set; } = 100;
+    public ushort HttpTimeout { get; set; } = 30;
     
     /// <summary>
     /// Certificate validation type for HTTP requests

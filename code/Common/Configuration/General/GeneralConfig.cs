@@ -10,7 +10,7 @@ public sealed record GeneralConfig : IConfig
     
     public ushort HttpMaxRetries { get; init; }
     
-    public ushort HttpTimeout { get; init; } = 100;
+    public ushort HttpTimeout { get; init; } = 30;
     
     public CertificateValidationType HttpCertificateValidation { get; init; } = CertificateValidationType.Enabled;
 

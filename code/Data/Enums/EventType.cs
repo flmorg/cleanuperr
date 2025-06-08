@@ -9,5 +9,6 @@ public enum EventType
     SlowTimeStrike,
     QueueItemDeleted,
     DownloadCleaned,
-    CategoryChanged
+    CategoryChanged,
+    DownloadMarkedForDeletion
 }
