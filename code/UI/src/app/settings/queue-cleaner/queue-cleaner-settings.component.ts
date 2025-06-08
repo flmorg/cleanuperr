@@ -110,7 +110,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
 
       // Failed Import settings - nested group
       failedImport: this.formBuilder.group({
-        maxStrikes: [0, [Validators.min(0)]],
+        maxStrikes: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
         ignorePrivate: [{ value: false, disabled: true }],
         deletePrivate: [{ value: false, disabled: true }],
         ignoredPatterns: [{ value: [], disabled: true }],
@@ -118,21 +118,21 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
 
       // Stalled settings - nested group
       stalled: this.formBuilder.group({
-        maxStrikes: [0, [Validators.min(0)]],
+        maxStrikes: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
         resetStrikesOnProgress: [{ value: false, disabled: true }],
         ignorePrivate: [{ value: false, disabled: true }],
         deletePrivate: [{ value: false, disabled: true }],
-        downloadingMetadataMaxStrikes: [0, [Validators.min(0)]],
+        downloadingMetadataMaxStrikes: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
       }),
 
       // Slow Download settings - nested group
       slow: this.formBuilder.group({
-        maxStrikes: [0, [Validators.min(0)]],
+        maxStrikes: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
         resetStrikesOnProgress: [{ value: false, disabled: true }],
         ignorePrivate: [{ value: false, disabled: true }],
         deletePrivate: [{ value: false, disabled: true }],
         minSpeed: [{ value: "", disabled: true }],
-        maxTime: [{ value: 0, disabled: true }],
+        maxTime: [{ value: 0, disabled: true }, [Validators.required, Validators.min(0), Validators.max(168)]],
         ignoreAboveSize: [{ value: "", disabled: true }],
       }),
 

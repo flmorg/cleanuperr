@@ -42,15 +42,10 @@
             <p-inputNumber
               formControlName="every"
               [showButtons]="true"
-              [min]="1"
-              [max]="59"
               buttonLayout="horizontal"
               inputStyleClass="schedule-value"
             >
             </p-inputNumber>
-            <small *ngIf="hasNestedError('jobSchedule', 'every', 'required')" class="p-error">This field is required</small>
-            <small *ngIf="hasNestedError('jobSchedule', 'every', 'min')" class="p-error">Value must be at least 1</small>
-            <small *ngIf="hasNestedError('jobSchedule', 'every', 'max')" class="p-error">Value cannot exceed 59</small>
 
             <p-selectButton
               formControlName="type"
@@ -60,6 +55,8 @@
             >
             </p-selectButton>
           </div>
+          <small *ngIf="hasNestedError('jobSchedule', 'every', 'required')" class="p-error">This field is required</small>
+          <small *ngIf="hasNestedError('jobSchedule', 'every', 'min')" class="p-error">Value must be at least 1</small>
           <small class="form-helper-text">How often the queue cleaner should run</small>
         </div>
       </div>
@@ -128,15 +125,18 @@
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">Max Strikes</label>
-              <div class="field-input">
-                <p-inputNumber
-                  formControlName="maxStrikes"
-                  [showButtons]="true"
-                  [min]="0"
-                  [max]="10"
-                  buttonLayout="horizontal"
-                >
-                </p-inputNumber>
+              <div>
+                <div class="field-input">
+                  <p-inputNumber
+                    formControlName="maxStrikes"
+                    [showButtons]="true"
+                    [min]="0"
+                    buttonLayout="horizontal"
+                  >
+                  </p-inputNumber>
+                </div>
+                <small *ngIf="hasNestedError('stalled', 'maxStrikes', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('stalled', 'maxStrikes', 'max')" class="p-error">Value cannot exceed 100</small>
                 <small class="form-helper-text"
                   >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
                 >
@@ -175,15 +175,18 @@
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">Max Strikes for Downloading Metadata</label>
-              <div class="field-input">
-                <p-inputNumber
-                  formControlName="downloadingMetadataMaxStrikes"
-                  [showButtons]="true"
-                  [min]="0"
-                  buttonLayout="horizontal"
-                >
-                </p-inputNumber>
-                <small *ngIf="hasNestedError('stalled', 'downloadingMetadataMaxStrikes', 'min')" class="p-error">Value must be at least 0</small>
+              <div>
+                <div class="field-input">
+                  <p-inputNumber
+                    formControlName="downloadingMetadataMaxStrikes"
+                    [showButtons]="true"
+                    [min]="0"
+                    buttonLayout="horizontal"
+                  >
+                  </p-inputNumber>
+                </div>
+                <small *ngIf="hasNestedError('stalled', 'downloadingMetadataMaxStrikes', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('stalled', 'downloadingMetadataMaxStrikes', 'max')" class="p-error">Value cannot exceed 100</small>
                 <small class="form-helper-text"
                   >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
                 >
@@ -198,15 +201,18 @@
           <p-accordion-content>
             <div class="field-row" formGroupName="slow">
               <label class="field-label">Max Strikes</label>
-              <div class="field-input">
-                <p-inputNumber
-                  formControlName="maxStrikes"
-                  [showButtons]="true"
-                  [min]="0"
-                  [max]="10"
-                  buttonLayout="horizontal"
-                >
-                </p-inputNumber>
+              <div>
+                <div class="field-input">
+                  <p-inputNumber
+                    formControlName="maxStrikes"
+                    [showButtons]="true"
+                    [min]="0"
+                    buttonLayout="horizontal"
+                  >
+                  </p-inputNumber>
+                </div>
+                <small *ngIf="hasNestedError('slow', 'maxStrikes', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('slow', 'maxStrikes', 'max')" class="p-error">Value cannot exceed 100</small>
                 <small class="form-helper-text"
                   >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
                 >
@@ -257,12 +263,12 @@
                   formControlName="maxTime"
                   [showButtons]="true"
                   [min]="0"
-                  [max]="168"
                   buttonLayout="horizontal"
                 >
                 </p-inputNumber>
-                <small *ngIf="hasNestedError('slow', 'maxTime', 'min')" class="p-error">Value must be at least 0</small>
-                <small class="form-helper-text">Maximum time allowed for slow downloads (in hours)</small>
+                <small *ngIf="hasNestedError('slow', 'maxTime', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('slow', 'maxTime', 'max')" class="p-error">Value cannot exceed 168</small>
+                <small class="form-helper-text">Maximum time allowed for slow downloads (0 means disabled)</small>
               </div>
             </div>
 
