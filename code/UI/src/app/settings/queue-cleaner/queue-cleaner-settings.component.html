@@ -1,3 +1,5 @@
+<p-toast></p-toast>
+
 <p-card styleClass="settings-card h-full">
   <ng-template pTemplate="header">
     <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
@@ -20,6 +22,8 @@
       loadingMessage="Loading settings..."
       noConnectionMessage="Could not connect to server"
     ></app-loading-error-state>
+
+
 
     <!-- Form Content - only shown when not loading and no error -->
     <form *ngIf="!queueCleanerLoading() && !queueCleanerError()" [formGroup]="queueCleanerForm" class="p-fluid">

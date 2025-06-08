@@ -421,8 +421,20 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
    * Save the queue cleaner configuration
    */
   saveQueueCleanerConfig(): void {
+    // Validate form before saving
     if (this.queueCleanerForm.invalid) {
+      // Mark all controls as touched to show validation errors
       this.markFormGroupTouched(this.queueCleanerForm);
+      
+      // Show error toast notification
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: 'Please correct the form errors before saving.',
+        life: 5000
+      });
+      
+      // Emit error for parent components
       this.error.emit("Please fix validation errors before saving.");
       return;
     }
@@ -496,9 +508,25 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         this.queueCleanerForm.markAsPristine();
         // Update original values reference
         this.storeOriginalValues();
+        // Emit saved event
+        this.saved.emit();
+        // Show success message
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Queue cleaner configuration saved successfully.',
+          life: 3000
+        });
       } else if (!loading && error) {
         // If there's an error, we can stop checking
         this.destroy$.next();
+        // Show error message
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to save queue cleaner configuration.',
+          life: 5000
+        });
       } else {
         // If still loading, check again in a moment
         setTimeout(checkSaveCompletion, 100);
