@@ -67,15 +67,15 @@
 }
 
 /* Form layout and structure */
-.field-row {
-  display: flex;
-  margin-bottom: 1.25rem;
-  align-items: flex-start;
+// .field-row {
+//   display: flex;
+//   margin-bottom: 1.25rem;
+//   align-items: flex-start;
   
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
+//   &:last-child {
+//     margin-bottom: 0;
+//   }
+// }
 
 .field-label {
   flex: 0 0 200px;
@@ -127,9 +127,9 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .field-row {
-    flex-direction: column;
-  }
+  // .field-row {
+  //   flex-direction: column;
+  // }
   
   .field-label {
     flex: 0 0 auto;

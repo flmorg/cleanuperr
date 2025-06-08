@@ -536,15 +536,9 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
           this.queueCleanerForm.markAsPristine();
           // Update original values reference
           this.storeOriginalValues();
-          // Emit saved event
+          // Emit saved event (parent will display success message)
           this.saved.emit();
-          // Show success message
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Queue cleaner configuration saved successfully.',
-            life: 3000
-          });
+          // No success message here as it's handled by parent component
         } else if (!loading && error) {
           // If there's an error, we can stop checking
           this.destroy$.next();
