@@ -1,0 +1,169 @@
+<p-toast></p-toast>
+
+<p-card styleClass="settings-card h-full">
+  <ng-template pTemplate="header">
+    <div class="flex justify-content-between align-items-center">
+      <h1 class="card-title">General Settings</h1>
+      <div class="flex gap-2">
+        <p-button
+          label="Reset"
+          styleClass="p-button-outlined p-button-secondary"
+          [disabled]="!generalForm.dirty"
+          (click)="resetGeneralConfig()"
+        ></p-button>
+        <p-button
+          label="Save"
+          styleClass="p-button-primary"
+          [disabled]="!generalForm.dirty"
+          (click)="saveGeneralConfig()"
+        ></p-button>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="card-content">
+    <!-- Loading/Error Component -->
+    <app-loading-error-state
+      *ngIf="generalLoading() || generalError()"
+      [loading]="generalLoading()"
+      [error]="generalError()"
+      loadingMessage="Loading settings..."
+      noConnectionMessage="Could not connect to server"
+    ></app-loading-error-state>
+
+    <!-- Settings Form -->
+    <form *ngIf="!generalLoading() && !generalError()" [formGroup]="generalForm" class="p-fluid">
+      <!-- Dry Run -->
+      <div class="field mb-4">
+        <div class="p-field-checkbox">
+          <p-checkbox
+            formControlName="dryRun"
+            [binary]="true"
+            inputId="dryRun"
+          ></p-checkbox>
+          <label for="dryRun" class="ml-2">Dry Run</label>
+        </div>
+        <small class="text-secondary">When enabled, no changes will be made to the system</small>
+      </div>
+
+      <!-- HTTP Settings -->
+      <div class="field-group mb-4">
+        <h3 class="field-group-title">HTTP Settings</h3>
+        
+        <!-- HTTP Max Retries -->
+        <div class="field mb-3">
+          <label for="httpMaxRetries">Maximum HTTP Retries</label>
+          <p-inputNumber
+            formControlName="httpMaxRetries"
+            inputId="httpMaxRetries"
+            [showButtons]="true"
+            [min]="0"
+            buttonLayout="horizontal"
+            decrementButtonClass="p-button-secondary"
+            incrementButtonClass="p-button-secondary"
+            incrementButtonIcon="pi pi-plus"
+            decrementButtonIcon="pi pi-minus"
+          ></p-inputNumber>
+          <small *ngIf="hasError('httpMaxRetries', 'min')" class="p-error">Minimum value is 0</small>
+        </div>
+        
+        <!-- HTTP Timeout -->
+        <div class="field mb-3">
+          <label for="httpTimeout">HTTP Timeout (seconds)</label>
+          <p-inputNumber
+            formControlName="httpTimeout"
+            inputId="httpTimeout"
+            [showButtons]="true"
+            [min]="1"
+            buttonLayout="horizontal"
+            decrementButtonClass="p-button-secondary"
+            incrementButtonClass="p-button-secondary"
+            incrementButtonIcon="pi pi-plus"
+            decrementButtonIcon="pi pi-minus"
+          ></p-inputNumber>
+          <small *ngIf="hasError('httpTimeout', 'required')" class="p-error">This field is required</small>
+          <small *ngIf="hasError('httpTimeout', 'min')" class="p-error">Minimum value is 1</small>
+        </div>
+        
+        <!-- HTTP Certificate Validation -->
+        <div class="field mb-3">
+          <label for="httpCertificateValidation">Certificate Validation</label>
+          <p-select
+            formControlName="httpCertificateValidation"
+            inputId="httpCertificateValidation"
+            [options]="certificateValidationOptions"
+          ></p-select>
+          <small class="text-secondary">Enable or disable certificate validation for HTTP requests</small>
+        </div>
+      </div>
+
+      <!-- Search Settings -->
+      <div class="field-group mb-4">
+        <h3 class="field-group-title">Search Settings</h3>
+        
+        <!-- Search Enabled -->
+        <div class="field mb-3">
+          <div class="p-field-checkbox">
+            <p-checkbox
+              formControlName="searchEnabled"
+              [binary]="true"
+              inputId="searchEnabled"
+            ></p-checkbox>
+            <label for="searchEnabled" class="ml-2">Enable Search</label>
+          </div>
+          <small class="text-secondary">When enabled, the application will periodically search for new content</small>
+        </div>
+        
+        <!-- Search Delay -->
+        <div class="field mb-3">
+          <label for="searchDelay">Search Delay (seconds)</label>
+          <p-inputNumber
+            formControlName="searchDelay"
+            inputId="searchDelay"
+            [showButtons]="true"
+            [min]="1"
+            buttonLayout="horizontal"
+            decrementButtonClass="p-button-secondary"
+            incrementButtonClass="p-button-secondary"
+            incrementButtonIcon="pi pi-plus"
+            decrementButtonIcon="pi pi-minus"
+          ></p-inputNumber>
+          <small *ngIf="hasError('searchDelay', 'required')" class="p-error">This field is required</small>
+          <small *ngIf="hasError('searchDelay', 'min')" class="p-error">Minimum value is 1</small>
+        </div>
+      </div>
+
+      <!-- Log Level -->
+      <div class="field-group mb-4">
+        <h3 class="field-group-title">Logging</h3>
+        
+        <div class="field mb-3">
+          <label for="logLevel">Log Level</label>
+          <p-select
+            formControlName="logLevel"
+            inputId="logLevel"
+            [options]="logLevelOptions"
+          ></p-select>
+          <small class="text-secondary">Select the minimum log level to display</small>
+        </div>
+      </div>
+
+      <!-- Ignored Downloads -->
+      <div class="field-group">
+        <h3 class="field-group-title">Ignored Downloads</h3>
+        
+        <div class="field">
+          <label for="ignoredDownloads">Ignored Downloads</label>
+          <p-chips
+            formControlName="ignoredDownloads"
+            inputId="ignoredDownloads"
+            [allowDuplicate]="false"
+            placeholder="Add download pattern to ignore"
+            separator=","
+          ></p-chips>
+          <small class="text-secondary">Downloads matching these patterns will be ignored</small>
+        </div>
+      </div>
+    </form>
+  </div>
+</p-card>

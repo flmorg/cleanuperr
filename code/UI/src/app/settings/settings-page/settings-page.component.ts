@@ -14,6 +14,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 // Custom Components and Services
 import { QueueCleanerSettingsComponent } from '../queue-cleaner/queue-cleaner-settings.component';
 import { SettingsCardComponent } from '../components/settings-card/settings-card.component';
+import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
 
 // Define interfaces for settings page
 interface LogLevel {
@@ -38,7 +39,8 @@ interface Category {
     ToastModule,
     ConfirmDialogModule,
     SettingsCardComponent,
-    QueueCleanerSettingsComponent
+    QueueCleanerSettingsComponent,
+    GeneralSettingsComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
@@ -72,8 +74,9 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
   // Services
   private messageService = inject(MessageService);
   
-  // Reference to the queue cleaner settings component
+  // Reference to the settings components
   @ViewChild(QueueCleanerSettingsComponent) queueCleanerSettings!: QueueCleanerSettingsComponent;
+  @ViewChild(GeneralSettingsComponent) generalSettings!: GeneralSettingsComponent;
 
   ngOnInit(): void {
     // Future implementation for other settings sections
@@ -89,7 +92,10 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
       return false;
     }
     
-    // Add other settings components checks here in the future
+    // Check if general settings has unsaved changes
+    if (this.generalSettings?.canDeactivate() === false) {
+      return false;
+    }
     
     return true;
   }

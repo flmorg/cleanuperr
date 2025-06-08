@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.field-group-title {
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.field-group {
+  border-radius: 8px;
+  padding: 1.25rem;
+  background-color: var(--surface-card);
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card-content {
+  padding: 0 0.5rem;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.text-secondary {
+  color: var(--text-color-secondary);
+}
