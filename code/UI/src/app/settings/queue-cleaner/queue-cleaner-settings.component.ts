@@ -29,6 +29,7 @@ import { ToastModule } from "primeng/toast";
 import { MessageService } from "primeng/api";
 import { SelectModule } from "primeng/select";
 import { AutoCompleteModule } from "primeng/autocomplete";
+import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 
 @Component({
   selector: "app-queue-cleaner-settings",
@@ -48,6 +49,7 @@ import { AutoCompleteModule } from "primeng/autocomplete";
     ByteSizeInputComponent,
     SelectModule,
     AutoCompleteModule,
+    LoadingErrorStateComponent,
   ],
   providers: [QueueCleanerConfigStore, MessageService],
   templateUrl: "./queue-cleaner-settings.component.html",

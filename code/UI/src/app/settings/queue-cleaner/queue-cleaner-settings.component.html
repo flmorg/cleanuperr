@@ -12,7 +12,17 @@
   </ng-template>
 
   <div class="card-content">
-    <form [formGroup]="queueCleanerForm" class="p-fluid">
+    <!-- Loading and Error State Component -->
+    <app-loading-error-state
+      *ngIf="queueCleanerLoading() || queueCleanerError()"
+      [loading]="queueCleanerLoading()"
+      [error]="queueCleanerError()"
+      loadingMessage="Loading settings..."
+      noConnectionMessage="Could not connect to server"
+    ></app-loading-error-state>
+    
+    <!-- Form Content - only shown when not loading and no error -->
+    <form *ngIf="!queueCleanerLoading() && !queueCleanerError()" [formGroup]="queueCleanerForm" class="p-fluid">
       <!-- Main Settings -->
       <div class="field-row">
         <label class="field-label">Enable Queue Cleaner</label>
