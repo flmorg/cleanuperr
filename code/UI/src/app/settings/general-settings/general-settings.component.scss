@@ -3,30 +3,76 @@
   height: 100%;
 }
 
-.field-group-title {
-  font-size: 1.15rem;
-  margin-bottom: 1rem;
-  font-weight: 600;
-  color: var(--primary-color);
+.settings-card {
+  height: 100%;
+  overflow: hidden;
+
+  .p-card-content {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    overflow-y: auto;
+    max-height: calc(100% - 50px);
+  }
 }
 
-.field-group {
-  border-radius: 8px;
-  padding: 1.25rem;
-  background-color: var(--surface-card);
+.header-title-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .card-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .card-subtitle {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+.field-row {
+  display: flex;
+  align-items: flex-start;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  
+  @media screen and (max-width: 768px) {
+    flex-direction: column;
+  }
 }
 
-.card-content {
-  padding: 0 0.5rem;
+.field-label {
+  width: 200px;
+  font-weight: 500;
+  padding-top: 0.5rem;
+  
+  @media screen and (max-width: 768px) {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
 }
 
-.card-title {
-  margin: 0;
-  font-size: 1.5rem;
+.field-input {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  
+  .form-helper-text {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+  
+  .p-error {
+    font-size: 0.75rem;
+  }
 }
 
-.text-secondary {
-  color: var(--text-color-secondary);
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
 }
