@@ -20,7 +20,7 @@
       loadingMessage="Loading settings..."
       noConnectionMessage="Could not connect to server"
     ></app-loading-error-state>
-    
+
     <!-- Form Content - only shown when not loading and no error -->
     <form *ngIf="!queueCleanerLoading() && !queueCleanerError()" [formGroup]="queueCleanerForm" class="p-fluid">
       <!-- Main Settings -->
@@ -60,7 +60,7 @@
       </div>
 
       <!-- Detailed Settings in Accordion -->
-      <p-accordion [multiple]="true" [value]="activeAccordionIndices" styleClass="mt-3">
+      <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
         <!-- Failed Import Settings -->
         <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="0">
           <p-accordion-header>Failed Import Settings</p-accordion-header>
