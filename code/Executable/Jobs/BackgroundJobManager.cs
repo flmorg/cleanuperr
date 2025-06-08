@@ -1,5 +1,6 @@
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
+using Common.Exceptions;
 using Common.Helpers;
 using Infrastructure.Configuration;
 using Infrastructure.Verticals.DownloadCleaner;
@@ -160,7 +161,12 @@ public class BackgroundJobManager : IHostedService
             
             if (triggerValue > Constants.TriggerMaxLimit)
             {
-                throw new Exception($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
+                throw new ValidationException($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
+            }
+            
+            if (triggerValue < Constants.TriggerMinLimit)
+            {
+                throw new ValidationException($"{cronExpression} should have a fire time of minimum {Constants.TriggerMinLimit.TotalSeconds} seconds");
             }
 
             if (triggerValue > StaticConfiguration.TriggerValue)
