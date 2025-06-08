@@ -50,6 +50,9 @@
               inputStyleClass="schedule-value"
             >
             </p-inputNumber>
+            <small *ngIf="hasNestedError('jobSchedule', 'every', 'required')" class="p-error">This field is required</small>
+            <small *ngIf="hasNestedError('jobSchedule', 'every', 'min')" class="p-error">Value must be at least 1</small>
+            <small *ngIf="hasNestedError('jobSchedule', 'every', 'max')" class="p-error">Value cannot exceed 59</small>
 
             <p-selectButton
               formControlName="type"
@@ -179,10 +182,10 @@
                   formControlName="downloadingMetadataMaxStrikes"
                   [showButtons]="true"
                   [min]="0"
-                  [max]="10"
                   buttonLayout="horizontal"
                 >
                 </p-inputNumber>
+                <small *ngIf="hasNestedError('stalled', 'downloadingMetadataMaxStrikes', 'min')" class="p-error">Value must be at least 0</small>
                 <small class="form-helper-text"
                   >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
                 >
@@ -260,6 +263,7 @@
                   buttonLayout="horizontal"
                 >
                 </p-inputNumber>
+                <small *ngIf="hasNestedError('slow', 'maxTime', 'min')" class="p-error">Value must be at least 0</small>
                 <small class="form-helper-text">Maximum time allowed for slow downloads (in hours)</small>
               </div>
             </div>
@@ -412,7 +416,7 @@
           label="Save"
           icon="pi pi-save"
           class="p-button-outlined"
-          [disabled]="queueCleanerForm.pristine || queueCleanerSaving()"
+          [disabled]="(!queueCleanerForm.dirty || !hasActualChanges) || queueCleanerForm.invalid || queueCleanerSaving()"
           [loading]="queueCleanerSaving()"
           (click)="saveQueueCleanerConfig()"
         ></button>

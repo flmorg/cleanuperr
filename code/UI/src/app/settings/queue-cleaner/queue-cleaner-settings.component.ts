@@ -64,6 +64,9 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
   
   // Original form values for tracking changes
   private originalFormValues: any;
+  
+  // Track whether the form has actual changes compared to original values
+  hasActualChanges = false;
 
   // Schedule unit options for job schedules
   scheduleUnitOptions = [
@@ -242,13 +245,52 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       .subscribe((enabled) => {
         this.updateContentBlockerDependentControls(enabled);
       });
+      
+    // Listen to all form changes to check for actual differences from original values
+    this.queueCleanerForm.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.hasActualChanges = this.formValuesChanged();
+      });
   }
 
   /**
    * Store original form values for dirty checking
    */
   private storeOriginalValues(): void {
-    this.originalFormValues = this.queueCleanerForm.getRawValue();
+    // Create a deep copy of the form values to ensure proper comparison
+    this.originalFormValues = JSON.parse(JSON.stringify(this.queueCleanerForm.getRawValue()));
+    this.hasActualChanges = false;
+  }
+  
+  // Check if the current form values are different from the original values
+  private formValuesChanged(): boolean {
+    if (!this.originalFormValues) return false;
+    
+    const currentValues = this.queueCleanerForm.getRawValue();
+    return !this.isEqual(currentValues, this.originalFormValues);
+  }
+  
+  // Deep compare two objects for equality
+  private isEqual(obj1: any, obj2: any): boolean {
+    if (obj1 === obj2) return true;
+    
+    if (typeof obj1 !== 'object' || obj1 === null ||
+        typeof obj2 !== 'object' || obj2 === null) {
+      return obj1 === obj2;
+    }
+    
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+    
+    if (keys1.length !== keys2.length) return false;
+    
+    for (const key of keys1) {
+      if (!keys2.includes(key)) return false;
+      
+      if (!this.isEqual(obj1[key], obj2[key])) return false;
+    }
+    
+    return true;
   }
 
   /**
@@ -421,120 +463,118 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
    * Save the queue cleaner configuration
    */
   saveQueueCleanerConfig(): void {
-    // Validate form before saving
-    if (this.queueCleanerForm.invalid) {
-      // Mark all controls as touched to show validation errors
-      this.markFormGroupTouched(this.queueCleanerForm);
+    // Mark all form controls as touched to trigger validation messages
+    this.markFormGroupTouched(this.queueCleanerForm);
+    
+    if (this.queueCleanerForm.valid) {
+      const formValues = this.queueCleanerForm.getRawValue();
+
+      // Create a clean config object from form values
+      const config: QueueCleanerConfig = {
+        enabled: formValues.enabled,
+        cronExpression: "", // This field is required but will be generated on the backend
+        jobSchedule: {
+          every: formValues.jobSchedule.every,
+          type: formValues.jobSchedule.type,
+        },
+
+        failedImport: {
+          maxStrikes: formValues.failedImport?.maxStrikes || 0,
+          ignorePrivate: formValues.failedImport?.ignorePrivate || false,
+          deletePrivate: formValues.failedImport?.deletePrivate || false,
+          ignoredPatterns: formValues.failedImport?.ignoredPatterns || [],
+        },
+
+        stalled: {
+          maxStrikes: formValues.stalled?.maxStrikes || 0,
+          resetStrikesOnProgress: formValues.stalled?.resetStrikesOnProgress || false,
+          ignorePrivate: formValues.stalled?.ignorePrivate || false,
+          deletePrivate: formValues.stalled?.deletePrivate || false,
+          downloadingMetadataMaxStrikes: formValues.stalled?.downloadingMetadataMaxStrikes || 0,
+        },
+
+        slow: {
+          maxStrikes: formValues.slow?.maxStrikes || 0,
+          resetStrikesOnProgress: formValues.slow?.resetStrikesOnProgress || false,
+          ignorePrivate: formValues.slow?.ignorePrivate || false,
+          deletePrivate: formValues.slow?.deletePrivate || false,
+          minSpeed: formValues.slow?.minSpeed || "",
+          maxTime: formValues.slow?.maxTime || 0,
+          ignoreAboveSize: formValues.slow?.ignoreAboveSize || "",
+        },
+
+        contentBlocker: {
+          enabled: formValues.contentBlocker?.enabled || false,
+          ignorePrivate: formValues.contentBlocker?.ignorePrivate || false,
+          deletePrivate: formValues.contentBlocker?.deletePrivate || false,
+          sonarrBlocklist: formValues.contentBlocker?.sonarrBlocklist || {
+            path: "",
+            type: BlocklistType.Blacklist,
+          },
+          radarrBlocklist: formValues.contentBlocker?.radarrBlocklist || {
+            path: "",
+            type: BlocklistType.Blacklist,
+          },
+          lidarrBlocklist: formValues.contentBlocker?.lidarrBlocklist || {
+            path: "",
+            type: BlocklistType.Blacklist,
+          },
+        },
+      };
+
+      // Save the configuration
+      this.queueCleanerStore.saveConfig(config);
       
-      // Show error toast notification
+      // Setup a one-time check to mark form as pristine after successful save
+      // This pattern works with signals since we're not trying to pipe the signal itself
+      const checkSaveCompletion = () => {
+        const loading = this.queueCleanerLoading();
+        const error = this.queueCleanerError();
+        
+        if (!loading && !error) {
+          // Mark form as pristine after successful save
+          this.queueCleanerForm.markAsPristine();
+          // Update original values reference
+          this.storeOriginalValues();
+          // Emit saved event
+          this.saved.emit();
+          // Show success message
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Queue cleaner configuration saved successfully.',
+            life: 3000
+          });
+        } else if (!loading && error) {
+          // If there's an error, we can stop checking
+          this.destroy$.next();
+          // Show error message
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to save queue cleaner configuration.',
+            life: 5000
+          });
+        } else {
+          // If still loading, check again in a moment
+          setTimeout(checkSaveCompletion, 100);
+        }
+      };
+      
+      // Start checking for save completion
+      checkSaveCompletion();
+    } else {
+      // Form is invalid, show error message
       this.messageService.add({
-        severity: 'error',
-        summary: 'Validation Error',
-        detail: 'Please correct the form errors before saving.',
+        severity: "error",
+        summary: "Validation Error",
+        detail: "Please correct the errors in the form before saving.",
         life: 5000
       });
       
       // Emit error for parent components
       this.error.emit("Please fix validation errors before saving.");
-      return;
     }
-
-    const formValues = this.queueCleanerForm.getRawValue();
-
-    // Create a clean config object from form values
-    const config: QueueCleanerConfig = {
-      enabled: formValues.enabled,
-      cronExpression: "", // This field is required but will be generated on the backend
-      jobSchedule: {
-        every: formValues.jobSchedule.every,
-        type: formValues.jobSchedule.type,
-      },
-
-      failedImport: {
-        maxStrikes: formValues.failedImport?.maxStrikes || 0,
-        ignorePrivate: formValues.failedImport?.ignorePrivate || false,
-        deletePrivate: formValues.failedImport?.deletePrivate || false,
-        ignoredPatterns: formValues.failedImport?.ignoredPatterns || [],
-      },
-
-      stalled: {
-        maxStrikes: formValues.stalled?.maxStrikes || 0,
-        resetStrikesOnProgress: formValues.stalled?.resetStrikesOnProgress || false,
-        ignorePrivate: formValues.stalled?.ignorePrivate || false,
-        deletePrivate: formValues.stalled?.deletePrivate || false,
-        downloadingMetadataMaxStrikes: formValues.stalled?.downloadingMetadataMaxStrikes || 0,
-      },
-
-      slow: {
-        maxStrikes: formValues.slow?.maxStrikes || 0,
-        resetStrikesOnProgress: formValues.slow?.resetStrikesOnProgress || false,
-        ignorePrivate: formValues.slow?.ignorePrivate || false,
-        deletePrivate: formValues.slow?.deletePrivate || false,
-        minSpeed: formValues.slow?.minSpeed || "",
-        maxTime: formValues.slow?.maxTime || 0,
-        ignoreAboveSize: formValues.slow?.ignoreAboveSize || "",
-      },
-
-      contentBlocker: {
-        enabled: formValues.contentBlocker?.enabled || false,
-        ignorePrivate: formValues.contentBlocker?.ignorePrivate || false,
-        deletePrivate: formValues.contentBlocker?.deletePrivate || false,
-        sonarrBlocklist: formValues.contentBlocker?.sonarrBlocklist || {
-          path: "",
-          type: BlocklistType.Blacklist,
-        },
-        radarrBlocklist: formValues.contentBlocker?.radarrBlocklist || {
-          path: "",
-          type: BlocklistType.Blacklist,
-        },
-        lidarrBlocklist: formValues.contentBlocker?.lidarrBlocklist || {
-          path: "",
-          type: BlocklistType.Blacklist,
-        },
-      },
-    };
-
-    // Save the configuration
-    this.queueCleanerStore.saveConfig(config);
-    
-    // Setup a one-time check to mark form as pristine after successful save
-    // This pattern works with signals since we're not trying to pipe the signal itself
-    const checkSaveCompletion = () => {
-      const loading = this.queueCleanerLoading();
-      const error = this.queueCleanerError();
-      
-      if (!loading && !error) {
-        // Mark form as pristine after successful save
-        this.queueCleanerForm.markAsPristine();
-        // Update original values reference
-        this.storeOriginalValues();
-        // Emit saved event
-        this.saved.emit();
-        // Show success message
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Queue cleaner configuration saved successfully.',
-          life: 3000
-        });
-      } else if (!loading && error) {
-        // If there's an error, we can stop checking
-        this.destroy$.next();
-        // Show error message
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to save queue cleaner configuration.',
-          life: 5000
-        });
-      } else {
-        // If still loading, check again in a moment
-        setTimeout(checkSaveCompletion, 100);
-      }
-    };
-    
-    // Start checking for save completion
-    checkSaveCompletion();
   }
 
   /**
