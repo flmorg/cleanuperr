@@ -65,6 +65,7 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   // Certificate validation options for dropdown
   certificateValidationOptions = [
     { label: "Enabled", value: CertificateValidationType.Enabled },
+    { label: "Disabled for Local Addresses", value: CertificateValidationType.DisabledForLocalAddresses },
     { label: "Disabled", value: CertificateValidationType.Disabled },
   ];
 

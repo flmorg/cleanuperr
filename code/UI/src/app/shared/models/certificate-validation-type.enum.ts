@@ -3,5 +3,6 @@
  */
 export enum CertificateValidationType {
   Enabled = 'Enabled',
+  DisabledForLocalAddresses = 'DisabledForLocalAddresses',
   Disabled = 'Disabled'
 }
