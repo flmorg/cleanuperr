@@ -65,7 +65,7 @@ export class GeneralConfigStore {
     this._saving.set(true);
     this._error.set(null);
 
-    this.http.put<any>(`${this.baseUrl}/configuration/general`, config)
+    this.http.put<any>(`${this.baseUrl}/api/configuration/general`, config)
       .pipe(
         tap(() => {
           this._config.set(config);
