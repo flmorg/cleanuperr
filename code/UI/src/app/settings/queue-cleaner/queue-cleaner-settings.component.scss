@@ -118,18 +118,11 @@
 
 /* Card footer styling */
 .card-footer {
-  border-top: 1px solid var(--surface-border);
-  padding-top: 1rem;
   display: flex;
+  justify-content: flex-end;
   gap: 0.5rem;
-  
-  .p-button {
-    flex: 1;
-    
-    &:last-child {
-      flex: 0 0 auto;
-    }
-  }
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
 }
 
 /* Responsive adjustments */
@@ -147,9 +140,5 @@
   .field-input {
     width: 100%;
     max-width: 100%;
-  }
-  
-  .card-footer {
-    flex-direction: column;
   }
 }
