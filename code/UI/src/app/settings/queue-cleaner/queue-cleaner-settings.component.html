@@ -55,13 +55,13 @@
         <div>
           <div class="field-input schedule-input flex flex-wrap">
             <span class="schedule-label">Every</span>
-            <p-dropdown 
+            <p-select 
               formControlName="every"
               [options]="getScheduleValueOptions()"
               optionLabel="label"
               optionValue="value"
               placeholder="Select interval"
-            ></p-dropdown>
+            ></p-select>
 
             <p-selectButton
               formControlName="type"
@@ -79,8 +79,10 @@
       <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
       <div class="field-row" *ngIf="queueCleanerForm.get('useAdvancedScheduling')?.value">
         <label class="field-label">Cron Expression</label>
-        <div class="field-input">
-          <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
+        <div>
+          <div class="field-input">
+            <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
+          </div>
           <small *ngIf="queueCleanerForm.get('cronExpression')?.hasError('required') && queueCleanerForm.get('cronExpression')?.touched" class="p-error">Cron expression is required</small>
           <small class="form-helper-text">Enter a valid Quartz cron expression (e.g., "0 0/5 * ? * * *" runs every 5 minutes)</small>
         </div>
