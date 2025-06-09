@@ -8,6 +8,11 @@ public sealed record DownloadCleanerConfig : IJobConfig
 
     public string CronExpression { get; init; } = "0 0 * * * ?";
 
+    /// <summary>
+    /// Indicates whether to use the CronExpression directly or convert from a user-friendly schedule
+    /// </summary>
+    public bool UseAdvancedScheduling { get; init; } = false;
+
     public List<CleanCategory> Categories { get; init; } = [];
 
     public bool DeletePrivate { get; init; }

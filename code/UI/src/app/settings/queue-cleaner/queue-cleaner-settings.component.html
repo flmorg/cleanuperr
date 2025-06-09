@@ -34,18 +34,34 @@
         </div>
       </div>
 
-      <div class="field-row" formGroupName="jobSchedule">
+      <!-- Scheduling Mode Toggle -->
+      <div class="field-row">
+        <label class="field-label">Scheduling Mode</label>
+        <div class="field-input">
+          <p-selectButton
+            formControlName="useAdvancedScheduling"
+            [options]="scheduleModeOptions"
+            optionLabel="label"
+            optionValue="value"
+          >
+          </p-selectButton>
+          <small class="form-helper-text">Choose between basic scheduling or advanced cron expression</small>
+        </div>
+      </div>
+
+      <!-- Basic Schedule Controls - shown when useAdvancedScheduling is false -->
+      <div class="field-row" formGroupName="jobSchedule" *ngIf="!queueCleanerForm.get('useAdvancedScheduling')?.value">
         <label class="field-label">Run Schedule</label>
         <div>
           <div class="field-input schedule-input flex flex-wrap">
             <span class="schedule-label">Every</span>
-            <p-inputNumber
+            <p-dropdown 
               formControlName="every"
-              [showButtons]="true"
-              buttonLayout="horizontal"
-              inputStyleClass="schedule-value"
-            >
-            </p-inputNumber>
+              [options]="getScheduleValueOptions()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select interval"
+            ></p-dropdown>
 
             <p-selectButton
               formControlName="type"
@@ -56,8 +72,17 @@
             </p-selectButton>
           </div>
           <small *ngIf="hasNestedError('jobSchedule', 'every', 'required')" class="p-error">This field is required</small>
-          <small *ngIf="hasNestedError('jobSchedule', 'every', 'min')" class="p-error">Value must be at least 1</small>
           <small class="form-helper-text">How often the queue cleaner should run</small>
+        </div>
+      </div>
+
+      <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
+      <div class="field-row" *ngIf="queueCleanerForm.get('useAdvancedScheduling')?.value">
+        <label class="field-label">Cron Expression</label>
+        <div class="field-input">
+          <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
+          <small *ngIf="queueCleanerForm.get('cronExpression')?.hasError('required') && queueCleanerForm.get('cronExpression')?.touched" class="p-error">Cron expression is required</small>
+          <small class="form-helper-text">Enter a valid Quartz cron expression (e.g., "0 0/5 * ? * * *" runs every 5 minutes)</small>
         </div>
       </div>
 

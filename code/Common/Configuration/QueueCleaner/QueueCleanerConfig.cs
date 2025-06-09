@@ -6,6 +6,11 @@ public sealed record QueueCleanerConfig : IJobConfig
     
     public string CronExpression { get; init; } = "0 0/5 * * * ?";
     
+    /// <summary>
+    /// Indicates whether to use the CronExpression directly or convert from a user-friendly schedule
+    /// </summary>
+    public bool UseAdvancedScheduling { get; init; } = false;
+    
     public FailedImportConfig FailedImport { get; init; } = new();
     
     public StalledConfig Stalled { get; init; } = new();

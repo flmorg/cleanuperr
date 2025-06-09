@@ -1,4 +1,6 @@
 using Infrastructure.Models;
+using System.ComponentModel.DataAnnotations;
+using Quartz;
 
 namespace Infrastructure.Utilities;
 
@@ -18,23 +20,70 @@ public static class CronExpressionConverter
         if (schedule == null)
             throw new ArgumentNullException(nameof(schedule));
 
-        if (schedule.Every <= 0)
-            throw new ArgumentException("Every must be greater than zero", nameof(schedule.Every));
+        // Validate the schedule using predefined valid values
+        if (!ScheduleOptions.IsValidValue(schedule.Type, schedule.Every))
+        {
+            var validValues = string.Join(", ", ScheduleOptions.GetValidValues(schedule.Type));
+            throw new ValidationException($"Invalid value for {schedule.Type}: {schedule.Every}. Valid values are: {validValues}");
+        }
 
         // Cron format: Seconds Minutes Hours Day-of-month Month Day-of-week Year
         return schedule.Type switch
         {
-            ScheduleUnit.Seconds when schedule.Every < 60 => 
-                $"*/{schedule.Every} * * ? * * *", // Every n seconds
+            ScheduleUnit.Seconds => 
+                $"0/{schedule.Every} * * ? * * *", // Every n seconds
             
-            ScheduleUnit.Minutes when schedule.Every < 60 => 
-                $"0 */{schedule.Every} * ? * * *", // Every n minutes
+            ScheduleUnit.Minutes => 
+                $"0 0/{schedule.Every} * ? * * *", // Every n minutes
             
-            ScheduleUnit.Hours when schedule.Every < 24 => 
-                $"0 0 */{schedule.Every} ? * * *", // Every n hours
+            ScheduleUnit.Hours => 
+                $"0 0 0/{schedule.Every} ? * * *", // Every n hours
             
-            _ => throw new ArgumentException($"Invalid schedule: {schedule.Every} {schedule.Type}")
+            _ => throw new ArgumentException($"Invalid schedule unit: {schedule.Type}")
         };
+    }
+    
+    /// <summary>
+    /// Validates a cron expression string to ensure it's valid for Quartz.NET
+    /// </summary>
+    /// <param name="cronExpression">The cron expression to validate</param>
+    /// <returns>True if valid, false otherwise</returns>
+    public static bool IsValidCronExpression(string cronExpression)
+    {
+        if (string.IsNullOrWhiteSpace(cronExpression))
+            return false;
+            
+        try
+        {
+            return CronExpression.IsValidExpression(cronExpression);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Try to get a user-friendly description of a cron expression
+    /// </summary>
+    /// <param name="cronExpression">The cron expression to describe</param>
+    /// <returns>A human-readable description or null if not valid</returns>
+    public static string? GetCronDescription(string cronExpression)
+    {
+        if (!IsValidCronExpression(cronExpression))
+            return null;
+            
+        try
+        {
+            var expression = new CronExpression(cronExpression);
+            // This is a simplified description - a proper implementation would use
+            // a library like CronExpressionDescriptor to provide a better description
+            return $"Custom schedule: {cronExpression}";
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>

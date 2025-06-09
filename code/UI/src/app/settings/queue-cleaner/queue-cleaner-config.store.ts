@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { QueueCleanerConfig } from '../../shared/models/queue-cleaner-config.model';
+import { QueueCleanerConfig, JobSchedule, ScheduleUnit } from '../../shared/models/queue-cleaner-config.model';
 import { ConfigurationService } from '../../core/services/configuration.service';
 import { EMPTY, Observable, catchError, switchMap, tap } from 'rxjs';
 import { MessageService } from 'primeng/api';
@@ -107,6 +107,30 @@ export class QueueCleanerConfigStore extends signalStore(
      */
     resetError() {
       patchState(store, { error: null });
+    },
+
+    /**
+     * Generate a cron expression from a job schedule
+     */
+    generateCronExpression(schedule: JobSchedule): string {
+      if (!schedule) {
+        return "0 0/5 * * * ?"; // Default: every 5 minutes
+      }
+      
+      // Cron format: Seconds Minutes Hours Day-of-month Month Day-of-week Year
+      switch (schedule.type) {
+        case ScheduleUnit.Seconds:
+          return `0/${schedule.every} * * ? * * *`; // Every n seconds
+        
+        case ScheduleUnit.Minutes:
+          return `0 0/${schedule.every} * ? * * *`; // Every n minutes
+        
+        case ScheduleUnit.Hours:
+          return `0 0 0/${schedule.every} ? * * *`; // Every n hours
+        
+        default:
+          return "0 0/5 * * * ?"; // Default: every 5 minutes
+      }
     }
   })),
   withHooks({

@@ -4,6 +4,15 @@ export enum ScheduleUnit {
   Hours = 'Hours'
 }
 
+/**
+ * Valid values for each schedule unit
+ */
+export const ScheduleOptions = {
+  [ScheduleUnit.Seconds]: [30],
+  [ScheduleUnit.Minutes]: [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30],
+  [ScheduleUnit.Hours]: [1, 2, 3, 4, 6, 8, 12]
+};
+
 export interface JobSchedule {
   every: number;
   type: ScheduleUnit;
@@ -58,6 +67,7 @@ export interface ContentBlockerConfig {
 export interface QueueCleanerConfig {
   enabled: boolean;
   cronExpression: string;
+  useAdvancedScheduling: boolean;
   jobSchedule?: JobSchedule; // UI-only field, not sent to API
   
   // Nested configurations

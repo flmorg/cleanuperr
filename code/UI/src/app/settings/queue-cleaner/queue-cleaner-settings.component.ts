@@ -12,6 +12,7 @@ import {
   StalledConfig,
   SlowConfig,
   ContentBlockerConfig,
+  ScheduleOptions
 } from "../../shared/models/queue-cleaner-config.model";
 import { SettingsCardComponent } from "../components/settings-card/settings-card.component";
 import { ByteSizeInputComponent } from "../../shared/components/byte-size-input/byte-size-input.component";
@@ -29,6 +30,7 @@ import { ToastModule } from "primeng/toast";
 import { MessageService } from "primeng/api";
 import { SelectModule } from "primeng/select";
 import { AutoCompleteModule } from "primeng/autocomplete";
+import { DropdownModule } from "primeng/dropdown";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 
 @Component({
@@ -49,6 +51,7 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     ByteSizeInputComponent,
     SelectModule,
     AutoCompleteModule,
+    DropdownModule,
     LoadingErrorStateComponent,
   ],
   providers: [QueueCleanerConfigStore, MessageService],
@@ -73,6 +76,19 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     { label: "Seconds", value: ScheduleUnit.Seconds },
     { label: "Minutes", value: ScheduleUnit.Minutes },
     { label: "Hours", value: ScheduleUnit.Hours },
+  ];
+  
+  // Options for each schedule unit
+  scheduleValueOptions = {
+    [ScheduleUnit.Seconds]: ScheduleOptions[ScheduleUnit.Seconds].map(v => ({ label: v.toString(), value: v })),
+    [ScheduleUnit.Minutes]: ScheduleOptions[ScheduleUnit.Minutes].map(v => ({ label: v.toString(), value: v })),
+    [ScheduleUnit.Hours]: ScheduleOptions[ScheduleUnit.Hours].map(v => ({ label: v.toString(), value: v }))
+  };
+  
+  // Display modes for schedule
+  scheduleModeOptions = [
+    { label: 'Basic', value: false },
+    { label: 'Advanced', value: true }
   ];
 
   // Inject the necessary services
@@ -103,6 +119,8 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     // Initialize the queue cleaner form with proper disabled states
     this.queueCleanerForm = this.formBuilder.group({
       enabled: [false],
+      useAdvancedScheduling: [false],
+      cronExpression: [{ value: '', disabled: true }, [Validators.required]],
       jobSchedule: this.formBuilder.group({
         every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
         type: [{ value: ScheduleUnit.Minutes, disabled: true }],
@@ -159,32 +177,41 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     // Create an effect to update the form when the configuration changes
     effect(() => {
       const config = this.queueCleanerConfig();
-      if (!config) return;
+      if (config) {
+        // Save original cron expression
+        const cronExpression = config.cronExpression;
+        
+        // Reset form with the config values
+        this.queueCleanerForm.patchValue({
+          enabled: config.enabled,
+          useAdvancedScheduling: config.useAdvancedScheduling || false,
+          cronExpression: config.cronExpression,
+          jobSchedule: config.jobSchedule || {
+            every: 5,
+            type: ScheduleUnit.Minutes
+          },
+          failedImport: config.failedImport,
+          stalled: config.stalled,
+          slow: config.slow,
+          contentBlocker: config.contentBlocker,
+        });
 
-      this.queueCleanerForm.patchValue({
-        enabled: config.enabled,
-        jobSchedule: config.jobSchedule,
-        failedImport: config.failedImport,
-        stalled: config.stalled,
-        slow: config.slow,
-        contentBlocker: config.contentBlocker,
-      });
+        // First ensure content blocker's enabled state gets properly set based on main enabled status
+        if (config.enabled) {
+          this.queueCleanerForm.get("contentBlocker.enabled")?.enable({ emitEvent: false });
+        } else {
+          this.queueCleanerForm.get("contentBlocker.enabled")?.disable({ emitEvent: false });
+        }
 
-      // First ensure content blocker's enabled state gets properly set based on main enabled status
-      if (config.enabled) {
-        this.queueCleanerForm.get("contentBlocker.enabled")?.enable({ emitEvent: false });
-      } else {
-        this.queueCleanerForm.get("contentBlocker.enabled")?.disable({ emitEvent: false });
+        // Then update all other dependent form control states
+        this.updateFormControlDisabledStates(config);
+        
+        // Store original values for dirty checking
+        this.storeOriginalValues();
+
+        // Mark form as pristine since we've just loaded the data
+        this.queueCleanerForm.markAsPristine();
       }
-
-      // Then update all other dependent form control states
-      this.updateFormControlDisabledStates(config);
-      
-      // Store original values for dirty checking
-      this.storeOriginalValues();
-
-      // Mark form as pristine since we've just loaded the data
-      this.queueCleanerForm.markAsPristine();
     });   // Set up listeners for form value changes
     this.setupFormValueChangeListeners();
   }
@@ -201,50 +228,75 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
    * Set up listeners for form control value changes to manage dependent control states
    */
   private setupFormValueChangeListeners(): void {
-    // Listen to the 'enabled' control changes
-    this.queueCleanerForm
-      .get("enabled")
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((enabled) => {
-        this.updateMainControlsState(enabled);
-
-        // When disabled, close all accordions
-        if (!enabled) {
-          this.activeAccordionIndices = [];
-        }
-      });
+    // Listen for changes to the 'enabled' control
+    const enabledControl = this.queueCleanerForm.get('enabled');
+    if (enabledControl) {
+      enabledControl.valueChanges.pipe(takeUntil(this.destroy$))
+        .subscribe((enabled: boolean) => {
+          this.updateMainControlsState(enabled);
+        });
+    }
+      
+    // Listen for changes to the 'useAdvancedScheduling' control
+    const advancedControl = this.queueCleanerForm.get('useAdvancedScheduling');
+    if (advancedControl) {
+      advancedControl.valueChanges.pipe(takeUntil(this.destroy$))
+        .subscribe((useAdvanced: boolean) => {
+          const enabled = this.queueCleanerForm.get('enabled')?.value || false;
+          if (enabled) {
+            const cronExpressionControl = this.queueCleanerForm.get('cronExpression');
+            const jobScheduleGroup = this.queueCleanerForm.get('jobSchedule') as FormGroup;
+            const everyControl = jobScheduleGroup?.get('every');
+            const typeControl = jobScheduleGroup?.get('type');
+            
+            if (useAdvanced) {
+              if (cronExpressionControl) cronExpressionControl.enable();
+              if (everyControl) everyControl.disable();
+              if (typeControl) typeControl.disable();
+            } else {
+              if (cronExpressionControl) cronExpressionControl.disable();
+              if (everyControl) everyControl.enable();
+              if (typeControl) typeControl.enable();
+            }
+          }
+        });
+    }
 
     // Failed import settings
-    this.queueCleanerForm
-      .get("failedImport.maxStrikes")
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
+    const failedImportMaxStrikesControl = this.queueCleanerForm.get("failedImport.maxStrikes");
+    if (failedImportMaxStrikesControl) {
+      failedImportMaxStrikesControl.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((strikes) => {
         this.updateFailedImportDependentControls(strikes);
       });
+    }
 
     // Stalled settings
-    this.queueCleanerForm
-      .get("stalled.maxStrikes")
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
+    const stalledMaxStrikesControl = this.queueCleanerForm.get("stalled.maxStrikes");
+    if (stalledMaxStrikesControl) {
+      stalledMaxStrikesControl.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((strikes) => {
         this.updateStalledDependentControls(strikes);
       });
+    }
 
     // Slow downloads settings
-    this.queueCleanerForm
-      .get("slow.maxStrikes")
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
+    const slowMaxStrikesControl = this.queueCleanerForm.get("slow.maxStrikes");
+    if (slowMaxStrikesControl) {
+      slowMaxStrikesControl.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((strikes) => {
         this.updateSlowDependentControls(strikes);
       });
+    }
 
     // Update content blocker dependent controls when enabled changes
-    this.queueCleanerForm
-      .get("contentBlocker.enabled")
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
+    const contentBlockerEnabledControl = this.queueCleanerForm.get("contentBlocker.enabled");
+    if (contentBlockerEnabledControl) {
+      contentBlockerEnabledControl.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((enabled) => {
         this.updateContentBlockerDependentControls(enabled);
       });
+    }
       
     // Listen to all form changes to check for actual differences from original values
     this.queueCleanerForm.valueChanges.pipe(takeUntil(this.destroy$))
@@ -325,12 +377,23 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
    * Update the state of main controls based on the 'enabled' control value
    */
   private updateMainControlsState(enabled: boolean): void {
-    // Common controls
-    const jobScheduleGroup = this.queueCleanerForm.get("jobSchedule") as FormGroup;
+    const useAdvancedScheduling = this.queueCleanerForm.get('useAdvancedScheduling')?.value || false;
+    const cronExpressionControl = this.queueCleanerForm.get('cronExpression');
+    const jobScheduleGroup = this.queueCleanerForm.get('jobSchedule') as FormGroup;
+    const everyControl = jobScheduleGroup.get('every');
+    const typeControl = jobScheduleGroup.get('type');
 
     if (enabled) {
-      jobScheduleGroup.get("every")?.enable({ emitEvent: false });
-      jobScheduleGroup.get("type")?.enable({ emitEvent: false });
+      // Enable scheduling controls based on mode
+      if (useAdvancedScheduling) {
+        cronExpressionControl?.enable();
+        everyControl?.disable();
+        typeControl?.disable();
+      } else {
+        cronExpressionControl?.disable();
+        everyControl?.enable();
+        typeControl?.enable();
+      }
       
       // Enable the content blocker primary checkbox when queue cleaner is enabled
       this.queueCleanerForm.get("contentBlocker.enabled")?.enable({ emitEvent: false });
@@ -340,14 +403,16 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       const stalledMaxStrikes = this.queueCleanerForm.get("stalled.maxStrikes")?.value;
       const slowMaxStrikes = this.queueCleanerForm.get("slow.maxStrikes")?.value;
       const contentBlockerEnabled = this.queueCleanerForm.get("contentBlocker.enabled")?.value;
-
+      
       this.updateFailedImportDependentControls(failedImportMaxStrikes);
       this.updateStalledDependentControls(stalledMaxStrikes);
       this.updateSlowDependentControls(slowMaxStrikes);
       this.updateContentBlockerDependentControls(contentBlockerEnabled);
     } else {
-      jobScheduleGroup.get("every")?.disable({ emitEvent: false });
-      jobScheduleGroup.get("type")?.disable({ emitEvent: false });
+      // Disable all scheduling controls
+      cronExpressionControl?.disable();
+      everyControl?.disable();
+      typeControl?.disable();
       
       // Disable the content blocker primary checkbox when queue cleaner is disabled
       this.queueCleanerForm.get("contentBlocker.enabled")?.disable({ emitEvent: false });
@@ -467,63 +532,61 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     this.markFormGroupTouched(this.queueCleanerForm);
     
     if (this.queueCleanerForm.valid) {
-      const formValues = this.queueCleanerForm.getRawValue();
-
-      // Create a clean config object from form values
-      const config: QueueCleanerConfig = {
-        enabled: formValues.enabled,
-        cronExpression: "", // This field is required but will be generated on the backend
-        jobSchedule: {
-          every: formValues.jobSchedule.every,
-          type: formValues.jobSchedule.type,
-        },
-
+      // Make a copy of the form values
+      const formValue = this.queueCleanerForm.getRawValue();
+      
+      // Create the config object to be saved
+      const queueCleanerConfig: QueueCleanerConfig = {
+        enabled: formValue.enabled,
+        useAdvancedScheduling: formValue.useAdvancedScheduling,
+        cronExpression: formValue.useAdvancedScheduling ? 
+          formValue.cronExpression : 
+          // If in basic mode, generate cron expression from the schedule
+          this.queueCleanerStore.generateCronExpression(formValue.jobSchedule),
+        jobSchedule: formValue.jobSchedule,
         failedImport: {
-          maxStrikes: formValues.failedImport?.maxStrikes || 0,
-          ignorePrivate: formValues.failedImport?.ignorePrivate || false,
-          deletePrivate: formValues.failedImport?.deletePrivate || false,
-          ignoredPatterns: formValues.failedImport?.ignoredPatterns || [],
+          maxStrikes: formValue.failedImport?.maxStrikes || 0,
+          ignorePrivate: formValue.failedImport?.ignorePrivate || false,
+          deletePrivate: formValue.failedImport?.deletePrivate || false,
+          ignoredPatterns: formValue.failedImport?.ignoredPatterns || [],
         },
-
         stalled: {
-          maxStrikes: formValues.stalled?.maxStrikes || 0,
-          resetStrikesOnProgress: formValues.stalled?.resetStrikesOnProgress || false,
-          ignorePrivate: formValues.stalled?.ignorePrivate || false,
-          deletePrivate: formValues.stalled?.deletePrivate || false,
-          downloadingMetadataMaxStrikes: formValues.stalled?.downloadingMetadataMaxStrikes || 0,
+          maxStrikes: formValue.stalled?.maxStrikes || 0,
+          resetStrikesOnProgress: formValue.stalled?.resetStrikesOnProgress || false,
+          ignorePrivate: formValue.stalled?.ignorePrivate || false,
+          deletePrivate: formValue.stalled?.deletePrivate || false,
+          downloadingMetadataMaxStrikes: formValue.stalled?.downloadingMetadataMaxStrikes || 0,
         },
-
         slow: {
-          maxStrikes: formValues.slow?.maxStrikes || 0,
-          resetStrikesOnProgress: formValues.slow?.resetStrikesOnProgress || false,
-          ignorePrivate: formValues.slow?.ignorePrivate || false,
-          deletePrivate: formValues.slow?.deletePrivate || false,
-          minSpeed: formValues.slow?.minSpeed || "",
-          maxTime: formValues.slow?.maxTime || 0,
-          ignoreAboveSize: formValues.slow?.ignoreAboveSize || "",
+          maxStrikes: formValue.slow?.maxStrikes || 0,
+          resetStrikesOnProgress: formValue.slow?.resetStrikesOnProgress || false,
+          ignorePrivate: formValue.slow?.ignorePrivate || false,
+          deletePrivate: formValue.slow?.deletePrivate || false,
+          minSpeed: formValue.slow?.minSpeed || "",
+          maxTime: formValue.slow?.maxTime || 0,
+          ignoreAboveSize: formValue.slow?.ignoreAboveSize || "",
         },
-
         contentBlocker: {
-          enabled: formValues.contentBlocker?.enabled || false,
-          ignorePrivate: formValues.contentBlocker?.ignorePrivate || false,
-          deletePrivate: formValues.contentBlocker?.deletePrivate || false,
-          sonarrBlocklist: formValues.contentBlocker?.sonarrBlocklist || {
+          enabled: formValue.contentBlocker?.enabled || false,
+          ignorePrivate: formValue.contentBlocker?.ignorePrivate || false,
+          deletePrivate: formValue.contentBlocker?.deletePrivate || false,
+          sonarrBlocklist: formValue.contentBlocker?.sonarrBlocklist || {
             path: "",
             type: BlocklistType.Blacklist,
           },
-          radarrBlocklist: formValues.contentBlocker?.radarrBlocklist || {
+          radarrBlocklist: formValue.contentBlocker?.radarrBlocklist || {
             path: "",
             type: BlocklistType.Blacklist,
           },
-          lidarrBlocklist: formValues.contentBlocker?.lidarrBlocklist || {
+          lidarrBlocklist: formValue.contentBlocker?.lidarrBlocklist || {
             path: "",
             type: BlocklistType.Blacklist,
           },
         },
       };
-
+      
       // Save the configuration
-      this.queueCleanerStore.saveConfig(config);
+      this.queueCleanerStore.saveConfig(queueCleanerConfig);
       
       // Setup a one-time check to mark form as pristine after successful save
       // This pattern works with signals since we're not trying to pipe the signal itself
@@ -571,12 +634,16 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     }
   }
 
+
+  
   /**
    * Reset the queue cleaner configuration form to default values
    */
   resetQueueCleanerConfig(): void {  
     this.queueCleanerForm.reset({
       enabled: false,
+      useAdvancedScheduling: false,
+      cronExpression: "0 0/5 * * * ?",
       jobSchedule: {
         every: 5,
         type: ScheduleUnit.Minutes,
@@ -660,6 +727,21 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
   hasError(controlName: string, errorName: string): boolean {
     const control = this.queueCleanerForm.get(controlName);
     return control ? control.touched && control.hasError(errorName) : false;
+  }
+  
+  /**
+   * Get schedule value options based on the current schedule unit type
+   */
+  getScheduleValueOptions(): {label: string, value: number}[] {
+    const scheduleType = this.queueCleanerForm.get('jobSchedule.type')?.value as ScheduleUnit;
+    if (scheduleType === ScheduleUnit.Seconds) {
+      return this.scheduleValueOptions[ScheduleUnit.Seconds];
+    } else if (scheduleType === ScheduleUnit.Minutes) {
+      return this.scheduleValueOptions[ScheduleUnit.Minutes];
+    } else if (scheduleType === ScheduleUnit.Hours) {
+      return this.scheduleValueOptions[ScheduleUnit.Hours];
+    }
+    return this.scheduleValueOptions[ScheduleUnit.Minutes]; // Default to minutes
   }
 
   /**

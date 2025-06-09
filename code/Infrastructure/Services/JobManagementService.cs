@@ -24,7 +24,33 @@ public class JobManagementService : IJobManagementService
     public async Task<bool> StartJob(JobType jobType, JobSchedule? schedule = null, string? directCronExpression = null)
     {
         string jobName = jobType.ToJobName();
-        string? cronExpression = directCronExpression ?? schedule?.ToCronExpression();
+        string? cronExpression = null;
+        
+        // Validate and set the cron expression
+        if (directCronExpression != null)
+        {
+            // Validate direct cron expression
+            if (!CronExpressionConverter.IsValidCronExpression(directCronExpression))
+            {
+                _logger.LogError("Invalid cron expression: {cronExpression}", directCronExpression);
+                return false;
+            }
+            cronExpression = directCronExpression;
+        }
+        else if (schedule != null)
+        {
+            try
+            {
+                // Validate schedule and get cron expression
+                schedule.Validate();
+                cronExpression = schedule.ToCronExpression();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Invalid job schedule");
+                return false;
+            }
+        }
         
         try
         {
