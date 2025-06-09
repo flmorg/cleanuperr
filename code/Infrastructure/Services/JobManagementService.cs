@@ -320,6 +320,7 @@ public class JobManagementService : IJobManagementService
             var newTrigger = TriggerBuilder.Create()
                 .WithIdentity(triggerKey)
                 .ForJob(jobKey)
+                .WithSchedule(SimpleScheduleBuilder.RepeatSecondlyForever(10))
                 .WithCronSchedule(cronExpression)
                 .Build();
             

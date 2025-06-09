@@ -95,7 +95,7 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
     this.generalForm = this.formBuilder.group({
       dryRun: [false],
       httpMaxRetries: [0, [Validators.required,Validators.min(0), Validators.max(5)]],
-      httpTimeout: [30, [Validators.required, Validators.min(1), Validators.max(100)]],
+      httpTimeout: [100, [Validators.required, Validators.min(1), Validators.max(100)]],
       httpCertificateValidation: [CertificateValidationType.Enabled],
       searchEnabled: [true],
       searchDelay: [30, [Validators.required, Validators.min(1), Validators.max(300)]],
