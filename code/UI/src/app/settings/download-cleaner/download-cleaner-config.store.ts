@@ -79,8 +79,7 @@ export class DownloadCleanerConfigStore {
           next: (response) => {
             // Update local state with saved config
             this._config.set(config);
-            // Show success notification
-            this.notificationService.showSuccess('Download cleaner configuration saved successfully');
+            // Resolve without showing notification, let the component handle that
             resolve(true);
           },
           error: (error: HttpErrorResponse) => {

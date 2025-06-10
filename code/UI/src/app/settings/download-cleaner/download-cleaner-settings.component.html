@@ -130,9 +130,10 @@
                   <p-inputNumber formControlName="maxRatio" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
                     [minFractionDigits]="2" [maxFractionDigits]="2" [useGrouping]="false"
                     decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
-                    decrementButtonIcon="pi pi-minus" [disabled]="downloadCleanerForm.disabled">
+                    decrementButtonIcon="pi pi-minus">
                   </p-inputNumber>
                   <small class="form-helper-text">Maximum ratio to seed before removing (<code>-1</code> means disabled)</small>
+                  <small *ngIf="hasCategoryError(i, 'maxRatio', 'min')" class="p-error block">Min value is -1</small>
                 </div>
               </div>
               
@@ -141,7 +142,7 @@
                 <div class="field-input">
                   <p-inputNumber formControlName="minSeedTime" [min]="0" [showButtons]="true" buttonLayout="horizontal"
                     decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
-                    decrementButtonIcon="pi pi-minus" [disabled]="downloadCleanerForm.disabled">
+                    decrementButtonIcon="pi pi-minus">
                   </p-inputNumber>
                   <small *ngIf="hasCategoryError(i, 'minSeedTime', 'min')" class="p-error block">Min value is 0</small>
                 </div>
@@ -153,10 +154,11 @@
                   <div class="field-input">
                     <p-inputNumber formControlName="maxSeedTime" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
                       decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
-                      decrementButtonIcon="pi pi-minus" [disabled]="downloadCleanerForm.disabled">
+                      decrementButtonIcon="pi pi-minus">
                     </p-inputNumber>
                   </div>
                   <small class="form-helper-text">Maximum time to seed before removing (<code>-1</code> means disabled)</small>
+                  <small *ngIf="hasCategoryError(i, 'maxSeedTime', 'min')" class="p-error block">Min value is -1</small>
                 </div>
               </div>
             </div>
@@ -165,14 +167,14 @@
         
         <div class="flex justify-content-end mt-3">
           <button pButton type="button" icon="pi pi-plus" label="Add Category" 
-            (click)="addCategory()" [disabled]="downloadCleanerForm.disabled" class="p-button-success"></button>
+            (click)="addCategory()" [disabled]="downloadCleanerForm.get('enabled')?.value === false" class="p-button-success"></button>
         </div>
       </div>
 
       <!-- Unlinked Downloads Settings -->
       <div class="section-header mt-4 mb-2">
         <h3>Unlinked Downloads Settings</h3>
-        <small>Configure handling of unlinked downloads</small>
+        <small>Configure handling of unlinked downloads (downloads that have no hardlinks)</small>
       </div>
 
       <!-- Unlinked Target Category -->
@@ -192,7 +194,7 @@
         <label class="field-label">Use Tag</label>
         <div class="field-input">
           <p-checkbox formControlName="unlinkedUseTag" [binary]="true" inputId="unlinkedUseTag"></p-checkbox>
-          <small class="form-helper-text">When enabled, uses a tag instead of category</small>
+          <small class="form-helper-text">When enabled, uses a tag instead of category (qBittorrent only)</small>
         </div>
       </div>
 
@@ -203,7 +205,7 @@
           <div class="field-input">
             <input type="text" pInputText formControlName="unlinkedIgnoredRootDir" placeholder="/path/to/directory" />
           </div>
-          <small class="form-helper-text">Root directory to ignore when checking for unlinked downloads</small>
+          <small class="form-helper-text">Root directory to ignore when checking for unlinked downloads (used for cross-seed)</small>
         </div>
       </div>
 
@@ -226,23 +228,25 @@
       </div>
 
       <!-- Form Actions -->
-      <div class="form-actions mt-4 flex justify-content-end gap-2">
-        <button 
-          pButton 
-          type="button" 
-          label="Reset" 
-          class="p-button-outlined" 
-          (click)="resetDownloadCleanerConfig()"
-          [disabled]="downloadCleanerSaving()"
-        ></button>
-        <button 
-          pButton 
-          type="submit" 
-          label="Save" 
-          icon="pi pi-save" 
-          (click)="saveDownloadCleanerConfig()"
-          [disabled]="!downloadCleanerForm.dirty || downloadCleanerSaving()"
+      <div class="card-footer mt-3">
+        <button
+          pButton
+          type="button"
+          label="Save"
+          icon="pi pi-save"
+          class="p-button-outlined"
+          [disabled]="!downloadCleanerForm.dirty || !downloadCleanerForm.valid || !hasActualChanges || downloadCleanerSaving()"
           [loading]="downloadCleanerSaving()"
+          (click)="saveDownloadCleanerConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Reset"
+          icon="pi pi-refresh"
+          class="p-button-secondary p-button-outlined ml-2"
+          [disabled]="!downloadCleanerForm.dirty || downloadCleanerSaving()"
+          (click)="resetDownloadCleanerConfig()"
         ></button>
       </div>
     </form>

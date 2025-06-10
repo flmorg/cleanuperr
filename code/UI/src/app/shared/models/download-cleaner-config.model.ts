@@ -6,6 +6,7 @@ export interface DownloadCleanerConfig {
   enabled: boolean;
   cronExpression: string;
   useAdvancedScheduling: boolean;
+  jobSchedule: JobSchedule;
   categories: CleanCategory[];
   deletePrivate: boolean;
   unlinkedTargetCategory: string;
@@ -41,6 +42,10 @@ export const defaultDownloadCleanerConfig: DownloadCleanerConfig = {
   enabled: false,
   cronExpression: '0 0 * * * ?',
   useAdvancedScheduling: false,
+  jobSchedule: {
+    every: 5,
+    type: ScheduleUnit.Minutes
+  },
   categories: [],
   deletePrivate: false,
   unlinkedTargetCategory: 'cleanuparr-unlinked',

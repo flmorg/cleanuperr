@@ -23,7 +23,7 @@ public sealed record CleanCategory : IConfig
 
     public void Validate()
     {
-        if (string.IsNullOrWhiteSpace(Name))
+        if (string.IsNullOrEmpty(Name.Trim()))
         {
             throw new ValidationException("Category name can not be empty");
         }

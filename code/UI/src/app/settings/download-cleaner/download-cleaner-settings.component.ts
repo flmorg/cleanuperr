@@ -55,51 +55,64 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
   styleUrls: ["./download-cleaner-settings.component.scss"],
 })
 export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponentDeactivate {
-  @Output() saved = new EventEmitter<void>();
   @Output() error = new EventEmitter<string>();
+  @Output() saved = new EventEmitter<void>();
 
-  // Download Cleaner Configuration Form
-  downloadCleanerForm: FormGroup;
+  // Services
+  private formBuilder = inject(FormBuilder);
+  private notificationService = inject(NotificationService);
+  private downloadCleanerStore = inject(DownloadCleanerConfigStore);
   
-  // Original form values for tracking changes
-  private originalFormValues: any;
+  // Configuration signals
+  readonly downloadCleanerConfig = this.downloadCleanerStore.config;
+  readonly downloadCleanerLoading = this.downloadCleanerStore.loading;
+  readonly downloadCleanerSaving = this.downloadCleanerStore.saving;
+  readonly downloadCleanerError = this.downloadCleanerStore.error;
   
-  // Track whether the form has actual changes compared to original values
-  hasActualChanges = false;
-
-  // Schedule unit options for job schedules
+  // Form and state
+  downloadCleanerForm!: FormGroup;
+  originalFormValues: any;
+  private destroy$ = new Subject<void>();
+  hasActualChanges = false; // Flag to track actual form changes
+  
+  // Get the categories form array for easier access in the template
+  get categoriesFormArray(): FormArray {
+    return this.downloadCleanerForm.get('categories') as FormArray;
+  }
+  
+  // Schedule options
   scheduleUnitOptions = [
-    { label: "Seconds", value: ScheduleUnit.Seconds },
-    { label: "Minutes", value: ScheduleUnit.Minutes },
-    { label: "Hours", value: ScheduleUnit.Hours },
+    { label: 'Seconds', value: ScheduleUnit.Seconds },
+    { label: 'Minutes', value: ScheduleUnit.Minutes },
+    { label: 'Hours', value: ScheduleUnit.Hours },
   ];
-  
-  // Options for each schedule unit
-  scheduleValueOptions = {
-    [ScheduleUnit.Seconds]: ScheduleOptions[ScheduleUnit.Seconds].map(v => ({ label: v.toString(), value: v })),
-    [ScheduleUnit.Minutes]: ScheduleOptions[ScheduleUnit.Minutes].map(v => ({ label: v.toString(), value: v })),
-    [ScheduleUnit.Hours]: ScheduleOptions[ScheduleUnit.Hours].map(v => ({ label: v.toString(), value: v }))
+
+  scheduleValueOptions: Record<ScheduleUnit, {label: string, value: number}[]> = {
+    [ScheduleUnit.Seconds]: [
+      { label: '15s', value: 15 },
+      { label: '30s', value: 30 },
+      { label: '45s', value: 45 }
+    ],
+    [ScheduleUnit.Minutes]: [
+      { label: '1m', value: 1 },
+      { label: '5m', value: 5 },
+      { label: '15m', value: 15 },
+      { label: '30m', value: 30 },
+      { label: '45m', value: 45 }
+    ],
+    [ScheduleUnit.Hours]: [
+      { label: '1h', value: 1 },
+      { label: '3h', value: 3 },
+      { label: '6h', value: 6 },
+      { label: '12h', value: 12 }
+    ]
   };
-  
+
   // Display modes for schedule
   scheduleModeOptions = [
     { label: 'Basic', value: false },
     { label: 'Advanced', value: true }
   ];
-
-  // Inject the necessary services
-  private formBuilder = inject(FormBuilder);
-  private notificationService = inject(NotificationService);
-  private downloadCleanerStore = inject(DownloadCleanerConfigStore);
-
-  // Signals from the store
-  readonly downloadCleanerConfig = this.downloadCleanerStore.config;
-  readonly downloadCleanerLoading = this.downloadCleanerStore.loading;
-  readonly downloadCleanerSaving = this.downloadCleanerStore.saving;
-  readonly downloadCleanerError = this.downloadCleanerStore.error;
-
-  // Subject for unsubscribing from observables when component is destroyed
-  private destroy$ = new Subject<void>();
 
   /**
    * Check if component can be deactivated (navigation guard)
@@ -110,33 +123,73 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   }
 
   constructor() {
-    // Initialize form
+    // Initialize the form with proper disabled states for dependent controls
     this.downloadCleanerForm = this.formBuilder.group({
       enabled: [false],
-      useAdvancedScheduling: [false],
-      cronExpression: ['0 0 * * * ?', [Validators.required]],
+      useAdvancedScheduling: [{ value: false, disabled: true }],
+      cronExpression: [{ value: "0 0 * * * ?", disabled: true }, [Validators.required]],
       jobSchedule: this.formBuilder.group({
-        every: [5, [Validators.required]],
-        type: [ScheduleUnit.Minutes, [Validators.required]]
+        every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
+        type: [{ value: ScheduleUnit.Minutes, disabled: true }, [Validators.required]]
       }),
       categories: this.formBuilder.array([]),
-      deletePrivate: [false],
-      unlinkedTargetCategory: ['cleanuparr-unlinked', [Validators.required]],
-      unlinkedUseTag: [false],
-      unlinkedIgnoredRootDir: [''],
-      unlinkedCategories: [[]]
+      deletePrivate: [{ value: false, disabled: true }],
+      unlinkedTargetCategory: [{ value: 'cleanuparr-unlinked', disabled: true }, [Validators.required]],
+      unlinkedUseTag: [{ value: false, disabled: true }],
+      unlinkedIgnoredRootDir: [{ value: '', disabled: true }],
+      unlinkedCategories: [{ value: [], disabled: true }]
     });
 
     // Set up form value change listeners
     this.setupFormValueChangeListeners();
 
-    // Listen for config changes from the store
+    // Load the current configuration
     effect(() => {
       const config = this.downloadCleanerConfig();
-      if (config && !this.downloadCleanerLoading()) {
+      if (config) {
         this.updateForm(config);
       }
     });
+    
+    // Effect to handle errors
+    effect(() => {
+      const errorMessage = this.downloadCleanerError();
+      if (errorMessage) {
+        // Only emit the error for parent components
+        this.error.emit(errorMessage);
+      }
+    });
+  }
+  
+  /**
+   * Add a new category to the form array
+   */
+  addCategory(): void {
+    const defaultCategory = createDefaultCategory();
+    const categoryGroup = this.formBuilder.group({
+      name: [defaultCategory.name, [Validators.required]],
+      maxRatio: [defaultCategory.maxRatio, [Validators.min(-1)]],
+      minSeedTime: [defaultCategory.minSeedTime, [Validators.min(0)]],
+      maxSeedTime: [defaultCategory.maxSeedTime, [Validators.min(-1)]]
+    });
+    
+    this.categoriesFormArray.push(categoryGroup);
+    this.downloadCleanerForm.markAsDirty();
+  }
+  
+  /**
+   * Helper method to get a category control as FormGroup for the template
+   */
+  getCategoryAsFormGroup(index: number): FormGroup {
+    return this.categoriesFormArray.at(index) as FormGroup;
+  }
+  
+  /**
+   * Remove a category from the form array
+   */
+  removeCategory(index: number): void {
+    this.categoriesFormArray.removeAt(index);
+    this.downloadCleanerForm.markAsDirty();
   }
 
   /**
@@ -144,16 +197,25 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
    */
   private updateForm(config: DownloadCleanerConfig): void {
     // Clear existing categories
-    this.categoriesFormArray.clear();
-    
-    // Add each category from the config
+    while (this.categoriesFormArray.length > 0) {
+      this.categoriesFormArray.removeAt(0);
+    }
+
+    // Add categories from config
     if (config.categories && config.categories.length > 0) {
       config.categories.forEach(category => {
-        this.addCategory(category);
+        const categoryGroup = this.formBuilder.group({
+          name: [category.name, [Validators.required]],
+          maxRatio: [category.maxRatio, [Validators.min(-1)]],
+          minSeedTime: [category.minSeedTime, [Validators.min(0)]],
+          maxSeedTime: [category.maxSeedTime, [Validators.min(-1)]]
+        });
+        
+        this.categoriesFormArray.push(categoryGroup);
       });
     }
 
-    // Update the form values
+    // Update form values
     this.downloadCleanerForm.patchValue({
       enabled: config.enabled,
       useAdvancedScheduling: config.useAdvancedScheduling,
@@ -162,9 +224,17 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       unlinkedTargetCategory: config.unlinkedTargetCategory,
       unlinkedUseTag: config.unlinkedUseTag,
       unlinkedIgnoredRootDir: config.unlinkedIgnoredRootDir,
-      unlinkedCategories: config.unlinkedCategories
+      unlinkedCategories: config.unlinkedCategories || []
     });
 
+    // Update job schedule if present
+    if (config.jobSchedule) {
+      this.downloadCleanerForm.get('jobSchedule')?.patchValue({
+        every: config.jobSchedule.every,
+        type: config.jobSchedule.type
+      });
+    }
+    
     // Update form control states based on the configuration
     this.updateFormControlDisabledStates(config);
     
@@ -188,41 +258,58 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
    */
   private setupFormValueChangeListeners(): void {
     // Listen for changes to the 'enabled' control
-    this.downloadCleanerForm.get('enabled')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(enabled => {
-        this.updateMainControlsState(enabled);
-      });
+    const enabledControl = this.downloadCleanerForm.get('enabled');
+    if (enabledControl) {
+      enabledControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(enabled => {
+          this.updateMainControlsState(enabled);
+        });
+    }
 
     // Listen for changes to the 'useAdvancedScheduling' control
-    this.downloadCleanerForm.get('useAdvancedScheduling')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(useAdvanced => {
-        const cronControl = this.downloadCleanerForm.get('cronExpression');
-        const jobScheduleControl = this.downloadCleanerForm.get('jobSchedule');
+    const advancedControl = this.downloadCleanerForm.get('useAdvancedScheduling');
+    if (advancedControl) {
+      advancedControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(useAdvanced => {
+          const cronControl = this.downloadCleanerForm.get('cronExpression');
+          const jobScheduleControl = this.downloadCleanerForm.get('jobSchedule');
+          const options = { onlySelf: true };
 
-        if (useAdvanced) {
-          jobScheduleControl?.disable();
-          cronControl?.enable();
-        } else {
-          cronControl?.disable();
-          jobScheduleControl?.enable();
-        }
-      });
+          if (useAdvanced) {
+            jobScheduleControl?.disable(options);
+            cronControl?.enable(options);
+          } else {
+            cronControl?.disable(options);
+            jobScheduleControl?.enable(options);
+          }
+        });
+    }
 
     // Listen for changes to the schedule type to update available values
-    this.downloadCleanerForm.get('jobSchedule.type')?.valueChanges
+    const scheduleTypeControl = this.downloadCleanerForm.get('jobSchedule.type');
+    if (scheduleTypeControl) {
+      scheduleTypeControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          // Ensure the selected value is valid for the new type
+          const everyControl = this.downloadCleanerForm.get('jobSchedule.every');
+          const currentValue = everyControl?.value;
+          const scheduleType = this.downloadCleanerForm.get('jobSchedule.type')?.value;
+          
+          const validValues = ScheduleOptions[scheduleType as keyof typeof ScheduleOptions];
+          if (currentValue && !validValues.includes(currentValue)) {
+            everyControl?.setValue(validValues[0]);
+          }
+        });
+    }
+    
+    // Listen to all form changes to check for actual differences from original values
+    this.downloadCleanerForm.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        // Ensure the selected value is valid for the new type
-        const everyControl = this.downloadCleanerForm.get('jobSchedule.every');
-        const currentValue = everyControl?.value;
-        const scheduleType = this.downloadCleanerForm.get('jobSchedule.type')?.value;
-        
-        const validValues = ScheduleOptions[scheduleType as keyof typeof ScheduleOptions];
-        if (currentValue && !validValues.includes(currentValue)) {
-          everyControl?.setValue(validValues[0]);
-        }
+        this.hasActualChanges = this.formValuesChanged();
       });
   }
 
@@ -230,14 +317,20 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
    * Store original form values for dirty checking
    */
   private storeOriginalValues(): void {
-    this.originalFormValues = JSON.parse(JSON.stringify(this.downloadCleanerForm.value));
+    // Create a deep copy of the form values to ensure proper comparison
+    // Using getRawValue() instead of just value to include disabled controls
+    this.originalFormValues = JSON.parse(JSON.stringify(this.downloadCleanerForm.getRawValue()));
+    this.hasActualChanges = false;
   }
 
   /**
    * Check if the current form values are different from the original values
    */
   formValuesChanged(): boolean {
-    const currentValues = this.downloadCleanerForm.value;
+    if (!this.originalFormValues) return false;
+    
+    // Use getRawValue() to include disabled controls in the comparison
+    const currentValues = this.downloadCleanerForm.getRawValue();
     return !this.isEqual(currentValues, this.originalFormValues);
   }
 
@@ -281,97 +374,53 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       jobScheduleControl?.enable();
     }
   }
-
+  
   /**
    * Update the state of main controls based on the 'enabled' control value
    */
   private updateMainControlsState(enabled: boolean): void {
-    const controls = [
-      'useAdvancedScheduling',
-      'deletePrivate',
-      'unlinkedTargetCategory',
-      'unlinkedUseTag',
-      'unlinkedIgnoredRootDir',
-      'unlinkedCategories'
-    ];
-
-    if (enabled) {
-      // Enable all controls when the cleaner is enabled
-      controls.forEach(controlName => {
-        const control = this.downloadCleanerForm.get(controlName);
-        if (control) {
-          control.enable();
-        }
-      });
-
-      // Enable or disable schedule controls based on advanced scheduling
-      const useAdvanced = this.downloadCleanerForm.get('useAdvancedScheduling')?.value;
-      if (useAdvanced) {
-        this.downloadCleanerForm.get('cronExpression')?.enable();
-        this.downloadCleanerForm.get('jobSchedule')?.disable();
-      } else {
-        this.downloadCleanerForm.get('cronExpression')?.disable();
-        this.downloadCleanerForm.get('jobSchedule')?.enable();
-      }
-
-      // Enable categories form array
-      this.categoriesFormArray.enable();
-    } else {
-      // Disable all controls when the cleaner is disabled
-      controls.forEach(controlName => {
-        const control = this.downloadCleanerForm.get(controlName);
-        if (control) {
-          control.disable();
-        }
-      });
-
-      // Disable schedule controls
-      this.downloadCleanerForm.get('cronExpression')?.disable();
-      this.downloadCleanerForm.get('jobSchedule')?.disable();
-
-      // Disable categories form array
-      this.categoriesFormArray.disable();
-    }
-  }
-
-  /**
-   * Get the categories form array
-   */
-  get categoriesFormArray(): FormArray {
-    return this.downloadCleanerForm.get('categories') as FormArray;
-  }
-
-  /**
-   * Add a new category to the form array
-   */
-  addCategory(category?: CleanCategory): void {
-    // Use the provided category or create a default one
-    const defaultCategory = category || createDefaultCategory();
+    // Get references to all controls that depend on the main enabled toggle
+    const jobScheduleControl = this.downloadCleanerForm.get('jobSchedule');
+    const cronExpressionControl = this.downloadCleanerForm.get('cronExpression');
+    const useAdvancedSchedulingControl = this.downloadCleanerForm.get('useAdvancedScheduling');
+    const categoriesControl = this.downloadCleanerForm.get('categories');
+    const unlinkedTargetCategoryControl = this.downloadCleanerForm.get('unlinkedTargetCategory');
+    const unlinkedUseTagControl = this.downloadCleanerForm.get('unlinkedUseTag');
+    const unlinkedIgnoredRootDirControl = this.downloadCleanerForm.get('unlinkedIgnoredRootDir');
+    const unlinkedCategoriesControl = this.downloadCleanerForm.get('unlinkedCategories');
+    const deletePrivateControl = this.downloadCleanerForm.get('deletePrivate');
     
-    const categoryGroup = this.formBuilder.group({
-      name: [defaultCategory.name, [Validators.required]],
-      maxRatio: [defaultCategory.maxRatio, [Validators.min(-1), Validators.pattern(/^\d+(\.\d+)?$/)]],
-      minSeedTime: [defaultCategory.minSeedTime, [Validators.min(0)]],
-      maxSeedTime: [defaultCategory.maxSeedTime, [Validators.min(-1)]]
-    });
-
-    this.categoriesFormArray.push(categoryGroup);
-    this.downloadCleanerForm.markAsDirty();
-  }
-
-  /**
-   * Helper method to get a category control as FormGroup for the template
-   */
-  getCategoryAsFormGroup(index: number): FormGroup {
-    return this.categoriesFormArray.at(index) as FormGroup;
-  }
-
-  /**
-   * Remove a category from the form array
-   */
-  removeCategory(index: number): void {
-    this.categoriesFormArray.removeAt(index);
-    this.downloadCleanerForm.markAsDirty();
+    if (enabled) {
+      // Enable all dependent controls when the main toggle is enabled
+      useAdvancedSchedulingControl?.enable();
+      deletePrivateControl?.enable();
+      unlinkedTargetCategoryControl?.enable();
+      unlinkedUseTagControl?.enable();
+      unlinkedIgnoredRootDirControl?.enable();
+      unlinkedCategoriesControl?.enable();
+      categoriesControl?.enable();
+      
+      // Handle schedule controls based on advanced scheduling mode
+      const useAdvancedScheduling = useAdvancedSchedulingControl?.value || false;
+      if (useAdvancedScheduling) {
+        cronExpressionControl?.enable();
+        jobScheduleControl?.disable();
+      } else {
+        cronExpressionControl?.disable();
+        jobScheduleControl?.enable();
+      }
+    } else {
+      // Disable all dependent controls when the main toggle is disabled
+      useAdvancedSchedulingControl?.disable();
+      cronExpressionControl?.disable();
+      jobScheduleControl?.disable();
+      deletePrivateControl?.disable();
+      unlinkedTargetCategoryControl?.disable();
+      unlinkedUseTagControl?.disable();
+      unlinkedIgnoredRootDirControl?.disable();
+      unlinkedCategoriesControl?.disable();
+      categoriesControl?.disable();
+    }
   }
 
   /**
@@ -382,7 +431,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     this.markFormGroupTouched(this.downloadCleanerForm);
 
     if (this.downloadCleanerForm.valid) {
-      // Get form values
+      // Get form values including disabled controls
       const formValues = this.downloadCleanerForm.getRawValue();
 
       // Create config object from form values
@@ -390,27 +439,37 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
         enabled: formValues.enabled,
         useAdvancedScheduling: formValues.useAdvancedScheduling,
         cronExpression: formValues.cronExpression,
+        jobSchedule: formValues.jobSchedule,
         categories: formValues.categories,
         deletePrivate: formValues.deletePrivate,
         unlinkedTargetCategory: formValues.unlinkedTargetCategory,
         unlinkedUseTag: formValues.unlinkedUseTag,
         unlinkedIgnoredRootDir: formValues.unlinkedIgnoredRootDir,
-        unlinkedCategories: formValues.unlinkedCategories
+        unlinkedCategories: formValues.unlinkedCategories || []
       };
 
       // Save the configuration
       this.downloadCleanerStore.saveDownloadCleanerConfig(config)
         .then(success => {
           if (success) {
+            // Show success message
+            this.notificationService.showSuccess('Download cleaner configuration saved successfully.');
+            
             // Emit saved event for parent components
             this.saved.emit();
             
             // Setup a one-time check to mark form as pristine after successful save
             const checkSaveCompletion = () => {
-              if (!this.downloadCleanerSaving()) {
+              const saving = this.downloadCleanerSaving();
+              const error = this.downloadCleanerError();
+              
+              if (!saving && !error) {
                 // Reset form state after successful save
                 this.downloadCleanerForm.markAsPristine();
                 this.storeOriginalValues();
+              } else if (!saving && error) {
+                // If there's an error, we can stop checking
+                // No need to show error toast here, it's handled by the LoadingErrorStateComponent
               } else {
                 // If still saving, check again in a moment
                 setTimeout(checkSaveCompletion, 100);
