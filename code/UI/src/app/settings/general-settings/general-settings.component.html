@@ -1,4 +1,4 @@
-<p-toast></p-toast>
+<!-- Toast notifications handled by central toast container -->
 
 <p-card styleClass="settings-card h-full">
   <ng-template pTemplate="header">
@@ -20,7 +20,7 @@
       [loading]="generalLoading()"
       [error]="generalError()"
       loadingMessage="Loading settings..."
-      noConnectionMessage="Could not connect to server"
+      errorMessage="Could not connect to server"
     ></app-loading-error-state>
 
     <!-- Settings Form -->

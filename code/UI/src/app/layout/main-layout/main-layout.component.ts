@@ -15,6 +15,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 // Custom Components
 import { SidebarContentComponent } from '../sidebar-content/sidebar-content.component';
+import { ToastContainerComponent } from '../../shared/components/toast-container/toast-container.component';
 
 interface MenuItem {
   label: string;
@@ -37,7 +38,8 @@ interface MenuItem {
     DividerModule,
     RippleModule,
     ConfirmDialogModule,
-    SidebarContentComponent
+    SidebarContentComponent,
+    ToastContainerComponent
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'

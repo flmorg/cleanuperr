@@ -27,7 +27,8 @@ import { AccordionModule } from "primeng/accordion";
 import { SelectButtonModule } from "primeng/selectbutton";
 import { ChipsModule } from "primeng/chips";
 import { ToastModule } from "primeng/toast";
-import { MessageService } from "primeng/api";
+// Using centralized NotificationService instead of MessageService
+import { NotificationService } from "../../core/services/notification.service";
 import { SelectModule } from "primeng/select";
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { DropdownModule } from "primeng/dropdown";
@@ -54,7 +55,7 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     DropdownModule,
     LoadingErrorStateComponent,
   ],
-  providers: [QueueCleanerConfigStore, MessageService],
+  providers: [QueueCleanerConfigStore],
   templateUrl: "./queue-cleaner-settings.component.html",
   styleUrls: ["./queue-cleaner-settings.component.scss"],
 })
@@ -93,7 +94,8 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
 
   // Inject the necessary services
   private formBuilder = inject(FormBuilder);
-  private messageService = inject(MessageService);
+  // Using the notification service for all toast messages
+  private notificationService = inject(NotificationService);
   private queueCleanerStore = inject(QueueCleanerConfigStore);
 
   // Signals from the store
@@ -175,6 +177,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     });
 
     // Create an effect to update the form when the configuration changes
+    // Effect to handle configuration changes
     effect(() => {
       const config = this.queueCleanerConfig();
       if (config) {
@@ -212,7 +215,19 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         // Mark form as pristine since we've just loaded the data
         this.queueCleanerForm.markAsPristine();
       }
-    });   // Set up listeners for form value changes
+    });
+    
+    // Effect to handle errors - only emit to parent but don't show toast
+    // (will be displayed by the LoadingErrorStateComponent)
+    effect(() => {
+      const errorMessage = this.queueCleanerError();
+      if (errorMessage) {
+        // Only emit the error for parent components
+        this.error.emit(errorMessage);
+      }
+    });
+    
+    // Set up listeners for form value changes
     this.setupFormValueChangeListeners();
   }
 
@@ -591,29 +606,23 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       // Setup a one-time check to mark form as pristine after successful save
       // This pattern works with signals since we're not trying to pipe the signal itself
       const checkSaveCompletion = () => {
-        const loading = this.queueCleanerLoading();
+        const saving = this.queueCleanerSaving();
         const error = this.queueCleanerError();
         
-        if (!loading && !error) {
+        if (!saving && !error) {
           // Mark form as pristine after successful save
           this.queueCleanerForm.markAsPristine();
           // Update original values reference
           this.storeOriginalValues();
-          // Emit saved event (parent will display success message)
+          // Emit saved event 
           this.saved.emit();
-          // No success message here as it's handled by parent component
-        } else if (!loading && error) {
+          // Display success message
+          this.notificationService.showSuccess('Queue cleaner configuration saved successfully.');
+        } else if (!saving && error) {
           // If there's an error, we can stop checking
-          this.destroy$.next();
-          // Show error message
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to save queue cleaner configuration.',
-            life: 5000
-          });
+          // No need to show error toast here, it's handled by the LoadingErrorStateComponent
         } else {
-          // If still loading, check again in a moment
+          // If still saving, check again in a moment
           setTimeout(checkSaveCompletion, 100);
         }
       };
@@ -622,12 +631,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       checkSaveCompletion();
     } else {
       // Form is invalid, show error message
-      this.messageService.add({
-        severity: "error",
-        summary: "Validation Error",
-        detail: "Please correct the errors in the form before saving.",
-        life: 5000
-      });
+      this.notificationService.showValidationError();
       
       // Emit error for parent components
       this.error.emit("Please fix validation errors before saving.");

@@ -15,7 +15,7 @@ import { CheckboxModule } from "primeng/checkbox";
 import { ButtonModule } from "primeng/button";
 import { InputNumberModule } from "primeng/inputnumber";
 import { ToastModule } from "primeng/toast";
-import { MessageService } from "primeng/api";
+import { NotificationService } from '../../core/services/notification.service';
 import { SelectModule } from "primeng/select";
 import { ChipsModule } from "primeng/chips";
 import { AutoCompleteModule } from "primeng/autocomplete";
@@ -38,7 +38,7 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     AutoCompleteModule,
     LoadingErrorStateComponent,
   ],
-  providers: [GeneralConfigStore, MessageService],
+  providers: [GeneralConfigStore],
   templateUrl: "./general-settings.component.html",
   styleUrls: ["./general-settings.component.scss"],
 })
@@ -71,7 +71,7 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
 
   // Inject the necessary services
   private formBuilder = inject(FormBuilder);
-  private messageService = inject(MessageService);
+  private notificationService = inject(NotificationService);
   private generalConfigStore = inject(GeneralConfigStore);
 
   // Signals from the store
@@ -113,18 +113,17 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
     });
 
     // Setup effect to react to error changes
+    // Only emit errors to parent components, don't show toast
+    // (toast is shown by LoadingErrorStateComponent)
     effect(() => {
       const errorMessage = this.generalError();
       if (errorMessage) {
-        this.messageService.add({
-          severity: "error",
-          summary: "Error",
-          detail: errorMessage,
-          life: 5000,
-        });
+        // Only emit the error for parent components
         this.error.emit(errorMessage);
       }
     });
+
+    // No automatic validation error effect needed - validation errors are shown on form submission
   }
 
   /**
@@ -148,12 +147,7 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   saveGeneralConfig(): void {
     if (this.generalForm.invalid) {
       this.markFormGroupTouched(this.generalForm);
-      this.messageService.add({
-        severity: "error",
-        summary: "Validation Error",
-        detail: "Please correct the form errors before saving.",
-        life: 5000,
-      });
+      this.notificationService.showValidationError();
       return;
     }
 
@@ -186,12 +180,7 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
         // Emit saved event
         this.saved.emit();
         // Show success message
-        this.messageService.add({
-          severity: "success",
-          summary: "Success",
-          detail: "General configuration saved successfully.",
-          life: 3000,
-        });
+        this.notificationService.showSuccess('General configuration saved successfully!');
       } else if (!loading && error) {
         // If there's an error, we can stop checking
       } else {
