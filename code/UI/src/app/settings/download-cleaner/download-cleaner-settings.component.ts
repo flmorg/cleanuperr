@@ -134,6 +134,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       }),
       categories: this.formBuilder.array([]),
       deletePrivate: [{ value: false, disabled: true }],
+      unlinkedEnabled: [{ value: false, disabled: true }],
       unlinkedTargetCategory: [{ value: 'cleanuparr-unlinked', disabled: true }, [Validators.required]],
       unlinkedUseTag: [{ value: false, disabled: true }],
       unlinkedIgnoredRootDir: [{ value: '', disabled: true }],
@@ -221,6 +222,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       useAdvancedScheduling: config.useAdvancedScheduling,
       cronExpression: config.cronExpression,
       deletePrivate: config.deletePrivate,
+      unlinkedEnabled: config.unlinkedEnabled,
       unlinkedTargetCategory: config.unlinkedTargetCategory,
       unlinkedUseTag: config.unlinkedUseTag,
       unlinkedIgnoredRootDir: config.unlinkedIgnoredRootDir,
@@ -284,6 +286,16 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
             cronControl?.disable(options);
             jobScheduleControl?.enable(options);
           }
+        });
+    }
+
+    // Listen for changes to the 'unlinkedEnabled' control
+    const unlinkedEnabledControl = this.downloadCleanerForm.get('unlinkedEnabled');
+    if (unlinkedEnabledControl) {
+      unlinkedEnabledControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(enabled => {
+          this.updateUnlinkedControlsState(enabled);
         });
     }
 
@@ -376,50 +388,48 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   }
   
   /**
-   * Update the state of main controls based on the 'enabled' control value
+   * Update the state of main controls based on whether the feature is enabled
    */
   private updateMainControlsState(enabled: boolean): void {
-    // Get references to all controls that depend on the main enabled toggle
+    const useAdvancedControl = this.downloadCleanerForm.get('useAdvancedScheduling');
+    const cronControl = this.downloadCleanerForm.get('cronExpression');
     const jobScheduleControl = this.downloadCleanerForm.get('jobSchedule');
-    const cronExpressionControl = this.downloadCleanerForm.get('cronExpression');
-    const useAdvancedSchedulingControl = this.downloadCleanerForm.get('useAdvancedScheduling');
-    const categoriesControl = this.downloadCleanerForm.get('categories');
-    const unlinkedTargetCategoryControl = this.downloadCleanerForm.get('unlinkedTargetCategory');
-    const unlinkedUseTagControl = this.downloadCleanerForm.get('unlinkedUseTag');
-    const unlinkedIgnoredRootDirControl = this.downloadCleanerForm.get('unlinkedIgnoredRootDir');
-    const unlinkedCategoriesControl = this.downloadCleanerForm.get('unlinkedCategories');
+    const categoriesControl = this.categoriesFormArray;
     const deletePrivateControl = this.downloadCleanerForm.get('deletePrivate');
-    
+    const unlinkedEnabledControl = this.downloadCleanerForm.get('unlinkedEnabled');
+
+    // Disable emitting events during bulk changes
+    const options = { emitEvent: false };
+
     if (enabled) {
-      // Enable all dependent controls when the main toggle is enabled
-      useAdvancedSchedulingControl?.enable();
-      deletePrivateControl?.enable();
-      unlinkedTargetCategoryControl?.enable();
-      unlinkedUseTagControl?.enable();
-      unlinkedIgnoredRootDirControl?.enable();
-      unlinkedCategoriesControl?.enable();
-      categoriesControl?.enable();
-      
-      // Handle schedule controls based on advanced scheduling mode
-      const useAdvancedScheduling = useAdvancedSchedulingControl?.value || false;
-      if (useAdvancedScheduling) {
-        cronExpressionControl?.enable();
-        jobScheduleControl?.disable();
+      // Enable main controls
+      useAdvancedControl?.enable(options);
+      deletePrivateControl?.enable(options);
+      categoriesControl?.enable(options);
+      unlinkedEnabledControl?.enable(options);
+
+      // Enable the appropriate scheduling controls based on advanced mode
+      const useAdvanced = useAdvancedControl?.value;
+      if (useAdvanced) {
+        cronControl?.enable(options);
       } else {
-        cronExpressionControl?.disable();
-        jobScheduleControl?.enable();
+        jobScheduleControl?.enable(options);
       }
+      
+      // Update unlinked controls based on unlinkedEnabled value
+      const unlinkedEnabled = unlinkedEnabledControl?.value;
+      this.updateUnlinkedControlsState(unlinkedEnabled);
     } else {
-      // Disable all dependent controls when the main toggle is disabled
-      useAdvancedSchedulingControl?.disable();
-      cronExpressionControl?.disable();
-      jobScheduleControl?.disable();
-      deletePrivateControl?.disable();
-      unlinkedTargetCategoryControl?.disable();
-      unlinkedUseTagControl?.disable();
-      unlinkedIgnoredRootDirControl?.disable();
-      unlinkedCategoriesControl?.disable();
-      categoriesControl?.disable();
+      // Disable all controls when the feature is disabled
+      useAdvancedControl?.disable(options);
+      cronControl?.disable(options);
+      jobScheduleControl?.disable(options);
+      categoriesControl?.disable(options);
+      deletePrivateControl?.disable(options);
+      unlinkedEnabledControl?.disable(options);
+      
+      // Always disable unlinked controls when main feature is disabled
+      this.updateUnlinkedControlsState(false);
     }
   }
 
@@ -442,6 +452,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
         jobSchedule: formValues.jobSchedule,
         categories: formValues.categories,
         deletePrivate: formValues.deletePrivate,
+        unlinkedEnabled: formValues.unlinkedEnabled,
         unlinkedTargetCategory: formValues.unlinkedTargetCategory,
         unlinkedUseTag: formValues.unlinkedUseTag,
         unlinkedIgnoredRootDir: formValues.unlinkedIgnoredRootDir,
@@ -500,13 +511,14 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     this.downloadCleanerForm.reset({
       enabled: false,
       useAdvancedScheduling: false,
-      cronExpression: "0 0 * * * ?",
+      cronExpression: '0 0 * * * ?',
       jobSchedule: {
-        every: 5,
         type: ScheduleUnit.Minutes,
+        every: 5
       },
       categories: [],
       deletePrivate: false,
+      unlinkedEnabled: false,
       unlinkedTargetCategory: 'cleanuparr-unlinked',
       unlinkedUseTag: false,
       unlinkedIgnoredRootDir: '',
@@ -578,5 +590,41 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     
     const control = categoryGroup.get(controlName);
     return control ? control.touched && control.hasError(errorName) : false;
+  }
+
+  /**
+   * Check if a category form control has an error
+   */
+  hasCategoryControlError(categoryIndex: number, controlName: string, errorName: string): boolean {
+    const categoryGroup = this.categoriesFormArray.at(categoryIndex);
+    const control = categoryGroup.get(controlName);
+    return control ? control.touched && control.hasError(errorName) : false;
+  }
+
+  /**
+   * Update the state of unlinked controls based on whether unlinked handling is enabled
+   */
+  private updateUnlinkedControlsState(enabled: boolean): void {
+    const targetCategoryControl = this.downloadCleanerForm.get('unlinkedTargetCategory');
+    const useTagControl = this.downloadCleanerForm.get('unlinkedUseTag');
+    const ignoredRootDirControl = this.downloadCleanerForm.get('unlinkedIgnoredRootDir');
+    const categoriesControl = this.downloadCleanerForm.get('unlinkedCategories');
+    
+    // Disable emitting events during bulk changes
+    const options = { emitEvent: false };
+    
+    if (enabled) {
+      // Enable all unlinked controls
+      targetCategoryControl?.enable(options);
+      useTagControl?.enable(options);
+      ignoredRootDirControl?.enable(options);
+      categoriesControl?.enable(options);
+    } else {
+      // Disable all unlinked controls
+      targetCategoryControl?.disable(options);
+      useTagControl?.disable(options);
+      ignoredRootDirControl?.disable(options);
+      categoriesControl?.disable(options);
+    }
   }
 }

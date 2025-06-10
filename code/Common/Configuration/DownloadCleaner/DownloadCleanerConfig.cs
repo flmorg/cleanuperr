@@ -17,6 +17,11 @@ public sealed record DownloadCleanerConfig : IJobConfig
 
     public bool DeletePrivate { get; init; }
     
+    /// <summary>
+    /// Indicates whether unlinked download handling is enabled
+    /// </summary>
+    public bool UnlinkedEnabled { get; init; } = false;
+    
     public string UnlinkedTargetCategory { get; init; } = "cleanuparr-unlinked";
 
     public bool UnlinkedUseTag { get; init; }
@@ -39,9 +44,15 @@ public sealed record DownloadCleanerConfig : IJobConfig
         
         Categories.ForEach(x => x.Validate());
         
-        if (string.IsNullOrEmpty(UnlinkedTargetCategory))
+        // Only validate unlinked settings if unlinked handling is enabled
+        if (!UnlinkedEnabled)
         {
             return;
+        }
+        
+        if (string.IsNullOrEmpty(UnlinkedTargetCategory))
+        {
+            throw new ValidationException("unlinked target category is required");
         }
 
         if (UnlinkedCategories?.Count is null or 0)

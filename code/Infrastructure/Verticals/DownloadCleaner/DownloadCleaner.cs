@@ -92,7 +92,7 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
         
-        bool isUnlinkedEnabled = !string.IsNullOrEmpty(_config.UnlinkedTargetCategory) && _config.UnlinkedCategories.Count > 0;
+        bool isUnlinkedEnabled = _config.UnlinkedEnabled && !string.IsNullOrEmpty(_config.UnlinkedTargetCategory) && _config.UnlinkedCategories.Count > 0;
         bool isCleaningEnabled = _config.Categories.Count > 0;
         
         if (!isUnlinkedEnabled && !isCleaningEnabled)

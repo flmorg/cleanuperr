@@ -9,6 +9,7 @@ export interface DownloadCleanerConfig {
   jobSchedule: JobSchedule;
   categories: CleanCategory[];
   deletePrivate: boolean;
+  unlinkedEnabled: boolean;
   unlinkedTargetCategory: string;
   unlinkedUseTag: boolean;
   unlinkedIgnoredRootDir: string;
@@ -48,6 +49,7 @@ export const defaultDownloadCleanerConfig: DownloadCleanerConfig = {
   },
   categories: [],
   deletePrivate: false,
+  unlinkedEnabled: false,
   unlinkedTargetCategory: 'cleanuparr-unlinked',
   unlinkedUseTag: false,
   unlinkedIgnoredRootDir: '',
