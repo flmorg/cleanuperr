@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnDestroy, Output, inject, effect } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { DownloadCleanerConfigStore } from "./download-cleaner-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
@@ -165,17 +165,38 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   /**
    * Add a new category to the form array
    */
-  addCategory(): void {
-    const defaultCategory = createDefaultCategory();
-    const categoryGroup = this.formBuilder.group({
-      name: [defaultCategory.name, [Validators.required]],
-      maxRatio: [defaultCategory.maxRatio, [Validators.min(-1)]],
-      minSeedTime: [defaultCategory.minSeedTime, [Validators.min(0)]],
-      maxSeedTime: [defaultCategory.maxSeedTime, [Validators.min(-1)]]
-    });
+  addCategory(category: CleanCategory = createDefaultCategory()): void {
+    // Create a form group for the category with validation and add it to the form array
+    const categoryGroup = this.createCategoryFormGroup(category);
     
     this.categoriesFormArray.push(categoryGroup);
     this.downloadCleanerForm.markAsDirty();
+  }
+  
+  /**
+   * Create a category form group with validation
+   */
+  private createCategoryFormGroup(category: CleanCategory): FormGroup {
+    return this.formBuilder.group({
+      name: [category.name, Validators.required],
+      maxRatio: [category.maxRatio],
+      minSeedTime: [category.minSeedTime, [Validators.min(0)]],
+      maxSeedTime: [category.maxSeedTime],
+    }, { validators: this.validateCategory });
+  }
+  
+  /**
+   * Custom validator for the "both disabled" rule in categories
+   */
+  private validateCategory(group: FormGroup): ValidationErrors | null {
+    const maxRatio = group.get('maxRatio')?.value;
+    const maxSeedTime = group.get('maxSeedTime')?.value;
+
+    if (maxRatio < 0 && maxSeedTime < 0) {
+      return { bothDisabled: true };
+    }
+
+    return null;
   }
   
   /**
@@ -193,26 +214,19 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     this.downloadCleanerForm.markAsDirty();
   }
 
+
+
   /**
    * Update the form with values from the configuration
    */
   private updateForm(config: DownloadCleanerConfig): void {
-    // Clear existing categories
-    while (this.categoriesFormArray.length > 0) {
-      this.categoriesFormArray.removeAt(0);
-    }
+    // Reset any existing categories
+    this.categoriesFormArray.clear();
 
-    // Add categories from config
+    // Add categories from config with validation
     if (config.categories && config.categories.length > 0) {
       config.categories.forEach(category => {
-        const categoryGroup = this.formBuilder.group({
-          name: [category.name, [Validators.required]],
-          maxRatio: [category.maxRatio, [Validators.min(-1)]],
-          minSeedTime: [category.minSeedTime, [Validators.min(0)]],
-          maxSeedTime: [category.maxSeedTime, [Validators.min(-1)]]
-        });
-        
-        this.categoriesFormArray.push(categoryGroup);
+        this.addCategory(category);
       });
     }
 
@@ -461,42 +475,37 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
 
       // Save the configuration
       this.downloadCleanerStore.saveDownloadCleanerConfig(config)
-        .then(success => {
-          if (success) {
-            // Show success message
-            this.notificationService.showSuccess('Download cleaner configuration saved successfully.');
-            
-            // Emit saved event for parent components
-            this.saved.emit();
-            
-            // Setup a one-time check to mark form as pristine after successful save
-            const checkSaveCompletion = () => {
-              const saving = this.downloadCleanerSaving();
-              const error = this.downloadCleanerError();
-              
-              if (!saving && !error) {
-                // Reset form state after successful save
-                this.downloadCleanerForm.markAsPristine();
-                this.storeOriginalValues();
-              } else if (!saving && error) {
-                // If there's an error, we can stop checking
-                // No need to show error toast here, it's handled by the LoadingErrorStateComponent
-              } else {
-                // If still saving, check again in a moment
-                setTimeout(checkSaveCompletion, 100);
-              }
-            };
-            
-            // Start checking for save completion
-            checkSaveCompletion();
+        .then(() => {
+          this.notificationService.showSuccess('Download cleaner configuration saved successfully');
+          this.saved.emit();
+          this.storeOriginalValues();
+          this.downloadCleanerForm.markAsPristine();
+          this.hasActualChanges = false;
+        })
+        .catch((err) => {
+          console.error('Failed to save download cleaner config', err);
+          
+          // Extract meaningful message from error response for toast notification
+          let errorMessage = 'Failed to save download cleaner configuration';
+          
+          // If it's a 400 error with a message, use that message
+          if (err && err.status === 400) {
+            if (typeof err.error === 'string') {
+              errorMessage = err.error;
+            } else if (err.error && err.error.message) {
+              errorMessage = err.error.message;
+            } else if (err.error && err.error.title) {
+              errorMessage = err.error.title;
+            } else if (err.message) {
+              errorMessage = err.message;
+            }
           }
+          
+          this.notificationService.showError(errorMessage);
+          this.error.emit(errorMessage);
         });
     } else {
-      // Form is invalid, show error message
       this.notificationService.showValidationError();
-      
-      // Emit error for parent components
-      this.error.emit("Please fix validation errors before saving.");
     }
   }
 
@@ -599,6 +608,14 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     const categoryGroup = this.categoriesFormArray.at(categoryIndex);
     const control = categoryGroup.get(controlName);
     return control ? control.touched && control.hasError(errorName) : false;
+  }
+  
+  /**
+   * Check if a category form group itself has an error (not tied to a specific control)
+   */
+  hasCategoryGroupError(categoryIndex: number, errorName: string): boolean {
+    const categoryGroup = this.categoriesFormArray.at(categoryIndex);
+    return categoryGroup ? categoryGroup.touched && categoryGroup.hasError(errorName) : false;
   }
 
   /**

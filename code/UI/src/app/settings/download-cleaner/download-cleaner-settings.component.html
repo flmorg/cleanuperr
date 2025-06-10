@@ -132,8 +132,8 @@
                     decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
                     decrementButtonIcon="pi pi-minus">
                   </p-inputNumber>
-                  <small class="form-helper-text">Maximum ratio to seed before removing (<code>-1</code> means disabled)</small>
                   <small *ngIf="hasCategoryError(i, 'maxRatio', 'min')" class="p-error block">Min value is -1</small>
+                  <small class="form-helper-text">Maximum ratio to seed before removing (<code>-1</code> means disabled)</small>
                 </div>
               </div>
               
@@ -145,6 +145,7 @@
                     decrementButtonIcon="pi pi-minus">
                   </p-inputNumber>
                   <small *ngIf="hasCategoryError(i, 'minSeedTime', 'min')" class="p-error block">Min value is 0</small>
+                  <small class="form-helper-text">Minimum time to seed before removing a download that has reached the max ratio (<code>0</code> means disabled)</small>
                 </div>
               </div>
               
@@ -162,6 +163,10 @@
                 </div>
               </div>
             </div>
+            <!-- Error for both maxRatio and maxSeedTime disabled -->
+            <small *ngIf="hasCategoryGroupError(i, 'bothDisabled')" class="p-error block">
+              Both max ratio and max seed time cannot be disabled at the same time
+            </small>
           </div>
         </div>
         

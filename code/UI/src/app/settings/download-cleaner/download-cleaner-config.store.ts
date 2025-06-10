@@ -68,7 +68,7 @@ export class DownloadCleanerConfigStore {
     this._saving.set(true);
     this._error.set(null);
 
-    return new Promise<boolean>((resolve) => {
+    return new Promise<boolean>((resolve, reject) => {
       // API call to update download cleaner config
       this.http.put<any>(`${this.apiUrl}/download_cleaner`, config)
         .pipe(
@@ -87,9 +87,8 @@ export class DownloadCleanerConfigStore {
             console.error('Error saving download cleaner config', error);
             const errorMessage = error.error?.message || error.message || 'Unknown error';
             this._error.set(`Failed to save download cleaner configuration: ${errorMessage}`);
-            // Show error notification
-            this.notificationService.showError(`Failed to save: ${errorMessage}`);
-            resolve(false);
+            // Let the component handle the error notification
+            reject(error); // Pass the original error to preserve all details
           }
         });
     });
