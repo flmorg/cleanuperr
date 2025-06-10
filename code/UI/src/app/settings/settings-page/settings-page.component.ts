@@ -15,6 +15,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { QueueCleanerSettingsComponent } from '../queue-cleaner/queue-cleaner-settings.component';
 import { SettingsCardComponent } from '../components/settings-card/settings-card.component';
 import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
+import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-cleaner-settings.component';
 
 // Define interfaces for settings page
 interface LogLevel {
@@ -40,7 +41,8 @@ interface Category {
     ConfirmDialogModule,
     SettingsCardComponent,
     QueueCleanerSettingsComponent,
-    GeneralSettingsComponent
+    GeneralSettingsComponent,
+    DownloadCleanerSettingsComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
@@ -77,6 +79,7 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
   // Reference to the settings components
   @ViewChild(QueueCleanerSettingsComponent) queueCleanerSettings!: QueueCleanerSettingsComponent;
   @ViewChild(GeneralSettingsComponent) generalSettings!: GeneralSettingsComponent;
+  @ViewChild(DownloadCleanerSettingsComponent) downloadCleanerSettings!: DownloadCleanerSettingsComponent;
 
   ngOnInit(): void {
     // Future implementation for other settings sections
@@ -94,6 +97,11 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
     
     // Check if general settings has unsaved changes
     if (this.generalSettings?.canDeactivate() === false) {
+      return false;
+    }
+    
+    // Check if download cleaner settings has unsaved changes
+    if (this.downloadCleanerSettings?.canDeactivate() === false) {
       return false;
     }
     
