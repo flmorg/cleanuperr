@@ -103,53 +103,69 @@
         <small>Configure categories for automatic cleanup</small>
       </div>
 
-      <!-- Categories Table -->
+      <!-- Categories Vertical Layout -->
       <div class="categories-container mb-3">
-        <p-table [value]="categoriesFormArray.controls" [responsive]="true" styleClass="p-datatable-sm">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>Category Name</th>
-              <th>Delete After (Days)</th>
-              <th>Min Size</th>
-              <th>Max Size</th>
-              <th>Actions</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-category let-i="rowIndex">
-            <tr [formGroup]="category">
-              <td>
-                <input type="text" pInputText formControlName="name" placeholder="Category name" />
-                <small *ngIf="hasCategoryError(i, 'name', 'required')" class="p-error block">Name is required</small>
-              </td>
-              <td>
-                <p-inputNumber formControlName="deleteAfterDays" [min]="1" [showButtons]="true" buttonLayout="horizontal"></p-inputNumber>
-                <small *ngIf="hasCategoryError(i, 'deleteAfterDays', 'required')" class="p-error block">Required</small>
-                <small *ngIf="hasCategoryError(i, 'deleteAfterDays', 'min')" class="p-error block">Min value is 1</small>
-              </td>
-              <td>
-                <app-byte-size-input formControlName="minimumSizeBytes"></app-byte-size-input>
-              </td>
-              <td>
-                <app-byte-size-input formControlName="maximumSizeBytes"></app-byte-size-input>
-              </td>
-              <td>
-                <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm" 
-                  (click)="removeCategory(i)" [disabled]="downloadCleanerForm.disabled"></button>
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="5" class="text-center p-3">
-                No categories defined. Add a category to start cleaning downloads.
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
+        <!-- Empty state message when no categories -->
+        <div *ngIf="categoriesFormArray.controls.length === 0" class="empty-categories-message p-3 text-center">
+          <p>No categories defined. Add a category to start cleaning downloads.</p>
+        </div>
         
-        <div class="mt-2">
-          <button pButton type="button" label="Add Category" icon="pi pi-plus" 
-            (click)="addCategory()" [disabled]="downloadCleanerForm.disabled"></button>
+        <!-- Category cards -->
+        <div class="category-list">
+          <div *ngFor="let category of categoriesFormArray.controls; let i = index" class="category-item" [formGroup]="getCategoryAsFormGroup(i)">
+            <div class="category-header">
+              <div class="category-title">
+                <i class="pi pi-tag category-icon"></i>
+                <input type="text" pInputText formControlName="name" placeholder="Category name" class="category-name-input" />
+              </div>
+              <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm" 
+                (click)="removeCategory(i)" [disabled]="downloadCleanerForm.disabled"></button>
+            </div>
+            <small *ngIf="hasCategoryError(i, 'name', 'required')" class="p-error block">Name is required</small>
+            
+            <div class="category-content">
+              <div class="category-field">
+                <label>Max Ratio</label>
+                <div class="field-input">
+                  <p-inputNumber formControlName="maxRatio" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
+                    [minFractionDigits]="2" [maxFractionDigits]="2" [useGrouping]="false"
+                    decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus" [disabled]="downloadCleanerForm.disabled">
+                  </p-inputNumber>
+                  <small class="form-helper-text">Maximum ratio to seed before removing (<code>-1</code> means disabled)</small>
+                </div>
+              </div>
+              
+              <div class="category-field">
+                <label>Min Seed Time (hours)</label>
+                <div class="field-input">
+                  <p-inputNumber formControlName="minSeedTime" [min]="0" [showButtons]="true" buttonLayout="horizontal"
+                    decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus" [disabled]="downloadCleanerForm.disabled">
+                  </p-inputNumber>
+                  <small *ngIf="hasCategoryError(i, 'minSeedTime', 'min')" class="p-error block">Min value is 0</small>
+                </div>
+              </div>
+              
+              <div class="category-field">
+                <label>Max Seed Time (hours)</label>
+                <div>
+                  <div class="field-input">
+                    <p-inputNumber formControlName="maxSeedTime" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
+                      decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
+                      decrementButtonIcon="pi pi-minus" [disabled]="downloadCleanerForm.disabled">
+                    </p-inputNumber>
+                  </div>
+                  <small class="form-helper-text">Maximum time to seed before removing (<code>-1</code> means disabled)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-content-end mt-3">
+          <button pButton type="button" icon="pi pi-plus" label="Add Category" 
+            (click)="addCategory()" [disabled]="downloadCleanerForm.disabled" class="p-button-success"></button>
         </div>
       </div>
 

@@ -16,15 +16,24 @@ export interface DownloadCleanerConfig {
 
 export interface CleanCategory {
   name: string;
-  deleteAfterDays: number;
-  minimumSizeBytes?: number;
-  maximumSizeBytes?: number;
-  ignoredPaths?: string[];
+  maxRatio: number;
+  minSeedTime: number; // hours
+  maxSeedTime: number; // hours
 }
 
 export interface JobSchedule {
   every: number;
   type: ScheduleUnit;
+}
+
+// Helper function to create a default category
+export function createDefaultCategory(): CleanCategory {
+  return {
+    name: '',
+    maxRatio: -1, // -1 means disabled
+    minSeedTime: 0,
+    maxSeedTime: -1 // -1 means disabled
+  };
 }
 
 // Default configuration

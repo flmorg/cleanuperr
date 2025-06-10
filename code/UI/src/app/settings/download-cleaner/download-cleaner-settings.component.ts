@@ -7,7 +7,8 @@ import { CanComponentDeactivate } from "../../core/guards";
 import {
   CleanCategory,
   DownloadCleanerConfig,
-  JobSchedule
+  JobSchedule,
+  createDefaultCategory
 } from "../../shared/models/download-cleaner-config.model";
 import { ScheduleUnit, ScheduleOptions } from "../../shared/models/queue-cleaner-config.model";
 
@@ -27,7 +28,6 @@ import { AutoCompleteModule } from "primeng/autocomplete";
 import { DropdownModule } from "primeng/dropdown";
 import { TableModule } from "primeng/table";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
-import { ByteSizeInputComponent } from "../../shared/components/byte-size-input/byte-size-input.component";
 
 @Component({
   selector: "app-download-cleaner-settings",
@@ -44,7 +44,6 @@ import { ByteSizeInputComponent } from "../../shared/components/byte-size-input/
     SelectButtonModule,
     ChipsModule,
     ToastModule,
-    ByteSizeInputComponent,
     SelectModule,
     AutoCompleteModule,
     DropdownModule,
@@ -346,15 +345,25 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
    * Add a new category to the form array
    */
   addCategory(category?: CleanCategory): void {
+    // Use the provided category or create a default one
+    const defaultCategory = category || createDefaultCategory();
+    
     const categoryGroup = this.formBuilder.group({
-      name: [category?.name || '', [Validators.required]],
-      deleteAfterDays: [category?.deleteAfterDays || 7, [Validators.required, Validators.min(1)]],
-      minimumSizeBytes: [category?.minimumSizeBytes || null],
-      maximumSizeBytes: [category?.maximumSizeBytes || null],
-      ignoredPaths: [category?.ignoredPaths || []]
+      name: [defaultCategory.name, [Validators.required]],
+      maxRatio: [defaultCategory.maxRatio, [Validators.min(-1), Validators.pattern(/^\d+(\.\d+)?$/)]],
+      minSeedTime: [defaultCategory.minSeedTime, [Validators.min(0)]],
+      maxSeedTime: [defaultCategory.maxSeedTime, [Validators.min(-1)]]
     });
 
     this.categoriesFormArray.push(categoryGroup);
+    this.downloadCleanerForm.markAsDirty();
+  }
+
+  /**
+   * Helper method to get a category control as FormGroup for the template
+   */
+  getCategoryAsFormGroup(index: number): FormGroup {
+    return this.categoriesFormArray.at(index) as FormGroup;
   }
 
   /**
