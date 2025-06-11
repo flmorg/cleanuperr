@@ -16,6 +16,7 @@ import { QueueCleanerSettingsComponent } from '../queue-cleaner/queue-cleaner-se
 import { SettingsCardComponent } from '../components/settings-card/settings-card.component';
 import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
 import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-cleaner-settings.component';
+import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
 
 // Define interfaces for settings page
 interface LogLevel {
@@ -42,7 +43,8 @@ interface Category {
     SettingsCardComponent,
     QueueCleanerSettingsComponent,
     GeneralSettingsComponent,
-    DownloadCleanerSettingsComponent
+    DownloadCleanerSettingsComponent,
+    SonarrSettingsComponent
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
@@ -80,6 +82,7 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
   @ViewChild(QueueCleanerSettingsComponent) queueCleanerSettings!: QueueCleanerSettingsComponent;
   @ViewChild(GeneralSettingsComponent) generalSettings!: GeneralSettingsComponent;
   @ViewChild(DownloadCleanerSettingsComponent) downloadCleanerSettings!: DownloadCleanerSettingsComponent;
+  @ViewChild(SonarrSettingsComponent) sonarrSettings!: SonarrSettingsComponent;
 
   ngOnInit(): void {
     // Future implementation for other settings sections
@@ -102,6 +105,11 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
     
     // Check if download cleaner settings has unsaved changes
     if (this.downloadCleanerSettings?.canDeactivate() === false) {
+      return false;
+    }
+    
+    // Check if sonarr settings has unsaved changes
+    if (this.sonarrSettings?.canDeactivate() === false) {
       return false;
     }
     

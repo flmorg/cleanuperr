@@ -1,0 +1,228 @@
+<p-card styleClass="settings-card h-full">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+      <div class="header-title-container">
+        <h2 class="card-title m-0">Sonarr Configuration</h2>
+        <span class="card-subtitle">Configure Sonarr integration settings</span>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-cog text-xl"></i>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="card-content">
+    <!-- Loading/Error State Component -->
+    <app-loading-error-state
+      *ngIf="sonarrLoading() || sonarrError()"
+      [loading]="sonarrLoading()"
+      [error]="sonarrError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+
+    <!-- Form Content - only shown when not loading and no error -->
+    <form *ngIf="!sonarrLoading() && !sonarrError()" [formGroup]="sonarrForm" class="p-fluid">
+      <!-- Main Settings -->
+      <div class="field-row">
+        <label class="field-label">Enable Sonarr Integration</label>
+        <div class="field-input">
+          <p-checkbox formControlName="enabled" [binary]="true" inputId="sonarrEnabled"></p-checkbox>
+          <small class="form-helper-text">When enabled, Sonarr API integration will be used</small>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Failed Import Max Strikes</label>
+        <div>
+          <div class="field-input">
+            <p-inputNumber
+              formControlName="failedImportMaxStrikes"
+              [min]="0" 
+              [showButtons]="true"
+              buttonLayout="horizontal"
+              incrementButtonIcon="pi pi-plus"
+              decrementButtonIcon="pi pi-minus"
+              inputId="failedImportMaxStrikes"
+            ></p-inputNumber>
+          </div>
+          <small class="form-helper-text">Maximum number of strikes before taking action (-1 to disable)</small>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Search Type</label>
+        <div>
+          <div class="field-input">
+            <p-dropdown
+              formControlName="searchType"
+              [options]="searchTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select search type"
+              appendTo="body"
+            ></p-dropdown>
+          </div>
+          <small *ngIf="hasError('searchType', 'required')" class="p-error">Search type is required</small>
+          <small class="form-helper-text">Type of search used by Sonarr</small>
+        </div>
+      </div>
+
+      <!-- Instances Section -->
+      <div class="section-header">
+        <h3>Sonarr Instances</h3>
+        <small class="form-helper-text">Configure multiple Sonarr server instances</small>
+      </div>
+
+      <!-- Instances Table -->
+      <div class="instances-table mt-2">
+        <p-table [value]="instances.controls" [responsive]="true" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Name</th>
+              <th>URL</th>
+              <th>API Key</th>
+              <th style="width: 120px">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-instance let-i="rowIndex">
+            <tr [formGroup]="instance">
+              <td>{{ instance.get('name')?.value }}</td>
+              <td>{{ instance.get('url')?.value }}</td>
+              <td>{{ instance.get('apiKey')?.value | slice:0:8 }}•••••••</td>
+              <td>
+                <div class="flex justify-content-end gap-2">
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-pencil"
+                    class="p-button-text p-button-sm"
+                    (click)="openEditInstanceDialog(i)"
+                    [disabled]="!sonarrForm.get('enabled')?.value"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-danger p-button-sm"
+                    (click)="removeInstance(i)"
+                    [disabled]="!sonarrForm.get('enabled')?.value"
+                  ></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="text-center">
+                <div class="p-3">No Sonarr instances configured</div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Add Instance Button -->
+      <div class="mt-3">
+        <button
+          pButton
+          type="button"
+          label="Add Sonarr Instance"
+          icon="pi pi-plus"
+          class="p-button-outlined"
+          (click)="openAddInstanceDialog()"
+          [disabled]="!sonarrForm.get('enabled')?.value"
+        ></button>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button
+          pButton
+          type="button"
+          label="Save"
+          icon="pi pi-save"
+          class="p-button-outlined"
+          [disabled]="(!sonarrForm.dirty || !hasActualChanges) || sonarrForm.invalid || sonarrSaving()"
+          [loading]="sonarrSaving()"
+          (click)="saveSonarrConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Reset"
+          icon="pi pi-refresh"
+          class="p-button-secondary p-button-outlined ml-2"
+          (click)="resetSonarrConfig()"
+        ></button>
+      </div>
+    </form>
+  </div>
+</p-card>
+
+<!-- Instance Dialog -->
+<p-dialog
+  [(visible)]="showInstanceDialog"
+  [header]="editingInstanceIndex !== null ? 'Edit Sonarr Instance' : 'Add Sonarr Instance'"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="instanceForm" class="p-fluid">
+    <div class="field mb-4">
+      <label for="name" class="font-bold">Name*</label>
+      <input
+        type="text"
+        pInputText
+        id="name"
+        formControlName="name"
+        placeholder="My Sonarr Server"
+        required
+      />
+      <small *ngIf="hasInstanceError('name', 'required')" class="p-error">Name is required</small>
+    </div>
+
+    <div class="field mb-4">
+      <label for="url" class="font-bold">URL*</label>
+      <input
+        type="text"
+        pInputText
+        id="url"
+        formControlName="url"
+        placeholder="http://localhost:8989"
+        required
+      />
+      <small *ngIf="hasInstanceError('url', 'required')" class="p-error">URL is required</small>
+    </div>
+
+    <div class="field mb-4">
+      <label for="apiKey" class="font-bold">API Key*</label>
+      <input
+        type="password"
+        pInputText
+        id="apiKey"
+        formControlName="apiKey"
+        placeholder="Your Sonarr API key"
+        required
+      />
+      <small *ngIf="hasInstanceError('apiKey', 'required')" class="p-error">API key is required</small>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancel"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cancelInstanceDialog()"
+    ></button>
+    <button
+      pButton
+      label="Save"
+      icon="pi pi-check"
+      (click)="saveInstance()"
+      [disabled]="instanceForm.invalid"
+    ></button>
+  </ng-template>
+</p-dialog>

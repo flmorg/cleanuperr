@@ -3,6 +3,7 @@ import { Injectable, inject } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/models/queue-cleaner-config.model";
+import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 
 @Injectable({
   providedIn: "root",
@@ -114,5 +115,29 @@ export class ConfigurationService {
 
     // Fallback to default
     return "0 0/5 * * * ?";
+  }
+
+  /**
+   * Get Sonarr configuration
+   */
+  getSonarrConfig(): Observable<SonarrConfig> {
+    return this.http.get<SonarrConfig>(`${this.apiUrl}/api/configuration/sonarr`).pipe(
+      catchError((error) => {
+        console.error("Error fetching Sonarr config:", error);
+        return throwError(() => new Error("Failed to load Sonarr configuration"));
+      })
+    );
+  }
+
+  /**
+   * Update Sonarr configuration
+   */
+  updateSonarrConfig(config: SonarrConfig): Observable<SonarrConfig> {
+    return this.http.put<SonarrConfig>(`${this.apiUrl}/api/configuration/sonarr`, config).pipe(
+      catchError((error) => {
+        console.error("Error updating Sonarr config:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to update Sonarr configuration"));
+      })
+    );
   }
 }
