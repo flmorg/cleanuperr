@@ -12,10 +12,7 @@ import { InputTextModule } from "primeng/inputtext";
 import { CheckboxModule } from "primeng/checkbox";
 import { ButtonModule } from "primeng/button";
 import { InputNumberModule } from "primeng/inputnumber";
-import { AccordionModule } from "primeng/accordion";
 import { SelectButtonModule } from "primeng/selectbutton";
-import { DialogModule } from "primeng/dialog";
-import { TableModule } from "primeng/table";
 import { ToastModule } from "primeng/toast";
 import { NotificationService } from "../../core/services/notification.service";
 import { DropdownModule } from "primeng/dropdown";
@@ -32,10 +29,7 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     CheckboxModule,
     ButtonModule,
     InputNumberModule,
-    AccordionModule,
     SelectButtonModule,
-    DialogModule,
-    TableModule,
     ToastModule,
     DropdownModule,
     LoadingErrorStateComponent,
@@ -50,17 +44,12 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
 
   // Sonarr Configuration Form
   sonarrForm: FormGroup;
-  
+
   // Original form values for tracking changes
   private originalFormValues: any;
-  
+
   // Track whether the form has actual changes compared to original values
   hasActualChanges = false;
-
-  // Dialog state
-  showInstanceDialog = false;
-  editingInstanceIndex: number | null = null;
-  instanceForm: FormGroup;
 
   // SonarrSearchType options
   searchTypeOptions = [
@@ -78,11 +67,11 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   private notificationService = inject(NotificationService);
   private sonarrStore = inject(SonarrConfigStore);
 
-  // Signals from the store
-  readonly sonarrConfig = this.sonarrStore.config;
-  readonly sonarrLoading = this.sonarrStore.loading;
-  readonly sonarrSaving = this.sonarrStore.saving;
-  readonly sonarrError = this.sonarrStore.error;
+  // Signals from store
+  sonarrConfig = this.sonarrStore.config;
+  sonarrLoading = this.sonarrStore.loading;
+  sonarrError = this.sonarrStore.error;
+  sonarrSaving = this.sonarrStore.saving;
 
   /**
    * Check if component can be deactivated (navigation guard)
@@ -99,27 +88,17 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
       searchType: [SonarrSearchType.Episode, Validators.required],
     });
 
-    // Initialize the instance form
-    this.instanceForm = this.formBuilder.group({
-      id: [''],
-      name: ['', Validators.required],
-      url: ['', [Validators.required]],
-      apiKey: ['', [Validators.required]],
-    });
-
     // Add instances FormArray to main form
     this.sonarrForm.addControl('instances', this.formBuilder.array([]));
 
-    // Setup value change listeners
-    this.setupFormValueChangeListeners();
+    // Load Sonarr config data
+    this.sonarrStore.loadConfig();
 
-    // Create an effect to respond to config changes
+    // Setup effect to update form when config changes
     effect(() => {
       const config = this.sonarrConfig();
       if (config) {
-        this.updateForm(config);
-        this.storeOriginalValues();
-        this.updateFormControlDisabledStates(config);
+        this.updateFormFromConfig(config);
       }
     });
   }
@@ -133,97 +112,9 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   }
 
   /**
-   * Set up listeners for form control value changes to manage dependent control states
+   * Update form with values from the configuration
    */
-  private setupFormValueChangeListeners(): void {
-    // Listen for changes on the enabled control
-    this.sonarrForm
-      .get("enabled")
-      ?.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((enabled) => {
-        this.updateMainControlsState(enabled);
-      });
-
-    // Listen for form changes to update the hasActualChanges flag
-    this.sonarrForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.hasActualChanges = this.formValuesChanged();
-      });
-  }
-
-  /**
-   * Store original form values for dirty checking
-   */
-  private storeOriginalValues(): void {
-    this.originalFormValues = JSON.parse(JSON.stringify(this.sonarrForm.value));
-    this.sonarrForm.markAsPristine();
-    this.hasActualChanges = false;
-  }
-
-  /**
-   * Check if the current form values are different from the original values
-   */
-  private formValuesChanged(): boolean {
-    return !this.isEqual(this.sonarrForm.value, this.originalFormValues);
-  }
-
-  /**
-   * Deep compare two objects for equality
-   */
-  private isEqual(obj1: any, obj2: any): boolean {
-    if (obj1 === obj2) return true;
-    
-    if (typeof obj1 !== "object" || typeof obj2 !== "object" || obj1 == null || obj2 == null) {
-      return false;
-    }
-    
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-    
-    if (keys1.length !== keys2.length) return false;
-    
-    for (const key of keys1) {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
-      const areObjects = typeof val1 === "object" && typeof val2 === "object";
-      
-      if ((areObjects && !this.isEqual(val1, val2)) || (!areObjects && val1 !== val2)) {
-        return false;
-      }
-    }
-    
-    return true;
-  }
-
-  /**
-   * Update form control disabled states based on the configuration
-   */
-  private updateFormControlDisabledStates(config: SonarrConfig): void {
-    const enabled = config.enabled;
-    this.updateMainControlsState(enabled);
-  }
-
-  /**
-   * Update the state of main controls based on the 'enabled' control value
-   */
-  private updateMainControlsState(enabled: boolean): void {
-    const failedImportMaxStrikesControl = this.sonarrForm.get('failedImportMaxStrikes');
-    const searchTypeControl = this.sonarrForm.get('searchType');
-    
-    if (enabled) {
-      failedImportMaxStrikesControl?.enable();
-      searchTypeControl?.enable();
-    } else {
-      failedImportMaxStrikesControl?.disable();
-      searchTypeControl?.disable();
-    }
-  }
-
-  /**
-   * Update the form with values from the configuration
-   */
-  private updateForm(config: SonarrConfig): void {
+  private updateFormFromConfig(config: SonarrConfig): void {
     // Update main form controls
     this.sonarrForm.patchValue({
       enabled: config.enabled,
@@ -248,13 +139,77 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
         );
       });
     }
+
+    // Store original form values for dirty checking
+    this.storeOriginalValues();
   }
 
   /**
-   * Get the instances form array
+   * Store original form values for dirty checking
    */
-  get instances(): FormArray {
-    return this.sonarrForm.get('instances') as FormArray;
+  private storeOriginalValues(): void {
+    this.originalFormValues = JSON.parse(JSON.stringify(this.sonarrForm.value));
+    this.sonarrForm.markAsPristine();
+    this.hasActualChanges = false;
+  }
+
+  /**
+   * Check if the current form values are different from the original values
+   */
+  private formValuesChanged(): boolean {
+    return !this.isEqual(this.sonarrForm.value, this.originalFormValues);
+  }
+
+  /**
+   * Deep compare two objects for equality
+   */
+  private isEqual(obj1: any, obj2: any): boolean {
+    if (obj1 === obj2) return true;
+
+    if (typeof obj1 !== "object" || typeof obj2 !== "object" || obj1 == null || obj2 == null) {
+      return false;
+    }
+
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) return false;
+
+    for (const key of keys1) {
+      const val1 = obj1[key];
+      const val2 = obj2[key];
+      const areObjects = typeof val1 === "object" && typeof val2 === "object";
+
+      if ((areObjects && !this.isEqual(val1, val2)) || (!areObjects && val1 !== val2)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Update form control disabled states based on the configuration
+   */
+  private updateFormControlDisabledStates(config: SonarrConfig): void {
+    const enabled = config.enabled;
+    this.updateMainControlsState(enabled);
+  }
+
+  /**
+   * Update the state of main controls based on the 'enabled' control value
+   */
+  private updateMainControlsState(enabled: boolean): void {
+    const failedImportMaxStrikesControl = this.sonarrForm.get('failedImportMaxStrikes');
+    const searchTypeControl = this.sonarrForm.get('searchType');
+
+    if (enabled) {
+      failedImportMaxStrikesControl?.enable();
+      searchTypeControl?.enable();
+    } else {
+      failedImportMaxStrikesControl?.disable();
+      searchTypeControl?.disable();
+    }
   }
 
   /**
@@ -267,7 +222,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
 
       // Get data from form
       const formValue = this.sonarrForm.getRawValue();
-      
+
       // Create config object
       const sonarrConfig: SonarrConfig = {
         enabled: formValue.enabled,
@@ -275,7 +230,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
         searchType: formValue.searchType,
         instances: formValue.instances || []
       };
-      
+
       // Save the configuration
       this.sonarrStore.saveConfig(sonarrConfig);
 
@@ -285,18 +240,18 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
         if (!this.sonarrSaving()) {
           // Re-enable the form
           this.sonarrForm.enable();
-          
+
           // If still disabled, update control states based on enabled state
           if (!this.sonarrForm.get('enabled')?.value) {
             this.updateMainControlsState(false);
           }
-          
+
           // Update original values to match current form state
           this.storeOriginalValues();
-          
+
           // Notify listeners that we've completed the save
           this.saved.emit();
-          
+
           // Show success message
           this.notificationService.showSuccess("Sonarr configuration saved successfully");
         } else {
@@ -304,16 +259,16 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
           setTimeout(checkSaveCompletion, 100);
         }
       };
-      
+
       // Start checking for save completion
       checkSaveCompletion();
     } else {
       // Form is invalid, show error message
       this.notificationService.showValidationError();
-      
+
       // Emit error for parent components
       this.error.emit("Please fix validation errors before saving.");
-      
+
       // Mark all controls as touched to show validation errors
       this.markFormGroupTouched(this.sonarrForm);
     }
@@ -335,71 +290,27 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
 
     // Update control states after reset
     this.updateMainControlsState(false);
-    
+
     // Mark form as dirty so the save button is enabled after reset
     this.sonarrForm.markAsDirty();
     this.hasActualChanges = true;
   }
 
   /**
-   * Open the instance dialog for adding a new instance
+   * Add a new instance to the instances form array
    */
-  openAddInstanceDialog(): void {
-    this.editingInstanceIndex = null;
-    this.instanceForm.reset({
-      id: '',
-      name: '',
-      url: '',
-      apiKey: '',
-    });
-    this.showInstanceDialog = true;
-  }
-
-  /**
-   * Open the instance dialog for editing an existing instance
-   */
-  openEditInstanceDialog(index: number): void {
-    const instanceToEdit = this.instances.at(index).value;
-    this.editingInstanceIndex = index;
-    
-    this.instanceForm.reset({
-      id: instanceToEdit.id || '',
-      name: instanceToEdit.name,
-      url: instanceToEdit.url,
-      apiKey: instanceToEdit.apiKey,
-    });
-    
-    this.showInstanceDialog = true;
-  }
-
-  /**
-   * Save the instance from the dialog
-   */
-  saveInstance(): void {
-    if (this.instanceForm.invalid) {
-      this.markFormGroupTouched(this.instanceForm);
-      return;
-    }
-
-    const instanceData = this.instanceForm.value;
+  addInstance(): void {
     const instancesArray = this.sonarrForm.get('instances') as FormArray;
 
-    if (this.editingInstanceIndex !== null) {
-      // Update existing instance
-      instancesArray.at(this.editingInstanceIndex).patchValue(instanceData);
-    } else {
-      // Add new instance
-      instancesArray.push(
-        this.formBuilder.group({
-          id: [instanceData.id || ''],
-          name: [instanceData.name, Validators.required],
-          url: [instanceData.url, Validators.required],
-          apiKey: [instanceData.apiKey, Validators.required],
-        })
-      );
-    }
+    instancesArray.push(
+      this.formBuilder.group({
+        id: [''],
+        name: ['', Validators.required],
+        url: ['', Validators.required],
+        apiKey: ['', Validators.required],
+      })
+    );
 
-    this.showInstanceDialog = false;
     this.sonarrForm.markAsDirty();
     this.hasActualChanges = true;
   }
@@ -415,11 +326,20 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   }
 
   /**
-   * Cancel the instance dialog
+   * Get the instances form array
    */
-  cancelInstanceDialog(): void {
-    this.showInstanceDialog = false;
+  get instances(): FormArray {
+    return this.sonarrForm.get('instances') as FormArray;
   }
+
+  /**
+   * Get an instance at the specified index as a FormGroup
+   */
+  getInstanceAsFormGroup(index: number): FormGroup {
+    return this.instances.at(index) as FormGroup;
+  }
+
+  // hasInstanceFieldError is implemented below
 
   /**
    * Mark all controls in a form group as touched
@@ -435,18 +355,28 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   }
 
   /**
-   * Check if a form control has an error after it's been touched
+   * Check if the form control has an error
+   * @param controlName The name of the control to check
+   * @param errorName The name of the error to check for
+   * @returns True if the control has the specified error
    */
   hasError(controlName: string, errorName: string): boolean {
     const control = this.sonarrForm.get(controlName);
-    return control ? control.touched && control.hasError(errorName) : false;
+    return control !== null && control.hasError(errorName) && control.touched;
   }
 
   /**
-   * Get nested form control errors
+   * Check if an instance field has an error
+   * @param instanceIndex The index of the instance in the array
+   * @param fieldName The name of the field to check
+   * @param errorName The name of the error to check for
+   * @returns True if the field has the specified error
    */
-  hasInstanceError(controlName: string, errorName: string): boolean {
-    const control = this.instanceForm.get(controlName);
-    return control ? control.touched && control.hasError(errorName) : false;
+  hasInstanceFieldError(instanceIndex: number, fieldName: string, errorName: string): boolean {
+    const instancesArray = this.sonarrForm.get('instances') as FormArray;
+    if (!instancesArray || !instancesArray.controls[instanceIndex]) return false;
+    
+    const control = (instancesArray.controls[instanceIndex] as FormGroup).get(fieldName);
+    return control !== null && control.hasError(errorName) && control.touched;
   }
 }
