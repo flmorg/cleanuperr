@@ -115,8 +115,8 @@
         </div>
         
         <div class="flex justify-content-end mt-3">
-          <button pButton type="button" icon="pi pi-plus" label="Add Sonarr Instance" 
-            (click)="addInstance()" [disabled]="!sonarrForm.get('enabled')?.value" class="p-button-success"></button>
+          <button pButton type="button" icon="pi pi-plus" label="Add Instance" 
+            (click)="addInstance()" [disabled]="!sonarrForm.get('enabled')?.value" class="p-button-outlined"></button>
         </div>
       </div>
 
@@ -127,7 +127,7 @@
           type="button"
           label="Save"
           icon="pi pi-save"
-          class="p-button-outlined"
+          class="p-button-primary"
           [disabled]="(!sonarrForm.dirty || !hasActualChanges) || sonarrForm.invalid || sonarrSaving()"
           [loading]="sonarrSaving()"
           (click)="saveSonarrConfig()"

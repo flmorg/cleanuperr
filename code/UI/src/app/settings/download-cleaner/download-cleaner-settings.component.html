@@ -172,7 +172,7 @@
         
         <div class="flex justify-content-end mt-3">
           <button pButton type="button" icon="pi pi-plus" label="Add Category" 
-            (click)="addCategory()" [disabled]="downloadCleanerForm.get('enabled')?.value === false" class="p-button-success"></button>
+            (click)="addCategory()" [disabled]="downloadCleanerForm.get('enabled')?.value === false" class="p-button-outlined"></button>
         </div>
       </div>
 
@@ -246,7 +246,7 @@
           type="button"
           label="Save"
           icon="pi pi-save"
-          class="p-button-outlined"
+          class="p-button-primary"
           [disabled]="!downloadCleanerForm.dirty || !downloadCleanerForm.valid || !hasActualChanges || downloadCleanerSaving()"
           [loading]="downloadCleanerSaving()"
           (click)="saveDownloadCleanerConfig()"
