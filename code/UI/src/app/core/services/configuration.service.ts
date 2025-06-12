@@ -5,6 +5,7 @@ import { environment } from "../../../environments/environment";
 import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/models/queue-cleaner-config.model";
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
+import { LidarrConfig } from "../../shared/models/lidarr-config.model";
 
 @Injectable({
   providedIn: "root",
@@ -160,6 +161,29 @@ export class ConfigurationService {
       catchError((error) => {
         console.error("Error updating Radarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Radarr configuration"));
+      })
+    );
+  }
+
+  /**
+   * Get Lidarr configuration
+   */
+  getLidarrConfig(): Observable<LidarrConfig> {
+    return this.http.get<LidarrConfig>(`${this.apiUrl}/api/configuration/lidarr`).pipe(
+      catchError((error) => {
+        console.error("Error fetching Lidarr config:", error);
+        return throwError(() => new Error("Failed to load Lidarr configuration"));
+      })
+    );
+  }
+  /**
+   * Update Lidarr configuration
+   */
+  updateLidarrConfig(config: LidarrConfig): Observable<LidarrConfig> {
+    return this.http.put<LidarrConfig>(`${this.apiUrl}/api/configuration/lidarr`, config).pipe(
+      catchError((error) => {
+        console.error("Error updating Lidarr config:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to update Lidarr configuration"));
       })
     );
   }
