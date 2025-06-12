@@ -52,7 +52,26 @@ deployment:
           value: "false"
 
         - name: DOWNLOADCLEANER__ENABLED
-          value: "false"
+          value: "true"
+        - name: DOWNLOADCLEANER__DELETE_PRIVATE
+          value: "true"
+        - name: DOWNLOADCLEANER__CATEGORIES__0__NAME
+          value: unlinked
+        - name: DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME
+          value: "240"
+
+        - name: DOWNLOADCLEANER__UNLINKED_TARGET_CATEGORY
+          value: unlinked
+        - name: DOWNLOADCLEANER__UNLINKED_IGNORED_ROOT_DIR
+          value: /downloads
+        - name: DOWNLOADCLEANER__UNLINKED_CATEGORIES__0
+          value: sonarr-low
+        - name: DOWNLOADCLEANER__UNLINKED_CATEGORIES__1
+          value: sonarr-high
+        - name: DOWNLOADCLEANER__UNLINKED_CATEGORIES__2
+          value: radarr-low
+        - name: DOWNLOADCLEANER__UNLINKED_CATEGORIES__3
+          value: radarr-high
 
         - name: DOWNLOAD_CLIENT
           value: qbittorrent
@@ -127,6 +146,12 @@ deployment:
         - name: storage
           mountPath: /var/logs
           subPath: cleanuperr/logs
+        - name: storage
+          mountPath: /downloads/general2
+          subPath: media/downloads/general2
+        - name: storage
+          mountPath: /downloads/cross-seed
+          subPath: media/downloads/cross-seed
   volumes:
     - name: storage
       type: pvc
