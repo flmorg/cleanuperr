@@ -17,6 +17,7 @@ import { SettingsCardComponent } from '../components/settings-card/settings-card
 import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
 import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-cleaner-settings.component';
 import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
+import { RadarrSettingsComponent } from "../radarr/radarr-settings.component";
 
 // Define interfaces for settings page
 interface LogLevel {
@@ -44,8 +45,9 @@ interface Category {
     QueueCleanerSettingsComponent,
     GeneralSettingsComponent,
     DownloadCleanerSettingsComponent,
-    SonarrSettingsComponent
-  ],
+    SonarrSettingsComponent,
+    RadarrSettingsComponent
+],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
   styleUrl: './settings-page.component.scss'

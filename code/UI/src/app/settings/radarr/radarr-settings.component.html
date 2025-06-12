@@ -2,8 +2,8 @@
   <ng-template pTemplate="header">
     <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
       <div class="header-title-container">
-        <h2 class="card-title m-0">Sonarr Configuration</h2>
-        <span class="card-subtitle">Configure Sonarr integration settings</span>
+        <h2 class="card-title m-0">Radarr Configuration</h2>
+        <span class="card-subtitle">Configure Radarr integration settings</span>
       </div>
       <div class="flex align-items-center gap-2">
         <i class="pi pi-cog text-xl"></i>
@@ -14,21 +14,21 @@
   <div class="card-content">
     <!-- Loading/Error State Component -->
     <app-loading-error-state
-      *ngIf="sonarrLoading() || sonarrError()"
-      [loading]="sonarrLoading()"
-      [error]="sonarrError()"
+      *ngIf="radarrLoading() || radarrError()"
+      [loading]="radarrLoading()"
+      [error]="radarrError()"
       loadingMessage="Loading settings..."
       errorMessage="Could not connect to server"
     ></app-loading-error-state>
 
     <!-- Form Content - only shown when not loading and no error -->
-    <form *ngIf="!sonarrLoading() && !sonarrError()" [formGroup]="sonarrForm" class="p-fluid">
+    <form *ngIf="!radarrLoading() && !radarrError()" [formGroup]="radarrForm" class="p-fluid">
       <!-- Main Settings -->
       <div class="field-row">
-        <label class="field-label">Enable Sonarr Integration</label>
+        <label class="field-label">Enable Radarr Integration</label>
         <div class="field-input">
           <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
-          <small class="form-helper-text">When enabled, Sonarr API integration will be used</small>
+          <small class="form-helper-text">When enabled, Radarr API integration will be used</small>
         </div>
       </div>
 
@@ -49,35 +49,17 @@
         </div>
       </div>
 
-      <div class="field-row">
-        <label class="field-label">Search Type</label>
-        <div>
-          <div class="field-input">
-            <p-select
-              formControlName="searchType"
-              [options]="searchTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select search type"
-              appendTo="body"
-            ></p-select>
-          </div>
-          <small *ngIf="hasError('searchType', 'required')" class="p-error">Search type is required</small>
-          <small class="form-helper-text">Type of search used by Sonarr</small>
-        </div>
-      </div>
-
       <!-- Instances Section -->
       <div class="section-header mt-4">
-        <h3>Sonarr Instances</h3>
-        <small>Configure multiple Sonarr server instances</small>
+        <h3>Radarr Instances</h3>
+        <small>Configure multiple Radarr server instances</small>
       </div>
 
       <!-- Instances Container -->
       <div class="instances-container">
         <!-- Empty state message when no instances -->
         <div *ngIf="instances.controls.length === 0" class="empty-instances-message p-3 text-center">
-          <p>No Sonarr instances defined. Add an instance to start using Sonarr integration.</p>
+          <p>No Radarr instances defined. Add an instance to start using Radarr integration.</p>
         </div>
         
         <!-- Instance cards -->
@@ -89,7 +71,7 @@
                 <input type="text" pInputText formControlName="name" placeholder="Instance name" class="instance-name-input" />
               </div>
               <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm" 
-                (click)="removeInstance(i)" [disabled]="sonarrForm.disabled || !sonarrForm.get('enabled')?.value"></button>
+                (click)="removeInstance(i)" [disabled]="radarrForm.disabled || !radarrForm.get('enabled')?.value"></button>
             </div>
             <small *ngIf="hasInstanceFieldError(i, 'name', 'required')" class="p-error block">Name is required</small>
             
@@ -105,7 +87,7 @@
               <div class="instance-field">
                 <label>API Key</label>
                 <div class="field-input">
-                  <input type="password" pInputText formControlName="apiKey" placeholder="Your Sonarr API key" required />
+                  <input type="password" pInputText formControlName="apiKey" placeholder="Your Radarr API key" required />
                   <small *ngIf="hasInstanceFieldError(i, 'apiKey', 'required')" class="p-error block">API key is required</small>
                 </div>
               </div>
@@ -115,7 +97,7 @@
         
         <div class="flex justify-content-end mt-3">
           <button pButton type="button" icon="pi pi-plus" label="Add Instance" 
-            (click)="addInstance()" [disabled]="!sonarrForm.get('enabled')?.value" class="p-button-outlined"></button>
+            (click)="addInstance()" [disabled]="!radarrForm.get('enabled')?.value" class="p-button-outlined"></button>
         </div>
       </div>
 
@@ -127,9 +109,9 @@
           label="Save"
           icon="pi pi-save"
           class="p-button-primary"
-          [disabled]="(!sonarrForm.dirty || !hasActualChanges) || sonarrForm.invalid || sonarrSaving()"
-          [loading]="sonarrSaving()"
-          (click)="saveSonarrConfig()"
+          [disabled]="(!radarrForm.dirty || !hasActualChanges) || radarrForm.invalid || radarrSaving()"
+          [loading]="radarrSaving()"
+          (click)="saveRadarrConfig()"
         ></button>
         <button
           pButton
@@ -137,7 +119,7 @@
           label="Reset"
           icon="pi pi-refresh"
           class="p-button-secondary p-button-outlined ml-2"
-          (click)="resetSonarrConfig()"
+          (click)="resetRadarrConfig()"
         ></button>
       </div>
     </form>

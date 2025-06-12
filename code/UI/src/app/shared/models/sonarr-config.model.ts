@@ -3,15 +3,7 @@
  * These models represent the structures used in the API for Sonarr configuration
  */
 
-/**
- * Represents a Sonarr instance with connection details
- */
-export interface ArrInstance {
-  id?: string;
-  name: string;
-  url: string;
-  apiKey: string;
-}
+import { ArrInstance } from "./arr-config.model";
 
 /**
  * Defines the possible search types for Sonarr

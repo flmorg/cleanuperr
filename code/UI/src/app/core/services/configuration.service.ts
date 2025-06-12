@@ -4,6 +4,7 @@ import { Observable, catchError, map, throwError } from "rxjs";
 import { environment } from "../../../environments/environment";
 import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/models/queue-cleaner-config.model";
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
+import { RadarrConfig } from "../../shared/models/radarr-config.model";
 
 @Injectable({
   providedIn: "root",
@@ -128,7 +129,6 @@ export class ConfigurationService {
       })
     );
   }
-
   /**
    * Update Sonarr configuration
    */
@@ -137,6 +137,29 @@ export class ConfigurationService {
       catchError((error) => {
         console.error("Error updating Sonarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Sonarr configuration"));
+      })
+    );
+  }
+
+  /**
+   * Get Radarr configuration
+   */
+  getRadarrConfig(): Observable<RadarrConfig> {
+    return this.http.get<RadarrConfig>(`${this.apiUrl}/api/configuration/radarr`).pipe(
+      catchError((error) => {
+        console.error("Error fetching Radarr config:", error);
+        return throwError(() => new Error("Failed to load Radarr configuration"));
+      })
+    );
+  }
+  /**
+   * Update Radarr configuration
+   */
+  updateRadarrConfig(config: RadarrConfig): Observable<RadarrConfig> {
+    return this.http.put<RadarrConfig>(`${this.apiUrl}/api/configuration/radarr`, config).pipe(
+      catchError((error) => {
+        console.error("Error updating Radarr config:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to update Radarr configuration"));
       })
     );
   }

@@ -2,9 +2,9 @@ import { Component, EventEmitter, OnDestroy, Output, effect, inject } from "@ang
 import { CommonModule } from "@angular/common";
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
-import { SonarrConfigStore } from "./sonarr-config.store";
+import { RadarrConfigStore } from "./radarr-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
-import { SonarrConfig, SonarrSearchType } from "../../shared/models/sonarr-config.model";
+import { RadarrConfig } from "../../shared/models/radarr-config.model";
 
 // PrimeNG Components
 import { CardModule } from "primeng/card";
@@ -15,11 +15,11 @@ import { InputNumberModule } from "primeng/inputnumber";
 import { SelectButtonModule } from "primeng/selectbutton";
 import { ToastModule } from "primeng/toast";
 import { NotificationService } from "../../core/services/notification.service";
-import { SelectModule } from 'primeng/select';
+import { DropdownModule } from "primeng/dropdown";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 
 @Component({
-  selector: "app-sonarr-settings",
+  selector: "app-radarr-settings",
   standalone: true,
   imports: [
     CommonModule,
@@ -31,32 +31,25 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     InputNumberModule,
     SelectButtonModule,
     ToastModule,
+    DropdownModule,
     LoadingErrorStateComponent,
-    SelectModule
   ],
-  providers: [SonarrConfigStore],
-  templateUrl: "./sonarr-settings.component.html",
-  styleUrls: ["./sonarr-settings.component.scss"],
+  providers: [RadarrConfigStore],
+  templateUrl: "./radarr-settings.component.html",
+  styleUrls: ["./radarr-settings.component.scss"],
 })
-export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivate {
+export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivate {
   @Output() saved = new EventEmitter<void>();
   @Output() error = new EventEmitter<string>();
 
-  // Sonarr Configuration Form
-  sonarrForm: FormGroup;
+  // Radarr Configuration Form
+  radarrForm: FormGroup;
 
   // Original form values for tracking changes
   private originalFormValues: any;
 
   // Track whether the form has actual changes compared to original values
   hasActualChanges = false;
-
-  // SonarrSearchType options
-  searchTypeOptions = [
-    { label: "Episode", value: SonarrSearchType.Episode },
-    { label: "Season", value: SonarrSearchType.Season },
-    { label: "Series", value: SonarrSearchType.Series },
-  ];
 
   // Clean up subscriptions
   private destroy$ = new Subject<void>();
@@ -65,38 +58,37 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   private formBuilder = inject(FormBuilder);
   // Using the notification service for all toast messages
   private notificationService = inject(NotificationService);
-  private sonarrStore = inject(SonarrConfigStore);
+  private radarrStore = inject(RadarrConfigStore);
 
   // Signals from store
-  sonarrConfig = this.sonarrStore.config;
-  sonarrLoading = this.sonarrStore.loading;
-  sonarrError = this.sonarrStore.error;
-  sonarrSaving = this.sonarrStore.saving;
+  radarrConfig = this.radarrStore.config;
+  radarrLoading = this.radarrStore.loading;
+  radarrError = this.radarrStore.error;
+  radarrSaving = this.radarrStore.saving;
 
   /**
    * Check if component can be deactivated (navigation guard)
    */
   canDeactivate(): boolean {
-    return !this.sonarrForm?.dirty || !this.hasActualChanges;
+    return !this.radarrForm?.dirty || !this.hasActualChanges;
   }
 
   constructor() {
     // Initialize the main form
-    this.sonarrForm = this.formBuilder.group({
+    this.radarrForm = this.formBuilder.group({
       enabled: [false],
       failedImportMaxStrikes: [-1],
-      searchType: [SonarrSearchType.Episode, Validators.required],
     });
 
     // Add instances FormArray to main form
-    this.sonarrForm.addControl('instances', this.formBuilder.array([]));
+    this.radarrForm.addControl('instances', this.formBuilder.array([]));
 
-    // Load Sonarr config data
-    this.sonarrStore.loadConfig();
+    // Load Radarr config data
+    this.radarrStore.loadConfig();
 
     // Setup effect to update form when config changes
     effect(() => {
-      const config = this.sonarrConfig();
+      const config = this.radarrConfig();
       if (config) {
         this.updateFormFromConfig(config);
       }
@@ -114,16 +106,15 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   /**
    * Update form with values from the configuration
    */
-  private updateFormFromConfig(config: SonarrConfig): void {
+  private updateFormFromConfig(config: RadarrConfig): void {
     // Update main form controls
-    this.sonarrForm.patchValue({
+    this.radarrForm.patchValue({
       enabled: config.enabled,
-      failedImportMaxStrikes: config.failedImportMaxStrikes,
-      searchType: config.searchType,
+      failedImportMaxStrikes: config.failedImportMaxStrikes
     });
 
     // Clear and rebuild the instances form array
-    const instancesArray = this.sonarrForm.get('instances') as FormArray;
+    const instancesArray = this.radarrForm.get('instances') as FormArray;
     instancesArray.clear();
 
     // Add all instances to the form array
@@ -148,8 +139,8 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * Store original form values for dirty checking
    */
   private storeOriginalValues(): void {
-    this.originalFormValues = JSON.parse(JSON.stringify(this.sonarrForm.value));
-    this.sonarrForm.markAsPristine();
+    this.originalFormValues = JSON.parse(JSON.stringify(this.radarrForm.value));
+    this.radarrForm.markAsPristine();
     this.hasActualChanges = false;
   }
 
@@ -157,7 +148,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * Check if the current form values are different from the original values
    */
   private formValuesChanged(): boolean {
-    return !this.isEqual(this.sonarrForm.value, this.originalFormValues);
+    return !this.isEqual(this.radarrForm.value, this.originalFormValues);
   }
 
   /**
@@ -191,7 +182,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   /**
    * Update form control disabled states based on the configuration
    */
-  private updateFormControlDisabledStates(config: SonarrConfig): void {
+  private updateFormControlDisabledStates(config: RadarrConfig): void {
     const enabled = config.enabled;
     this.updateMainControlsState(enabled);
   }
@@ -200,8 +191,8 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * Update the state of main controls based on the 'enabled' control value
    */
   private updateMainControlsState(enabled: boolean): void {
-    const failedImportMaxStrikesControl = this.sonarrForm.get('failedImportMaxStrikes');
-    const searchTypeControl = this.sonarrForm.get('searchType');
+    const failedImportMaxStrikesControl = this.radarrForm.get('failedImportMaxStrikes');
+    const searchTypeControl = this.radarrForm.get('searchType');
 
     if (enabled) {
       failedImportMaxStrikesControl?.enable();
@@ -213,36 +204,35 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   }
 
   /**
-   * Save the Sonarr configuration
+   * Save the Radarr configuration
    */
-  saveSonarrConfig(): void {
-    if (this.sonarrForm.valid) {
+  saveRadarrConfig(): void {
+    if (this.radarrForm.valid) {
       // Mark form as saving
-      this.sonarrForm.disable();
+      this.radarrForm.disable();
 
       // Get data from form
-      const formValue = this.sonarrForm.getRawValue();
+      const formValue = this.radarrForm.getRawValue();
 
       // Create config object
-      const sonarrConfig: SonarrConfig = {
+      const radarrConfig: RadarrConfig = {
         enabled: formValue.enabled,
         failedImportMaxStrikes: formValue.failedImportMaxStrikes,
-        searchType: formValue.searchType,
         instances: formValue.instances || []
       };
 
       // Save the configuration
-      this.sonarrStore.saveConfig(sonarrConfig);
+      this.radarrStore.saveConfig(radarrConfig);
 
       // Setup a one-time check for save completion
       const checkSaveCompletion = () => {
         // Check if we're done saving
-        if (!this.sonarrSaving()) {
+        if (!this.radarrSaving()) {
           // Re-enable the form
-          this.sonarrForm.enable();
+          this.radarrForm.enable();
 
           // If still disabled, update control states based on enabled state
-          if (!this.sonarrForm.get('enabled')?.value) {
+          if (!this.radarrForm.get('enabled')?.value) {
             this.updateMainControlsState(false);
           }
 
@@ -253,7 +243,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
           this.saved.emit();
 
           // Show success message
-          this.notificationService.showSuccess("Sonarr configuration saved successfully");
+          this.notificationService.showSuccess("Radarr configuration saved successfully");
         } else {
           // If still saving, check again in a moment
           setTimeout(checkSaveCompletion, 100);
@@ -270,29 +260,28 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
       this.error.emit("Please fix validation errors before saving.");
 
       // Mark all controls as touched to show validation errors
-      this.markFormGroupTouched(this.sonarrForm);
+      this.markFormGroupTouched(this.radarrForm);
     }
   }
 
   /**
-   * Reset the Sonarr configuration form to default values
+   * Reset the Radarr configuration form to default values
    */
-  resetSonarrConfig(): void {
-    this.sonarrForm.reset({
+  resetRadarrConfig(): void {
+    this.radarrForm.reset({
       enabled: false,
       failedImportMaxStrikes: -1,
-      searchType: SonarrSearchType.Episode,
     });
 
     // Clear all instances
-    const instancesArray = this.sonarrForm.get('instances') as FormArray;
+    const instancesArray = this.radarrForm.get('instances') as FormArray;
     instancesArray.clear();
 
     // Update control states after reset
     this.updateMainControlsState(false);
 
     // Mark form as dirty so the save button is enabled after reset
-    this.sonarrForm.markAsDirty();
+    this.radarrForm.markAsDirty();
     this.hasActualChanges = true;
   }
 
@@ -300,7 +289,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * Add a new instance to the instances form array
    */
   addInstance(): void {
-    const instancesArray = this.sonarrForm.get('instances') as FormArray;
+    const instancesArray = this.radarrForm.get('instances') as FormArray;
 
     instancesArray.push(
       this.formBuilder.group({
@@ -311,7 +300,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
       })
     );
 
-    this.sonarrForm.markAsDirty();
+    this.radarrForm.markAsDirty();
     this.hasActualChanges = true;
   }
 
@@ -319,9 +308,9 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * Remove an instance from the list
    */
   removeInstance(index: number): void {
-    const instancesArray = this.sonarrForm.get('instances') as FormArray;
+    const instancesArray = this.radarrForm.get('instances') as FormArray;
     instancesArray.removeAt(index);
-    this.sonarrForm.markAsDirty();
+    this.radarrForm.markAsDirty();
     this.hasActualChanges = true;
   }
 
@@ -329,7 +318,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * Get the instances form array
    */
   get instances(): FormArray {
-    return this.sonarrForm.get('instances') as FormArray;
+    return this.radarrForm.get('instances') as FormArray;
   }
 
   /**
@@ -361,7 +350,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * @returns True if the control has the specified error
    */
   hasError(controlName: string, errorName: string): boolean {
-    const control = this.sonarrForm.get(controlName);
+    const control = this.radarrForm.get(controlName);
     return control !== null && control.hasError(errorName) && control.touched;
   }
 
@@ -373,7 +362,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    * @returns True if the field has the specified error
    */
   hasInstanceFieldError(instanceIndex: number, fieldName: string, errorName: string): boolean {
-    const instancesArray = this.sonarrForm.get('instances') as FormArray;
+    const instancesArray = this.radarrForm.get('instances') as FormArray;
     if (!instancesArray || !instancesArray.controls[instanceIndex]) return false;
     
     const control = (instancesArray.controls[instanceIndex] as FormGroup).get(fieldName);
