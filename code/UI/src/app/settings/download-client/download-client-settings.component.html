@@ -74,6 +74,8 @@
                 <div class="field-input">
                   <input type="text" pInputText formControlName="host" placeholder="http://localhost:8080" required />
                   <small *ngIf="hasClientFieldError(i, 'host', 'required')" class="p-error block">Host is required</small>
+                  <small *ngIf="hasClientFieldError(i, 'host', 'invalidUri')" class="p-error block">Host must be a valid URL</small>
+                  <small *ngIf="hasClientFieldError(i, 'host', 'invalidProtocol')" class="p-error block">Host must use http or https protocol</small>
                 </div>
               </div>
               

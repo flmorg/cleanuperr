@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnDestroy, Output, effect, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { DownloadClientConfigStore } from "./download-client-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
@@ -262,7 +262,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
         id: [client?.id ?? ''],
         name: [client?.name ?? '', Validators.required],
         type: [client?.type ?? DownloadClientType.QBittorrent, Validators.required],
-        host: [client?.host ?? '', Validators.required],
+        host: [client?.host ?? '', [Validators.required, this.uriValidator]],
         username: [client?.username ?? ''],
         password: [client?.password ?? ''],
         urlBase: [client?.urlBase ?? '']
@@ -336,5 +336,29 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     
     const control = (clientsArray.controls[clientIndex] as FormGroup).get(fieldName);
     return control !== null && control.hasError(errorName) && control.touched;
+  }
+
+  /**
+   * Custom validator to check if the input is a valid URI
+   */
+  private uriValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null; // Let required validator handle empty values
+    }
+    
+    try {
+      // Try to create a URL from the input value
+      // This will throw an error if the input is not a valid URL
+      const url = new URL(control.value);
+      
+      // Check that we have a valid protocol (http or https)
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return { invalidProtocol: true };
+      }
+      
+      return null; // Valid URI
+    } catch (e) {
+      return { invalidUri: true }; // Invalid URI
+    }
   }
 }
