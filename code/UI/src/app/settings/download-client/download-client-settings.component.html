@@ -1,0 +1,133 @@
+<p-card styleClass="settings-card h-full">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+      <div class="header-title-container">
+        <h2 class="card-title m-0">Download Client Configuration</h2>
+        <span class="card-subtitle">Configure download client integration settings</span>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-download text-xl"></i>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="card-content">
+    <!-- Loading/Error State Component -->
+    <app-loading-error-state
+      *ngIf="downloadClientLoading() || downloadClientError()"
+      [loading]="downloadClientLoading()"
+      [error]="downloadClientError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+
+    <!-- Form Content - only shown when not loading and no error -->
+    <form *ngIf="!downloadClientLoading() && !downloadClientError()" [formGroup]="downloadClientForm" class="p-fluid">
+      <!-- Clients Section -->
+      <div class="section-header mt-4">
+        <h3>Download Clients</h3>
+        <small>Configure multiple download client instances</small>
+      </div>
+
+      <!-- Clients Container -->
+      <div class="instances-container">
+        <!-- Empty state message when no clients -->
+        <div *ngIf="clients.controls.length === 0" class="empty-instances-message p-3 text-center">
+          <p>No download clients defined. Add a client to start.</p>
+        </div>
+        
+        <!-- Client cards -->
+        <div class="instance-list">
+          <div *ngFor="let client of clients.controls; let i = index" class="instance-item" [formGroup]="getClientAsFormGroup(i)">
+            <div class="instance-header">
+              <div class="instance-title">
+                <i class="pi pi-download instance-icon"></i>
+                <input type="text" pInputText formControlName="name" placeholder="Client name" class="instance-name-input" />
+              </div>
+              <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm" 
+                (click)="removeClient(i)" [disabled]="downloadClientForm.disabled"></button>
+            </div>
+            <small *ngIf="hasClientFieldError(i, 'name', 'required')" class="p-error block">Name is required</small>
+            <div class="d-flex align-items-center ml-4 mb-2">
+              <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+              <small class="ml-2">Enabled</small>
+            </div>
+            
+            <div class="instance-content">
+              <div class="instance-field">
+                <label>Client Type</label>
+                <div class="field-input">
+                  <p-select
+                    formControlName="type"
+                    [options]="clientTypeOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select client type"
+                    appendTo="body"
+                  ></p-select>
+                  <small *ngIf="hasClientFieldError(i, 'type', 'required')" class="p-error block">Client type is required</small>
+                </div>
+              </div>
+              
+              <div class="instance-field">
+                <label>Host</label>
+                <div class="field-input">
+                  <input type="text" pInputText formControlName="host" placeholder="http://localhost:8080" required />
+                  <small *ngIf="hasClientFieldError(i, 'host', 'required')" class="p-error block">Host is required</small>
+                </div>
+              </div>
+              
+              <div class="instance-field">
+                <label>URL Base</label>
+                <div class="field-input">
+                  <input type="text" pInputText formControlName="urlBase" placeholder="(Optional) Path prefix" />
+                </div>
+              </div>
+              
+              <div class="instance-field">
+                <label>Username</label>
+                <div class="field-input">
+                  <input type="text" pInputText formControlName="username" placeholder="Username" />
+                </div>
+              </div>
+              
+              <div class="instance-field">
+                <label>Password</label>
+                <div class="field-input">
+                  <input type="password" pInputText formControlName="password" placeholder="Password" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-content-end mt-3">
+          <button pButton type="button" icon="pi pi-plus" label="Add Client" 
+            (click)="addClient()" class="p-button-outlined"></button>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button
+          pButton
+          type="button"
+          label="Save"
+          icon="pi pi-save"
+          class="p-button-primary"
+          [disabled]="(!downloadClientForm.dirty || !hasActualChanges) || downloadClientForm.invalid || downloadClientSaving()"
+          [loading]="downloadClientSaving()"
+          (click)="saveDownloadClientConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Reset"
+          icon="pi pi-refresh"
+          class="p-button-secondary p-button-outlined ml-2"
+          (click)="resetDownloadClientConfig()"
+        ></button>
+      </div>
+    </form>
+  </div>
+</p-card>

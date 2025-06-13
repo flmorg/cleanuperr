@@ -6,6 +6,7 @@ import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/mode
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
+import { DownloadClientConfig } from "../../shared/models/download-client-config.model";
 
 @Injectable({
   providedIn: "root",
@@ -184,6 +185,30 @@ export class ConfigurationService {
       catchError((error) => {
         console.error("Error updating Lidarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Lidarr configuration"));
+      })
+    );
+  }
+
+  /**
+   * Get Download Client configuration
+   */
+  getDownloadClientConfig(): Observable<DownloadClientConfig> {
+    return this.http.get<DownloadClientConfig>(`${this.apiUrl}/api/configuration/download_client`).pipe(
+      catchError((error) => {
+        console.error("Error fetching Download Client config:", error);
+        return throwError(() => new Error("Failed to load Download Client configuration"));
+      })
+    );
+  }
+  
+  /**
+   * Update Download Client configuration
+   */
+  updateDownloadClientConfig(config: DownloadClientConfig): Observable<DownloadClientConfig> {
+    return this.http.put<DownloadClientConfig>(`${this.apiUrl}/api/configuration/download_client`, config).pipe(
+      catchError((error) => {
+        console.error("Error updating Download Client config:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to update Download Client configuration"));
       })
     );
   }

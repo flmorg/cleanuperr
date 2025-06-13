@@ -19,6 +19,7 @@ import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-c
 import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
 import { RadarrSettingsComponent } from "../radarr/radarr-settings.component";
 import { LidarrSettingsComponent } from "../lidarr/lidarr-settings.component";
+import { DownloadClientSettingsComponent } from "../download-client/download-client-settings.component";
 
 // Define interfaces for settings page
 interface LogLevel {
@@ -48,7 +49,8 @@ interface Category {
     DownloadCleanerSettingsComponent,
     SonarrSettingsComponent,
     RadarrSettingsComponent,
-    LidarrSettingsComponent
+    LidarrSettingsComponent,
+    DownloadClientSettingsComponent
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
