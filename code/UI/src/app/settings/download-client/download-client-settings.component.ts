@@ -270,7 +270,8 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     );
     
     this.downloadClientForm.markAsDirty();
-    this.hasActualChanges = true;
+    // Recalculate if actual changes exist by comparing with original values
+    this.hasActualChanges = this.formValuesChanged();
   }
 
   /**
@@ -280,7 +281,8 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     const clientsArray = this.downloadClientForm.get('clients') as FormArray;
     clientsArray.removeAt(index);
     this.downloadClientForm.markAsDirty();
-    this.hasActualChanges = true;
+    // Recalculate if actual changes exist by comparing with original values
+    this.hasActualChanges = this.formValuesChanged();
   }
 
   /**
