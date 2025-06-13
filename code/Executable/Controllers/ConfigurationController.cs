@@ -107,23 +107,24 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateQueueCleanerConfig([FromBody] QueueCleanerConfig dto)
     {
         // Get existing config
-        var config = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
         
-        // Apply updates from DTO
-        dto.Adapt(config);
+        // Apply updates from DTO, preserving sensitive data if not provided
+        var newConfig = oldConfig.Adapt<QueueCleanerConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save QueueCleaner configuration");
         }
         
         // Update the scheduler based on configuration changes
-        await UpdateJobSchedule(config, JobType.QueueCleaner);
+        await UpdateJobSchedule(oldConfig, JobType.QueueCleaner);
         
         return Ok(new { Message = "QueueCleaner configuration updated successfully" });
     }
@@ -166,16 +167,17 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateContentBlockerConfig([FromBody] ContentBlockerConfigUpdateDto dto)
     {
         // Get existing config
-        var config = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
         
-        // Apply updates from DTO
-        dto.Adapt(config);
+        // Apply updates from DTO, preserving sensitive data if not provided
+        var newConfig = oldConfig.Adapt<ContentBlockerConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save ContentBlocker configuration");
@@ -188,41 +190,43 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateDownloadCleanerConfig([FromBody] DownloadCleanerConfig dto)
     {
         // Get existing config
-        var config = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
         
-        // Apply updates from DTO
-        dto.Adapt(config);
+        // Apply updates from DTO, preserving sensitive data if not provided
+        var newConfig = oldConfig.Adapt<DownloadCleanerConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save DownloadCleaner configuration");
         }
         
         // Update the scheduler based on configuration changes
-        await UpdateJobSchedule(config, JobType.DownloadCleaner);
+        await UpdateJobSchedule(oldConfig, JobType.DownloadCleaner);
         
         return Ok(new { Message = "DownloadCleaner configuration updated successfully" });
     }
     
     [HttpPut("download_client")]
-    public async Task<IActionResult> UpdateDownloadClientConfig([FromBody] DownloadClientConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateDownloadClientConfig(DownloadClientConfigUpdateDto dto)
     {
         // Get existing config to preserve sensitive data
-        var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
-        
+        var oldConfig = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+
         // Apply updates from DTO, preserving sensitive data if not provided
-        dto.Adapt(config);
+        var newConfig = oldConfig.Adapt<DownloadClientConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save DownloadClient configuration");
@@ -235,24 +239,24 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateGeneralConfig([FromBody] GeneralConfig dto)
     {
         // Get existing config to preserve sensitive data
-        var config = await _configManager.GetConfigurationAsync<GeneralConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<GeneralConfig>();
         
         // Apply updates from DTO, preserving sensitive data if not provided
-        dto.Adapt(config);
+        var newConfig = oldConfig.Adapt<GeneralConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
-
-        _loggingConfigManager.SetLogLevel(config.LogLevel);
-        
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save General configuration");
         }
         
+        _loggingConfigManager.SetLogLevel(oldConfig.LogLevel);
+
         return Ok(new { Message = "General configuration updated successfully" });
     }
     
@@ -260,16 +264,17 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateSonarrConfig([FromBody] SonarrConfigUpdateDto dto)
     {
         // Get existing config to preserve sensitive data
-        var config = await _configManager.GetConfigurationAsync<SonarrConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<SonarrConfig>();
         
         // Apply updates from DTO, preserving sensitive data if not provided
-        dto.Adapt(config);
+        var newConfig = oldConfig.Adapt<SonarrConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save Sonarr configuration");
@@ -282,16 +287,17 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateRadarrConfig([FromBody] RadarrConfigUpdateDto dto)
     {
         // Get existing config to preserve sensitive data
-        var config = await _configManager.GetConfigurationAsync<RadarrConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<RadarrConfig>();
         
         // Apply updates from DTO, preserving sensitive data if not provided
-        dto.Adapt(config);
+        var newConfig = oldConfig.Adapt<RadarrConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save Radarr configuration");
@@ -304,16 +310,17 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateLidarrConfig([FromBody] LidarrConfigUpdateDto dto)
     {
         // Get existing config to preserve sensitive data
-        var config = await _configManager.GetConfigurationAsync<LidarrConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<LidarrConfig>();
         
         // Apply updates from DTO, preserving sensitive data if not provided
-        dto.Adapt(config);
+        var newConfig = oldConfig.Adapt<LidarrConfig>();
+        newConfig = dto.Adapt(newConfig);
         
         // Validate the configuration
-        config.Validate();
+        newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save Lidarr configuration");
@@ -326,13 +333,17 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> UpdateNotificationsConfig([FromBody] NotificationsConfigUpdateDto dto)
     {
         // Get existing config to preserve sensitive data
-        var config = await _configManager.GetConfigurationAsync<NotificationsConfig>();
+        var oldConfig = await _configManager.GetConfigurationAsync<NotificationsConfig>();
         
         // Apply updates from DTO, preserving sensitive data if not provided
-        dto.Adapt(config);
+        var newConfig = oldConfig.Adapt<NotificationsConfig>();
+        newConfig = dto.Adapt(newConfig);
+        
+        // Validate the configuration
+        // newConfig.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(config);
+        var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
         {
             return StatusCode(500, "Failed to save Notifications configuration");

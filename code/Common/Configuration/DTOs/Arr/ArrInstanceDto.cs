@@ -8,7 +8,7 @@ public class ArrInstanceDto
     /// <summary>
     /// Unique identifier for this instance
     /// </summary>
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid? Id { get; set; } = Guid.NewGuid();
     
     /// <summary>
     /// Friendly name for this instance

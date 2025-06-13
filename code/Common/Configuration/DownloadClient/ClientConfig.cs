@@ -1,7 +1,6 @@
 using Common.Attributes;
-using Common.Configuration;
 using Common.Enums;
-using Microsoft.Extensions.Configuration;
+using Common.Exceptions;
 using Newtonsoft.Json;
 
 namespace Common.Configuration.DownloadClient;
@@ -29,12 +28,12 @@ public sealed record ClientConfig
     /// <summary>
     /// Type of download client
     /// </summary>
-    public DownloadClientType Type { get; init; } = DownloadClientType.None;
+    public required DownloadClientType Type { get; init; }
     
     /// <summary>
     /// Host address for the download client
     /// </summary>
-    public string Host { get; init; } = string.Empty;
+    public Uri? Host { get; init; }
     
     /// <summary>
     /// Username for authentication
@@ -57,7 +56,7 @@ public sealed record ClientConfig
     /// <summary>
     /// The computed full URL for the client
     /// </summary>
-    public Uri Url => new($"{Host.TrimEnd('/')}/{UrlBase.TrimStart('/').TrimEnd('/')}");
+    public Uri Url => new($"{Host?.ToString().TrimEnd('/')}/{UrlBase.TrimStart('/').TrimEnd('/')}");
     
     /// <summary>
     /// Validates the configuration
@@ -66,22 +65,17 @@ public sealed record ClientConfig
     {
         if (Id == Guid.Empty)
         {
-            throw new InvalidOperationException("Client ID cannot be empty");
+            throw new ValidationException("Client ID cannot be empty");
         }
         
         if (string.IsNullOrWhiteSpace(Name))
         {
-            throw new InvalidOperationException($"Client name cannot be empty for client ID: {Id}");
+            throw new ValidationException($"Client name cannot be empty for client ID: {Id}");
         }
         
-        if (string.IsNullOrWhiteSpace(Host))
+        if (Host is null && Type is not DownloadClientType.Usenet)
         {
-            throw new InvalidOperationException($"Host cannot be empty for client ID: {Id}");
-        }
-        
-        if (Type == DownloadClientType.None)
-        {
-            throw new InvalidOperationException($"Client type must be specified for client ID: {Id}");
+            throw new ValidationException($"Host cannot be empty for client ID: {Id}");
         }
     }
 }

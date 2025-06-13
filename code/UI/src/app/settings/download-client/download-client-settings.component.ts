@@ -54,7 +54,8 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   clientTypeOptions = [
     { label: "QBittorrent", value: DownloadClientType.QBittorrent },
     { label: "Deluge", value: DownloadClientType.Deluge },
-    { label: "Transmission", value: DownloadClientType.Transmission }
+    { label: "Transmission", value: DownloadClientType.Transmission },
+    { label: "Usenet", value: DownloadClientType.Usenet }
   ];
 
   // Clean up subscriptions
@@ -255,20 +256,35 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
    */
   addClient(client: ClientConfig | null = null): void {
     const clientsArray = this.downloadClientForm.get('clients') as FormArray;
+    const clientType = client?.type ?? DownloadClientType.QBittorrent;
+    const isUsenet = clientType === DownloadClientType.Usenet;
     
-    clientsArray.push(
-      this.formBuilder.group({
-        enabled: [client?.enabled ?? true],
-        id: [client?.id ?? ''],
-        name: [client?.name ?? '', Validators.required],
-        type: [client?.type ?? DownloadClientType.QBittorrent, Validators.required],
-        host: [client?.host ?? '', [Validators.required, this.uriValidator]],
-        username: [client?.username ?? ''],
-        password: [client?.password ?? ''],
-        urlBase: [client?.urlBase ?? '']
-      })
-    );
+    // Create the client form group with conditional validators based on client type
+    const clientFormGroup = this.formBuilder.group({
+      enabled: [client?.enabled ?? true],
+      id: [client?.id ?? ''],
+      name: [client?.name ?? '', Validators.required],
+      type: [clientType, Validators.required],
+      host: [client?.host ?? '', isUsenet ? [] : [Validators.required, this.uriValidator]],
+      username: [client?.username ?? ''],
+      password: [client?.password ?? ''],
+      urlBase: [client?.urlBase ?? '']
+    });
     
+    // Set up subscription to type changes to update validators
+    const typeControl = clientFormGroup.get('type');
+    if (typeControl) {
+      typeControl.valueChanges.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(newType => {
+        // Only update validators if newType is not null
+        if (newType !== null) {
+          this.updateValidatorsForClientType(clientFormGroup, newType);
+        }
+      });
+    }
+    
+    clientsArray.push(clientFormGroup);
     this.downloadClientForm.markAsDirty();
     // Recalculate if actual changes exist by comparing with original values
     this.hasActualChanges = this.formValuesChanged();
@@ -360,5 +376,31 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     } catch (e) {
       return { invalidUri: true }; // Invalid URI
     }
+  }
+  
+  /**
+   * Checks if a client type is Usenet
+   */
+  isUsenetClient(clientType: DownloadClientType | null | undefined): boolean {
+    return clientType === DownloadClientType.Usenet;
+  }
+  
+  /**
+   * Update validators for a client form group based on the client type
+   */
+  private updateValidatorsForClientType(clientFormGroup: FormGroup, clientType: DownloadClientType): void {
+    const hostControl = clientFormGroup.get('host');
+    if (!hostControl) return;
+    
+    if (clientType === DownloadClientType.Usenet) {
+      // For Usenet, remove all validators
+      hostControl.clearValidators();
+    } else {
+      // For other client types, add required and URI validators
+      hostControl.setValidators([Validators.required, this.uriValidator]);
+    }
+    
+    // Update validation state
+    hostControl.updateValueAndValidity();
   }
 }

@@ -1,4 +1,6 @@
-﻿namespace Common.Configuration.DownloadClient;
+﻿using Common.Exceptions;
+
+namespace Common.Configuration.DownloadClient;
 
 public sealed record DownloadClientConfig : IConfig
 {
@@ -32,34 +34,21 @@ public sealed record DownloadClientConfig : IConfig
     public void Validate()
     {
         // Validate clients have unique IDs
-        var duplicateIds = Clients
-            .GroupBy(c => c.Id)
+        var duplicateNames = Clients
+            .GroupBy(c => c.Name)
             .Where(g => g.Count() > 1)
             .Select(g => g.Key)
             .ToList();
             
-        if (duplicateIds.Any())
+        if (duplicateNames.Any())
         {
-            throw new InvalidOperationException($"Duplicate client IDs found: {string.Join(", ", duplicateIds)}");
+            throw new ValidationException($"Duplicate client names found: {string.Join(", ", duplicateNames)}");
         }
         
         // Validate each client configuration
         foreach (var client in Clients)
         {
-            if (client.Id == Guid.Empty)
-            {
-                throw new InvalidOperationException("Client ID cannot be empty");
-            }
-            
-            if (string.IsNullOrWhiteSpace(client.Name))
-            {
-                throw new InvalidOperationException($"Client name cannot be empty for client ID: {client.Id}");
-            }
-            
-            if (string.IsNullOrWhiteSpace(client.Host))
-            {
-                throw new InvalidOperationException($"Host cannot be empty for client ID: {client.Id}");
-            }
+            client.Validate();
         }
     }
 }

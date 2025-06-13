@@ -71,9 +71,6 @@ public abstract class DownloadService : IDownloadService
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
         
-        // Initialize with default empty configuration
-        _clientConfig = new ClientConfig();
-        
         _queueCleanerConfig = _configManager.GetConfiguration<QueueCleanerConfig>();
         _downloadCleanerConfig = _configManager.GetConfiguration<DownloadCleanerConfig>();
     }

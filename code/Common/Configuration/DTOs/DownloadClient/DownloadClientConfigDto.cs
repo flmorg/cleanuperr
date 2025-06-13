@@ -5,7 +5,7 @@ namespace Common.Configuration.DTOs.DownloadClient;
 /// <summary>
 /// DTO for retrieving DownloadClient configuration (excludes sensitive data)
 /// </summary>
-public class DownloadClientConfigDto
+public class  DownloadClientConfigDto
 {
     /// <summary>
     /// Collection of download clients configured for the application
@@ -26,7 +26,7 @@ public class ClientConfigDto
     /// <summary>
     /// Unique identifier for this client
     /// </summary>
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid? Id { get; set; } = Guid.NewGuid();
     
     /// <summary>
     /// Friendly name for this client
@@ -36,12 +36,12 @@ public class ClientConfigDto
     /// <summary>
     /// Type of download client
     /// </summary>
-    public DownloadClientType Type { get; set; } = DownloadClientType.None;
+    public required DownloadClientType Type { get; set; }
     
     /// <summary>
     /// Host address for the download client
     /// </summary>
-    public string Host { get; set; } = string.Empty;
+    public Uri? Host { get; set; }
     
     /// <summary>
     /// Username for authentication (included without password)

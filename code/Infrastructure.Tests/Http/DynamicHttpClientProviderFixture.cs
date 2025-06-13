@@ -38,7 +38,7 @@ public class DynamicHttpClientProviderFixture : IDisposable
             Name = "QBit Test",
             Type = DownloadClientType.QBittorrent,
             Enabled = true,
-            Host = "http://localhost:8080",
+            Host = new("http://localhost:8080"),
             Username = "admin",
             Password = "adminadmin"
         };
@@ -52,7 +52,7 @@ public class DynamicHttpClientProviderFixture : IDisposable
             Name = "Transmission Test",
             Type = DownloadClientType.Transmission,
             Enabled = true,
-            Host = "http://localhost:9091",
+            Host = new("http://localhost:9091"),
             Username = "admin",
             Password = "adminadmin",
             UrlBase = "transmission"
@@ -67,7 +67,7 @@ public class DynamicHttpClientProviderFixture : IDisposable
             Name = "Deluge Test",
             Type = DownloadClientType.Deluge,
             Enabled = true,
-            Host = "http://localhost:8112",
+            Host = new("http://localhost:8112"),
             Username = "admin",
             Password = "deluge"
         };

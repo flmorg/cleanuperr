@@ -69,35 +69,43 @@
                 </div>
               </div>
               
-              <div class="instance-field">
-                <label>Host</label>
-                <div class="field-input">
-                  <input type="text" pInputText formControlName="host" placeholder="http://localhost:8080" required />
-                  <small *ngIf="hasClientFieldError(i, 'host', 'required')" class="p-error block">Host is required</small>
-                  <small *ngIf="hasClientFieldError(i, 'host', 'invalidUri')" class="p-error block">Host must be a valid URL</small>
-                  <small *ngIf="hasClientFieldError(i, 'host', 'invalidProtocol')" class="p-error block">Host must use http or https protocol</small>
+              <!-- Connection fields - only shown when client type is not Usenet -->
+              <ng-container *ngIf="!isUsenetClient(client.get('type')?.value)">
+                <div class="instance-field">
+                  <label>Host</label>
+                  <div class="field-input">
+                    <input type="text" pInputText formControlName="host" placeholder="http://localhost:8080" required />
+                    <small *ngIf="hasClientFieldError(i, 'host', 'required')" class="p-error block">Host is required</small>
+                    <small *ngIf="hasClientFieldError(i, 'host', 'invalidUri')" class="p-error block">Host must be a valid URL</small>
+                    <small *ngIf="hasClientFieldError(i, 'host', 'invalidProtocol')" class="p-error block">Host must use http or https protocol</small>
+                  </div>
                 </div>
-              </div>
+                
+                <div class="instance-field">
+                  <label>URL Base</label>
+                  <div class="field-input">
+                    <input type="text" pInputText formControlName="urlBase" placeholder="(Optional) Path prefix" />
+                  </div>
+                </div>
+                
+                <div class="instance-field">
+                  <label>Username</label>
+                  <div class="field-input">
+                    <input type="text" pInputText formControlName="username" placeholder="Username" />
+                  </div>
+                </div>
+                
+                <div class="instance-field">
+                  <label>Password</label>
+                  <div class="field-input">
+                    <input type="password" pInputText formControlName="password" placeholder="Password" />
+                  </div>
+                </div>
+              </ng-container>
               
-              <div class="instance-field">
-                <label>URL Base</label>
-                <div class="field-input">
-                  <input type="text" pInputText formControlName="urlBase" placeholder="(Optional) Path prefix" />
-                </div>
-              </div>
-              
-              <div class="instance-field">
-                <label>Username</label>
-                <div class="field-input">
-                  <input type="text" pInputText formControlName="username" placeholder="Username" />
-                </div>
-              </div>
-              
-              <div class="instance-field">
-                <label>Password</label>
-                <div class="field-input">
-                  <input type="password" pInputText formControlName="password" placeholder="Password" />
-                </div>
+              <!-- Message shown when Usenet is selected -->
+              <div *ngIf="isUsenetClient(client.get('type')?.value)" class="p-3 mt-2 surface-overlay border-1 border-round-sm">
+                <small class="text-secondary">Usenet client type is for categorization only. No connection details needed.</small>
               </div>
             </div>
           </div>
