@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using Common.Configuration.DownloadClient;
 using Common.Enums;
 using Infrastructure.Configuration;
 using Infrastructure.Http;
@@ -51,7 +50,7 @@ public class DownloadClientFactory : IDownloadClientFactory
     /// <inheritdoc />
     public IEnumerable<IDownloadService> GetAllEnabledClients()
     {
-        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>();
+        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfigs>();
         
         foreach (var client in downloadClientConfig.GetEnabledClients())
         {
@@ -62,7 +61,7 @@ public class DownloadClientFactory : IDownloadClientFactory
     /// <inheritdoc />
     public IEnumerable<IDownloadService> GetClientsByType(DownloadClientType clientType)
     {
-        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>();
+        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfigs>();
         
         foreach (var client in downloadClientConfig.GetEnabledClients().Where(c => c.Type == clientType))
         {
@@ -100,7 +99,7 @@ public class DownloadClientFactory : IDownloadClientFactory
 
     private IDownloadService CreateClient(Guid clientId)
     {
-        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfig>();
+        var downloadClientConfig = _configManager.GetConfiguration<DownloadClientConfigs>();
         
         var clientConfig = downloadClientConfig.GetClientConfig(clientId);
         
@@ -126,24 +125,24 @@ public class DownloadClientFactory : IDownloadClientFactory
         return service;
     }
 
-    private QBitService CreateQBitService(ClientConfig clientConfig)
+    private QBitService CreateQBitService(Common.Configuration.DownloadClient downloadClient)
     {
         var client = _serviceProvider.GetRequiredService<QBitService>();
-        client.Initialize(clientConfig);
+        client.Initialize(downloadClient);
         return client;
     }
 
-    private TransmissionService CreateTransmissionService(ClientConfig clientConfig)
+    private TransmissionService CreateTransmissionService(Common.Configuration.DownloadClient downloadClient)
     {
         var client = _serviceProvider.GetRequiredService<TransmissionService>();
-        client.Initialize(clientConfig);
+        client.Initialize(downloadClient);
         return client;
     }
 
-    private DelugeService CreateDelugeService(ClientConfig clientConfig)
+    private DelugeService CreateDelugeService(Common.Configuration.DownloadClient downloadClient)
     {
         var client = _serviceProvider.GetRequiredService<DelugeService>();
-        client.Initialize(clientConfig);
+        client.Initialize(downloadClient);
         return client;
     }
 }

@@ -10,7 +10,7 @@ public abstract class NotificationProvider : INotificationProvider
     private readonly IConfigManager _configManager;
     protected readonly NotificationsConfig _config;
     
-    public abstract BaseNotificationConfig Config { get; }
+    public abstract NotificationConfig Config { get; }
 
     protected NotificationProvider(IConfigManager configManager)
     {

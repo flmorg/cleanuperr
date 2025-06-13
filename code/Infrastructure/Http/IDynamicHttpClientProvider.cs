@@ -1,4 +1,4 @@
-using Common.Configuration.DownloadClient;
+using Common.Configuration;
 
 namespace Infrastructure.Http;
 
@@ -10,7 +10,7 @@ public interface IDynamicHttpClientProvider
     /// <summary>
     /// Creates an HTTP client configured for the specified download client
     /// </summary>
-    /// <param name="clientConfig">The client configuration</param>
+    /// <param name="downloadClient">The client configuration</param>
     /// <returns>A configured HttpClient instance</returns>
-    HttpClient CreateClient(ClientConfig clientConfig);
+    HttpClient CreateClient(DownloadClient downloadClient);
 }

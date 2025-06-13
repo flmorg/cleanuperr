@@ -1,7 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Common.Configuration.QueueCleaner;
 
 public sealed record QueueCleanerConfig : IJobConfig
 {
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
     public bool Enabled { get; init; }
     
     public string CronExpression { get; init; } = "0 0/5 * * * ?";

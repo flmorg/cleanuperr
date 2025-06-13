@@ -4,6 +4,8 @@ namespace Common.Configuration.DownloadCleaner;
 
 public sealed record DownloadCleanerConfig : IJobConfig
 {
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
     public bool Enabled { get; init; }
 
     public string CronExpression { get; init; } = "0 0 * * * ?";
@@ -11,7 +13,7 @@ public sealed record DownloadCleanerConfig : IJobConfig
     /// <summary>
     /// Indicates whether to use the CronExpression directly or convert from a user-friendly schedule
     /// </summary>
-    public bool UseAdvancedScheduling { get; init; } = false;
+    public bool UseAdvancedScheduling { get; init; }
 
     public List<CleanCategory> Categories { get; init; } = [];
 

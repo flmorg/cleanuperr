@@ -1,4 +1,4 @@
-using Common.Configuration.DownloadClient;
+using Common.Configuration;
 using Common.Enums;
 using Infrastructure.Configuration;
 using Infrastructure.Http;
@@ -30,9 +30,9 @@ public class DynamicHttpClientProviderFixture : IDisposable
             certificateValidationService);
     }
     
-    public ClientConfig CreateQBitClientConfig()
+    public DownloadClient CreateQBitClientConfig()
     {
-        return new ClientConfig
+        return new DownloadClient
         {
             Id = Guid.NewGuid(),
             Name = "QBit Test",
@@ -44,9 +44,9 @@ public class DynamicHttpClientProviderFixture : IDisposable
         };
     }
     
-    public ClientConfig CreateTransmissionClientConfig()
+    public DownloadClient CreateTransmissionClientConfig()
     {
-        return new ClientConfig
+        return new DownloadClient
         {
             Id = Guid.NewGuid(),
             Name = "Transmission Test",
@@ -59,9 +59,9 @@ public class DynamicHttpClientProviderFixture : IDisposable
         };
     }
     
-    public ClientConfig CreateDelugeClientConfig()
+    public DownloadClient CreateDelugeClientConfig()
     {
-        return new ClientConfig
+        return new DownloadClient
         {
             Id = Guid.NewGuid(),
             Name = "Deluge Test",

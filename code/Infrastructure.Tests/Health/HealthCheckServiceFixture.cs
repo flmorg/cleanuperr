@@ -1,4 +1,4 @@
-using Common.Configuration.DownloadClient;
+using Common.Configuration;
 using Common.Enums;
 using Infrastructure.Configuration;
 using Infrastructure.Health;
@@ -16,7 +16,7 @@ public class HealthCheckServiceFixture : IDisposable
     public IConfigManager ConfigManager { get; }
     public IDownloadClientFactory ClientFactory { get; }
     public IDownloadService MockClient { get; }
-    public DownloadClientConfig DownloadClientConfig { get; }
+    public DownloadClientConfigs DownloadClientConfigs { get; }
 
     public HealthCheckServiceFixture()
     {
@@ -27,9 +27,9 @@ public class HealthCheckServiceFixture : IDisposable
         Guid clientId = Guid.NewGuid();
         
         // Set up test download client config
-        DownloadClientConfig = new DownloadClientConfig
+        DownloadClientConfigs = new DownloadClientConfigs
         {
-            Clients = new List<ClientConfig>
+            Clients = new List<DownloadClient>
             {
                 new()
                 {
@@ -64,7 +64,7 @@ public class HealthCheckServiceFixture : IDisposable
         MockClient.GetClientId().Returns(clientId);
         
         // Set up mock config manager
-        ConfigManager.GetConfiguration<DownloadClientConfig>().Returns(DownloadClientConfig);
+        ConfigManager.GetConfiguration<DownloadClientConfigs>().Returns(DownloadClientConfigs);
     }
 
     public HealthCheckService CreateSut()

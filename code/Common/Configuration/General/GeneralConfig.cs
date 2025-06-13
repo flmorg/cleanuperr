@@ -1,26 +1,32 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Common.Enums;
-using Common.Exceptions;
 using Serilog.Events;
+using ValidationException = Common.Exceptions.ValidationException;
 
 namespace Common.Configuration.General;
 
 public sealed record GeneralConfig : IConfig
 {
-    public bool DryRun { get; init; }
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; } = Guid.NewGuid();
     
-    public ushort HttpMaxRetries { get; init; }
+    public bool DryRun { get; set; }
     
-    public ushort HttpTimeout { get; init; } = 100;
+    public ushort HttpMaxRetries { get; set; }
     
-    public CertificateValidationType HttpCertificateValidation { get; init; } = CertificateValidationType.Enabled;
+    public ushort HttpTimeout { get; set; } = 100;
+    
+    public CertificateValidationType HttpCertificateValidation { get; set; } = CertificateValidationType.Enabled;
 
-    public bool SearchEnabled { get; init; } = true;
+    public bool SearchEnabled { get; set; } = true;
     
-    public ushort SearchDelay { get; init; } = 30;
+    public ushort SearchDelay { get; set; } = 30;
     
     public LogEventLevel LogLevel { get; set; } = LogEventLevel.Information;
 
-    public string EncryptionKey { get; init; } = Guid.NewGuid().ToString();
+    public string EncryptionKey { get; set; } = Guid.NewGuid().ToString();
 
     public List<string> IgnoredDownloads { get; set; } = [];
 

@@ -1,6 +1,6 @@
 ﻿namespace Common.Configuration.Notification;
 
-public sealed record AppriseConfig : BaseNotificationConfig
+public sealed record AppriseConfig : NotificationConfig
 {
     public Uri? Url { get; init; }
     

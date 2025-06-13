@@ -1,7 +1,6 @@
 using Common.Configuration;
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadCleaner;
-using Common.Configuration.DownloadClient;
 using Common.Configuration.General;
 using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
@@ -53,7 +52,7 @@ public class ConfigurationController : ControllerBase
     [HttpGet("download_client")]
     public async Task<IActionResult> GetDownloadClientConfig()
     {
-        var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+        var config = await _configManager.GetConfigurationAsync<DownloadClientConfigs>();
         return Ok(config);
     }
     
@@ -195,13 +194,13 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPut("download_client")]
-    public async Task<IActionResult> UpdateDownloadClientConfig(DownloadClientConfig newConfig)
+    public async Task<IActionResult> UpdateDownloadClientConfig(DownloadClientConfigs newConfigs)
     {
         // Validate the configuration
-        newConfig.Validate();
+        newConfigs.Validate();
         
         // Persist the configuration
-        var result = await _configManager.SaveConfigurationAsync(newConfig);
+        var result = await _configManager.SaveConfigurationAsync(newConfigs);
         if (!result)
         {
             return StatusCode(500, "Failed to save DownloadClient configuration");

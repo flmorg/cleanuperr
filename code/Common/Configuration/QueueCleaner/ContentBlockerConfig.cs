@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Common.Configuration.QueueCleaner;
 
+[ComplexType]
 public sealed record ContentBlockerConfig
 {
     public bool Enabled { get; init; }

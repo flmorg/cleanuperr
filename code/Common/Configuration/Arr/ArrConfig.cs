@@ -1,9 +1,14 @@
-using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Common.Configuration.Arr;
 
 public abstract class ArrConfig : IConfig
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
     public bool Enabled { get; init; }
 
     public short FailedImportMaxStrikes { get; init; } = -1;

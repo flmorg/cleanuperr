@@ -1,6 +1,6 @@
 ﻿namespace Common.Configuration.Notification;
 
-public abstract record BaseNotificationConfig
+public abstract record NotificationConfig
 {
     public bool OnFailedImportStrike { get; init; }
     

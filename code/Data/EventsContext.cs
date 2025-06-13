@@ -33,6 +33,22 @@ public class EventsContext : DbContext
             entity.Property(e => e.Timestamp)
                 .HasConversion(new UtcDateTimeConverter());
         });
+        
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var enumProperties = entityType.ClrType.GetProperties()
+                .Where(p => p.PropertyType.IsEnum || 
+                            (p.PropertyType.IsGenericType && 
+                             p.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>) && 
+                             p.PropertyType.GetGenericArguments()[0].IsEnum));
+
+            foreach (var property in enumProperties)
+            {
+                modelBuilder.Entity(entityType.ClrType)
+                    .Property(property.Name)
+                    .HasConversion<string>();
+            }
+        }
     }
     
     public class UtcDateTimeConverter : ValueConverter<DateTime, DateTime>

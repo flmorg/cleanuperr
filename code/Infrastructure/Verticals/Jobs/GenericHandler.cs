@@ -1,29 +1,27 @@
 using Common.Configuration.Arr;
-using Common.Configuration.DownloadClient;
+using Common.Configuration.DownloadCleaner;
 using Common.Configuration.General;
+using Common.Configuration.QueueCleaner;
+using Data;
 using Data.Enums;
 using Data.Models.Arr;
 using Data.Models.Arr.Queue;
-using Infrastructure.Configuration;
 using Infrastructure.Events;
 using Infrastructure.Verticals.Arr;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.DownloadRemover.Models;
-using Infrastructure.Verticals.Notifications;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Jobs;
 
-public abstract class GenericHandler : IHandler, IDisposable
+public abstract class GenericHandler : IHandler
 {
     protected readonly ILogger<GenericHandler> _logger;
-    protected readonly GeneralConfig _generalConfig;
-    protected readonly DownloadClientConfig _downloadClientConfig;
-    protected readonly SonarrConfig _sonarrConfig;
-    protected readonly RadarrConfig _radarrConfig;
-    protected readonly LidarrConfig _lidarrConfig;
+    protected readonly DataContext _dataContext;
     protected readonly IMemoryCache _cache;
     protected readonly IBus _messageBus;
     protected readonly ArrClientFactory _arrClientFactory;
@@ -31,9 +29,6 @@ public abstract class GenericHandler : IHandler, IDisposable
     protected readonly DownloadServiceFactory _downloadServiceFactory;
     private readonly EventPublisher _eventPublisher;
     
-    // Collection of download services for use with multiple clients
-    protected readonly List<IDownloadService> _downloadServices = [];
-
     protected GenericHandler(
         ILogger<GenericHandler> logger,
         IMemoryCache cache,
@@ -41,7 +36,7 @@ public abstract class GenericHandler : IHandler, IDisposable
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        IConfigManager configManager,
+        DataContext dataContext,
         EventPublisher eventPublisher
     )
     {
@@ -52,31 +47,51 @@ public abstract class GenericHandler : IHandler, IDisposable
         _arrArrQueueIterator = arrArrQueueIterator;
         _downloadServiceFactory = downloadServiceFactory;
         _eventPublisher = eventPublisher;
-        _generalConfig = configManager.GetConfiguration<GeneralConfig>();
-        _downloadClientConfig = configManager.GetConfiguration<DownloadClientConfig>();
-        _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
-        _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
-        _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
+        _dataContext = dataContext;
+        // _generalConfig = configManager.GetConfiguration<GeneralConfig>();
+        // _downloadClientConfigs = configManager.GetConfiguration<DownloadClientConfigs>();
+        // _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
+        // _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
+        // _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
 
     /// <summary>
     /// Initialize download services based on configuration
     /// </summary>
-    protected virtual void InitializeDownloadServices()
+    protected async Task<List<IDownloadService>> GetDownloadServices()
     {
-        // Clear any existing services
-        DisposeDownloadServices();
-        _downloadServices.Clear();
+        var clients = await _dataContext.DownloadClients
+            .AsNoTracking()
+            .ToListAsync();
+        
+        if (clients.Count is 0)
+        {
+            _logger.LogWarning("No download clients configured");
+            return [];
+        }
+        
+        var enabledClients = await _dataContext.DownloadClients
+            .Where(c => c.Enabled)
+            .ToListAsync();
+
+        if (enabledClients.Count == 0)
+        {
+            _logger.LogWarning("No enabled download clients available");
+            return [];
+        }
+        
+        List<IDownloadService> downloadServices = [];
         
         // Add all enabled clients
-        foreach (var client in _downloadClientConfig.GetEnabledClients())
+        foreach (var client in enabledClients)
         {
             try
             {
                 var service = _downloadServiceFactory.GetDownloadService(client);
                 if (service != null)
                 {
-                    _downloadServices.Add(service);
+                    await service.LoginAsync();
+                    downloadServices.Add(service);
                     _logger.LogDebug("Initialized download client: {name}", client.Name);
                 }
                 else
@@ -90,54 +105,52 @@ public abstract class GenericHandler : IHandler, IDisposable
             }
         }
         
-        if (_downloadServices.Count == 0)
+        if (downloadServices.Count == 0)
         {
-            _logger.LogWarning("No enabled download clients found");
+            _logger.LogWarning("No valid download clients found");
         }
         else
         {
-            _logger.LogDebug("Initialized {count} download clients", _downloadServices.Count);
+            _logger.LogDebug("Initialized {count} download clients", downloadServices.Count);
         }
+
+        return downloadServices;
     }
 
-    public virtual async Task ExecuteAsync()
+    public async Task ExecuteAsync()
     {
-        // Initialize download services
-        InitializeDownloadServices();
+        ContextProvider.Set(nameof(GeneralConfig), await _dataContext.GeneralConfigs.FirstAsync());
+        ContextProvider.Set(nameof(SonarrConfig), await _dataContext.SonarrConfigs.FirstAsync());
+        ContextProvider.Set(nameof(RadarrConfig), await _dataContext.RadarrConfigs.FirstAsync());
+        ContextProvider.Set(nameof(LidarrConfig), await _dataContext.LidarrConfigs.FirstAsync());
+        ContextProvider.Set(nameof(QueueCleanerConfig), await _dataContext.QueueCleanerConfigs.FirstAsync());
+        ContextProvider.Set(nameof(DownloadCleanerConfig), await _dataContext.DownloadCleanerConfigs.FirstAsync());
         
-        if (_downloadServices.Count == 0)
-        {
-            _logger.LogWarning("No download clients available, skipping execution");
-            return;
-        }
-        
-        // Login to all download services
-        foreach (var downloadService in _downloadServices)
-        {
-            await downloadService.LoginAsync();
-        }
-
-        await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr);
-        await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr);
-        await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr);
+        await ExecuteInternalAsync();
     }
+    // {
+    //     // Initialize download services
+    //     GetDownloadServices();
+    //     
+    //     if (_downloadServices.Count == 0)
+    //     {
+    //         _logger.LogWarning("No download clients available, skipping execution");
+    //         return;
+    //     }
+    //     
+    //     // Login to all download services
+    //     foreach (var downloadService in _downloadServices)
+    //     {
+    //         await downloadService.LoginAsync();
+    //     }
+    //
+    //     await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr);
+    //     await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr);
+    //     await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr);
+    // }
 
-    public virtual void Dispose()
-    {
-        DisposeDownloadServices();
-    }
+    protected abstract Task ExecuteInternalAsync();
     
-    /// <summary>
-    /// Dispose all download services
-    /// </summary>
-    protected void DisposeDownloadServices()
-    {
-        foreach (var service in _downloadServices)
-        {
-            service.Dispose();
-        }
-    }
-
     protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config);
     
     protected async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType, bool throwOnFailure = false)
@@ -210,27 +223,28 @@ public abstract class GenericHandler : IHandler, IDisposable
     
     protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record, bool isPack = false)
     {
+        var sonarrConfig = ContextProvider.Get<SonarrConfig>(nameof(SonarrConfig));
         return type switch
         {
-            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode && !isPack => new SonarrSearchItem
+            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Episode && !isPack => new SonarrSearchItem
             {
                 Id = record.EpisodeId,
                 SeriesId = record.SeriesId,
                 SearchType = SonarrSearchType.Episode
             },
-            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Episode && isPack => new SonarrSearchItem
+            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Episode && isPack => new SonarrSearchItem
             {
                 Id = record.SeasonNumber,
                 SeriesId = record.SeriesId,
                 SearchType = SonarrSearchType.Season
             },
-            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Season => new SonarrSearchItem
+            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Season => new SonarrSearchItem
             {
                 Id = record.SeasonNumber,
                 SeriesId = record.SeriesId,
                 SearchType = SonarrSearchType.Series
             },
-            InstanceType.Sonarr when _sonarrConfig.SearchType is SonarrSearchType.Series => new SonarrSearchItem
+            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Series => new SonarrSearchItem
             {
                 Id = record.SeriesId
             },

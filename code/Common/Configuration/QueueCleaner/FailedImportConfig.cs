@@ -1,7 +1,9 @@
-﻿using Common.Exceptions;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Common.Exceptions;
 
 namespace Common.Configuration.QueueCleaner;
 
+[ComplexType]
 public sealed record FailedImportConfig
 {
     public ushort MaxStrikes { get; init; }

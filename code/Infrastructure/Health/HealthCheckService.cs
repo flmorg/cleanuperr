@@ -1,7 +1,6 @@
-using Common.Configuration.DownloadClient;
-using Infrastructure.Configuration;
-using Infrastructure.Verticals.DownloadClient;
+using Data;
 using Infrastructure.Verticals.DownloadClient.Factory;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Health;
@@ -12,7 +11,7 @@ namespace Infrastructure.Health;
 public class HealthCheckService : IHealthCheckService
 {
     private readonly ILogger<HealthCheckService> _logger;
-    private readonly IConfigManager _configManager;
+    private readonly DataContext _dataContext;
     private readonly IDownloadClientFactory _clientFactory;
     private readonly Dictionary<Guid, HealthStatus> _healthStatuses = new();
     private readonly object _lockObject = new();
@@ -22,19 +21,13 @@ public class HealthCheckService : IHealthCheckService
     /// </summary>
     public event EventHandler<ClientHealthChangedEventArgs>? ClientHealthChanged;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="HealthCheckService"/> class
-    /// </summary>
-    /// <param name="logger">The logger</param>
-    /// <param name="configManager">The configuration manager</param>
-    /// <param name="clientFactory">The download client factory</param>
     public HealthCheckService(
         ILogger<HealthCheckService> logger,
-        IConfigManager configManager,
+        DataContext dataContext,
         IDownloadClientFactory clientFactory)
     {
         _logger = logger;
-        _configManager = configManager;
+        _dataContext = dataContext;
         _clientFactory = clientFactory;
     }
 
@@ -46,8 +39,11 @@ public class HealthCheckService : IHealthCheckService
         try
         {
             // Get the client configuration
-            var config = await GetClientConfigAsync(clientId);
-            if (config == null)
+            var config = await _dataContext.DownloadClients
+                .Where(x => x.Id == clientId)
+                .FirstOrDefaultAsync();
+            
+            if (config is null)
             {
                 _logger.LogWarning("Client {clientId} not found in configuration", clientId);
                 var notFoundStatus = new HealthStatus
@@ -135,8 +131,9 @@ public class HealthCheckService : IHealthCheckService
         try
         {
             // Get all enabled client configurations
-            var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
-            var enabledClients = config.GetEnabledClients();
+            var enabledClients = await _dataContext.DownloadClients
+                .Where(x => x.Enabled)
+                .ToListAsync();
             var results = new Dictionary<Guid, HealthStatus>();
             
             // Check health of each enabled client
@@ -171,12 +168,6 @@ public class HealthCheckService : IHealthCheckService
         {
             return new Dictionary<Guid, HealthStatus>(_healthStatuses);
         }
-    }
-    
-    private async Task<ClientConfig?> GetClientConfigAsync(Guid clientId)
-    {
-        var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
-        return config.GetClientConfig(clientId);
     }
     
     private void UpdateHealthStatus(HealthStatus newStatus)

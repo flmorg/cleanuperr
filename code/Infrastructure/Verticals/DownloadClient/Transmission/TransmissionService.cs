@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Attributes;
 using Common.Configuration.DownloadCleaner;
-using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
@@ -69,15 +68,15 @@ public partial class TransmissionService : DownloadService, ITransmissionService
     }
     
     /// <inheritdoc />
-    public override void Initialize(ClientConfig clientConfig)
+    public override void Initialize(Common.Configuration.DownloadClient downloadClient)
     {
         // Initialize base service first
-        base.Initialize(clientConfig);
+        base.Initialize(downloadClient);
         
         // Ensure client type is correct
-        if (clientConfig.Type != Common.Enums.DownloadClientType.Transmission)
+        if (downloadClient.Type != Common.Enums.DownloadClientType.Transmission)
         {
-            throw new InvalidOperationException($"Cannot initialize TransmissionService with client type {clientConfig.Type}");
+            throw new InvalidOperationException($"Cannot initialize TransmissionService with client type {downloadClient.Type}");
         }
         
         if (_httpClient == null)
@@ -86,18 +85,18 @@ public partial class TransmissionService : DownloadService, ITransmissionService
         }
         
         // Create the RPC path
-        string rpcPath = string.IsNullOrEmpty(clientConfig.UrlBase)
+        string rpcPath = string.IsNullOrEmpty(downloadClient.UrlBase)
             ? "/rpc"
-            : $"/{clientConfig.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
+            : $"/{downloadClient.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
         
         // Create full RPC URL
-        string rpcUrl = new UriBuilder(clientConfig.Url) { Path = rpcPath }.Uri.ToString();
+        string rpcUrl = new UriBuilder(downloadClient.Url) { Path = rpcPath }.Uri.ToString();
         
         // Create Transmission client
-        _client = new Client(_httpClient, rpcUrl, login: clientConfig.Username, password: clientConfig.Password);
+        _client = new Client(_httpClient, rpcUrl, login: downloadClient.Username, password: downloadClient.Password);
         
         _logger.LogInformation("Initialized Transmission service for client {clientName} ({clientId})", 
-            clientConfig.Name, clientConfig.Id);
+            downloadClient.Name, downloadClient.Id);
     }
 
     public override async Task LoginAsync()
@@ -110,11 +109,11 @@ public partial class TransmissionService : DownloadService, ITransmissionService
         try 
         {
             await _client.GetSessionInformationAsync();
-            _logger.LogDebug("Successfully logged in to Transmission client {clientId}", _clientConfig.Id);
+            _logger.LogDebug("Successfully logged in to Transmission client {clientId}", _downloadClient.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to login to Transmission client {clientId}", _clientConfig.Id);
+            _logger.LogError(ex, "Failed to login to Transmission client {clientId}", _downloadClient.Id);
             throw;
         }
     }

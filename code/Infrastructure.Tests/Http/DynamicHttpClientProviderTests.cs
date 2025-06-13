@@ -1,5 +1,4 @@
 using System.Net;
-using Common.Configuration.DownloadClient;
 using Common.Enums;
 using Infrastructure.Http;
 using Shouldly;

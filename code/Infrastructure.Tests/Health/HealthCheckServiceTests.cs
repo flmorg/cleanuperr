@@ -1,4 +1,3 @@
-using Common.Configuration.DownloadClient;
 using Infrastructure.Health;
 using NSubstitute;
 using Shouldly;
@@ -59,8 +58,8 @@ public class HealthCheckServiceTests : IClassFixture<HealthCheckServiceFixture>
         var sut = _fixture.CreateSut();
         
         // Configure the ConfigManager to return null for the client config
-        _fixture.ConfigManager.GetConfigurationAsync<DownloadClientConfig>().Returns(
-            Task.FromResult<DownloadClientConfig>(new())
+        _fixture.ConfigManager.GetConfigurationAsync<DownloadClientConfigs>().Returns(
+            Task.FromResult<DownloadClientConfigs>(new())
         );
         
         // Act

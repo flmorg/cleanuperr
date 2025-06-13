@@ -1,6 +1,4 @@
-using Common.Configuration.DownloadClient;
 using Common.Enums;
-using Infrastructure.Configuration;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.DownloadClient.Transmission;
@@ -15,16 +13,13 @@ namespace Infrastructure.Verticals.DownloadClient;
 public sealed class DownloadServiceFactory
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IConfigManager _configManager;
     private readonly ILogger<DownloadServiceFactory> _logger;
     
     public DownloadServiceFactory(
         IServiceProvider serviceProvider, 
-        IConfigManager configManager,
         ILogger<DownloadServiceFactory> logger)
     {
         _serviceProvider = serviceProvider;
-        _configManager = configManager;
         _logger = logger;
     }
 
@@ -56,21 +51,21 @@ public sealed class DownloadServiceFactory
     /// <summary>
     /// Creates a download service using the specified client configuration
     /// </summary>
-    /// <param name="clientConfig">The client configuration to use</param>
+    /// <param name="downloadClient">The client configuration to use</param>
     /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
-    public IDownloadService? GetDownloadService(ClientConfig clientConfig)
+    public IDownloadService? GetDownloadService(Common.Configuration.DownloadClient downloadClient)
     {
-        if (!clientConfig.Enabled)
+        if (!downloadClient.Enabled)
         {
-            _logger.LogWarning("Download client {clientId} is disabled", clientConfig.Id);
+            _logger.LogWarning("Download client {clientId} is disabled", downloadClient.Id);
             return null;
         }
         
-        return clientConfig.Type switch
+        return downloadClient.Type switch
         {
-            DownloadClientType.QBittorrent => CreateClientService<QBitService>(clientConfig),
-            DownloadClientType.Deluge => CreateClientService<DelugeService>(clientConfig),
-            DownloadClientType.Transmission => CreateClientService<TransmissionService>(clientConfig),
+            DownloadClientType.QBittorrent => CreateClientService<QBitService>(downloadClient),
+            DownloadClientType.Deluge => CreateClientService<DelugeService>(downloadClient),
+            DownloadClientType.Transmission => CreateClientService<TransmissionService>(downloadClient),
             _ => null
         };
     }
@@ -79,12 +74,12 @@ public sealed class DownloadServiceFactory
     /// Creates a download client service for a specific client type
     /// </summary>
     /// <typeparam name="T">The type of download service to create</typeparam>
-    /// <param name="clientConfig">The client configuration</param>
+    /// <param name="downloadClient">The client configuration</param>
     /// <returns>An implementation of IDownloadService</returns>
-    private T CreateClientService<T>(ClientConfig clientConfig) where T : IDownloadService
+    private T CreateClientService<T>(Common.Configuration.DownloadClient downloadClient) where T : IDownloadService
     {
         var service = _serviceProvider.GetRequiredService<T>();
-        service.Initialize(clientConfig);
+        service.Initialize(downloadClient);
         return service;
     }
 }

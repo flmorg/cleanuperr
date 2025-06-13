@@ -1,5 +1,4 @@
 using Common.Configuration.Arr;
-using Common.Configuration.DownloadClient;
 using Infrastructure.Configuration;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
@@ -38,7 +37,7 @@ public class StatusController : ControllerBase
             var process = Process.GetCurrentProcess();
             
             // Get configuration
-            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfigs>();
             var sonarrConfig = await _configManager.GetConfigurationAsync<SonarrConfig>();
             var radarrConfig = await _configManager.GetConfigurationAsync<RadarrConfig>();
             var lidarrConfig = await _configManager.GetConfigurationAsync<LidarrConfig>();
@@ -91,7 +90,7 @@ public class StatusController : ControllerBase
     {
         try
         {
-            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
+            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfigs>();
             var result = new Dictionary<string, object>();
             
             // Check for configured clients

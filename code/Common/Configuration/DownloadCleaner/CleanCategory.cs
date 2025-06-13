@@ -1,9 +1,15 @@
-﻿using Common.Exceptions;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using ValidationException = Common.Exceptions.ValidationException;
 
 namespace Common.Configuration.DownloadCleaner;
 
 public sealed record CleanCategory : IConfig
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
     public required string Name { get; init; }
     
     /// <summary>

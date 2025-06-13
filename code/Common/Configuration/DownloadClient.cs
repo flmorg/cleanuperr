@@ -1,29 +1,31 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Common.Attributes;
 using Common.Enums;
 using Common.Exceptions;
 using Newtonsoft.Json;
 
-namespace Common.Configuration.DownloadClient;
+namespace Common.Configuration;
 
 /// <summary>
 /// Configuration for a specific download client
 /// </summary>
-public sealed record ClientConfig
+public sealed record DownloadClient
 {
-    /// <summary>
-    /// Whether this client is enabled
-    /// </summary>
-    public bool Enabled { get; init; } = true;
-    
     /// <summary>
     /// Unique identifier for this client
     /// </summary>
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; init; } = Guid.NewGuid();
+    
+    /// <summary>
+    /// Whether this client is enabled
+    /// </summary>
+    public bool Enabled { get; init; } = false;
     
     /// <summary>
     /// Friendly name for this client
     /// </summary>
-    public string Name { get; init; } = string.Empty;
+    public required string Name { get; init; }
     
     /// <summary>
     /// Type of download client
@@ -39,19 +41,19 @@ public sealed record ClientConfig
     /// Username for authentication
     /// </summary>
     [SensitiveData]
-    public string Username { get; init; } = string.Empty;
+    public string? Username { get; init; }
     
     /// <summary>
     /// Password for authentication
     /// </summary>
     [SensitiveData]
-    public string Password { get; init; } = string.Empty;
+    public string? Password { get; init; }
     
     /// <summary>
     /// The base URL path component, used by clients like Transmission and Deluge
     /// </summary>
     [JsonProperty("url_base")]
-    public string UrlBase { get; init; } = string.Empty;
+    public string? UrlBase { get; init; }
     
     /// <summary>
     /// The computed full URL for the client
@@ -63,11 +65,6 @@ public sealed record ClientConfig
     /// </summary>
     public void Validate()
     {
-        if (Id == Guid.Empty)
-        {
-            throw new ValidationException("Client ID cannot be empty");
-        }
-        
         if (string.IsNullOrWhiteSpace(Name))
         {
             throw new ValidationException($"Client name cannot be empty for client ID: {Id}");

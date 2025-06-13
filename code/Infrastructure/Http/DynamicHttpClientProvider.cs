@@ -1,7 +1,7 @@
 using System.Net;
-using Common.Configuration.DownloadClient;
+using Common.Configuration;
 using Common.Configuration.General;
-using Infrastructure.Configuration;
+using Data;
 using Infrastructure.Services;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -15,62 +15,62 @@ namespace Infrastructure.Http;
 public class DynamicHttpClientProvider : IDynamicHttpClientProvider
 {
     private readonly ILogger<DynamicHttpClientProvider> _logger;
+    private readonly DataContext _dataContext;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfigManager _configManager;
     private readonly CertificateValidationService _certificateValidationService;
 
     public DynamicHttpClientProvider(
         ILogger<DynamicHttpClientProvider> logger,
+        DataContext dataContext,
         IHttpClientFactory httpClientFactory,
-        IConfigManager configManager,
         CertificateValidationService certificateValidationService)
     {
         _logger = logger;
+        _dataContext = dataContext;
         _httpClientFactory = httpClientFactory;
-        _configManager = configManager;
         _certificateValidationService = certificateValidationService;
     }
 
     /// <inheritdoc />
-    public HttpClient CreateClient(ClientConfig clientConfig)
+    public HttpClient CreateClient(DownloadClient downloadClient)
     {
-        if (clientConfig == null)
+        if (downloadClient == null)
         {
-            throw new ArgumentNullException(nameof(clientConfig));
+            throw new ArgumentNullException(nameof(downloadClient));
         }
         
         // Try to use named client if it exists
         try
         {
-            string clientName = GetClientName(clientConfig);
+            string clientName = GetClientName(downloadClient);
             return _httpClientFactory.CreateClient(clientName);
         }
         catch (InvalidOperationException)
         {
-            _logger.LogWarning("Named HTTP client for {clientId} not found, creating generic client", clientConfig.Id);
-            return CreateGenericClient(clientConfig);
+            _logger.LogWarning("Named HTTP client for {clientId} not found, creating generic client", downloadClient.Id);
+            return CreateGenericClient(downloadClient);
         }
     }
 
     /// <summary>
     /// Gets the client name for a specific client configuration
     /// </summary>
-    /// <param name="clientConfig">The client configuration</param>
+    /// <param name="downloadClient">The client configuration</param>
     /// <returns>The client name for use with IHttpClientFactory</returns>
-    private string GetClientName(ClientConfig clientConfig)
+    private string GetClientName(DownloadClient downloadClient)
     {
-        return $"DownloadClient_{clientConfig.Id}";
+        return $"DownloadClient_{downloadClient.Id}";
     }
 
     /// <summary>
     /// Creates a generic HTTP client with appropriate configuration
     /// </summary>
-    /// <param name="clientConfig">The client configuration</param>
+    /// <param name="downloadClient">The client configuration</param>
     /// <returns>A configured HttpClient instance</returns>
-    private HttpClient CreateGenericClient(ClientConfig clientConfig)
+    private HttpClient CreateGenericClient(DownloadClient downloadClient)
     {
         // TODO
-        var httpConfig = _configManager.GetConfiguration<GeneralConfig>();
+        var httpConfig = _dataContext.GeneralConfigs.First();
         
         // Create handler with certificate validation
         var handler = new HttpClientHandler
@@ -86,7 +86,7 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
             UseDefaultCredentials = false
         };
 
-        if (clientConfig.Type == Common.Enums.DownloadClientType.Deluge)
+        if (downloadClient.Type == Common.Enums.DownloadClientType.Deluge)
         {
             handler.AllowAutoRedirect = true;
             handler.UseCookies = true;
@@ -101,13 +101,13 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
         };
         
         // Set base address if needed
-        if (clientConfig.Url != null)
+        if (downloadClient.Url != null)
         {
-            client.BaseAddress = clientConfig.Url;
+            client.BaseAddress = downloadClient.Url;
         }
         
         _logger.LogDebug("Created generic HTTP client for client {clientId} with base address {baseAddress}", 
-            clientConfig.Id, client.BaseAddress);
+            downloadClient.Id, client.BaseAddress);
         
         return client;
     }

@@ -1,5 +1,5 @@
 ﻿using Common.Configuration.Arr;
-using Common.Configuration.General;
+using Data;
 using Data.Enums;
 using Data.Models.Arr;
 using Data.Models.Arr.Queue;
@@ -10,25 +10,25 @@ using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadRemover.Interfaces;
 using Infrastructure.Verticals.DownloadRemover.Models;
 using Microsoft.Extensions.Caching.Memory;
-using Infrastructure.Configuration;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Verticals.DownloadRemover;
 
 public sealed class QueueItemRemover : IQueueItemRemover
 {
-    private readonly GeneralConfig _generalConfig;
+    private readonly DataContext _dataContext;
     private readonly IMemoryCache _cache;
     private readonly ArrClientFactory _arrClientFactory;
     private readonly EventPublisher _eventPublisher;
 
     public QueueItemRemover(
-        IConfigManager configManager,
+        DataContext dataContext,
         IMemoryCache cache,
         ArrClientFactory arrClientFactory,
         EventPublisher eventPublisher
     )
     {
-        _generalConfig = configManager.GetConfiguration<GeneralConfig>();
+        _dataContext = dataContext;
         _cache = cache;
         _arrClientFactory = arrClientFactory;
         _eventPublisher = eventPublisher;
@@ -39,6 +39,7 @@ public sealed class QueueItemRemover : IQueueItemRemover
     {
         try
         {
+            var generalConfig = await _dataContext.GeneralConfigs.FirstAsync();
             var arrClient = _arrClientFactory.GetClient(request.InstanceType);
             await arrClient.DeleteQueueItemAsync(request.Instance, request.Record, request.RemoveFromClient, request.DeleteReason);
             
@@ -52,7 +53,7 @@ public sealed class QueueItemRemover : IQueueItemRemover
             // Use the new centralized EventPublisher method
             await _eventPublisher.PublishQueueItemDeleted(request.RemoveFromClient, request.DeleteReason);
 
-            if (!_generalConfig.SearchEnabled)
+            if (!generalConfig.SearchEnabled)
             {
                 return;
             }
@@ -60,7 +61,7 @@ public sealed class QueueItemRemover : IQueueItemRemover
             await arrClient.SearchItemsAsync(request.Instance, [request.SearchItem]);
 
             // prevent tracker spamming
-            await Task.Delay(TimeSpan.FromSeconds(_generalConfig.SearchDelay));
+            await Task.Delay(TimeSpan.FromSeconds(generalConfig.SearchDelay));
         }
         finally
         {

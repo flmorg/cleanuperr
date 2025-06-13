@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Attributes;
 using Common.Configuration.DownloadCleaner;
-using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
@@ -48,16 +47,16 @@ public partial class QBitService : DownloadService, IQBitService
     }
     
     /// <inheritdoc />
-    public override void Initialize(ClientConfig clientConfig)
+    public override void Initialize(Common.Configuration.DownloadClient downloadClient)
     {
         // Initialize base service first
-        base.Initialize(clientConfig);
+        base.Initialize(downloadClient);
         
         // Create QBittorrent client
-        _client = new QBittorrentClient(_httpClient, clientConfig.Url);
+        _client = new QBittorrentClient(_httpClient, downloadClient.Url);
         
         _logger.LogInformation("Initialized QBittorrent service for client {clientName} ({clientId})", 
-            clientConfig.Name, clientConfig.Id);
+            downloadClient.Name, downloadClient.Id);
     }
 
     public override async Task LoginAsync()
@@ -67,20 +66,20 @@ public partial class QBitService : DownloadService, IQBitService
             throw new InvalidOperationException("QBittorrent client is not initialized");
         }
         
-        if (string.IsNullOrEmpty(_clientConfig.Username) && string.IsNullOrEmpty(_clientConfig.Password))
+        if (string.IsNullOrEmpty(_downloadClient.Username) && string.IsNullOrEmpty(_downloadClient.Password))
         {
-            _logger.LogDebug("No credentials configured for client {clientId}, skipping login", _clientConfig.Id);
+            _logger.LogDebug("No credentials configured for client {clientId}, skipping login", _downloadClient.Id);
             return;
         }
 
         try
         {
-            await _client.LoginAsync(_clientConfig.Username, _clientConfig.Password);
-            _logger.LogDebug("Successfully logged in to QBittorrent client {clientId}", _clientConfig.Id);
+            await _client.LoginAsync(_downloadClient.Username, _downloadClient.Password);
+            _logger.LogDebug("Successfully logged in to QBittorrent client {clientId}", _downloadClient.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to login to QBittorrent client {clientId}", _clientConfig.Id);
+            _logger.LogError(ex, "Failed to login to QBittorrent client {clientId}", _downloadClient.Id);
             throw;
         }
     }

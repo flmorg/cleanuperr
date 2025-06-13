@@ -1,9 +1,11 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Common.CustomDataTypes;
 using Common.Exceptions;
 
 namespace Common.Configuration.QueueCleaner;
 
+[ComplexType]
 public sealed record SlowConfig
 {
     public ushort MaxStrikes { get; init; }
