@@ -1,3 +1,4 @@
+using Common.Helpers;
 using Data;
 using Infrastructure.Events;
 using Infrastructure.Interceptors;
@@ -25,7 +26,8 @@ public static class ServicesDI
         services
             .AddSingleton<IEncryptionService, AesEncryptionService>()
             .AddTransient<SensitiveDataJsonConverter>()
-            .AddTransient<EventsContext>()
+            .AddDbContext<EventsContext>()
+            .AddDbContext<DataContext>()
             .AddTransient<EventPublisher>()
             .AddHostedService<EventCleanupService>()
             // API services

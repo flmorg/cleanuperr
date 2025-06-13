@@ -1,4 +1,5 @@
-﻿using Common.Helpers;
+﻿using Common.Configuration.QueueCleaner;
+using Common.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data;
@@ -8,13 +9,20 @@ namespace Data;
 /// </summary>
 public class DataContext : DbContext
 {
+    public DbSet<QueueCleanerConfig> QueueCleanerConfigs { get; set; }
+    
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (!optionsBuilder.IsConfigured)
+        if (optionsBuilder.IsConfigured)
         {
-            var dbPath = Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.db");
-            optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            return;
         }
+        
+        var dbPath = Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.db");
+        optionsBuilder
+            .UseSqlite($"Data Source={dbPath}")
+            .UseLowerCaseNamingConvention()
+            .UseSnakeCaseNamingConvention();
     }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)

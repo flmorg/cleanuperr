@@ -14,11 +14,16 @@ public class EventsContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        if (!optionsBuilder.IsConfigured)
+        if (optionsBuilder.IsConfigured)
         {
-            var dbPath = Path.Combine(ConfigurationPathProvider.GetConfigPath(), "events.db");
-            optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            return;
         }
+        
+        var dbPath = Path.Combine(ConfigurationPathProvider.GetConfigPath(), "events.db");
+        optionsBuilder
+            .UseSqlite($"Data Source={dbPath}")
+            .UseLowerCaseNamingConvention()
+            .UseSnakeCaseNamingConvention();
     }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
