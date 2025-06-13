@@ -2,11 +2,6 @@ using Common.Configuration;
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.DownloadClient;
-using Common.Configuration.DTOs.Arr;
-using Common.Configuration.DTOs.ContentBlocker;
-using Common.Configuration.DTOs.DownloadClient;
-using Common.Configuration.DTOs.General;
-using Common.Configuration.DTOs.Notification;
 using Common.Configuration.General;
 using Common.Configuration.Notification;
 using Common.Configuration.QueueCleaner;
@@ -59,48 +54,42 @@ public class ConfigurationController : ControllerBase
     public async Task<IActionResult> GetDownloadClientConfig()
     {
         var config = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
-        var dto = config.Adapt<DownloadClientConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
     
     [HttpGet("general")]
     public async Task<IActionResult> GetGeneralConfig()
     {
         var config = await _configManager.GetConfigurationAsync<GeneralConfig>();
-        var dto = config.Adapt<GeneralConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
     
     [HttpGet("sonarr")]
     public async Task<IActionResult> GetSonarrConfig()
     {
         var config = await _configManager.GetConfigurationAsync<SonarrConfig>();
-        var dto = config.Adapt<SonarrConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
     
     [HttpGet("radarr")]
     public async Task<IActionResult> GetRadarrConfig()
     {
         var config = await _configManager.GetConfigurationAsync<RadarrConfig>();
-        var dto = config.Adapt<RadarrConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
     
     [HttpGet("lidarr")]
     public async Task<IActionResult> GetLidarrConfig()
     {
         var config = await _configManager.GetConfigurationAsync<LidarrConfig>();
-        var dto = config.Adapt<LidarrConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
     
     [HttpGet("notifications")]
     public async Task<IActionResult> GetNotificationsConfig()
     {
         var config = await _configManager.GetConfigurationAsync<NotificationsConfig>();
-        var dto = config.Adapt<NotificationsConfigDto>();
-        return Ok(dto);
+        return Ok(config);
     }
 
     [HttpPut("queue_cleaner")]
@@ -164,15 +153,8 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPut("content_blocker")]
-    public async Task<IActionResult> UpdateContentBlockerConfig([FromBody] ContentBlockerConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateContentBlockerConfig([FromBody] ContentBlockerConfig newConfig)
     {
-        // Get existing config
-        var oldConfig = await _configManager.GetConfigurationAsync<ContentBlockerConfig>();
-        
-        // Apply updates from DTO, preserving sensitive data if not provided
-        var newConfig = oldConfig.Adapt<ContentBlockerConfig>();
-        newConfig = dto.Adapt(newConfig);
-        
         // Validate the configuration
         newConfig.Validate();
         
@@ -213,15 +195,8 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPut("download_client")]
-    public async Task<IActionResult> UpdateDownloadClientConfig(DownloadClientConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateDownloadClientConfig(DownloadClientConfig newConfig)
     {
-        // Get existing config to preserve sensitive data
-        var oldConfig = await _configManager.GetConfigurationAsync<DownloadClientConfig>();
-
-        // Apply updates from DTO, preserving sensitive data if not provided
-        var newConfig = oldConfig.Adapt<DownloadClientConfig>();
-        newConfig = dto.Adapt(newConfig);
-        
         // Validate the configuration
         newConfig.Validate();
         
@@ -236,15 +211,8 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPut("general")]
-    public async Task<IActionResult> UpdateGeneralConfig([FromBody] GeneralConfig dto)
+    public async Task<IActionResult> UpdateGeneralConfig([FromBody] GeneralConfig newConfig)
     {
-        // Get existing config to preserve sensitive data
-        var oldConfig = await _configManager.GetConfigurationAsync<GeneralConfig>();
-        
-        // Apply updates from DTO, preserving sensitive data if not provided
-        var newConfig = oldConfig.Adapt<GeneralConfig>();
-        newConfig = dto.Adapt(newConfig);
-        
         // Validate the configuration
         newConfig.Validate();
         
@@ -255,21 +223,14 @@ public class ConfigurationController : ControllerBase
             return StatusCode(500, "Failed to save General configuration");
         }
         
-        _loggingConfigManager.SetLogLevel(oldConfig.LogLevel);
+        _loggingConfigManager.SetLogLevel(newConfig.LogLevel);
 
         return Ok(new { Message = "General configuration updated successfully" });
     }
     
     [HttpPut("sonarr")]
-    public async Task<IActionResult> UpdateSonarrConfig([FromBody] SonarrConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateSonarrConfig([FromBody] SonarrConfig newConfig)
     {
-        // Get existing config to preserve sensitive data
-        var oldConfig = await _configManager.GetConfigurationAsync<SonarrConfig>();
-        
-        // Apply updates from DTO, preserving sensitive data if not provided
-        var newConfig = oldConfig.Adapt<SonarrConfig>();
-        newConfig = dto.Adapt(newConfig);
-        
         // Validate the configuration
         newConfig.Validate();
         
@@ -284,15 +245,8 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPut("radarr")]
-    public async Task<IActionResult> UpdateRadarrConfig([FromBody] RadarrConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateRadarrConfig([FromBody] RadarrConfig newConfig)
     {
-        // Get existing config to preserve sensitive data
-        var oldConfig = await _configManager.GetConfigurationAsync<RadarrConfig>();
-        
-        // Apply updates from DTO, preserving sensitive data if not provided
-        var newConfig = oldConfig.Adapt<RadarrConfig>();
-        newConfig = dto.Adapt(newConfig);
-        
         // Validate the configuration
         newConfig.Validate();
         
@@ -307,15 +261,8 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPut("lidarr")]
-    public async Task<IActionResult> UpdateLidarrConfig([FromBody] LidarrConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateLidarrConfig([FromBody] LidarrConfig newConfig)
     {
-        // Get existing config to preserve sensitive data
-        var oldConfig = await _configManager.GetConfigurationAsync<LidarrConfig>();
-        
-        // Apply updates from DTO, preserving sensitive data if not provided
-        var newConfig = oldConfig.Adapt<LidarrConfig>();
-        newConfig = dto.Adapt(newConfig);
-        
         // Validate the configuration
         newConfig.Validate();
         
@@ -330,18 +277,8 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPut("notifications")]
-    public async Task<IActionResult> UpdateNotificationsConfig([FromBody] NotificationsConfigUpdateDto dto)
+    public async Task<IActionResult> UpdateNotificationsConfig([FromBody] NotificationsConfig newConfig)
     {
-        // Get existing config to preserve sensitive data
-        var oldConfig = await _configManager.GetConfigurationAsync<NotificationsConfig>();
-        
-        // Apply updates from DTO, preserving sensitive data if not provided
-        var newConfig = oldConfig.Adapt<NotificationsConfig>();
-        newConfig = dto.Adapt(newConfig);
-        
-        // Validate the configuration
-        // newConfig.Validate();
-        
         // Persist the configuration
         var result = await _configManager.SaveConfigurationAsync(newConfig);
         if (!result)
