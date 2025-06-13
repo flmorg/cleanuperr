@@ -1,7 +1,5 @@
-using Common.Helpers;
+﻿using Common.Helpers;
 using Data.Enums;
-using Infrastructure.Configuration;
-using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.QueueCleaner;
 using Serilog;

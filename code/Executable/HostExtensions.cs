@@ -34,10 +34,16 @@ public static class HostExtensions
         }
         
         // Apply db migrations
-        var dbContext = host.Services.GetRequiredService<DataContext>();
-        if ((await dbContext.Database.GetPendingMigrationsAsync()).Any())
+        var eventsContext = host.Services.GetRequiredService<EventsContext>();
+        if ((await eventsContext.Database.GetPendingMigrationsAsync()).Any())
         {
-            await dbContext.Database.MigrateAsync();
+            await eventsContext.Database.MigrateAsync();
+        }
+
+        var configContext = host.Services.GetRequiredService<DataContext>();
+        if ((await configContext.Database.GetPendingMigrationsAsync()).Any())
+        {
+            await configContext.Database.MigrateAsync();
         }
         
         return host;

@@ -59,7 +59,7 @@ public class EventCleanupService : BackgroundService
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+            var context = scope.ServiceProvider.GetRequiredService<EventsContext>();
 
             var cutoffDate = DateTime.UtcNow.AddDays(-_retentionDays);
             await context.Events

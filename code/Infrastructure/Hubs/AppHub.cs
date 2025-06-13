@@ -11,11 +11,11 @@ namespace Infrastructure.Hubs;
 /// </summary>
 public class AppHub : Hub
 {
-    private readonly DataContext _context;
+    private readonly EventsContext _context;
     private readonly ILogger<AppHub> _logger;
     private readonly SignalRLogSink _logSink;
 
-    public AppHub(DataContext context, ILogger<AppHub> logger, SignalRLogSink logSink)
+    public AppHub(EventsContext context, ILogger<AppHub> logger, SignalRLogSink logSink)
     {
         _context = context;
         _logger = logger;

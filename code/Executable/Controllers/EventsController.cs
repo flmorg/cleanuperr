@@ -12,9 +12,9 @@ namespace Executable.Controllers;
 [Route("api/[controller]")]
 public class EventsController : ControllerBase
 {
-    private readonly DataContext _context;
+    private readonly EventsContext _context;
 
-    public EventsController(DataContext context)
+    public EventsController(EventsContext context)
     {
         _context = context;
     }
@@ -66,7 +66,7 @@ public class EventsController : ControllerBase
         // Apply search filter if provided
         if (!string.IsNullOrWhiteSpace(search))
         {
-            string pattern = DataContext.GetLikePattern(search);
+            string pattern = EventsContext.GetLikePattern(search);
             query = query.Where(e =>
                 EF.Functions.Like(e.Message, pattern) ||
                 EF.Functions.Like(e.Data, pattern) ||

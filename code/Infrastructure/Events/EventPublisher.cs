@@ -17,14 +17,14 @@ namespace Infrastructure.Events;
 /// </summary>
 public class EventPublisher
 {
-    private readonly DataContext _context;
+    private readonly EventsContext _context;
     private readonly IHubContext<AppHub> _appHubContext;
     private readonly ILogger<EventPublisher> _logger;
     private readonly INotificationPublisher _notificationPublisher;
     private readonly IDryRunInterceptor _dryRunInterceptor;
 
     public EventPublisher(
-        DataContext context, 
+        EventsContext context, 
         IHubContext<AppHub> appHubContext,
         ILogger<EventPublisher> logger,
         INotificationPublisher notificationPublisher,
