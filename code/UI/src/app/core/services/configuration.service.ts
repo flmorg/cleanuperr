@@ -6,7 +6,7 @@ import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/mode
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
-import { ClientConfig, DownloadClientConfig } from "../../shared/models/download-client-config.model";
+import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../../shared/models/download-client-config.model";
 
 @Injectable({
   providedIn: "root",
@@ -216,7 +216,7 @@ export class ConfigurationService {
   /**
    * Create a new Download Client
    */
-  createDownloadClient(client: ClientConfig): Observable<ClientConfig> {
+  createDownloadClient(client: CreateDownloadClientDto): Observable<ClientConfig> {
     return this.http.post<ClientConfig>(`${this.apiUrl}/api/configuration/download_client`, client).pipe(
       catchError((error) => {
         console.error("Error creating Download Client:", error);

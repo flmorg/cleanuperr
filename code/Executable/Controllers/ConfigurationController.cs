@@ -12,6 +12,7 @@ using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using Executable.DTOs;
 
 namespace Executable.Controllers;
 
@@ -92,24 +93,32 @@ public class ConfigurationController : ControllerBase
     }
     
     [HttpPost("download_client")]
-    public async Task<IActionResult> CreateDownloadClientConfig([FromBody] DownloadClientConfig newClient)
+    public async Task<IActionResult> CreateDownloadClientConfig([FromBody] CreateDownloadClientDto newClient)
     {
-        if (newClient == null)
-        {
-            return BadRequest("Invalid download client data");
-        }
-        
         await DataContext.Lock.WaitAsync();
         try
         {
             // Validate the configuration
             newClient.Validate();
             
+            // Create the full config from the DTO
+            var clientConfig = new DownloadClientConfig
+            {
+                Enabled = newClient.Enabled,
+                Name = newClient.Name,
+                TypeName = newClient.TypeName,
+                Type = newClient.Type,
+                Host = newClient.Host,
+                Username = newClient.Username,
+                Password = newClient.Password,
+                UrlBase = newClient.UrlBase
+            };
+            
             // Add the new client to the database
-            _dataContext.DownloadClients.Add(newClient);
+            _dataContext.DownloadClients.Add(clientConfig);
             await _dataContext.SaveChangesAsync();
             
-            return CreatedAtAction(nameof(GetDownloadClientConfig), new { id = newClient.Id }, newClient);
+            return CreatedAtAction(nameof(GetDownloadClientConfig), new { id = clientConfig.Id }, clientConfig);
         }
         catch (Exception ex)
         {

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { ClientConfig, DownloadClientConfig } from '../../shared/models/download-client-config.model';
+import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from '../../shared/models/download-client-config.model';
 import { ConfigurationService } from '../../core/services/configuration.service';
 import { EMPTY, Observable, catchError, switchMap, tap } from 'rxjs';
 
@@ -93,8 +93,8 @@ export class DownloadClientConfigStore extends signalStore(
     /**
      * Create a new download client
      */
-    createClient: rxMethod<ClientConfig>(
-      (client$: Observable<ClientConfig>) => client$.pipe(
+    createClient: rxMethod<CreateDownloadClientDto>(
+      (client$: Observable<CreateDownloadClientDto>) => client$.pipe(
         tap(() => patchState(store, { saving: true, error: null })),
         switchMap(client => configService.createDownloadClient(client).pipe(
           tap({

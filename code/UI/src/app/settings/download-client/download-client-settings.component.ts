@@ -227,9 +227,10 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
         operationsCount++;
         this.downloadClientStore.updateClient({ id: client.id, client: backendClient });
       } else {
-        // This is a new client, create it
+        // This is a new client, create it (don't send ID)
         operationsCount++;
-        this.downloadClientStore.createClient(backendClient);
+        const { id, ...clientWithoutId } = backendClient;
+        this.downloadClientStore.createClient(clientWithoutId);
       }
     });
     
@@ -239,14 +240,22 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
       return;
     }
     
-    // Setup effect to run once when saving is complete
-    const savingEffect = effect(() => {
+    // Monitor the saving state to show completion feedback
+    const savingSubscription = this.downloadClientSaving().valueOf() !== false ? 
+      this.monitorSavingCompletion() : null;
+  }
+
+  /**
+   * Monitor saving completion and show appropriate feedback
+   */
+  private monitorSavingCompletion(): void {
+    // Use a timeout to check the saving state periodically
+    const checkSavingStatus = () => {
       const saving = this.downloadClientSaving();
       const error = this.downloadClientError();
       
-      // Only proceed if not in saving state
       if (!saving) {
-        // Check for errors
+        // Saving is complete
         if (error) {
           this.notificationService.showError(`Failed to save: ${error}`);
           this.error.emit(error);
@@ -258,11 +267,14 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
           this.hasActualChanges = false;
           this.storeOriginalValues();
         }
-        
-        // Cleanup effect
-        savingEffect.destroy();
+      } else {
+        // Still saving, check again in a short while
+        setTimeout(checkSavingStatus, 100);
       }
-    });
+    };
+    
+    // Start monitoring
+    setTimeout(checkSavingStatus, 100);
   }
 
   /**

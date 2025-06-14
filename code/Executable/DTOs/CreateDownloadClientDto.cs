@@ -1,23 +1,13 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
-using Common.Attributes;
-using Common.Enums;
+﻿using Common.Enums;
 using Common.Exceptions;
 
-namespace Common.Configuration;
+namespace Executable.DTOs;
 
 /// <summary>
-/// Configuration for a specific download client
+/// DTO for creating a new download client (without ID)
 /// </summary>
-[Table("download_clients")]
-public sealed record DownloadClientConfig
+public sealed record CreateDownloadClientDto
 {
-    /// <summary>
-    /// Unique identifier for this client
-    /// </summary>
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Guid Id { get; init; } = Guid.NewGuid();
-    
     /// <summary>
     /// Whether this client is enabled
     /// </summary>
@@ -46,13 +36,11 @@ public sealed record DownloadClientConfig
     /// <summary>
     /// Username for authentication
     /// </summary>
-    [SensitiveData]
     public string? Username { get; init; }
     
     /// <summary>
     /// Password for authentication
     /// </summary>
-    [SensitiveData]
     public string? Password { get; init; }
     
     /// <summary>
@@ -61,25 +49,18 @@ public sealed record DownloadClientConfig
     public string? UrlBase { get; init; }
     
     /// <summary>
-    /// The computed full URL for the client
-    /// </summary>
-    [NotMapped]
-    [JsonIgnore]
-    public Uri Url => new($"{Host?.ToString().TrimEnd('/')}/{UrlBase.TrimStart('/').TrimEnd('/')}");
-    
-    /// <summary>
     /// Validates the configuration
     /// </summary>
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            throw new ValidationException($"Client name cannot be empty for client ID: {Id}");
+            throw new ValidationException("Client name cannot be empty");
         }
         
         if (Host is null && TypeName is not DownloadClientTypeName.Usenet)
         {
-            throw new ValidationException($"Host cannot be empty for client ID: {Id}");
+            throw new ValidationException("Host cannot be empty for non-Usenet clients");
         }
     }
 }
