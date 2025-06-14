@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { DownloadClientConfig } from '../../shared/models/download-client-config.model';
+import { ClientConfig, DownloadClientConfig } from '../../shared/models/download-client-config.model';
 import { ConfigurationService } from '../../core/services/configuration.service';
 import { EMPTY, Observable, catchError, switchMap, tap } from 'rxjs';
 
@@ -88,7 +88,105 @@ export class DownloadClientConfigStore extends signalStore(
      */
     resetError() {
       patchState(store, { error: null });
-    }
+    },
+    
+    /**
+     * Create a new download client
+     */
+    createClient: rxMethod<ClientConfig>(
+      (client$: Observable<ClientConfig>) => client$.pipe(
+        tap(() => patchState(store, { saving: true, error: null })),
+        switchMap(client => configService.createDownloadClient(client).pipe(
+          tap({
+            next: (newClient) => {
+              const currentConfig = store.config();
+              if (currentConfig) {
+                // Add the new client to the clients array
+                const updatedClients = [...currentConfig.clients, newClient];
+                
+                patchState(store, { 
+                  config: { clients: updatedClients },
+                  saving: false 
+                });
+              }
+            },
+            error: (error) => {
+              patchState(store, { 
+                saving: false, 
+                error: error.message || 'Failed to create Download Client' 
+              });
+            }
+          }),
+          catchError(() => EMPTY)
+        ))
+      )
+    ),
+    
+    /**
+     * Update a specific download client by ID
+     */
+    updateClient: rxMethod<{ id: string, client: ClientConfig }>(
+      (params$: Observable<{ id: string, client: ClientConfig }>) => params$.pipe(
+        tap(() => patchState(store, { saving: true, error: null })),
+        switchMap(({ id, client }) => configService.updateDownloadClient(id, client).pipe(
+          tap({
+            next: (updatedClient) => {
+              const currentConfig = store.config();
+              if (currentConfig) {
+                // Find and replace the updated client in the clients array
+                const updatedClients = currentConfig.clients.map((c: ClientConfig) => 
+                  c.id === id ? updatedClient : c
+                );
+                
+                patchState(store, { 
+                  config: { clients: updatedClients },
+                  saving: false 
+                });
+              }
+            },
+            error: (error) => {
+              patchState(store, { 
+                saving: false, 
+                error: error.message || `Failed to update Download Client with ID ${id}` 
+              });
+            }
+          }),
+          catchError(() => EMPTY)
+        ))
+      )
+    ),
+    
+    /**
+     * Delete a download client by ID
+     */
+    deleteClient: rxMethod<string>(
+      (id$: Observable<string>) => id$.pipe(
+        tap(() => patchState(store, { saving: true, error: null })),
+        switchMap(id => configService.deleteDownloadClient(id).pipe(
+          tap({
+            next: () => {
+              const currentConfig = store.config();
+              if (currentConfig) {
+                // Remove the client from the clients array
+                const updatedClients = currentConfig.clients.filter((c: ClientConfig) => c.id !== id);
+                
+                patchState(store, { 
+                  config: { clients: updatedClients },
+                  saving: false 
+                });
+              }
+            },
+            error: (error) => {
+              patchState(store, { 
+                saving: false, 
+                error: error.message || `Failed to delete Download Client with ID ${id}` 
+              });
+            }
+          }),
+          catchError(() => EMPTY)
+        ))
+      )
+    )
   })),
   withHooks({
     onInit({ loadConfig }) {

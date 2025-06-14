@@ -11,6 +11,7 @@ using Infrastructure.Verticals.ContentBlocker;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace Executable.Controllers;
 
@@ -76,10 +77,118 @@ public class ConfigurationController : ControllerBase
         await DataContext.Lock.WaitAsync();
         try
         {
-            var config = await _dataContext.DownloadClients
+            var clients = await _dataContext.DownloadClients
                 .AsNoTracking()
                 .ToListAsync();
+            
+            // Return in the expected format with clients wrapper
+            var config = new { clients = clients };
             return Ok(config);
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+    
+    [HttpPost("download_client")]
+    public async Task<IActionResult> CreateDownloadClientConfig([FromBody] DownloadClientConfig newClient)
+    {
+        if (newClient == null)
+        {
+            return BadRequest("Invalid download client data");
+        }
+        
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Validate the configuration
+            newClient.Validate();
+            
+            // Add the new client to the database
+            _dataContext.DownloadClients.Add(newClient);
+            await _dataContext.SaveChangesAsync();
+            
+            return CreatedAtAction(nameof(GetDownloadClientConfig), new { id = newClient.Id }, newClient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create download client");
+            return StatusCode(500, "Failed to create download client configuration");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+    
+    [HttpPut("download_client/{id}")]
+    public async Task<IActionResult> UpdateDownloadClientConfig(Guid id, [FromBody] DownloadClientConfig updatedClient)
+    {
+        if (updatedClient == null)
+        {
+            return BadRequest("Invalid download client data");
+        }
+        
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Find the existing download client
+            var existingClient = await _dataContext.DownloadClients
+                .FirstOrDefaultAsync(c => c.Id == id);
+                
+            if (existingClient == null)
+            {
+                return NotFound($"Download client with ID {id} not found");
+            }
+            
+            // Ensure the ID in the path matches the entity being updated
+            updatedClient = updatedClient with { Id = id };
+            
+            // Apply updates from DTO
+            updatedClient.Adapt(existingClient);
+            
+            // Persist the configuration
+            await _dataContext.SaveChangesAsync();
+            
+            return Ok(existingClient);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update download client with ID {Id}", id);
+            return StatusCode(500, "Failed to update download client configuration");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+    
+    [HttpDelete("download_client/{id}")]
+    public async Task<IActionResult> DeleteDownloadClientConfig(Guid id)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Find the existing download client
+            var existingClient = await _dataContext.DownloadClients
+                .FirstOrDefaultAsync(c => c.Id == id);
+                
+            if (existingClient == null)
+            {
+                return NotFound($"Download client with ID {id} not found");
+            }
+            
+            // Remove the client from the database
+            _dataContext.DownloadClients.Remove(existingClient);
+            await _dataContext.SaveChangesAsync();
+            
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete download client with ID {Id}", id);
+            return StatusCode(500, "Failed to delete download client configuration");
         }
         finally
         {
@@ -244,7 +353,7 @@ public class ConfigurationController : ControllerBase
             DataContext.Lock.Release();
         }
     }
-
+    
     [HttpPut("general")]
     public async Task<IActionResult> UpdateGeneralConfig([FromBody] GeneralConfig newConfig)
     {

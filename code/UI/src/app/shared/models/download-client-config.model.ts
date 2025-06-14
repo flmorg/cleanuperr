@@ -30,9 +30,14 @@ export interface ClientConfig {
   name: string;
   
   /**
-   * Type of download client
+   * Type of download client (frontend enum)
    */
   type: DownloadClientType;
+  
+  /**
+   * Type name of download client (backend enum)
+   */
+  typeName?: string;
   
   /**
    * Host address for the download client

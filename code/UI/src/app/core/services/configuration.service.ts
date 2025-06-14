@@ -6,7 +6,7 @@ import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/mode
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
-import { DownloadClientConfig } from "../../shared/models/download-client-config.model";
+import { ClientConfig, DownloadClientConfig } from "../../shared/models/download-client-config.model";
 
 @Injectable({
   providedIn: "root",
@@ -209,6 +209,42 @@ export class ConfigurationService {
       catchError((error) => {
         console.error("Error updating Download Client config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Download Client configuration"));
+      })
+    );
+  }
+  
+  /**
+   * Create a new Download Client
+   */
+  createDownloadClient(client: ClientConfig): Observable<ClientConfig> {
+    return this.http.post<ClientConfig>(`${this.apiUrl}/api/configuration/download_client`, client).pipe(
+      catchError((error) => {
+        console.error("Error creating Download Client:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to create Download Client"));
+      })
+    );
+  }
+  
+  /**
+   * Update a specific Download Client by ID
+   */
+  updateDownloadClient(id: string, client: ClientConfig): Observable<ClientConfig> {
+    return this.http.put<ClientConfig>(`${this.apiUrl}/api/configuration/download_client/${id}`, client).pipe(
+      catchError((error) => {
+        console.error(`Error updating Download Client with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to update Download Client with ID ${id}`));
+      })
+    );
+  }
+  
+  /**
+   * Delete a Download Client by ID
+   */
+  deleteDownloadClient(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/configuration/download_client/${id}`).pipe(
+      catchError((error) => {
+        console.error(`Error deleting Download Client with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to delete Download Client with ID ${id}`));
       })
     );
   }
