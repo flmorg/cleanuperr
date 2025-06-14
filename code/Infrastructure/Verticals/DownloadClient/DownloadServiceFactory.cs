@@ -1,3 +1,4 @@
+using Common.Configuration;
 using Common.Enums;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
@@ -51,22 +52,21 @@ public sealed class DownloadServiceFactory
     /// <summary>
     /// Creates a download service using the specified client configuration
     /// </summary>
-    /// <param name="downloadClient">The client configuration to use</param>
+    /// <param name="downloadClientConfig">The client configuration to use</param>
     /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
-    public IDownloadService? GetDownloadService(Common.Configuration.DownloadClient downloadClient)
+    public IDownloadService GetDownloadService(DownloadClientConfig downloadClientConfig)
     {
-        if (!downloadClient.Enabled)
+        if (!downloadClientConfig.Enabled)
         {
-            _logger.LogWarning("Download client {clientId} is disabled", downloadClient.Id);
-            return null;
+            _logger.LogWarning("Download client {clientId} is disabled, but a service was requested", downloadClientConfig.Id);
         }
         
-        return downloadClient.Type switch
+        return downloadClientConfig.TypeName switch
         {
-            DownloadClientType.QBittorrent => CreateClientService<QBitService>(downloadClient),
-            DownloadClientType.Deluge => CreateClientService<DelugeService>(downloadClient),
-            DownloadClientType.Transmission => CreateClientService<TransmissionService>(downloadClient),
-            _ => null
+            DownloadClientTypeName.QBittorrent => CreateClientService<QBitService>(downloadClientConfig),
+            DownloadClientTypeName.Deluge => CreateClientService<DelugeService>(downloadClientConfig),
+            DownloadClientTypeName.Transmission => CreateClientService<TransmissionService>(downloadClientConfig),
+            _ => throw new NotSupportedException($"Download client type {downloadClientConfig.TypeName} is not supported")
         };
     }
     
@@ -74,12 +74,12 @@ public sealed class DownloadServiceFactory
     /// Creates a download client service for a specific client type
     /// </summary>
     /// <typeparam name="T">The type of download service to create</typeparam>
-    /// <param name="downloadClient">The client configuration</param>
+    /// <param name="downloadClientConfig">The client configuration</param>
     /// <returns>An implementation of IDownloadService</returns>
-    private T CreateClientService<T>(Common.Configuration.DownloadClient downloadClient) where T : IDownloadService
+    private T CreateClientService<T>(Common.Configuration.DownloadClientConfig downloadClientConfig) where T : IDownloadService
     {
         var service = _serviceProvider.GetRequiredService<T>();
-        service.Initialize(downloadClient);
+        service.Initialize(downloadClientConfig);
         return service;
     }
 }

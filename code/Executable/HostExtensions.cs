@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
 using Data;
-using Infrastructure.Configuration;
-using Infrastructure.Events;
 using Microsoft.EntityFrameworkCore;
 
 namespace Executable;
@@ -21,17 +19,6 @@ public static class HostExtensions
         );
         
         logger.LogInformation("timezone: {tz}", TimeZoneInfo.Local.DisplayName);
-        
-        // Initialize configuration files
-        try
-        {
-            var configInitializer = host.Services.GetRequiredService<ConfigInitializer>();
-            await configInitializer.EnsureConfigFilesExistAsync();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to initialize configuration files");
-        }
         
         // Apply db migrations
         var eventsContext = host.Services.GetRequiredService<EventsContext>();

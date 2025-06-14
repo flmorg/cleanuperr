@@ -3,6 +3,12 @@ using Infrastructure.Verticals.Notifications.Models;
 
 namespace Infrastructure.Verticals.Notifications;
 
+public interface INotificationProvider<T> : INotificationProvider
+    where T : NotificationConfig
+{
+    new T Config { get; }
+}
+
 public interface INotificationProvider
 {
     NotificationConfig Config { get; }

@@ -7,7 +7,6 @@ using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
@@ -17,10 +16,9 @@ public class RadarrClient : ArrClient, IRadarrClient
     public RadarrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
-        IConfigManager configManager,
         IStriker striker,
         IDryRunInterceptor dryRunInterceptor
-    ) : base(logger, httpClientFactory, configManager, striker, dryRunInterceptor)
+    ) : base(logger, httpClientFactory, striker, dryRunInterceptor)
     {
     }
 

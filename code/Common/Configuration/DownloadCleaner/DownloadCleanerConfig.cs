@@ -1,9 +1,13 @@
-using Common.Exceptions;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using ValidationException = Common.Exceptions.ValidationException;
 
 namespace Common.Configuration.DownloadCleaner;
 
 public sealed record DownloadCleanerConfig : IJobConfig
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; init; } = Guid.NewGuid();
     
     public bool Enabled { get; init; }

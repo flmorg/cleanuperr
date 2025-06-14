@@ -1,25 +1,12 @@
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using Common.Attributes;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.QueueCleaner;
-using Common.CustomDataTypes;
-using Common.Helpers;
-using Data.Enums;
 using Infrastructure.Events;
-using Infrastructure.Extensions;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
-using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
-using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 using Infrastructure.Http;
 using Transmission.API.RPC;
-using Transmission.API.RPC.Arguments;
 using Transmission.API.RPC.Entity;
 
 namespace Infrastructure.Verticals.DownloadClient.Transmission;
@@ -49,7 +36,6 @@ public partial class TransmissionService : DownloadService, ITransmissionService
 
     public TransmissionService(
         ILogger<TransmissionService> logger,
-        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -59,7 +45,7 @@ public partial class TransmissionService : DownloadService, ITransmissionService
         EventPublisher eventPublisher,
         BlocklistProvider blocklistProvider
     ) : base(
-        logger, configManager, cache,
+        logger, cache,
         filenameEvaluator, striker, dryRunInterceptor, hardLinkFileService,
         httpClientProvider, eventPublisher, blocklistProvider
     )
@@ -68,15 +54,15 @@ public partial class TransmissionService : DownloadService, ITransmissionService
     }
     
     /// <inheritdoc />
-    public override void Initialize(Common.Configuration.DownloadClient downloadClient)
+    public override void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
     {
         // Initialize base service first
-        base.Initialize(downloadClient);
+        base.Initialize(downloadClientConfig);
         
         // Ensure client type is correct
-        if (downloadClient.Type != Common.Enums.DownloadClientType.Transmission)
+        if (downloadClientConfig.TypeName != Common.Enums.DownloadClientTypeName.Transmission)
         {
-            throw new InvalidOperationException($"Cannot initialize TransmissionService with client type {downloadClient.Type}");
+            throw new InvalidOperationException($"Cannot initialize TransmissionService with client type {downloadClientConfig.TypeName}");
         }
         
         if (_httpClient == null)
@@ -85,18 +71,18 @@ public partial class TransmissionService : DownloadService, ITransmissionService
         }
         
         // Create the RPC path
-        string rpcPath = string.IsNullOrEmpty(downloadClient.UrlBase)
+        string rpcPath = string.IsNullOrEmpty(downloadClientConfig.UrlBase)
             ? "/rpc"
-            : $"/{downloadClient.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
+            : $"/{downloadClientConfig.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
         
         // Create full RPC URL
-        string rpcUrl = new UriBuilder(downloadClient.Url) { Path = rpcPath }.Uri.ToString();
+        string rpcUrl = new UriBuilder(downloadClientConfig.Url) { Path = rpcPath }.Uri.ToString();
         
         // Create Transmission client
-        _client = new Client(_httpClient, rpcUrl, login: downloadClient.Username, password: downloadClient.Password);
+        _client = new Client(_httpClient, rpcUrl, login: downloadClientConfig.Username, password: downloadClientConfig.Password);
         
         _logger.LogInformation("Initialized Transmission service for client {clientName} ({clientId})", 
-            downloadClient.Name, downloadClient.Id);
+            downloadClientConfig.Name, downloadClientConfig.Id);
     }
 
     public override async Task LoginAsync()
@@ -109,11 +95,11 @@ public partial class TransmissionService : DownloadService, ITransmissionService
         try 
         {
             await _client.GetSessionInformationAsync();
-            _logger.LogDebug("Successfully logged in to Transmission client {clientId}", _downloadClient.Id);
+            _logger.LogDebug("Successfully logged in to Transmission client {clientId}", _downloadClientConfig.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to login to Transmission client {clientId}", _downloadClient.Id);
+            _logger.LogError(ex, "Failed to login to Transmission client {clientId}", _downloadClientConfig.Id);
             throw;
         }
     }

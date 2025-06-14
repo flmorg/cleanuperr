@@ -9,7 +9,8 @@ namespace Common.Configuration;
 /// <summary>
 /// Configuration for a specific download client
 /// </summary>
-public sealed record DownloadClient
+[Table("download_clients")]
+public sealed record DownloadClientConfig
 {
     /// <summary>
     /// Unique identifier for this client
@@ -26,6 +27,11 @@ public sealed record DownloadClient
     /// Friendly name for this client
     /// </summary>
     public required string Name { get; init; }
+    
+    /// <summary>
+    /// Type name of download client
+    /// </summary>
+    public required DownloadClientTypeName TypeName { get; init; }
     
     /// <summary>
     /// Type of download client
@@ -52,12 +58,12 @@ public sealed record DownloadClient
     /// <summary>
     /// The base URL path component, used by clients like Transmission and Deluge
     /// </summary>
-    [JsonProperty("url_base")]
     public string? UrlBase { get; init; }
     
     /// <summary>
     /// The computed full URL for the client
     /// </summary>
+    [NotMapped]
     public Uri Url => new($"{Host?.ToString().TrimEnd('/')}/{UrlBase.TrimStart('/').TrimEnd('/')}");
     
     /// <summary>
@@ -70,7 +76,7 @@ public sealed record DownloadClient
             throw new ValidationException($"Client name cannot be empty for client ID: {Id}");
         }
         
-        if (Host is null && Type is not DownloadClientType.Usenet)
+        if (Host is null && TypeName is not DownloadClientTypeName.Usenet)
         {
             throw new ValidationException($"Host cannot be empty for client ID: {Id}");
         }

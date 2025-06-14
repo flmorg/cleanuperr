@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using Common.Configuration.General;
-using Infrastructure.Configuration;
+using Data;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.Security;
@@ -16,12 +15,14 @@ public class AesEncryptionService : IEncryptionService
     private readonly byte[] _nonce;
     private const string EncryptedPrefix = "AES128GCM:";
 
-    public AesEncryptionService(ILogger<AesEncryptionService> logger, IConfigManager configManager)
+    public AesEncryptionService(ILogger<AesEncryptionService> logger, DataContext dataContext)
     {
         _logger = logger;
         
+        var generalConfig = dataContext.GeneralConfigs.First();
+        
         // Derive key and nonce from the GUID string
-        var keyBytes = Encoding.UTF8.GetBytes(configManager.GetConfiguration<GeneralConfig>().EncryptionKey);
+        var keyBytes = Encoding.UTF8.GetBytes(generalConfig.EncryptionKey);
         
         // Create a 16-byte key for AES-128
         _key = new byte[16];

@@ -1,15 +1,17 @@
+using Common.Configuration;
 using Common.Configuration.Arr;
+using Common.Configuration.General;
 using Common.Configuration.QueueCleaner;
+using Common.Enums;
+using Data;
 using Data.Enums;
 using Data.Models.Arr.Queue;
-using Infrastructure.Configuration;
 using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
-using Infrastructure.Verticals.DownloadClient.Factory;
 using Infrastructure.Verticals.Jobs;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
@@ -21,55 +23,68 @@ namespace Infrastructure.Verticals.QueueCleaner;
 
 public sealed class QueueCleaner : GenericHandler
 {
-    private readonly QueueCleanerConfig _config;
-    private readonly IDownloadClientFactory _downloadClientFactory;
     private readonly BlocklistProvider _blocklistProvider;
 
     public QueueCleaner(
         ILogger<QueueCleaner> logger,
-        IConfigManager configManager,
+        DataContext dataContext,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        IDownloadClientFactory downloadClientFactory,
         BlocklistProvider blocklistProvider,
         EventPublisher eventPublisher
     ) : base(
-        logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager, eventPublisher
+        logger, dataContext, cache, messageBus,
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, eventPublisher
     )
     {
-        _downloadClientFactory = downloadClientFactory;
         _blocklistProvider = blocklistProvider;
-
-        _config = configManager.GetConfiguration<QueueCleanerConfig>();
+        
+        // // Optional: Register for configuration changes
+        // _configProvider.RegisterChangeHandler<QueueCleanerConfig>(OnConfigChanged);
     }
     
-    public override async Task ExecuteAsync()
+    protected override async Task ExecuteInternalAsync()
     {
-        if (_downloadClientConfig.Clients.Count is 0)
+        if (ContextProvider.Get<List<DownloadClientConfig>>(nameof(DownloadClientConfig)).Count is 0)
         {
             _logger.LogWarning("No download clients configured");
             return;
         }
         
-        bool blocklistIsConfigured = _sonarrConfig.Enabled && !string.IsNullOrEmpty(_config.ContentBlocker.Sonarr.BlocklistPath) ||
-                                   _radarrConfig.Enabled && !string.IsNullOrEmpty(_config.ContentBlocker.Radarr.BlocklistPath) ||
-                                   _lidarrConfig.Enabled && !string.IsNullOrEmpty(_config.ContentBlocker.Lidarr.BlocklistPath);
+        await _blocklistProvider.LoadBlocklistsAsync();
+        
+        var sonarrConfig = ContextProvider.Get<SonarrConfig>();
+        var radarrConfig = ContextProvider.Get<RadarrConfig>();
+        var lidarrConfig = ContextProvider.Get<LidarrConfig>();
+        var config = ContextProvider.Get<QueueCleanerConfig>();
+        
+        bool blocklistIsConfigured = sonarrConfig.Enabled && !string.IsNullOrEmpty(config.ContentBlocker.Sonarr.BlocklistPath) ||
+                                     radarrConfig.Enabled && !string.IsNullOrEmpty(config.ContentBlocker.Radarr.BlocklistPath) ||
+                                     lidarrConfig.Enabled && !string.IsNullOrEmpty(config.ContentBlocker.Lidarr.BlocklistPath);
 
-        if (_config.ContentBlocker.Enabled && blocklistIsConfigured)
+        if (config.ContentBlocker.Enabled && blocklistIsConfigured)
         {
-            await _blocklistProvider.LoadBlocklistsAsync();
+            
         }
         
-        await base.ExecuteAsync();
+        // TODO create download services based on configuration
+        // Login to all download services
+        // foreach (var downloadService in _downloadServices)
+        // {
+        //     await downloadService.LoginAsync();
+        // }
+        
+        await ProcessArrConfigAsync(sonarrConfig, InstanceType.Sonarr);
+        await ProcessArrConfigAsync(radarrConfig, InstanceType.Radarr);
+        await ProcessArrConfigAsync(lidarrConfig, InstanceType.Lidarr);
     }
 
-    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig)
     {
-        IReadOnlyList<string> ignoredDownloads = _generalConfig.IgnoredDownloads;
+        IReadOnlyList<string> ignoredDownloads = ContextProvider.Get<GeneralConfig>().IgnoredDownloads;
         
         using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
         
@@ -122,43 +137,45 @@ public sealed class QueueCleaner : GenericHandler
 
                 if (record.Protocol is "torrent")
                 {
-                    if (_downloadClientConfig.Clients.Count == 0)
+                    var torrentClients = ContextProvider.Get<List<DownloadClientConfig>>(nameof(DownloadClientConfig))
+                        .Where(x => x.Type is DownloadClientType.Torrent)
+                        .ToList();
+                    if (torrentClients.Count > 0)
                     {
-                        _logger.LogWarning("skip | no download clients configured | {title}", record.Title);
-                    }
-                    else
-                    {
+                        // TODO
                         // Check each download client for the download item
-                        foreach (var downloadService in _downloadClientFactory.GetAllEnabledClients())
-                        {
-                            try
-                            {
-                                // stalled download check
-                                DownloadCheckResult result = await downloadService
-                                    .ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
-                                
-                                if (result.Found)
-                                {
-                                    downloadCheckResult = result;
-                                    break;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, "Error checking download {id} with download client {clientId}", 
-                                    record.DownloadId, downloadService.GetClientId());
-                            }
-                        }
+                        // foreach (var downloadService in _downloadClientFactory.GetAllEnabledClients())
+                        // {
+                        //     try
+                        //     {
+                        //         // stalled download check
+                        //         DownloadCheckResult result = await downloadService
+                        //             .ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
+                        //         
+                        //         if (result.Found)
+                        //         {
+                        //             downloadCheckResult = result;
+                        //             break;
+                        //         }
+                        //     }
+                        //     catch (Exception ex)
+                        //     {
+                        //         _logger.LogError(ex, "Error checking download {id} with download client {clientId}", 
+                        //             record.DownloadId, downloadService.GetClientId());
+                        //     }
+                        // }
                     
                         if (!downloadCheckResult.Found)
                         {
-                            _logger.LogWarning("skip | download not found {title}", record.Title);
+                            _logger.LogWarning("download not found {title}", record.Title);
                         }
                     }
                 }
                 
+                var config = ContextProvider.Get<QueueCleanerConfig>();
+                
                 // failed import check
-                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate, _config.FailedImport.MaxStrikes);
+                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate, config.FailedImport.MaxStrikes);
                 DeleteReason deleteReason = downloadCheckResult.ShouldRemove ? downloadCheckResult.DeleteReason : DeleteReason.FailedImport;
                 
                 if (!shouldRemoveFromArr && !downloadCheckResult.ShouldRemove)
@@ -168,25 +185,25 @@ public sealed class QueueCleaner : GenericHandler
                 }
 
                 bool removeFromClient = true;
-
+                
                 if (downloadCheckResult.IsPrivate)
                 {
                     bool isStalledWithoutPruneFlag = 
                         downloadCheckResult.DeleteReason is DeleteReason.Stalled &&
-                        !_config.Stalled.DeletePrivate;
+                        !config.Stalled.DeletePrivate;
     
                     bool isSlowWithoutPruneFlag = 
                         downloadCheckResult.DeleteReason is DeleteReason.SlowSpeed or DeleteReason.SlowTime &&
-                        !_config.Slow.DeletePrivate;
+                        !config.Slow.DeletePrivate;
                         
                     bool isContentBlockerWithoutPruneFlag =
                         deleteReason is DeleteReason.AllFilesBlocked &&
-                        !_config.ContentBlocker.DeletePrivate;
+                        !config.ContentBlocker.DeletePrivate;
     
                     bool shouldKeepDueToDeleteRules = downloadCheckResult.ShouldRemove && 
                         (isStalledWithoutPruneFlag || isSlowWithoutPruneFlag || isContentBlockerWithoutPruneFlag);
                         
-                    bool shouldKeepDueToImportRules = shouldRemoveFromArr && !_config.FailedImport.DeletePrivate;
+                    bool shouldKeepDueToImportRules = shouldRemoveFromArr && !config.FailedImport.DeletePrivate;
 
                     if (shouldKeepDueToDeleteRules || shouldKeepDueToImportRules)
                     {

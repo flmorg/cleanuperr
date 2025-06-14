@@ -24,7 +24,7 @@ builder.Services.AddCors(options =>
 
 // Register services needed for logging first
 builder.Services
-    .AddSingleton<LoggingConfigManager>()
+    .AddTransient<LoggingConfigManager>()
     .AddSingleton<SignalRLogSink>();
 
 // Add logging with proper service provider

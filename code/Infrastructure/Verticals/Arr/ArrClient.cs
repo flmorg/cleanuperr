@@ -7,9 +7,9 @@ using Data.Models.Arr;
 using Data.Models.Arr.Queue;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 using Newtonsoft.Json;
 
 namespace Infrastructure.Verticals.Arr;
@@ -18,26 +18,20 @@ public abstract class ArrClient : IArrClient
 {
     protected readonly ILogger<ArrClient> _logger;
     protected readonly HttpClient _httpClient;
-    protected readonly IConfigManager _configManager;
     protected readonly IStriker _striker;
     protected readonly IDryRunInterceptor _dryRunInterceptor;
-    protected readonly QueueCleanerConfig _queueCleanerConfig;
     
     protected ArrClient(
         ILogger<ArrClient> logger,
         IHttpClientFactory httpClientFactory,
-        IConfigManager configManager,
         IStriker striker,
         IDryRunInterceptor dryRunInterceptor
     )
     {
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
-        _configManager = configManager;
         _striker = striker;
         _dryRunInterceptor = dryRunInterceptor;
-
-        _queueCleanerConfig = configManager.GetConfiguration<QueueCleanerConfig>();
     }
 
     public virtual async Task<QueueListResponse> GetQueueItemsAsync(ArrInstance arrInstance, int page)
@@ -74,7 +68,9 @@ public abstract class ArrClient : IArrClient
 
     public virtual async Task<bool> ShouldRemoveFromQueue(InstanceType instanceType, QueueRecord record, bool isPrivateDownload, ushort arrMaxStrikes)
     {
-        if (_queueCleanerConfig.FailedImport.IgnorePrivate && isPrivateDownload)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>();
+        
+        if (queueCleanerConfig.FailedImport.IgnorePrivate && isPrivateDownload)
         {
             // ignore private trackers
             _logger.LogDebug("skip failed import check | download is private | {name}", record.Title);
@@ -108,7 +104,7 @@ public abstract class ArrClient : IArrClient
                 return false;
             }
             
-            ushort maxStrikes = arrMaxStrikes > 0 ? (ushort)arrMaxStrikes : _queueCleanerConfig.FailedImport.MaxStrikes;
+            ushort maxStrikes = arrMaxStrikes > 0 ? (ushort)arrMaxStrikes : queueCleanerConfig.FailedImport.MaxStrikes;
             
             return await _striker.StrikeAndCheckLimit(
                 record.DownloadId,
@@ -214,7 +210,9 @@ public abstract class ArrClient : IArrClient
     
     private bool HasIgnoredPatterns(QueueRecord record)
     {
-        if (_queueCleanerConfig.FailedImport.IgnoredPatterns.Count is 0)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>();
+        
+        if (queueCleanerConfig.FailedImport.IgnoredPatterns.Count is 0)
         {
             // no patterns are configured
             return false;
@@ -234,7 +232,7 @@ public abstract class ArrClient : IArrClient
             .ForEach(x => messages.Add(x));
         
         return messages.Any(
-            m => _queueCleanerConfig.FailedImport.IgnoredPatterns.Any(
+            m => queueCleanerConfig.FailedImport.IgnoredPatterns.Any(
                 p => !string.IsNullOrWhiteSpace(p.Trim()) && m.Contains(p, StringComparison.InvariantCultureIgnoreCase)
             )
         );

@@ -1,5 +1,4 @@
-using Common.Configuration.General;
-using Infrastructure.Configuration;
+using Data;
 using Microsoft.Extensions.Logging;
 using Serilog.Core;
 using Serilog.Events;
@@ -11,17 +10,15 @@ namespace Infrastructure.Logging;
 /// </summary>
 public class LoggingConfigManager
 {
-    private readonly IConfigManager _configManager;
-    private readonly LoggingLevelSwitch _levelSwitch;
+    private readonly DataContext _dataContext;
     private readonly ILogger<LoggingConfigManager> _logger;
+
+    private static LoggingLevelSwitch LevelSwitch = new();
     
-    public LoggingConfigManager(IConfigManager configManager, ILogger<LoggingConfigManager> logger)
+    public LoggingConfigManager(DataContext dataContext, ILogger<LoggingConfigManager> logger)
     {
-        _configManager = configManager;
+        _dataContext = dataContext;
         _logger = logger;
-        
-        // Initialize with default level
-        _levelSwitch = new LoggingLevelSwitch();
         
         // Load settings from configuration
         LoadConfiguration();
@@ -30,7 +27,7 @@ public class LoggingConfigManager
     /// <summary>
     /// Gets the level switch used to dynamically control log levels
     /// </summary>
-    public LoggingLevelSwitch GetLevelSwitch() => _levelSwitch;
+    public LoggingLevelSwitch GetLevelSwitch() => LevelSwitch;
     
     /// <summary>
     /// Updates the global log level and persists the change to configuration
@@ -41,13 +38,8 @@ public class LoggingConfigManager
         _logger.LogCritical("Setting global log level to {level}", level);
         
         // Change the level in the switch
-        _levelSwitch.MinimumLevel = level;
+        LevelSwitch.MinimumLevel = level;
     }
-    
-    /// <summary>
-    /// Gets the current global log level
-    /// </summary>
-    public LogEventLevel GetLogLevel() => _levelSwitch.MinimumLevel;
     
     /// <summary>
     /// Loads logging settings from configuration
@@ -56,8 +48,8 @@ public class LoggingConfigManager
     {
         try
         {
-            var config = _configManager.GetConfiguration<GeneralConfig>();
-            _levelSwitch.MinimumLevel = config.LogLevel;
+            var config = _dataContext.GeneralConfigs.First();
+            LevelSwitch.MinimumLevel = config.LogLevel;
         }
         catch (Exception ex)
         {

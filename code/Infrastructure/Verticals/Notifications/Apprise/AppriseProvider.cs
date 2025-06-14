@@ -1,22 +1,21 @@
-using System.Text;
+﻿using System.Text;
 using Common.Configuration.Notification;
-using Infrastructure.Configuration;
+using Data;
 using Infrastructure.Verticals.Notifications.Models;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Verticals.Notifications.Apprise;
 
-public sealed class AppriseProvider : NotificationProvider
+public sealed class AppriseProvider : NotificationProvider<AppriseConfig>
 {
+    private readonly DataContext _dataContext;
     private readonly IAppriseProxy _proxy;
-    
-    public override AppriseConfig Config => _config.Apprise;
     
     public override string Name => "Apprise";
     
-    public AppriseProvider(IConfigManager configManager, IAppriseProxy proxy)
-        : base(configManager)
+    public AppriseProvider(DataContext dataContext, IAppriseProxy proxy)
+        : base(dataContext.AppriseConfigs)
     {
+        _dataContext = dataContext;
         _proxy = proxy;
     }
 

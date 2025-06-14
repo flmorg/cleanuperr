@@ -1,11 +1,9 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using Common.Configuration.General;
 using Common.Enums;
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 
 namespace Infrastructure.Services;
 

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Common.Configuration.Arr;
 using Data.Models.Arr;
 using Data.Models.Arr.Queue;
@@ -7,7 +7,6 @@ using Infrastructure.Interceptors;
 using Infrastructure.Verticals.Arr.Interfaces;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 using Newtonsoft.Json;
 using Series = Data.Models.Sonarr.Series;
 
@@ -18,10 +17,9 @@ public class SonarrClient : ArrClient, ISonarrClient
     public SonarrClient(
         ILogger<SonarrClient> logger,
         IHttpClientFactory httpClientFactory,
-        IConfigManager configManager,
         IStriker striker,
         IDryRunInterceptor dryRunInterceptor
-    ) : base(logger, httpClientFactory, configManager, striker, dryRunInterceptor)
+    ) : base(logger, httpClientFactory, striker, dryRunInterceptor)
     {
     }
     

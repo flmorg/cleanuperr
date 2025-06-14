@@ -1,20 +1,9 @@
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using Common.Attributes;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.QueueCleaner;
-using Common.CustomDataTypes;
-using Common.Helpers;
-using Data.Enums;
-using Infrastructure.Configuration;
-using Infrastructure.Extensions;
+using Data;
 using Infrastructure.Http;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
-using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
-using Infrastructure.Verticals.Notifications;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using QBittorrent.Client;
@@ -29,7 +18,6 @@ public partial class QBitService : DownloadService, IQBitService
     public QBitService(
         ILogger<QBitService> logger,
         IHttpClientFactory httpClientFactory,
-        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -39,7 +27,7 @@ public partial class QBitService : DownloadService, IQBitService
         EventPublisher eventPublisher,
         BlocklistProvider blocklistProvider
     ) : base(
-        logger, configManager, cache, filenameEvaluator, striker, dryRunInterceptor, hardLinkFileService,
+        logger, cache, filenameEvaluator, striker, dryRunInterceptor, hardLinkFileService,
         httpClientProvider, eventPublisher, blocklistProvider
     )
     {
@@ -47,16 +35,16 @@ public partial class QBitService : DownloadService, IQBitService
     }
     
     /// <inheritdoc />
-    public override void Initialize(Common.Configuration.DownloadClient downloadClient)
+    public override void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
     {
         // Initialize base service first
-        base.Initialize(downloadClient);
+        base.Initialize(downloadClientConfig);
         
         // Create QBittorrent client
-        _client = new QBittorrentClient(_httpClient, downloadClient.Url);
+        _client = new QBittorrentClient(_httpClient, downloadClientConfig.Url);
         
         _logger.LogInformation("Initialized QBittorrent service for client {clientName} ({clientId})", 
-            downloadClient.Name, downloadClient.Id);
+            downloadClientConfig.Name, downloadClientConfig.Id);
     }
 
     public override async Task LoginAsync()
@@ -66,20 +54,20 @@ public partial class QBitService : DownloadService, IQBitService
             throw new InvalidOperationException("QBittorrent client is not initialized");
         }
         
-        if (string.IsNullOrEmpty(_downloadClient.Username) && string.IsNullOrEmpty(_downloadClient.Password))
+        if (string.IsNullOrEmpty(_downloadClientConfig.Username) && string.IsNullOrEmpty(_downloadClientConfig.Password))
         {
-            _logger.LogDebug("No credentials configured for client {clientId}, skipping login", _downloadClient.Id);
+            _logger.LogDebug("No credentials configured for client {clientId}, skipping login", _downloadClientConfig.Id);
             return;
         }
 
         try
         {
-            await _client.LoginAsync(_downloadClient.Username, _downloadClient.Password);
-            _logger.LogDebug("Successfully logged in to QBittorrent client {clientId}", _downloadClient.Id);
+            await _client.LoginAsync(_downloadClientConfig.Username, _downloadClientConfig.Password);
+            _logger.LogDebug("Successfully logged in to QBittorrent client {clientId}", _downloadClientConfig.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to login to QBittorrent client {clientId}", _downloadClient.Id);
+            _logger.LogError(ex, "Failed to login to QBittorrent client {clientId}", _downloadClientConfig.Id);
             throw;
         }
     }

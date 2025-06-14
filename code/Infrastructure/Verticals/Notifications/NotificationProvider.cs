@@ -1,23 +1,24 @@
 using Common.Configuration.Notification;
-using Infrastructure.Configuration;
 using Infrastructure.Verticals.Notifications.Models;
-using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Verticals.Notifications;
 
-public abstract class NotificationProvider : INotificationProvider
+public abstract class NotificationProvider<T> : INotificationProvider<T>
+    where T : NotificationConfig
 {
-    private readonly IConfigManager _configManager;
-    protected readonly NotificationsConfig _config;
+    protected readonly DbSet<T> _notificationConfig;
+    protected T? _config;
     
-    public abstract NotificationConfig Config { get; }
+    public T Config => _config ??= _notificationConfig.First();
+    
+    NotificationConfig INotificationProvider.Config => Config;
 
-    protected NotificationProvider(IConfigManager configManager)
+    protected NotificationProvider(DbSet<T> notificationConfig)
     {
-        _configManager = configManager;
-        _config = configManager.GetConfiguration<NotificationsConfig>();
+        _notificationConfig = notificationConfig;
     }
-    
+
     public abstract string Name { get; }
     
     public abstract Task OnFailedImportStrike(FailedImportStrikeNotification notification);

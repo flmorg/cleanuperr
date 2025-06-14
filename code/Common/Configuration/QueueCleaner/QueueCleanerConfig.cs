@@ -1,9 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Common.Configuration.QueueCleaner;
 
 public sealed record QueueCleanerConfig : IJobConfig
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; init; } = Guid.NewGuid();
     
     public bool Enabled { get; init; }

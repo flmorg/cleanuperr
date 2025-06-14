@@ -1,14 +1,14 @@
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadCleaner;
-using Common.Configuration.DownloadClient;
+using Common.Configuration.General;
+using Data;
 using Data.Enums;
 using Data.Models.Arr.Queue;
-using Infrastructure.Configuration;
 using Infrastructure.Events;
 using Infrastructure.Helpers;
-using Infrastructure.Services;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Arr.Interfaces;
+using Infrastructure.Verticals.Context;
 using Infrastructure.Verticals.DownloadClient;
 using Infrastructure.Verticals.Jobs;
 using MassTransit;
@@ -20,14 +20,11 @@ namespace Infrastructure.Verticals.DownloadCleaner;
 
 public sealed class DownloadCleaner : GenericHandler
 {
-    private readonly DownloadCleanerConfig _config;
     private readonly HashSet<string> _excludedHashes = [];
-    
-    private static bool _hardLinkCategoryCreated;
     
     public DownloadCleaner(
         ILogger<DownloadCleaner> logger,
-        IConfigManager configManager,
+        DataContext dataContext,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
@@ -35,65 +32,58 @@ public sealed class DownloadCleaner : GenericHandler
         DownloadServiceFactory downloadServiceFactory,
         EventPublisher eventPublisher
     ) : base(
-        logger, cache, messageBus,
-        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, configManager, eventPublisher
+        logger, dataContext, cache, messageBus,
+        arrClientFactory, arrArrQueueIterator, downloadServiceFactory, eventPublisher
     )
     {
-        _config = configManager.GetConfiguration<DownloadCleanerConfig>();
     }
     
-    protected override void InitializeDownloadServices()
-    {
-        // Clear existing services
-        _downloadServices.Clear();
-        
-        if (_downloadClientConfig.Clients.Count == 0)
-        {
-            _logger.LogWarning("No download clients configured");
-            return;
-        }
-        
-        foreach (var client in _downloadClientConfig.GetEnabledClients())
-        {
-            try
-            {
-                var downloadService = _downloadServiceFactory.GetDownloadService(client);
-                if (downloadService != null)
-                {
-                    _downloadServices.Add(downloadService);
-                    _logger.LogDebug("Added download client: {name} ({id})", client.Name, client.Id);
-                }
-                else
-                {
-                    _logger.LogWarning("Download client service not available for: {id}", client.Id);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error initializing download client {id}: {message}", client.Id, ex.Message);
-            }
-        }
-    }
+    // protected override void GetDownloadServices()
+    // {
+    //     // Clear existing services
+    //     _downloadServices.Clear();
+    //     
+    //     if (_downloadClientConfigs.Clients.Count == 0)
+    //     {
+    //         _logger.LogWarning("No download clients configured");
+    //         return;
+    //     }
+    //     
+    //     foreach (var client in _downloadClientConfigs.GetEnabledClients())
+    //     {
+    //         try
+    //         {
+    //             var downloadService = _downloadServiceFactory.GetDownloadService(client);
+    //             if (downloadService != null)
+    //             {
+    //                 _downloadServices.Add(downloadService);
+    //                 _logger.LogDebug("Added download client: {name} ({id})", client.Name, client.Id);
+    //             }
+    //             else
+    //             {
+    //                 _logger.LogWarning("Download client service not available for: {id}", client.Id);
+    //             }
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             _logger.LogError(ex, "Error initializing download client {id}: {message}", client.Id, ex.Message);
+    //         }
+    //     }
+    // }
     
-    public override async Task ExecuteAsync()
+    protected override async Task ExecuteInternalAsync()
     {
-        if (_downloadClientConfig.Clients.Count is 0)
+        var downloadServices = await GetDownloadServices();
+
+        if (downloadServices.Count is 0)
         {
-            _logger.LogWarning("No download clients configured");
             return;
         }
+
+        var config = ContextProvider.Get<DownloadCleanerConfig>();
         
-        // Initialize download services
-        InitializeDownloadServices();
-        
-        if (_downloadServices.Count == 0)
-        {
-            _logger.LogWarning("No enabled download clients available");
-            return;
-        }
-        
-        bool isUnlinkedEnabled = _config.UnlinkedEnabled && !string.IsNullOrEmpty(_config.UnlinkedTargetCategory) && _config.UnlinkedCategories.Count > 0;
-        bool isCleaningEnabled = _config.Categories.Count > 0;
+        bool isUnlinkedEnabled = config.UnlinkedEnabled && !string.IsNullOrEmpty(config.UnlinkedTargetCategory) && config.UnlinkedCategories.Count > 0;
+        bool isCleaningEnabled = config.Categories.Count > 0;
         
         if (!isUnlinkedEnabled && !isCleaningEnabled)
         {
@@ -101,11 +91,11 @@ public sealed class DownloadCleaner : GenericHandler
             return;
         }
         
-        IReadOnlyList<string> ignoredDownloads = _generalConfig.IgnoredDownloads;
+        IReadOnlyList<string> ignoredDownloads = ContextProvider.Get<GeneralConfig>(nameof(GeneralConfig)).IgnoredDownloads;
         
         // Process each client separately
         var allDownloads = new List<object>();
-        foreach (var downloadService in _downloadServices)
+        foreach (var downloadService in downloadServices)
         {
             try
             {
@@ -135,12 +125,12 @@ public sealed class DownloadCleaner : GenericHandler
         if (isUnlinkedEnabled)
         {
             // Create category for all clients
-            foreach (var downloadService in _downloadServices)
+            foreach (var downloadService in downloadServices)
             {
                 try
                 {
-                    _logger.LogDebug("creating category {cat}", _config.UnlinkedTargetCategory);
-                    await downloadService.CreateCategoryAsync(_config.UnlinkedTargetCategory);
+                    _logger.LogDebug("creating category {cat}", config.UnlinkedTargetCategory);
+                    await downloadService.CreateCategoryAsync(config.UnlinkedTargetCategory);
                     // TODO mark creation as done
                 }
                 catch (Exception ex)
@@ -151,11 +141,11 @@ public sealed class DownloadCleaner : GenericHandler
             
             // Get downloads to change category
             downloadsToChangeCategory = new List<object>();
-            foreach (var downloadService in _downloadServices)
+            foreach (var downloadService in downloadServices)
             {
                 try
                 {
-                    var clientDownloads = downloadService.FilterDownloadsToChangeCategoryAsync(allDownloads, _config.UnlinkedCategories);
+                    var clientDownloads = downloadService.FilterDownloadsToChangeCategoryAsync(allDownloads, config.UnlinkedCategories);
                     if (clientDownloads?.Count > 0)
                     {
                         // TODO this is fucked up; I can't know which client the download belongs to
@@ -172,16 +162,16 @@ public sealed class DownloadCleaner : GenericHandler
         // wait for the downloads to appear in the arr queue
         await Task.Delay(10 * 1000);
 
-        await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr, true);
-        await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr, true);
-        await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr, true);
+        await ProcessArrConfigAsync(ContextProvider.Get<SonarrConfig>(), InstanceType.Sonarr, true);
+        await ProcessArrConfigAsync(ContextProvider.Get<SonarrConfig>(), InstanceType.Radarr, true);
+        await ProcessArrConfigAsync(ContextProvider.Get<SonarrConfig>(), InstanceType.Lidarr, true);
 
         if (isUnlinkedEnabled && downloadsToChangeCategory?.Count > 0)
         {
             _logger.LogTrace("found {count} potential downloads to change category", downloadsToChangeCategory.Count);
             
             // Process each client with its own filtered downloads
-            foreach (var downloadService in _downloadServices)
+            foreach (var downloadService in downloadServices)
             {
                 try
                 {
@@ -196,18 +186,18 @@ public sealed class DownloadCleaner : GenericHandler
             _logger.LogTrace("finished changing category");
         }
         
-        if (_config.Categories?.Count is null or 0)
+        if (config.Categories?.Count is null or 0)
         {
             return;
         }
         
         // Get downloads to clean
         List<object> downloadsToClean = new List<object>();
-        foreach (var downloadService in _downloadServices)
+        foreach (var downloadService in downloadServices)
         {
             try
             {
-                var clientDownloads = downloadService.FilterDownloadsToBeCleanedAsync(allDownloads, _config.Categories);
+                var clientDownloads = downloadService.FilterDownloadsToBeCleanedAsync(allDownloads, config.Categories);
                 if (clientDownloads?.Count > 0)
                 {
                     // TODO this is fucked up; I can't know which client the download belongs to
@@ -226,11 +216,11 @@ public sealed class DownloadCleaner : GenericHandler
         _logger.LogTrace("found {count} potential downloads to clean", downloadsToClean.Count);
         
         // Process cleaning for each client
-        foreach (var downloadService in _downloadServices)
+        foreach (var downloadService in downloadServices)
         {
             try
             {
-                await downloadService.CleanDownloadsAsync(downloadsToClean, _config.Categories, _excludedHashes, ignoredDownloads);
+                await downloadService.CleanDownloadsAsync(downloadsToClean, config.Categories, _excludedHashes, ignoredDownloads);
             }
             catch (Exception ex)
             {
@@ -239,9 +229,14 @@ public sealed class DownloadCleaner : GenericHandler
         }
         
         _logger.LogTrace("finished cleaning downloads");
+
+        foreach (var downloadService in downloadServices)
+        {
+            downloadService.Dispose();
+        }
     }
 
-    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig)
     {
         using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
         
@@ -259,13 +254,5 @@ public sealed class DownloadCleaner : GenericHandler
                 _excludedHashes.Add(record.DownloadId.ToLowerInvariant());
             }
         });
-    }
-    
-    public override void Dispose()
-    {
-        foreach (var downloadService in _downloadServices)
-        {
-            downloadService.Dispose();
-        }
     }
 }

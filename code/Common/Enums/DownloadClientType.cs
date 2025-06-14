@@ -2,8 +2,6 @@
 
 public enum DownloadClientType
 {
-    QBittorrent,
-    Deluge,
-    Transmission,
-    Usenet,
+    Torrent,
+    Usenet
 }

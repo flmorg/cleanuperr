@@ -1,7 +1,6 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Common.Configuration;
-using Common.Configuration.DownloadClient;
 using Common.Exceptions;
 using Data.Models.Deluge.Exceptions;
 using Data.Models.Deluge.Request;
@@ -14,7 +13,7 @@ namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
 public sealed class DelugeClient
 {
-    private readonly ClientConfig _config;
+    private readonly Common.Configuration.DownloadClientConfig _config;
     private readonly HttpClient _httpClient;
     
     private static readonly IReadOnlyList<string> Fields =
@@ -34,7 +33,7 @@ public sealed class DelugeClient
         "download_location"
     ];
     
-    public DelugeClient(ClientConfig config, HttpClient httpClient)
+    public DelugeClient(Common.Configuration.DownloadClientConfig config, HttpClient httpClient)
     {
         _config = config;
         _httpClient = httpClient;

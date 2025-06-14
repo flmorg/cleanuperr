@@ -1,5 +1,5 @@
-using Common.Configuration.DownloadClient;
 using Common.Exceptions;
+using Data;
 using Data.Models.Deluge.Response;
 using Infrastructure.Events;
 using Infrastructure.Interceptors;
@@ -8,7 +8,6 @@ using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Infrastructure.Configuration;
 using Infrastructure.Http;
 
 namespace Infrastructure.Verticals.DownloadClient.Deluge;
@@ -19,7 +18,6 @@ public partial class DelugeService : DownloadService, IDelugeService
 
     public DelugeService(
         ILogger<DelugeService> logger,
-        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -29,7 +27,7 @@ public partial class DelugeService : DownloadService, IDelugeService
         EventPublisher eventPublisher,
         BlocklistProvider blocklistProvider
     ) : base(
-        logger, configManager, cache,
+        logger, cache,
         filenameEvaluator, striker, dryRunInterceptor, hardLinkFileService,
         httpClientProvider, eventPublisher, blocklistProvider
     )
@@ -39,15 +37,15 @@ public partial class DelugeService : DownloadService, IDelugeService
     }
     
     /// <inheritdoc />
-    public override void Initialize(ClientConfig clientConfig)
+    public override void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
     {
         // Initialize base service first
-        base.Initialize(clientConfig);
+        base.Initialize(downloadClientConfig);
         
         // Ensure client type is correct
-        if (clientConfig.Type != Common.Enums.DownloadClientType.Deluge)
+        if (downloadClientConfig.TypeName != Common.Enums.DownloadClientTypeName.Deluge)
         {
-            throw new InvalidOperationException($"Cannot initialize DelugeService with client type {clientConfig.Type}");
+            throw new InvalidOperationException($"Cannot initialize DelugeService with client type {downloadClientConfig.TypeName}");
         }
         
         if (_httpClient == null)
@@ -56,10 +54,10 @@ public partial class DelugeService : DownloadService, IDelugeService
         }
         
         // Create Deluge client
-        _client = new DelugeClient(clientConfig, _httpClient);
+        _client = new DelugeClient(downloadClientConfig, _httpClient);
         
         _logger.LogInformation("Initialized Deluge service for client {clientName} ({clientId})", 
-            clientConfig.Name, clientConfig.Id);
+            downloadClientConfig.Name, downloadClientConfig.Id);
     }
     
     public override async Task LoginAsync()
@@ -78,11 +76,11 @@ public partial class DelugeService : DownloadService, IDelugeService
                 throw new FatalException("Deluge WebUI is not connected to the daemon");
             }
             
-            _logger.LogDebug("Successfully logged in to Deluge client {clientId}", _clientConfig.Id);
+            _logger.LogDebug("Successfully logged in to Deluge client {clientId}", _downloadClientConfig.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to login to Deluge client {clientId}", _clientConfig.Id);
+            _logger.LogError(ex, "Failed to login to Deluge client {clientId}", _downloadClientConfig.Id);
             throw;
         }
     }

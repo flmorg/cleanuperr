@@ -1,7 +1,14 @@
-﻿namespace Common.Configuration.Notification;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Common.Configuration.Notification;
 
 public abstract record NotificationConfig
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
     public bool OnFailedImportStrike { get; init; }
     
     public bool OnStalledStrike { get; init; }

@@ -1,13 +1,10 @@
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using Common.Configuration.DownloadCleaner;
-using Common.Configuration.DownloadClient;
 using Common.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
+using Data;
 using Data.Enums;
 using Data.Models.Cache;
-using Infrastructure.Configuration;
 using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Http;
@@ -18,14 +15,12 @@ using Infrastructure.Verticals.Files;
 using Infrastructure.Verticals.ItemStriker;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
 public abstract class DownloadService : IDownloadService
 {
     protected readonly ILogger<DownloadService> _logger;
-    protected readonly IConfigManager _configManager;
     protected readonly IMemoryCache _cache;
     protected readonly IFilenameEvaluator _filenameEvaluator;
     protected readonly IStriker _striker;
@@ -41,13 +36,12 @@ public abstract class DownloadService : IDownloadService
 
     
     // Client-specific configuration
-    protected ClientConfig _clientConfig;
+    protected Common.Configuration.DownloadClientConfig _downloadClientConfig;
     
     // HTTP client for this service
 
     protected DownloadService(
         ILogger<DownloadService> logger,
-        IConfigManager configManager,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -59,7 +53,6 @@ public abstract class DownloadService : IDownloadService
     )
     {
         _logger = logger;
-        _configManager = configManager;
         _cache = cache;
         _filenameEvaluator = filenameEvaluator;
         _striker = striker;
@@ -71,26 +64,26 @@ public abstract class DownloadService : IDownloadService
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
         
-        _queueCleanerConfig = _configManager.GetConfiguration<QueueCleanerConfig>();
-        _downloadCleanerConfig = _configManager.GetConfiguration<DownloadCleanerConfig>();
+        _queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+        _downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
     }
     
     /// <inheritdoc />
     public Guid GetClientId()
     {
-        return _clientConfig.Id;
+        return _downloadClientConfig.Id;
     }
     
     /// <inheritdoc />
-    public virtual void Initialize(ClientConfig clientConfig)
+    public virtual void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
     {
-        _clientConfig = clientConfig;
+        _downloadClientConfig = downloadClientConfig;
         
         // Create HTTP client for this service
-        _httpClient = _httpClientProvider.CreateClient(clientConfig);
+        _httpClient = _httpClientProvider.CreateClient(downloadClientConfig);
         
         _logger.LogDebug("Initialized download service for client {clientId} ({type})", 
-            clientConfig.Id, clientConfig.Type);
+            downloadClientConfig.Id, downloadClientConfig.TypeName);
     }
 
     public abstract void Dispose();

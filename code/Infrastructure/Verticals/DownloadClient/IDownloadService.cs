@@ -19,8 +19,8 @@ public interface IDownloadService : IDisposable
     /// <summary>
     /// Initializes the download service with client-specific configuration
     /// </summary>
-    /// <param name="downloadClient">The client configuration</param>
-    public void Initialize(Common.Configuration.DownloadClient downloadClient);
+    /// <param name="downloadClientConfig">The client configuration</param>
+    public void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig);
     
     public Task LoginAsync();
 

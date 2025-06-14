@@ -2,10 +2,11 @@ using Common.Configuration.DownloadCleaner;
 using Common.Configuration.QueueCleaner;
 using Common.Exceptions;
 using Common.Helpers;
-using Infrastructure.Configuration;
+using Data;
 using Infrastructure.Verticals.DownloadCleaner;
 using Infrastructure.Verticals.Jobs;
 using Infrastructure.Verticals.QueueCleaner;
+using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Quartz.Spi;
 
@@ -18,18 +19,18 @@ namespace Executable.Jobs;
 public class BackgroundJobManager : IHostedService
 {
     private readonly ISchedulerFactory _schedulerFactory;
-    private readonly IConfigManager _configManager;
+    private readonly DataContext _dataContext;
     private readonly ILogger<BackgroundJobManager> _logger;
     private IScheduler? _scheduler;
 
     public BackgroundJobManager(
         ISchedulerFactory schedulerFactory,
-        IConfigManager configManager,
+        DataContext dataContext,
         ILogger<BackgroundJobManager> logger
     )
     {
         _schedulerFactory = schedulerFactory;
-        _configManager = configManager;
+        _dataContext = dataContext;
         _logger = logger;
     }
 
@@ -74,9 +75,13 @@ public class BackgroundJobManager : IHostedService
             throw new InvalidOperationException("Scheduler not initialized");
         }
         
-        // Get configurations from JSON files
-        QueueCleanerConfig queueCleanerConfig = await _configManager.GetConfigurationAsync<QueueCleanerConfig>();
-        DownloadCleanerConfig downloadCleanerConfig = await _configManager.GetConfigurationAsync<DownloadCleanerConfig>();
+        // Get configurations from db
+        QueueCleanerConfig queueCleanerConfig = await _dataContext.QueueCleanerConfigs
+            .AsNoTracking()
+            .FirstAsync(cancellationToken);
+        DownloadCleanerConfig downloadCleanerConfig = await _dataContext.DownloadCleanerConfigs
+            .AsNoTracking()
+            .FirstAsync(cancellationToken);
         
         await AddQueueCleanerJob(queueCleanerConfig, cancellationToken);
         await AddDownloadCleanerJob(downloadCleanerConfig, cancellationToken);

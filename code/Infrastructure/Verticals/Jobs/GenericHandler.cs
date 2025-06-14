@@ -1,3 +1,4 @@
+using Common.Configuration;
 using Common.Configuration.Arr;
 using Common.Configuration.DownloadCleaner;
 using Common.Configuration.General;
@@ -28,15 +29,15 @@ public abstract class GenericHandler : IHandler
     protected readonly ArrQueueIterator _arrArrQueueIterator;
     protected readonly DownloadServiceFactory _downloadServiceFactory;
     private readonly EventPublisher _eventPublisher;
-    
+
     protected GenericHandler(
         ILogger<GenericHandler> logger,
+        DataContext dataContext,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
-        DataContext dataContext,
         EventPublisher eventPublisher
     )
     {
@@ -48,11 +49,6 @@ public abstract class GenericHandler : IHandler
         _downloadServiceFactory = downloadServiceFactory;
         _eventPublisher = eventPublisher;
         _dataContext = dataContext;
-        // _generalConfig = configManager.GetConfiguration<GeneralConfig>();
-        // _downloadClientConfigs = configManager.GetConfiguration<DownloadClientConfigs>();
-        // _sonarrConfig = configManager.GetConfiguration<SonarrConfig>();
-        // _radarrConfig = configManager.GetConfiguration<RadarrConfig>();
-        // _lidarrConfig = configManager.GetConfiguration<LidarrConfig>();
     }
 
     /// <summary>
@@ -119,12 +115,24 @@ public abstract class GenericHandler : IHandler
 
     public async Task ExecuteAsync()
     {
-        ContextProvider.Set(nameof(GeneralConfig), await _dataContext.GeneralConfigs.FirstAsync());
-        ContextProvider.Set(nameof(SonarrConfig), await _dataContext.SonarrConfigs.FirstAsync());
-        ContextProvider.Set(nameof(RadarrConfig), await _dataContext.RadarrConfigs.FirstAsync());
-        ContextProvider.Set(nameof(LidarrConfig), await _dataContext.LidarrConfigs.FirstAsync());
-        ContextProvider.Set(nameof(QueueCleanerConfig), await _dataContext.QueueCleanerConfigs.FirstAsync());
-        ContextProvider.Set(nameof(DownloadCleanerConfig), await _dataContext.DownloadCleanerConfigs.FirstAsync());
+        await DataContext.Lock.WaitAsync();
+
+        try
+        {
+            ContextProvider.Set(nameof(GeneralConfig), await _dataContext.GeneralConfigs.FirstAsync());
+            ContextProvider.Set(nameof(SonarrConfig), await _dataContext.SonarrConfigs.Include(x => x.Instances).FirstAsync());
+            ContextProvider.Set(nameof(RadarrConfig), await _dataContext.RadarrConfigs.Include(x => x.Instances).FirstAsync());
+            ContextProvider.Set(nameof(LidarrConfig), await _dataContext.LidarrConfigs.Include(x => x.Instances).FirstAsync());
+            ContextProvider.Set(nameof(QueueCleanerConfig), await _dataContext.QueueCleanerConfigs.FirstAsync());
+            ContextProvider.Set(nameof(DownloadCleanerConfig), await _dataContext.DownloadCleanerConfigs.FirstAsync());
+            ContextProvider.Set(nameof(DownloadClientConfig), await _dataContext.DownloadClients
+                .Where(x => x.Enabled)
+                .ToListAsync());
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
         
         await ExecuteInternalAsync();
     }
@@ -151,7 +159,7 @@ public abstract class GenericHandler : IHandler
 
     protected abstract Task ExecuteInternalAsync();
     
-    protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig config);
+    protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig);
     
     protected async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType, bool throwOnFailure = false)
     {

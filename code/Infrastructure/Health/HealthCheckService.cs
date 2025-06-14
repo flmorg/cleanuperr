@@ -1,5 +1,5 @@
 using Data;
-using Infrastructure.Verticals.DownloadClient.Factory;
+using Infrastructure.Verticals.DownloadClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +12,7 @@ public class HealthCheckService : IHealthCheckService
 {
     private readonly ILogger<HealthCheckService> _logger;
     private readonly DataContext _dataContext;
-    private readonly IDownloadClientFactory _clientFactory;
+    private readonly DownloadServiceFactory _downloadServiceFactory;
     private readonly Dictionary<Guid, HealthStatus> _healthStatuses = new();
     private readonly object _lockObject = new();
 
@@ -24,11 +24,11 @@ public class HealthCheckService : IHealthCheckService
     public HealthCheckService(
         ILogger<HealthCheckService> logger,
         DataContext dataContext,
-        IDownloadClientFactory clientFactory)
+        DownloadServiceFactory downloadServiceFactory)
     {
         _logger = logger;
         _dataContext = dataContext;
-        _clientFactory = clientFactory;
+        _downloadServiceFactory = downloadServiceFactory;
     }
 
     /// <inheritdoc />
@@ -39,11 +39,11 @@ public class HealthCheckService : IHealthCheckService
         try
         {
             // Get the client configuration
-            var config = await _dataContext.DownloadClients
+            var downloadClientConfig = await _dataContext.DownloadClients
                 .Where(x => x.Id == clientId)
                 .FirstOrDefaultAsync();
             
-            if (config is null)
+            if (downloadClientConfig is null)
             {
                 _logger.LogWarning("Client {clientId} not found in configuration", clientId);
                 var notFoundStatus = new HealthStatus
@@ -59,7 +59,7 @@ public class HealthCheckService : IHealthCheckService
             }
 
             // Get the client instance
-            var client = _clientFactory.GetClient(clientId);
+            var client = _downloadServiceFactory.GetDownloadService(downloadClientConfig);
             
             // Measure response time
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -75,8 +75,8 @@ public class HealthCheckService : IHealthCheckService
                 var status = new HealthStatus
                 {
                     ClientId = clientId,
-                    ClientName = config.Name,
-                    ClientTypeType = config.Type,
+                    ClientName = downloadClientConfig.Name,
+                    ClientTypeName = downloadClientConfig.TypeName,
                     IsHealthy = true,
                     LastChecked = DateTime.UtcNow,
                     ResponseTime = stopwatch.Elapsed
@@ -94,8 +94,8 @@ public class HealthCheckService : IHealthCheckService
                 var status = new HealthStatus
                 {
                     ClientId = clientId,
-                    ClientName = config.Name,
-                    ClientTypeType = config.Type,
+                    ClientName = downloadClientConfig.Name,
+                    ClientTypeName = downloadClientConfig.TypeName,
                     IsHealthy = false,
                     LastChecked = DateTime.UtcNow,
                     ErrorMessage = $"Connection failed: {ex.Message}",
@@ -172,7 +172,7 @@ public class HealthCheckService : IHealthCheckService
     
     private void UpdateHealthStatus(HealthStatus newStatus)
     {
-        HealthStatus? previousStatus = null;
+        HealthStatus? previousStatus;
         
         lock (_lockObject)
         {

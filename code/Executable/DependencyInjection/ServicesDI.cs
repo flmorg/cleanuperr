@@ -26,8 +26,8 @@ public static class ServicesDI
         services
             .AddSingleton<IEncryptionService, AesEncryptionService>()
             .AddTransient<SensitiveDataJsonConverter>()
-            .AddDbContext<EventsContext>()
-            .AddDbContext<DataContext>()
+            .AddTransient<EventsContext>()
+            .AddTransient<DataContext>()
             .AddTransient<EventPublisher>()
             .AddHostedService<EventCleanupService>()
             // API services

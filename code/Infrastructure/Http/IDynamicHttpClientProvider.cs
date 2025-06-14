@@ -10,7 +10,7 @@ public interface IDynamicHttpClientProvider
     /// <summary>
     /// Creates an HTTP client configured for the specified download client
     /// </summary>
-    /// <param name="downloadClient">The client configuration</param>
+    /// <param name="downloadClientConfig">The client configuration</param>
     /// <returns>A configured HttpClient instance</returns>
-    HttpClient CreateClient(DownloadClient downloadClient);
+    HttpClient CreateClient(DownloadClientConfig downloadClientConfig);
 }

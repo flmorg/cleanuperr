@@ -1,25 +1,25 @@
 using Common.Configuration.Notification;
-using Infrastructure.Configuration;
+using Data;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;
 
 namespace Infrastructure.Verticals.Notifications.Notifiarr;
 
-public class NotifiarrProvider : NotificationProvider
+public class NotifiarrProvider : NotificationProvider<NotifiarrConfig>
 {
+    private readonly DataContext _dataContext;
     private readonly INotifiarrProxy _proxy;
 
     private const string WarningColor = "f0ad4e";
     private const string ImportantColor = "bb2124";
     private const string Logo = "https://github.com/Cleanuparr/Cleanuparr/blob/main/Logo/48.png?raw=true";
 
-    public override NotifiarrConfig Config => _config.Notifiarr;
-
     public override string Name => "Notifiarr";
 
-    public NotifiarrProvider(IConfigManager configManager, INotifiarrProxy proxy)
-        : base(configManager)
+    public NotifiarrProvider(DataContext dataContext, INotifiarrProxy proxy)
+        : base(dataContext.NotifiarrConfigs)
     {
+        _dataContext = dataContext;
         _proxy = proxy;
     }
 

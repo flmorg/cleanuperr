@@ -32,42 +32,42 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
     }
 
     /// <inheritdoc />
-    public HttpClient CreateClient(DownloadClient downloadClient)
+    public HttpClient CreateClient(DownloadClientConfig downloadClientConfig)
     {
-        if (downloadClient == null)
+        if (downloadClientConfig == null)
         {
-            throw new ArgumentNullException(nameof(downloadClient));
+            throw new ArgumentNullException(nameof(downloadClientConfig));
         }
         
         // Try to use named client if it exists
         try
         {
-            string clientName = GetClientName(downloadClient);
+            string clientName = GetClientName(downloadClientConfig);
             return _httpClientFactory.CreateClient(clientName);
         }
         catch (InvalidOperationException)
         {
-            _logger.LogWarning("Named HTTP client for {clientId} not found, creating generic client", downloadClient.Id);
-            return CreateGenericClient(downloadClient);
+            _logger.LogWarning("Named HTTP client for {clientId} not found, creating generic client", downloadClientConfig.Id);
+            return CreateGenericClient(downloadClientConfig);
         }
     }
 
     /// <summary>
     /// Gets the client name for a specific client configuration
     /// </summary>
-    /// <param name="downloadClient">The client configuration</param>
+    /// <param name="downloadClientConfig">The client configuration</param>
     /// <returns>The client name for use with IHttpClientFactory</returns>
-    private string GetClientName(DownloadClient downloadClient)
+    private string GetClientName(DownloadClientConfig downloadClientConfig)
     {
-        return $"DownloadClient_{downloadClient.Id}";
+        return $"DownloadClient_{downloadClientConfig.Id}";
     }
 
     /// <summary>
     /// Creates a generic HTTP client with appropriate configuration
     /// </summary>
-    /// <param name="downloadClient">The client configuration</param>
+    /// <param name="downloadClientConfig">The client configuration</param>
     /// <returns>A configured HttpClient instance</returns>
-    private HttpClient CreateGenericClient(DownloadClient downloadClient)
+    private HttpClient CreateGenericClient(DownloadClientConfig downloadClientConfig)
     {
         // TODO
         var httpConfig = _dataContext.GeneralConfigs.First();
@@ -86,7 +86,7 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
             UseDefaultCredentials = false
         };
 
-        if (downloadClient.Type == Common.Enums.DownloadClientType.Deluge)
+        if (downloadClientConfig.TypeName == Common.Enums.DownloadClientTypeName.Deluge)
         {
             handler.AllowAutoRedirect = true;
             handler.UseCookies = true;
@@ -101,13 +101,13 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
         };
         
         // Set base address if needed
-        if (downloadClient.Url != null)
+        if (downloadClientConfig.Url != null)
         {
-            client.BaseAddress = downloadClient.Url;
+            client.BaseAddress = downloadClientConfig.Url;
         }
         
         _logger.LogDebug("Created generic HTTP client for client {clientId} with base address {baseAddress}", 
-            downloadClient.Id, client.BaseAddress);
+            downloadClientConfig.Id, client.BaseAddress);
         
         return client;
     }

@@ -1,10 +1,10 @@
-using Common.Configuration.Arr;
-using Infrastructure.Configuration;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using Data;
 using Data.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Executable.Controllers;
 
@@ -13,18 +13,18 @@ namespace Executable.Controllers;
 public class StatusController : ControllerBase
 {
     private readonly ILogger<StatusController> _logger;
-    private readonly IConfigManager _configManager;
+    private readonly DataContext _dataContext;
     private readonly DownloadServiceFactory _downloadServiceFactory;
     private readonly ArrClientFactory _arrClientFactory;
 
     public StatusController(
         ILogger<StatusController> logger,
-        IConfigManager configManager,
+        DataContext dataContext,
         DownloadServiceFactory downloadServiceFactory,
         ArrClientFactory arrClientFactory)
     {
         _logger = logger;
-        _configManager = configManager;
+        _dataContext = dataContext;
         _downloadServiceFactory = downloadServiceFactory;
         _arrClientFactory = arrClientFactory;
     }
@@ -37,10 +37,21 @@ public class StatusController : ControllerBase
             var process = Process.GetCurrentProcess();
             
             // Get configuration
-            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfigs>();
-            var sonarrConfig = await _configManager.GetConfigurationAsync<SonarrConfig>();
-            var radarrConfig = await _configManager.GetConfigurationAsync<RadarrConfig>();
-            var lidarrConfig = await _configManager.GetConfigurationAsync<LidarrConfig>();
+            var downloadClients = await _dataContext.DownloadClients
+                .AsNoTracking()
+                .ToListAsync();
+            var sonarrConfig = await _dataContext.SonarrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync();
+            var radarrConfig = await _dataContext.RadarrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync();
+            var lidarrConfig = await _dataContext.LidarrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync();
             
             var status = new
             {
@@ -90,20 +101,22 @@ public class StatusController : ControllerBase
     {
         try
         {
-            var downloadClientConfig = await _configManager.GetConfigurationAsync<DownloadClientConfigs>();
+            var downloadClients = await _dataContext.DownloadClients
+                .AsNoTracking()
+                .ToListAsync();
             var result = new Dictionary<string, object>();
             
             // Check for configured clients
-            if (downloadClientConfig.Clients.Count > 0)
+            if (downloadClients.Count > 0)
             {
                 var clientsStatus = new List<object>();
-                foreach (var client in downloadClientConfig.Clients)
+                foreach (var client in downloadClients)
                 {
                     clientsStatus.Add(new
                     {
                         client.Id,
                         client.Name,
-                        client.Type,
+                        Type = client.TypeName,
                         client.Host,
                         client.Enabled,
                         IsConnected = client.Enabled, // We can't check connection status without implementing test methods
@@ -122,7 +135,7 @@ public class StatusController : ControllerBase
         }
     }
 
-    [HttpGet("media-managers")]
+    [HttpGet("arrs")]
     public async Task<IActionResult> GetMediaManagersStatus()
     {
         try
@@ -130,9 +143,18 @@ public class StatusController : ControllerBase
             var status = new Dictionary<string, object>();
             
             // Get configurations
-            var sonarrConfig = await _configManager.GetConfigurationAsync<SonarrConfig>();
-            var radarrConfig = await _configManager.GetConfigurationAsync<RadarrConfig>();
-            var lidarrConfig = await _configManager.GetConfigurationAsync<LidarrConfig>();
+            var sonarrConfig = await _dataContext.SonarrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync();
+            var radarrConfig = await _dataContext.RadarrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync();
+            var lidarrConfig = await _dataContext.LidarrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync();
 
             // Check Sonarr instances
             if (sonarrConfig is { Enabled: true, Instances.Count: > 0 })
@@ -205,7 +227,7 @@ public class StatusController : ControllerBase
             }
 
             // Check Lidarr instances
-            if (lidarrConfig.Enabled == true && lidarrConfig.Instances?.Count > 0)
+            if (lidarrConfig is { Enabled: true, Instances.Count: > 0 })
             {
                 var lidarrStatus = new List<object>();
                 

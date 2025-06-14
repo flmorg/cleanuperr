@@ -14,9 +14,11 @@ namespace Data;
 /// </summary>
 public class DataContext : DbContext
 {
+    public static SemaphoreSlim Lock { get; } = new(1, 1);
+    
     public DbSet<GeneralConfig> GeneralConfigs { get; set; }
     
-    public DbSet<DownloadClient> DownloadClients { get; set; }
+    public DbSet<DownloadClientConfig> DownloadClients { get; set; }
     
     public DbSet<QueueCleanerConfig> QueueCleanerConfigs { get; set; }
     
@@ -72,7 +74,6 @@ public class DataContext : DbContext
             }
         }
 
-        modelBuilder.Entity<QueueCleanerConfig>().HasData(new QueueCleanerConfig());
         modelBuilder.Entity<DownloadCleanerConfig>().HasData(new DownloadCleanerConfig());
         modelBuilder.Entity<GeneralConfig>().HasData(new GeneralConfig());
         modelBuilder.Entity<SonarrConfig>().HasData(new SonarrConfig());

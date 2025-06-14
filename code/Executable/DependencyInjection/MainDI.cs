@@ -3,7 +3,6 @@ using Common.Configuration.General;
 using Data.Models.Arr;
 using Infrastructure.Health;
 using Infrastructure.Http;
-using Infrastructure.Verticals.DownloadClient.Factory;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.DownloadClient.Transmission;
@@ -22,7 +21,6 @@ public static class MainDI
         services
             .AddLogging(builder => builder.ClearProviders().AddConsole())
             .AddHttpClients(configuration)
-            .AddConfiguration(configuration)
             .AddMemoryCache(options => {
                 options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
             })
@@ -113,9 +111,6 @@ public static class MainDI
         
     private static IServiceCollection AddDownloadClientServices(this IServiceCollection services) =>
         services
-            // Register the factory that creates download clients
-            .AddSingleton<IDownloadClientFactory, DownloadClientFactory>()
-            
             // Register all download client service types
             // The factory will create instances as needed based on the client configuration
             .AddTransient<QBitService>()
