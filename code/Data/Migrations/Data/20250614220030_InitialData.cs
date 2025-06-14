@@ -240,11 +240,98 @@ namespace Data.Migrations.Data
                         principalColumn: "id");
                 });
 
+            migrationBuilder.CreateIndex(
+                name: "ix_arr_instance_lidarr_config_id",
+                table: "arr_instance",
+                column: "lidarr_config_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_arr_instance_radarr_config_id",
+                table: "arr_instance",
+                column: "radarr_config_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_arr_instance_sonarr_config_id",
+                table: "arr_instance",
+                column: "sonarr_config_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_clean_category_download_cleaner_config_id",
+                table: "clean_category",
+                column: "download_cleaner_config_id");
+            
             migrationBuilder.InsertData(
                 table: "apprise_configs",
                 columns: new[] { "id", "key", "on_category_changed", "on_download_cleaned", "on_failed_import_strike", "on_queue_item_deleted", "on_slow_strike", "on_stalled_strike", "url" },
                 values: new object[] { new Guid("9c7a346a-2b80-4935-ae4f-5400e336fd07"), null, false, false, false, false, false, false, null });
 
+            migrationBuilder.InsertData(
+                table: "queue_cleaner_configs",
+                columns: new[]
+                {
+                    "id",
+                    "content_blocker_delete_private",
+                    "content_blocker_enabled",
+                    "content_blocker_ignore_private",
+                    "content_blocker_lidarr_blocklist_path",
+                    "content_blocker_lidarr_blocklist_type",
+                    "content_blocker_radarr_blocklist_path",
+                    "content_blocker_radarr_blocklist_type",
+                    "content_blocker_sonarr_blocklist_path",
+                    "content_blocker_sonarr_blocklist_type",
+                    "cron_expression",
+                    "enabled",
+                    "failed_import_delete_private",
+                    "failed_import_ignore_private",
+                    "failed_import_ignored_patterns",
+                    "failed_import_max_strikes",
+                    "slow_delete_private",
+                    "slow_ignore_above_size",
+                    "slow_ignore_private",
+                    "slow_max_strikes",
+                    "slow_max_time",
+                    "slow_min_speed",
+                    "slow_reset_strikes_on_progress",
+                    "stalled_delete_private",
+                    "stalled_downloading_metadata_max_strikes",
+                    "stalled_ignore_private",
+                    "stalled_max_strikes",
+                    "stalled_reset_strikes_on_progress",
+                    "use_advanced_scheduling"
+                },
+                values: new object[]
+                {
+                    new Guid("098ae890-21dd-4a23-9ba8-ed5ce1ab4817"),
+                    false,
+                    false,
+                    false,
+                    null,
+                    0,
+                    null,
+                    0,
+                    null,
+                    0,
+                    "0 0/5 * * * ?",
+                    false,
+                    false,
+                    false,
+                    "[]",
+                    (ushort)0,
+                    false,
+                    "",
+                    false,
+                    (ushort)0,
+                    0.0,
+                    "",
+                    false,
+                    false,
+                    (ushort)0,
+                    false,
+                    (ushort)0,
+                    true,
+                    false
+                });
+            
             migrationBuilder.InsertData(
                 table: "download_cleaner_configs",
                 columns: new[] { "id", "cron_expression", "delete_private", "enabled", "unlinked_categories", "unlinked_enabled", "unlinked_ignored_root_dir", "unlinked_target_category", "unlinked_use_tag", "use_advanced_scheduling" },
@@ -274,26 +361,6 @@ namespace Data.Migrations.Data
                 table: "sonarr_configs",
                 columns: new[] { "id", "enabled", "failed_import_max_strikes", "search_type" },
                 values: new object[] { new Guid("0b38a68f-3d7b-4d98-ae96-115da62d9af2"), false, (short)-1, "Episode" });
-
-            migrationBuilder.CreateIndex(
-                name: "ix_arr_instance_lidarr_config_id",
-                table: "arr_instance",
-                column: "lidarr_config_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_arr_instance_radarr_config_id",
-                table: "arr_instance",
-                column: "radarr_config_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_arr_instance_sonarr_config_id",
-                table: "arr_instance",
-                column: "sonarr_config_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_clean_category_download_cleaner_config_id",
-                table: "clean_category",
-                column: "download_cleaner_config_id");
         }
 
         /// <inheritdoc />

@@ -86,14 +86,6 @@ namespace Data.Migrations.Data
                         .HasName("pk_lidarr_configs");
 
                     b.ToTable("lidarr_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("6096303a-399c-42b8-be8f-60a02cec5a51"),
-                            Enabled = false,
-                            FailedImportMaxStrikes = (short)-1
-                        });
                 });
 
             modelBuilder.Entity("Common.Configuration.Arr.RadarrConfig", b =>
@@ -115,14 +107,6 @@ namespace Data.Migrations.Data
                         .HasName("pk_radarr_configs");
 
                     b.ToTable("radarr_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("4fd2b82b-cffd-4b41-bcc0-204058b1e459"),
-                            Enabled = false,
-                            FailedImportMaxStrikes = (short)-1
-                        });
                 });
 
             modelBuilder.Entity("Common.Configuration.Arr.SonarrConfig", b =>
@@ -149,15 +133,6 @@ namespace Data.Migrations.Data
                         .HasName("pk_sonarr_configs");
 
                     b.ToTable("sonarr_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("0b38a68f-3d7b-4d98-ae96-115da62d9af2"),
-                            Enabled = false,
-                            FailedImportMaxStrikes = (short)-1,
-                            SearchType = "Episode"
-                        });
                 });
 
             modelBuilder.Entity("Common.Configuration.DownloadCleaner.CleanCategory", b =>
@@ -248,21 +223,6 @@ namespace Data.Migrations.Data
                         .HasName("pk_download_cleaner_configs");
 
                     b.ToTable("download_cleaner_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("edb20d44-9d7b-478f-aec5-93a803c26fb4"),
-                            CronExpression = "0 0 * * * ?",
-                            DeletePrivate = false,
-                            Enabled = false,
-                            UnlinkedCategories = "[]",
-                            UnlinkedEnabled = false,
-                            UnlinkedIgnoredRootDir = "",
-                            UnlinkedTargetCategory = "cleanuparr-unlinked",
-                            UnlinkedUseTag = false,
-                            UseAdvancedScheduling = false
-                        });
                 });
 
             modelBuilder.Entity("Common.Configuration.DownloadClientConfig", b =>
@@ -364,21 +324,6 @@ namespace Data.Migrations.Data
                         .HasName("pk_general_configs");
 
                     b.ToTable("general_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("1490f450-1b29-4111-ab20-8a03dbd9d366"),
-                            DryRun = false,
-                            EncryptionKey = "00253fe9-6c9b-4b0e-a05e-e5d2164f2389",
-                            HttpCertificateValidation = "Enabled",
-                            HttpMaxRetries = (ushort)0,
-                            HttpTimeout = (ushort)100,
-                            IgnoredDownloads = "[]",
-                            LogLevel = "Information",
-                            SearchDelay = (ushort)30,
-                            SearchEnabled = true
-                        });
                 });
 
             modelBuilder.Entity("Common.Configuration.Notification.AppriseConfig", b =>
@@ -424,18 +369,6 @@ namespace Data.Migrations.Data
                         .HasName("pk_apprise_configs");
 
                     b.ToTable("apprise_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("9c7a346a-2b80-4935-ae4f-5400e336fd07"),
-                            OnCategoryChanged = false,
-                            OnDownloadCleaned = false,
-                            OnFailedImportStrike = false,
-                            OnQueueItemDeleted = false,
-                            OnSlowStrike = false,
-                            OnStalledStrike = false
-                        });
                 });
 
             modelBuilder.Entity("Common.Configuration.Notification.NotifiarrConfig", b =>
@@ -481,18 +414,6 @@ namespace Data.Migrations.Data
                         .HasName("pk_notifiarr_configs");
 
                     b.ToTable("notifiarr_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("dd468589-e5ee-4e1b-b05e-28b461894846"),
-                            OnCategoryChanged = false,
-                            OnDownloadCleaned = false,
-                            OnFailedImportStrike = false,
-                            OnQueueItemDeleted = false,
-                            OnSlowStrike = false,
-                            OnStalledStrike = false
-                        });
                 });
 
             modelBuilder.Entity("Common.Configuration.QueueCleaner.QueueCleanerConfig", b =>

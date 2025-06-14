@@ -73,13 +73,5 @@ public class DataContext : DbContext
                     .HasConversion<string>();
             }
         }
-
-        modelBuilder.Entity<DownloadCleanerConfig>().HasData(new DownloadCleanerConfig());
-        modelBuilder.Entity<GeneralConfig>().HasData(new GeneralConfig());
-        modelBuilder.Entity<SonarrConfig>().HasData(new SonarrConfig());
-        modelBuilder.Entity<RadarrConfig>().HasData(new RadarrConfig());
-        modelBuilder.Entity<LidarrConfig>().HasData(new LidarrConfig());
-        modelBuilder.Entity<AppriseConfig>().HasData(new AppriseConfig());
-        modelBuilder.Entity<NotifiarrConfig>().HasData(new NotifiarrConfig());
     }
 } 

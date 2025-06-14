@@ -32,6 +32,9 @@ builder.Logging.AddLogging();
 
 var app = builder.Build();
 
+// Initialize the host
+await app.Init();
+
 // Get LoggingConfigManager (will be created if not already registered)
 var configManager = app.Services.GetRequiredService<LoggingConfigManager>();
         
@@ -51,8 +54,5 @@ Log.Logger = logConfig.CreateLogger();
 
 // Configure the HTTP request pipeline
 app.ConfigureApi();
-
-// Initialize the host
-await app.Init();
 
 await app.RunAsync();
