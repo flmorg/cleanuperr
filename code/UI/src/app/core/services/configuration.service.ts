@@ -7,6 +7,7 @@ import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
 import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../../shared/models/download-client-config.model";
+import { ArrInstance, CreateArrInstanceDto } from "../../shared/models/arr-config.model";
 
 @Injectable({
   providedIn: "root",
@@ -245,6 +246,120 @@ export class ConfigurationService {
       catchError((error) => {
         console.error(`Error deleting Download Client with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to delete Download Client with ID ${id}`));
+      })
+    );
+  }
+
+  // ===== SONARR INSTANCE MANAGEMENT =====
+
+  /**
+   * Create a new Sonarr instance
+   */
+  createSonarrInstance(instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.post<ArrInstance>(`${this.apiUrl}/api/configuration/sonarr/instances`, instance).pipe(
+      catchError((error) => {
+        console.error("Error creating Sonarr instance:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to create Sonarr instance"));
+      })
+    );
+  }
+
+  /**
+   * Update a Sonarr instance by ID
+   */
+  updateSonarrInstance(id: string, instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.put<ArrInstance>(`${this.apiUrl}/api/configuration/sonarr/instances/${id}`, instance).pipe(
+      catchError((error) => {
+        console.error(`Error updating Sonarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to update Sonarr instance with ID ${id}`));
+      })
+    );
+  }
+
+  /**
+   * Delete a Sonarr instance by ID
+   */
+  deleteSonarrInstance(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/configuration/sonarr/instances/${id}`).pipe(
+      catchError((error) => {
+        console.error(`Error deleting Sonarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to delete Sonarr instance with ID ${id}`));
+      })
+    );
+  }
+
+  // ===== RADARR INSTANCE MANAGEMENT =====
+
+  /**
+   * Create a new Radarr instance
+   */
+  createRadarrInstance(instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.post<ArrInstance>(`${this.apiUrl}/api/configuration/radarr/instances`, instance).pipe(
+      catchError((error) => {
+        console.error("Error creating Radarr instance:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to create Radarr instance"));
+      })
+    );
+  }
+
+  /**
+   * Update a Radarr instance by ID
+   */
+  updateRadarrInstance(id: string, instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.put<ArrInstance>(`${this.apiUrl}/api/configuration/radarr/instances/${id}`, instance).pipe(
+      catchError((error) => {
+        console.error(`Error updating Radarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to update Radarr instance with ID ${id}`));
+      })
+    );
+  }
+
+  /**
+   * Delete a Radarr instance by ID
+   */
+  deleteRadarrInstance(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/configuration/radarr/instances/${id}`).pipe(
+      catchError((error) => {
+        console.error(`Error deleting Radarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to delete Radarr instance with ID ${id}`));
+      })
+    );
+  }
+
+  // ===== LIDARR INSTANCE MANAGEMENT =====
+
+  /**
+   * Create a new Lidarr instance
+   */
+  createLidarrInstance(instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.post<ArrInstance>(`${this.apiUrl}/api/configuration/lidarr/instances`, instance).pipe(
+      catchError((error) => {
+        console.error("Error creating Lidarr instance:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to create Lidarr instance"));
+      })
+    );
+  }
+
+  /**
+   * Update a Lidarr instance by ID
+   */
+  updateLidarrInstance(id: string, instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.put<ArrInstance>(`${this.apiUrl}/api/configuration/lidarr/instances/${id}`, instance).pipe(
+      catchError((error) => {
+        console.error(`Error updating Lidarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to update Lidarr instance with ID ${id}`));
+      })
+    );
+  }
+
+  /**
+   * Delete a Lidarr instance by ID
+   */
+  deleteLidarrInstance(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/configuration/lidarr/instances/${id}`).pipe(
+      catchError((error) => {
+        console.error(`Error deleting Lidarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to delete Lidarr instance with ID ${id}`));
       })
     );
   }

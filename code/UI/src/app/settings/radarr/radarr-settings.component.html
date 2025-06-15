@@ -71,7 +71,7 @@
                 <input type="text" pInputText formControlName="name" placeholder="Instance name" class="instance-name-input" />
               </div>
               <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm" 
-                (click)="removeInstance(i)" [disabled]="radarrForm.disabled || !radarrForm.get('enabled')?.value"></button>
+                (click)="removeInstance(i)" [disabled]="radarrForm.disabled"></button>
             </div>
             <small *ngIf="hasInstanceFieldError(i, 'name', 'required')" class="p-error block">Name is required</small>
             

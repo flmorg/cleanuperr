@@ -7,3 +7,12 @@ export interface ArrInstance {
   url: string;
   apiKey: string;
 }
+
+/**
+ * DTO for creating new Arr instances without requiring an ID
+ */
+export interface CreateArrInstanceDto {
+  name: string;
+  url: string;
+  apiKey: string;
+}

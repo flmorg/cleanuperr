@@ -411,24 +411,36 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpPut("sonarr")]
-    public async Task<IActionResult> UpdateSonarrConfig([FromBody] SonarrConfig newConfig)
+    public async Task<IActionResult> UpdateSonarrConfig([FromBody] UpdateSonarrConfigDto newConfigDto)
     {
         await DataContext.Lock.WaitAsync();
         try
         {
-            // Validate the configuration
-            newConfig.Validate();
-
             // Get existing config
             var oldConfig = await _dataContext.SonarrConfigs
+                .Include(x => x.Instances)
                 .FirstAsync();
 
-            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            // Create new config with updated basic settings only (instances managed separately)
+            var updatedConfig = new SonarrConfig
+            {
+                Id = oldConfig.Id, // Keep the existing ID
+                Enabled = newConfigDto.Enabled,
+                FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
+                SearchType = newConfigDto.SearchType,
+                Instances = oldConfig.Instances // Keep existing instances unchanged
+            };
+
+            // Validate the configuration
+            updatedConfig.Validate();
+
+            // Update the existing entity using Mapster, excluding the ID
             var config = new TypeAdapterConfig();
             config.NewConfig<SonarrConfig, SonarrConfig>()
-                .Ignore(dest => dest.Id);
+                .Ignore(dest => dest.Id)
+                .Ignore(dest => dest.Instances); // Don't update instances here
             
-            newConfig.Adapt(oldConfig, config);
+            updatedConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -447,24 +459,35 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpPut("radarr")]
-    public async Task<IActionResult> UpdateRadarrConfig([FromBody] RadarrConfig newConfig)
+    public async Task<IActionResult> UpdateRadarrConfig([FromBody] UpdateRadarrConfigDto newConfigDto)
     {
         await DataContext.Lock.WaitAsync();
         try
         {
-            // Validate the configuration
-            newConfig.Validate();
-
             // Get existing config
             var oldConfig = await _dataContext.RadarrConfigs
+                .Include(x => x.Instances)
                 .FirstAsync();
 
-            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            // Create new config with updated basic settings only (instances managed separately)
+            var updatedConfig = new RadarrConfig
+            {
+                Id = oldConfig.Id, // Keep the existing ID
+                Enabled = newConfigDto.Enabled,
+                FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
+                Instances = oldConfig.Instances // Keep existing instances unchanged
+            };
+
+            // Validate the configuration
+            updatedConfig.Validate();
+
+            // Update the existing entity using Mapster, excluding the ID
             var config = new TypeAdapterConfig();
             config.NewConfig<RadarrConfig, RadarrConfig>()
-                .Ignore(dest => dest.Id);
+                .Ignore(dest => dest.Id)
+                .Ignore(dest => dest.Instances); // Don't update instances here
             
-            newConfig.Adapt(oldConfig, config);
+            updatedConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -483,24 +506,35 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpPut("lidarr")]
-    public async Task<IActionResult> UpdateLidarrConfig([FromBody] LidarrConfig newConfig)
+    public async Task<IActionResult> UpdateLidarrConfig([FromBody] UpdateLidarrConfigDto newConfigDto)
     {
         await DataContext.Lock.WaitAsync();
         try
         {
-            // Validate the configuration
-            newConfig.Validate();
-
             // Get existing config
             var oldConfig = await _dataContext.LidarrConfigs
+                .Include(x => x.Instances)
                 .FirstAsync();
 
-            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            // Create new config with updated basic settings only (instances managed separately)
+            var updatedConfig = new LidarrConfig
+            {
+                Id = oldConfig.Id, // Keep the existing ID
+                Enabled = newConfigDto.Enabled,
+                FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
+                Instances = oldConfig.Instances // Keep existing instances unchanged
+            };
+
+            // Validate the configuration
+            updatedConfig.Validate();
+
+            // Update the existing entity using Mapster, excluding the ID
             var config = new TypeAdapterConfig();
             config.NewConfig<LidarrConfig, LidarrConfig>()
-                .Ignore(dest => dest.Id);
+                .Ignore(dest => dest.Id)
+                .Ignore(dest => dest.Instances); // Don't update instances here
             
-            newConfig.Adapt(oldConfig, config);
+            updatedConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -550,5 +584,326 @@ public class ConfigurationController : ControllerBase
         // If the job is disabled, stop it
         _logger.LogInformation("{name} is disabled, stopping the job", jobType.ToString());
         await _jobManagementService.StopJob(jobType);
+    }
+
+    [HttpPost("sonarr/instances")]
+    public async Task<IActionResult> CreateSonarrInstance([FromBody] CreateArrInstanceDto newInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Sonarr config to add the instance to
+            var config = await _dataContext.SonarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            // Create the new instance
+            var instance = new ArrInstance
+            {
+                Name = newInstance.Name,
+                Url = new Uri(newInstance.Url),
+                ApiKey = newInstance.ApiKey
+            };
+
+            // Add to the config
+            config.Instances.Add(instance);
+            await _dataContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetSonarrConfig), new { id = instance.Id }, instance);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create Sonarr instance");
+            return StatusCode(500, "Failed to create Sonarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpPut("sonarr/instances/{id}")]
+    public async Task<IActionResult> UpdateSonarrInstance(Guid id, [FromBody] CreateArrInstanceDto updatedInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Sonarr config and find the instance
+            var config = await _dataContext.SonarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Sonarr instance with ID {id} not found");
+            }
+
+            // Update the instance properties
+            instance.Name = updatedInstance.Name;
+            instance.Url = new Uri(updatedInstance.Url);
+            instance.ApiKey = updatedInstance.ApiKey;
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(instance);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update Sonarr instance with ID {Id}", id);
+            return StatusCode(500, "Failed to update Sonarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpDelete("sonarr/instances/{id}")]
+    public async Task<IActionResult> DeleteSonarrInstance(Guid id)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Sonarr config and find the instance
+            var config = await _dataContext.SonarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Sonarr instance with ID {id} not found");
+            }
+
+            // Remove the instance
+            config.Instances.Remove(instance);
+            await _dataContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete Sonarr instance with ID {Id}", id);
+            return StatusCode(500, "Failed to delete Sonarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpPost("radarr/instances")]
+    public async Task<IActionResult> CreateRadarrInstance([FromBody] CreateArrInstanceDto newInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Radarr config to add the instance to
+            var config = await _dataContext.RadarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            // Create the new instance
+            var instance = new ArrInstance
+            {
+                Name = newInstance.Name,
+                Url = new Uri(newInstance.Url),
+                ApiKey = newInstance.ApiKey
+            };
+
+            // Add to the config
+            config.Instances.Add(instance);
+            await _dataContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetRadarrConfig), new { id = instance.Id }, instance);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create Radarr instance");
+            return StatusCode(500, "Failed to create Radarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpPut("radarr/instances/{id}")]
+    public async Task<IActionResult> UpdateRadarrInstance(Guid id, [FromBody] CreateArrInstanceDto updatedInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Radarr config and find the instance
+            var config = await _dataContext.RadarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Radarr instance with ID {id} not found");
+            }
+
+            // Update the instance properties
+            instance.Name = updatedInstance.Name;
+            instance.Url = new Uri(updatedInstance.Url);
+            instance.ApiKey = updatedInstance.ApiKey;
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(instance);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update Radarr instance with ID {Id}", id);
+            return StatusCode(500, "Failed to update Radarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpDelete("radarr/instances/{id}")]
+    public async Task<IActionResult> DeleteRadarrInstance(Guid id)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Radarr config and find the instance
+            var config = await _dataContext.RadarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Radarr instance with ID {id} not found");
+            }
+
+            // Remove the instance
+            config.Instances.Remove(instance);
+            await _dataContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete Radarr instance with ID {Id}", id);
+            return StatusCode(500, "Failed to delete Radarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpPost("lidarr/instances")]
+    public async Task<IActionResult> CreateLidarrInstance([FromBody] CreateArrInstanceDto newInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Lidarr config to add the instance to
+            var config = await _dataContext.LidarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            // Create the new instance
+            var instance = new ArrInstance
+            {
+                Name = newInstance.Name,
+                Url = new Uri(newInstance.Url),
+                ApiKey = newInstance.ApiKey
+            };
+
+            // Add to the config
+            config.Instances.Add(instance);
+            await _dataContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetLidarrConfig), new { id = instance.Id }, instance);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create Lidarr instance");
+            return StatusCode(500, "Failed to create Lidarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpPut("lidarr/instances/{id}")]
+    public async Task<IActionResult> UpdateLidarrInstance(Guid id, [FromBody] CreateArrInstanceDto updatedInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Lidarr config and find the instance
+            var config = await _dataContext.LidarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Lidarr instance with ID {id} not found");
+            }
+
+            // Update the instance properties
+            instance.Name = updatedInstance.Name;
+            instance.Url = new Uri(updatedInstance.Url);
+            instance.ApiKey = updatedInstance.ApiKey;
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(instance);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update Lidarr instance with ID {Id}", id);
+            return StatusCode(500, "Failed to update Lidarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpDelete("lidarr/instances/{id}")]
+    public async Task<IActionResult> DeleteLidarrInstance(Guid id)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Lidarr config and find the instance
+            var config = await _dataContext.LidarrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync();
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Lidarr instance with ID {id} not found");
+            }
+
+            // Remove the instance
+            config.Instances.Remove(instance);
+            await _dataContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete Lidarr instance with ID {Id}", id);
+            return StatusCode(500, "Failed to delete Lidarr instance");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
     }
 }
