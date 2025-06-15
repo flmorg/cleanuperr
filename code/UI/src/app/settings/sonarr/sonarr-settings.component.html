@@ -99,6 +99,8 @@
                 <div class="field-input">
                   <input type="text" pInputText formControlName="url" placeholder="http://localhost:8989" required />
                   <small *ngIf="hasInstanceFieldError(i, 'url', 'required')" class="p-error block">URL is required</small>
+                  <small *ngIf="hasInstanceFieldError(i, 'url', 'invalidUri')" class="p-error block">URL must be a valid URL</small>
+                  <small *ngIf="hasInstanceFieldError(i, 'url', 'invalidProtocol')" class="p-error block">URL must use http or https protocol</small>
                 </div>
               </div>
               

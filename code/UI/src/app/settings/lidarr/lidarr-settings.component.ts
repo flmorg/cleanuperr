@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnDestroy, Output, effect, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { LidarrConfigStore } from "./lidarr-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
@@ -95,6 +95,13 @@ export class LidarrSettingsComponent implements OnDestroy, CanComponentDeactivat
         this.updateFormFromConfig(config);
       }
     });
+
+    // Track form changes for dirty state
+    this.lidarrForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.hasActualChanges = this.formValuesChanged();
+      });
   }
 
   /**
@@ -126,7 +133,7 @@ export class LidarrSettingsComponent implements OnDestroy, CanComponentDeactivat
           this.formBuilder.group({
             id: [instance.id || ''],
             name: [instance.name, Validators.required],
-            url: [instance.url, Validators.required],
+            url: [instance.url, [Validators.required, this.uriValidator.bind(this)]],
             apiKey: [instance.apiKey, Validators.required],
           })
         );
@@ -213,11 +220,15 @@ export class LidarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     const instanceForm = this.formBuilder.group({
       id: [instance?.id || ''],
       name: [instance?.name || '', Validators.required],
-      url: [instance?.url?.toString() || '', Validators.required],
+      url: [instance?.url?.toString() || '', [Validators.required, this.uriValidator.bind(this)]],
       apiKey: [instance?.apiKey || '', Validators.required]
     });
     
     this.instances.push(instanceForm);
+    
+    // Mark form as dirty to enable save button
+    this.lidarrForm.markAsDirty();
+    this.hasActualChanges = this.formValuesChanged();
   }
 
   /**
@@ -249,7 +260,42 @@ export class LidarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     return this.instances.at(index) as FormGroup;
   }
 
-  // hasInstanceFieldError is implemented below
+  /**
+   * Check if an instance field has an error
+   * @param instanceIndex The index of the instance in the array
+   * @param fieldName The name of the field to check
+   * @param errorName The name of the error to check for
+   * @returns True if the field has the specified error
+   */
+  hasInstanceFieldError(instanceIndex: number, fieldName: string, errorName: string): boolean {
+    const instancesArray = this.lidarrForm.get('instances') as FormArray;
+    if (!instancesArray || !instancesArray.controls[instanceIndex]) return false;
+    
+    const control = (instancesArray.controls[instanceIndex] as FormGroup).get(fieldName);
+    return control !== null && control.hasError(errorName) && control.touched;
+  }
+
+  /**
+   * Custom validator to check if the input is a valid URI
+   */
+  private uriValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null; // Let required validator handle empty values
+    }
+    
+    try {
+      const url = new URL(control.value);
+      
+      // Check that we have a valid protocol (http or https)
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return { invalidProtocol: true };
+      }
+      
+      return null; // Valid URI
+    } catch (e) {
+      return { invalidUri: true }; // Invalid URI
+    }
+  }
 
   /**
    * Mark all controls in a form group as touched
@@ -272,21 +318,6 @@ export class LidarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    */
   hasError(controlName: string, errorName: string): boolean {
     const control = this.lidarrForm.get(controlName);
-    return control !== null && control.hasError(errorName) && control.touched;
-  }
-
-  /**
-   * Check if an instance field has an error
-   * @param instanceIndex The index of the instance in the array
-   * @param fieldName The name of the field to check
-   * @param errorName The name of the error to check for
-   * @returns True if the field has the specified error
-   */
-  hasInstanceFieldError(instanceIndex: number, fieldName: string, errorName: string): boolean {
-    const instancesArray = this.lidarrForm.get('instances') as FormArray;
-    if (!instancesArray || !instancesArray.controls[instanceIndex]) return false;
-    
-    const control = (instancesArray.controls[instanceIndex] as FormGroup).get(fieldName);
     return control !== null && control.hasError(errorName) && control.touched;
   }
 
