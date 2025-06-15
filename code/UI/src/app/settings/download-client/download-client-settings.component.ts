@@ -4,7 +4,7 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, Abs
 import { Subject, takeUntil } from "rxjs";
 import { DownloadClientConfigStore } from "./download-client-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
-import { ClientConfig, DownloadClientConfig } from "../../shared/models/download-client-config.model";
+import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../../shared/models/download-client-config.model";
 import { DownloadClientType } from "../../shared/models/enums";
 
 // PrimeNG Components
@@ -71,6 +71,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   downloadClientLoading = this.downloadClientStore.loading;
   downloadClientError = this.downloadClientStore.error;
   downloadClientSaving = this.downloadClientStore.saving;
+  pendingOperations = this.downloadClientStore.pendingOperations;
 
   /**
    * Get the clients form array
@@ -134,6 +135,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
         this.addClient(client);
       });
     }
+    // Don't automatically add an empty client - let the template handle the empty state
 
     // Store the original values for change detection
     this.storeOriginalValues();
@@ -209,10 +211,15 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     // Get the clients from the form
     const formClients = this.clients.getRawValue();
     
-    // Keep track of operations
-    let operationsCount = 0;
+    if (formClients.length === 0) {
+      this.notificationService.showSuccess('No clients to save');
+      return;
+    }
     
-    // Process each client
+    // Separate creates and updates
+    const creates: CreateDownloadClientDto[] = [];
+    const updates: Array<{ id: string, client: ClientConfig }> = [];
+    
     formClients.forEach((client: any) => {
       // Map the client type for backend compatibility
       const mappedType = this.mapClientTypeForBackend(client.type);
@@ -223,26 +230,20 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
       };
       
       if (client.id) {
-        // This is an existing client, use the individual update endpoint
-        operationsCount++;
-        this.downloadClientStore.updateClient({ id: client.id, client: backendClient });
+        // This is an existing client, prepare for update
+        updates.push({ id: client.id, client: backendClient });
       } else {
-        // This is a new client, create it (don't send ID)
-        operationsCount++;
+        // This is a new client, prepare for creation (don't send ID)
         const { id, ...clientWithoutId } = backendClient;
-        this.downloadClientStore.createClient(clientWithoutId);
+        creates.push(clientWithoutId as CreateDownloadClientDto);
       }
     });
     
-    // If we don't have any clients to process, show a message
-    if (operationsCount === 0) {
-      this.notificationService.showSuccess('No clients to save');
-      return;
-    }
+    // Use batch operations to handle everything at once
+    this.downloadClientStore.processBatchOperations({ creates, updates });
     
     // Monitor the saving state to show completion feedback
-    const savingSubscription = this.downloadClientSaving().valueOf() !== false ? 
-      this.monitorSavingCompletion() : null;
+    this.monitorSavingCompletion();
   }
 
   /**
@@ -253,19 +254,28 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     const checkSavingStatus = () => {
       const saving = this.downloadClientSaving();
       const error = this.downloadClientError();
+      const pendingOps = this.pendingOperations();
       
-      if (!saving) {
-        // Saving is complete
+      if (!saving && pendingOps === 0) {
+        // Operations are complete
         if (error) {
-          this.notificationService.showError(`Failed to save: ${error}`);
+          this.notificationService.showError(`Save completed with issues: ${error}`);
           this.error.emit(error);
+          // Don't mark as pristine if there were errors
         } else {
-          // Success
+          // Complete success
           this.notificationService.showSuccess('Download Client configuration saved successfully');
           this.saved.emit();
-          this.downloadClientForm.markAsPristine();
-          this.hasActualChanges = false;
-          this.storeOriginalValues();
+          
+          // Reload config from backend to ensure UI is in sync
+          this.downloadClientStore.loadConfig();
+          
+          // Reset form state after successful save
+          setTimeout(() => {
+            this.downloadClientForm.markAsPristine();
+            this.hasActualChanges = false;
+            this.storeOriginalValues();
+          }, 100);
         }
       } else {
         // Still saving, check again in a short while
@@ -362,7 +372,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     const clientForm = this.getClientAsFormGroup(index);
     const clientId = clientForm.get('id')?.value;
     
-    // If this is an existing client (has ID), delete it from the backend
+    // If this is an existing client (has ID), delete it from the backend immediately
     if (clientId) {
       this.downloadClientStore.deleteClient(clientId);
     }
@@ -370,10 +380,11 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     // Remove from the form array
     this.clients.removeAt(index);
     
-    // If no clients remain, add an empty one
-    if (this.clients.length === 0) {
-      this.addClient();
-    }
+    // Mark form as dirty to enable save button
+    this.downloadClientForm.markAsDirty();
+    this.hasActualChanges = this.formValuesChanged();
+    
+    // Don't automatically add an empty client - let users have a truly empty state
   }
 
   /**

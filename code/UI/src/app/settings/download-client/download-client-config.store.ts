@@ -3,20 +3,22 @@ import { patchState, signalStore, withHooks, withMethods, withState } from '@ngr
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from '../../shared/models/download-client-config.model';
 import { ConfigurationService } from '../../core/services/configuration.service';
-import { EMPTY, Observable, catchError, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, switchMap, tap, forkJoin, of } from 'rxjs';
 
 export interface DownloadClientConfigState {
   config: DownloadClientConfig | null;
   loading: boolean;
   saving: boolean;
   error: string | null;
+  pendingOperations: number;
 }
 
 const initialState: DownloadClientConfigState = {
   config: null,
   loading: false,
   saving: false,
-  error: null
+  error: null,
+  pendingOperations: 0
 };
 
 @Injectable()
@@ -91,6 +93,62 @@ export class DownloadClientConfigStore extends signalStore(
     },
     
     /**
+     * Batch create multiple clients
+     */
+    createClients: rxMethod<CreateDownloadClientDto[]>(
+      (clients$: Observable<CreateDownloadClientDto[]>) => clients$.pipe(
+        tap(() => patchState(store, { saving: true, error: null, pendingOperations: 0 })),
+        switchMap(clients => {
+          if (clients.length === 0) {
+            patchState(store, { saving: false });
+            return EMPTY;
+          }
+          
+          patchState(store, { pendingOperations: clients.length });
+          
+          // Create all clients in parallel
+          const createOperations = clients.map(client => 
+            configService.createDownloadClient(client).pipe(
+              catchError(error => {
+                console.error('Failed to create client:', error);
+                return of(null); // Return null for failed operations
+              })
+            )
+          );
+          
+          return forkJoin(createOperations).pipe(
+            tap({
+              next: (results) => {
+                const currentConfig = store.config();
+                if (currentConfig) {
+                  // Filter out failed operations (null results)
+                  const successfulClients = results.filter(client => client !== null) as ClientConfig[];
+                  const updatedClients = [...currentConfig.clients, ...successfulClients];
+                  
+                  const failedCount = results.filter(client => client === null).length;
+                  
+                  patchState(store, { 
+                    config: { clients: updatedClients },
+                    saving: false,
+                    pendingOperations: 0,
+                    error: failedCount > 0 ? `${failedCount} client(s) failed to create` : null
+                  });
+                }
+              },
+              error: (error) => {
+                patchState(store, { 
+                  saving: false,
+                  pendingOperations: 0,
+                  error: error.message || 'Failed to create clients' 
+                });
+              }
+            })
+          );
+        })
+      )
+    ),
+    
+    /**
      * Create a new download client
      */
     createClient: rxMethod<CreateDownloadClientDto>(
@@ -119,6 +177,71 @@ export class DownloadClientConfigStore extends signalStore(
           }),
           catchError(() => EMPTY)
         ))
+      )
+    ),
+    
+    /**
+     * Batch update multiple clients
+     */
+    updateClients: rxMethod<Array<{ id: string, client: ClientConfig }>>(
+      (updates$: Observable<Array<{ id: string, client: ClientConfig }>>) => updates$.pipe(
+        tap(() => patchState(store, { saving: true, error: null, pendingOperations: 0 })),
+        switchMap(updates => {
+          if (updates.length === 0) {
+            patchState(store, { saving: false });
+            return EMPTY;
+          }
+          
+          patchState(store, { pendingOperations: updates.length });
+          
+          // Update all clients in parallel
+          const updateOperations = updates.map(({ id, client }) => 
+            configService.updateDownloadClient(id, client).pipe(
+              catchError(error => {
+                console.error('Failed to update client:', error);
+                return of(null); // Return null for failed operations
+              })
+            )
+          );
+          
+          return forkJoin(updateOperations).pipe(
+            tap({
+              next: (results) => {
+                const currentConfig = store.config();
+                if (currentConfig) {
+                  let updatedClients = [...currentConfig.clients];
+                  let failedCount = 0;
+                  
+                  // Update successful results
+                  results.forEach((result, index) => {
+                    if (result !== null) {
+                      const clientIndex = updatedClients.findIndex(c => c.id === updates[index].id);
+                      if (clientIndex !== -1) {
+                        updatedClients[clientIndex] = result;
+                      }
+                    } else {
+                      failedCount++;
+                    }
+                  });
+                  
+                  patchState(store, { 
+                    config: { clients: updatedClients },
+                    saving: false,
+                    pendingOperations: 0,
+                    error: failedCount > 0 ? `${failedCount} client(s) failed to update` : null
+                  });
+                }
+              },
+              error: (error) => {
+                patchState(store, { 
+                  saving: false,
+                  pendingOperations: 0,
+                  error: error.message || 'Failed to update clients' 
+                });
+              }
+            })
+          );
+        })
       )
     ),
     
@@ -185,6 +308,96 @@ export class DownloadClientConfigStore extends signalStore(
           }),
           catchError(() => EMPTY)
         ))
+      )
+    ),
+    
+    /**
+     * Process mixed operations (creates and updates) in batch
+     */
+    processBatchOperations: rxMethod<{
+      creates: CreateDownloadClientDto[],
+      updates: Array<{ id: string, client: ClientConfig }>
+    }>(
+      (operations$: Observable<{
+        creates: CreateDownloadClientDto[],
+        updates: Array<{ id: string, client: ClientConfig }>
+      }>) => operations$.pipe(
+        tap(() => patchState(store, { saving: true, error: null, pendingOperations: 0 })),
+        switchMap(({ creates, updates }) => {
+          const totalOperations = creates.length + updates.length;
+          
+          if (totalOperations === 0) {
+            patchState(store, { saving: false });
+            return EMPTY;
+          }
+          
+          patchState(store, { pendingOperations: totalOperations });
+          
+          // Prepare all operations
+          const createOps = creates.map(client => 
+            configService.createDownloadClient(client).pipe(
+              catchError(error => {
+                console.error('Failed to create client:', error);
+                return of(null);
+              })
+            )
+          );
+          
+          const updateOps = updates.map(({ id, client }) => 
+            configService.updateDownloadClient(id, client).pipe(
+              catchError(error => {
+                console.error('Failed to update client:', error);
+                return of(null);
+              })
+            )
+          );
+          
+          // Execute all operations in parallel
+          return forkJoin([...createOps, ...updateOps]).pipe(
+            tap({
+              next: (results) => {
+                const currentConfig = store.config();
+                if (currentConfig) {
+                  let updatedClients = [...currentConfig.clients];
+                  let failedCount = 0;
+                  
+                  // Process create results
+                  const createResults = results.slice(0, creates.length);
+                  const successfulCreates = createResults.filter(client => client !== null) as ClientConfig[];
+                  updatedClients = [...updatedClients, ...successfulCreates];
+                  failedCount += createResults.filter(client => client === null).length;
+                  
+                  // Process update results
+                  const updateResults = results.slice(creates.length);
+                  updateResults.forEach((result, index) => {
+                    if (result !== null) {
+                      const clientIndex = updatedClients.findIndex(c => c.id === updates[index].id);
+                      if (clientIndex !== -1) {
+                        updatedClients[clientIndex] = result as ClientConfig;
+                      }
+                    } else {
+                      failedCount++;
+                    }
+                  });
+                  
+                  patchState(store, { 
+                    config: { clients: updatedClients },
+                    saving: false,
+                    pendingOperations: 0,
+                    error: failedCount > 0 ? `${failedCount} operation(s) failed` : null
+                  });
+                }
+              },
+              error: (error) => {
+                patchState(store, { 
+                  saving: false,
+                  pendingOperations: 0,
+                  error: error.message || 'Failed to process operations' 
+                });
+              }
+            })
+          );
+        })
       )
     )
   })),
