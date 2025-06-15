@@ -9,6 +9,7 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { FormsModule } from '@angular/forms';
 import { MenuModule } from 'primeng/menu';
 import { SidebarModule } from 'primeng/sidebar';
+import { DrawerModule } from 'primeng/drawer';
 import { DividerModule } from 'primeng/divider';
 import { RippleModule } from 'primeng/ripple';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -35,6 +36,7 @@ interface MenuItem {
     FormsModule,
     MenuModule,
     SidebarModule,
+    DrawerModule,
     DividerModule,
     RippleModule,
     ConfirmDialogModule,

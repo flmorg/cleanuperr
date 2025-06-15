@@ -66,22 +66,24 @@
   </div>
   
   <!-- Mobile Sidebar using PrimeNG sidebar component -->
-  <p-sidebar 
+  <p-drawer 
     styleClass="mobile-sidebar" 
     [visible]="mobileSidebarVisible()" 
     (visibleChange)="mobileSidebarVisible.set($event)" 
     [dismissible]="true" 
-    [showCloseIcon]="false" 
+    [showCloseIcon]="false"
     position="left">
-    <div class="mobile-sidebar-content">
-      <div class="sidebar-top-line"></div>
-      
-      <!-- Shared Sidebar Content for Mobile -->
-      <app-sidebar-content 
-        [menuItems]="menuItems" 
-        [isMobile]="true"
-        (navItemClicked)="mobileSidebarVisible.set(false)">
-      </app-sidebar-content>
-    </div>
-  </p-sidebar>
+    <ng-template #headless>
+      <div class="mobile-sidebar-content">
+        <div class="sidebar-top-line"></div>
+        
+        <!-- Shared Sidebar Content for Mobile -->
+        <app-sidebar-content 
+          [menuItems]="menuItems" 
+          [isMobile]="true"
+          (navItemClicked)="mobileSidebarVisible.set(false)">
+        </app-sidebar-content>
+      </div>
+    </ng-template>
+  </p-drawer>
 </div>
