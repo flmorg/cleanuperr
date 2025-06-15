@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
-import { DatePipe, NgFor, NgIf, NgClass } from '@angular/common';
+import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -28,7 +28,6 @@ import { MenuItem } from 'primeng/api';
   imports: [
     NgFor,
     NgIf,
-    NgClass,
     DatePipe,
     FormsModule,
     TableModule,

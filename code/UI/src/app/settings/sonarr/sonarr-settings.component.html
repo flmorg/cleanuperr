@@ -49,24 +49,6 @@
         </div>
       </div>
 
-      <div class="field-row">
-        <label class="field-label">Search Type</label>
-        <div>
-          <div class="field-input">
-            <p-select
-              formControlName="searchType"
-              [options]="searchTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select search type"
-              appendTo="body"
-            ></p-select>
-          </div>
-          <small *ngIf="hasError('searchType', 'required')" class="p-error">Search type is required</small>
-          <small class="form-helper-text">Type of search used by Sonarr</small>
-        </div>
-      </div>
-
       <!-- Instances Section -->
       <div class="section-header mt-4">
         <h3>Sonarr Instances</h3>

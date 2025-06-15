@@ -1,4 +1,5 @@
 using Common.Helpers;
+using Data.Converters;
 using Data.Models.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -44,19 +45,18 @@ public class EventsContext : DbContext
 
             foreach (var property in enumProperties)
             {
+                var enumType = property.PropertyType.IsEnum 
+                    ? property.PropertyType 
+                    : property.PropertyType.GetGenericArguments()[0];
+
+                var converterType = typeof(LowercaseEnumConverter<>).MakeGenericType(enumType);
+                var converter = Activator.CreateInstance(converterType);
+
                 modelBuilder.Entity(entityType.ClrType)
                     .Property(property.Name)
-                    .HasConversion<string>();
+                    .HasConversion((ValueConverter)converter);
             }
         }
-    }
-    
-    public class UtcDateTimeConverter : ValueConverter<DateTime, DateTime>
-    {
-        public UtcDateTimeConverter() : base(
-            v => v,
-            v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
-        ) {}
     }
     
     public static string GetLikePattern(string input)

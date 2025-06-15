@@ -5,7 +5,9 @@ using Data.Models.Configuration.General;
 using Data.Models.Configuration.Notification;
 using Data.Models.Configuration.QueueCleaner;
 using Common.Helpers;
+using Data.Converters;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Data;
 
@@ -66,9 +68,16 @@ public class DataContext : DbContext
 
             foreach (var property in enumProperties)
             {
+                var enumType = property.PropertyType.IsEnum 
+                    ? property.PropertyType 
+                    : property.PropertyType.GetGenericArguments()[0];
+
+                var converterType = typeof(LowercaseEnumConverter<>).MakeGenericType(enumType);
+                var converter = Activator.CreateInstance(converterType);
+
                 modelBuilder.Entity(entityType.ClrType)
                     .Property(property.Name)
-                    .HasConversion<string>();
+                    .HasConversion((ValueConverter)converter);
             }
         }
     }

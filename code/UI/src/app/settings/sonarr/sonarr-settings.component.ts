@@ -4,7 +4,7 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, Abs
 import { Subject, takeUntil } from "rxjs";
 import { SonarrConfigStore } from "./sonarr-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
-import { SonarrConfig, SonarrSearchType } from "../../shared/models/sonarr-config.model";
+import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { CreateArrInstanceDto, ArrInstance } from "../../shared/models/arr-config.model";
 
 // PrimeNG Components
@@ -52,13 +52,6 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   // Track whether the form has actual changes compared to original values
   hasActualChanges = false;
 
-  // SonarrSearchType options
-  searchTypeOptions = [
-    { label: "Episode", value: SonarrSearchType.Episode },
-    { label: "Season", value: SonarrSearchType.Season },
-    { label: "Series", value: SonarrSearchType.Series },
-  ];
-
   // Clean up subscriptions
   private destroy$ = new Subject<void>();
 
@@ -87,7 +80,6 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     this.sonarrForm = this.formBuilder.group({
       enabled: [false],
       failedImportMaxStrikes: [-1],
-      searchType: [SonarrSearchType.Episode, Validators.required],
     });
 
     // Add instances FormArray to main form
@@ -128,7 +120,6 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     this.sonarrForm.patchValue({
       enabled: config.enabled,
       failedImportMaxStrikes: config.failedImportMaxStrikes,
-      searchType: config.searchType,
     });
 
     // Clear and rebuild the instances form array
@@ -210,14 +201,11 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    */
   private updateMainControlsState(enabled: boolean): void {
     const failedImportMaxStrikesControl = this.sonarrForm.get('failedImportMaxStrikes');
-    const searchTypeControl = this.sonarrForm.get('searchType');
 
     if (enabled) {
       failedImportMaxStrikesControl?.enable();
-      searchTypeControl?.enable();
     } else {
       failedImportMaxStrikesControl?.disable();
-      searchTypeControl?.disable();
     }
   }
 
@@ -355,8 +343,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     const updatedConfig: SonarrConfig = {
       ...currentConfig,
       enabled: this.sonarrForm.get('enabled')?.value,
-      failedImportMaxStrikes: this.sonarrForm.get('failedImportMaxStrikes')?.value,
-      searchType: this.sonarrForm.get('searchType')?.value
+      failedImportMaxStrikes: this.sonarrForm.get('failedImportMaxStrikes')?.value
     };
 
     // Get the instances from the form
@@ -449,8 +436,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     // Reset main config to defaults
     this.sonarrForm.patchValue({
       enabled: false,
-      failedImportMaxStrikes: -1,
-      searchType: SonarrSearchType.Episode
+      failedImportMaxStrikes: -1
     });
     
     // Check if this reset actually changes anything compared to the original state
