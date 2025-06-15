@@ -231,30 +231,19 @@ public abstract class GenericHandler : IHandler
     
     protected SearchItem GetRecordSearchItem(InstanceType type, QueueRecord record, bool isPack = false)
     {
-        var sonarrConfig = ContextProvider.Get<SonarrConfig>(nameof(SonarrConfig));
         return type switch
         {
-            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Episode && !isPack => new SonarrSearchItem
+            InstanceType.Sonarr when !isPack => new SonarrSearchItem
             {
                 Id = record.EpisodeId,
                 SeriesId = record.SeriesId,
                 SearchType = SonarrSearchType.Episode
             },
-            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Episode && isPack => new SonarrSearchItem
+            InstanceType.Sonarr when isPack => new SonarrSearchItem
             {
                 Id = record.SeasonNumber,
                 SeriesId = record.SeriesId,
                 SearchType = SonarrSearchType.Season
-            },
-            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Season => new SonarrSearchItem
-            {
-                Id = record.SeasonNumber,
-                SeriesId = record.SeriesId,
-                SearchType = SonarrSearchType.Series
-            },
-            InstanceType.Sonarr when sonarrConfig.SearchType is SonarrSearchType.Series => new SonarrSearchItem
-            {
-                Id = record.SeriesId
             },
             InstanceType.Radarr => new SearchItem
             {

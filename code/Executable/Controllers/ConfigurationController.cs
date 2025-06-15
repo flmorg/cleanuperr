@@ -422,7 +422,6 @@ public class ConfigurationController : ControllerBase
 
             config.Enabled = newConfigDto.Enabled;
             config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
-            config.SearchType = newConfigDto.SearchType;
 
             // Validate the configuration
             config.Validate();
@@ -587,8 +586,7 @@ public class ConfigurationController : ControllerBase
             {
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
-                ApiKey = newInstance.ApiKey,
-                ArrConfigId = config.Id
+                ApiKey = newInstance.ApiKey
             };
             
             // Add to the config

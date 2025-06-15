@@ -11,8 +11,6 @@ public record UpdateSonarrConfigDto
     public bool Enabled { get; init; }
     
     public short FailedImportMaxStrikes { get; init; } = -1;
-    
-    public SonarrSearchType SearchType { get; init; }
 }
 
 /// <summary>
