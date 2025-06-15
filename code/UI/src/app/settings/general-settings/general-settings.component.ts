@@ -52,6 +52,9 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   // Original form values for tracking changes
   private originalFormValues: any;
   
+  // Track whether the form has actual changes compared to original values
+  hasActualChanges = false;
+  
   // Log level options for dropdown
   logLevelOptions = [
     { label: "Verbose", value: LogEventLevel.Verbose },
@@ -109,8 +112,17 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
       if (config) {
         this.generalForm.patchValue(config);
         this.storeOriginalValues();
+        this.generalForm.markAsPristine();
+        this.hasActualChanges = false;
       }
     });
+
+    // Track form changes for dirty state
+    this.generalForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.hasActualChanges = this.formValuesChanged();
+      });
 
     // Setup effect to react to error changes
     // Only emit errors to parent components, don't show toast
@@ -135,10 +147,49 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   }
 
   /**
+   * Check if the current form values are different from the original values
+   */
+  private formValuesChanged(): boolean {
+    return !this.isEqual(this.generalForm.value, this.originalFormValues);
+  }
+
+  /**
+   * Deep compare two objects for equality
+   */
+  private isEqual(obj1: any, obj2: any): boolean {
+    if (obj1 === obj2) return true;
+    if (obj1 === null || obj2 === null) return false;
+    if (obj1 === undefined || obj2 === undefined) return false;
+    
+    if (typeof obj1 !== 'object' && typeof obj2 !== 'object') {
+      return obj1 === obj2;
+    }
+    
+    if (Array.isArray(obj1) && Array.isArray(obj2)) {
+      if (obj1.length !== obj2.length) return false;
+      for (let i = 0; i < obj1.length; i++) {
+        if (!this.isEqual(obj1[i], obj2[i])) return false;
+      }
+      return true;
+    }
+    
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+    
+    if (keys1.length !== keys2.length) return false;
+    
+    for (const key of keys1) {
+      if (!this.isEqual(obj1[key], obj2[key])) return false;
+    }
+    
+    return true;
+  }
+
+  /**
    * Store original form values for dirty checking
    */
   private storeOriginalValues(): void {
-    this.originalFormValues = { ...this.generalForm.value };
+    this.originalFormValues = JSON.parse(JSON.stringify(this.generalForm.value));
   }
 
   /**
@@ -148,6 +199,11 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
     if (this.generalForm.invalid) {
       this.markFormGroupTouched(this.generalForm);
       this.notificationService.showValidationError();
+      return;
+    }
+
+    if (!this.hasActualChanges) {
+      this.notificationService.showSuccess('No changes detected');
       return;
     }
 
@@ -175,8 +231,9 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
       if (!loading && !error) {
         // Mark form as pristine after successful save
         this.generalForm.markAsPristine();
-        // Update original values reference
-        this.storeOriginalValues();
+        this.hasActualChanges = false;
+        // Original values will be updated automatically when the config effect runs after store reload
+        
         // Emit saved event
         this.saved.emit();
         // Show success message
@@ -208,8 +265,18 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
       ignoredDownloads: [],
     });
     
-    // Mark form as dirty so the save button is enabled after reset
-    this.generalForm.markAsDirty();
+    // Check if this reset actually changes anything compared to the original state
+    const hasChangesAfterReset = this.formValuesChanged();
+    
+    if (hasChangesAfterReset) {
+      // Only mark as dirty if the reset actually changes something
+      this.generalForm.markAsDirty();
+      this.hasActualChanges = true;
+    } else {
+      // If reset brings us back to original state, mark as pristine
+      this.generalForm.markAsPristine();
+      this.hasActualChanges = false;
+    }
   }
 
   /**

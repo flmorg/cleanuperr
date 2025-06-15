@@ -78,6 +78,8 @@
             formControlName="httpCertificateValidation"
             inputId="httpCertificateValidation"
             [options]="certificateValidationOptions"
+            optionLabel="label"
+            optionValue="value"
           ></p-select>
           <small class="form-helper-text">Enable or disable certificate validation for HTTP requests</small>
         </div>
@@ -114,7 +116,13 @@
       <div class="field-row">
         <label class="field-label">Log Level</label>
         <div class="field-input">
-          <p-select formControlName="logLevel" inputId="logLevel" [options]="logLevelOptions"></p-select>
+          <p-select 
+            formControlName="logLevel" 
+            inputId="logLevel" 
+            [options]="logLevelOptions"
+            optionLabel="label"
+            optionValue="value"
+          ></p-select>
           <small class="form-helper-text">Select the minimum log level to display</small>
         </div>
       </div>
@@ -143,7 +151,7 @@
           label="Save"
           icon="pi pi-save"
           class="p-button-primary"
-          [disabled]="generalForm.pristine || generalSaving()"
+          [disabled]="(!generalForm.dirty || !hasActualChanges) || generalForm.invalid || generalSaving()"
           [loading]="generalSaving()"
           (click)="saveGeneralConfig()"
         ></button>

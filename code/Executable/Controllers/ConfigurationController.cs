@@ -376,8 +376,12 @@ public class ConfigurationController : ControllerBase
             var oldConfig = await _dataContext.GeneralConfigs
                 .FirstAsync();
 
-            // Apply updates from DTO
-            newConfig.Adapt(oldConfig);
+            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            var config = new TypeAdapterConfig();
+            config.NewConfig<GeneralConfig, GeneralConfig>()
+                .Ignore(dest => dest.Id);
+            
+            newConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();

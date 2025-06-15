@@ -68,7 +68,7 @@ export class GeneralConfigStore {
     this.http.put<any>(`${this.baseUrl}/api/configuration/general`, config)
       .pipe(
         tap(() => {
-          this._config.set(config);
+          // Don't set config - let the form stay as-is with string enum values
           this._error.set(null);
         }),
         catchError((error: HttpErrorResponse) => {
