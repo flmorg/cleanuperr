@@ -417,30 +417,15 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get existing config
-            var oldConfig = await _dataContext.SonarrConfigs
-                .Include(x => x.Instances)
+            var config = await _dataContext.SonarrConfigs
                 .FirstAsync();
 
-            // Create new config with updated basic settings only (instances managed separately)
-            var updatedConfig = new SonarrConfig
-            {
-                Id = oldConfig.Id, // Keep the existing ID
-                Enabled = newConfigDto.Enabled,
-                FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
-                SearchType = newConfigDto.SearchType,
-                Instances = oldConfig.Instances // Keep existing instances unchanged
-            };
+            config.Enabled = newConfigDto.Enabled;
+            config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
+            config.SearchType = newConfigDto.SearchType;
 
             // Validate the configuration
-            updatedConfig.Validate();
-
-            // Update the existing entity using Mapster, excluding the ID
-            var config = new TypeAdapterConfig();
-            config.NewConfig<SonarrConfig, SonarrConfig>()
-                .Ignore(dest => dest.Id)
-                .Ignore(dest => dest.Instances); // Don't update instances here
-            
-            updatedConfig.Adapt(oldConfig, config);
+            config.Validate();
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -602,11 +587,13 @@ public class ConfigurationController : ControllerBase
             {
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
-                ApiKey = newInstance.ApiKey
+                ApiKey = newInstance.ApiKey,
+                ArrConfigId = config.Id
             };
-
+            
             // Add to the config
-            config.Instances.Add(instance);
+            // config.Instances.Add(instance);
+            _dataContext.ArrInstances.Add(instance);
             await _dataContext.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetSonarrConfig), new { id = instance.Id }, instance);

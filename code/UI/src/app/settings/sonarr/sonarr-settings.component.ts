@@ -387,13 +387,11 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
       }
     });
     
-    // Save main config first, then handle instances
-    this.sonarrStore.saveConfig(updatedConfig);
-    
-    // Handle instance operations if there are any
-    if (creates.length > 0 || updates.length > 0) {
-      this.sonarrStore.processBatchInstanceOperations({ creates, updates, deletes: [] });
-    }
+    // Use the new method that saves config and processes instances sequentially
+    this.sonarrStore.saveConfigAndInstances({
+      config: updatedConfig,
+      instanceOperations: { creates, updates, deletes: [] }
+    });
     
     // Monitor the saving state to show completion feedback
     this.monitorSavingCompletion();

@@ -30,6 +30,8 @@ public class DataContext : DbContext
     
     public DbSet<LidarrConfig> LidarrConfigs { get; set; }
     
+    public DbSet<ArrInstance> ArrInstances { get; set; }
+    
     public DbSet<AppriseConfig> AppriseConfigs { get; set; }
     
     public DbSet<NotifiarrConfig> NotifiarrConfigs { get; set; }

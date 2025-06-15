@@ -377,16 +377,11 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
       }
     });
     
-    // Save main config first, then handle instances
-    this.radarrStore.saveConfig(updatedConfig);
-    
-    // Handle instance operations if there are any
-    if (creates.length > 0) {
-      creates.forEach(instance => this.radarrStore.createInstance(instance));
-    }
-    if (updates.length > 0) {
-      updates.forEach(({ id, instance }) => this.radarrStore.updateInstance({ id, instance }));
-    }
+    // Use the new method that saves config and processes instances sequentially
+    this.radarrStore.saveConfigAndInstances({
+      config: updatedConfig,
+      instanceOperations: { creates, updates, deletes: [] }
+    });
     
     // Monitor the saving state to show completion feedback
     this.monitorSavingCompletion();

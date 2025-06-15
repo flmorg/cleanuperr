@@ -7,13 +7,13 @@ public abstract class ArrConfig : IConfig
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
     
-    public bool Enabled { get; init; }
+    public bool Enabled { get; set; }
 
-    public short FailedImportMaxStrikes { get; init; } = -1;
+    public short FailedImportMaxStrikes { get; set; } = -1;
     
-    public List<ArrInstance> Instances { get; init; } = [];
+    public List<ArrInstance> Instances { get; set; } = [];
 
     public abstract void Validate();
 }

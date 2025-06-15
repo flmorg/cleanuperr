@@ -190,6 +190,141 @@ export class LidarrConfigStore extends signalStore(
           catchError(() => EMPTY)
         ))
       )
+    ),
+
+    /**
+     * Save config and then process instance operations sequentially
+     */
+    saveConfigAndInstances: rxMethod<{
+      config: LidarrConfig,
+      instanceOperations: {
+        creates: CreateArrInstanceDto[],
+        updates: Array<{ id: string, instance: CreateArrInstanceDto }>,
+        deletes: string[]
+      }
+    }>(
+      (params$: Observable<{
+        config: LidarrConfig,
+        instanceOperations: {
+          creates: CreateArrInstanceDto[],
+          updates: Array<{ id: string, instance: CreateArrInstanceDto }>,
+          deletes: string[]
+        }
+      }>) => params$.pipe(
+        tap(() => patchState(store, { saving: true, error: null })),
+        switchMap(({ config, instanceOperations }) => {
+          // First save the main config
+          return configService.updateLidarrConfig(config).pipe(
+            tap(() => {
+              patchState(store, { config });
+            }),
+            switchMap(() => {
+              // Then process instance operations if any
+              const { creates, updates, deletes } = instanceOperations;
+              const totalOperations = creates.length + updates.length + deletes.length;
+              
+              if (totalOperations === 0) {
+                patchState(store, { saving: false });
+                return EMPTY;
+              }
+              
+              patchState(store, { instanceOperations: totalOperations });
+              
+              // Prepare all operations
+              const createOps = creates.map(instance => 
+                configService.createLidarrInstance(instance).pipe(
+                  catchError(error => {
+                    console.error('Failed to create Lidarr instance:', error);
+                    return of(null);
+                  })
+                )
+              );
+              
+              const updateOps = updates.map(({ id, instance }) => 
+                configService.updateLidarrInstance(id, instance).pipe(
+                  catchError(error => {
+                    console.error('Failed to update Lidarr instance:', error);
+                    return of(null);
+                  })
+                )
+              );
+              
+              const deleteOps = deletes.map(id => 
+                configService.deleteLidarrInstance(id).pipe(
+                  catchError(error => {
+                    console.error('Failed to delete Lidarr instance:', error);
+                    return of(null);
+                  })
+                )
+              );
+              
+              // Execute all operations in parallel
+              return forkJoin([...createOps, ...updateOps, ...deleteOps]).pipe(
+                tap({
+                  next: (results) => {
+                    const currentConfig = store.config();
+                    if (currentConfig) {
+                      let updatedInstances = [...currentConfig.instances];
+                      let failedCount = 0;
+                      
+                      // Process create results
+                      const createResults = results.slice(0, creates.length);
+                      const successfulCreates = createResults.filter(instance => instance !== null) as ArrInstance[];
+                      updatedInstances = [...updatedInstances, ...successfulCreates];
+                      failedCount += createResults.filter(instance => instance === null).length;
+                      
+                      // Process update results
+                      const updateResults = results.slice(creates.length, creates.length + updates.length);
+                      updateResults.forEach((result, index) => {
+                        if (result !== null) {
+                          const instanceIndex = updatedInstances.findIndex(inst => inst.id === updates[index].id);
+                          if (instanceIndex !== -1) {
+                            updatedInstances[instanceIndex] = result as ArrInstance;
+                          }
+                        } else {
+                          failedCount++;
+                        }
+                      });
+                      
+                      // Process delete results
+                      const deleteResults = results.slice(creates.length + updates.length);
+                      deleteResults.forEach((result, index) => {
+                        if (result !== null) {
+                          // Delete was successful, remove from array
+                          updatedInstances = updatedInstances.filter(inst => inst.id !== deletes[index]);
+                        } else {
+                          failedCount++;
+                        }
+                      });
+                      
+                      patchState(store, { 
+                        config: { ...currentConfig, instances: updatedInstances },
+                        saving: false,
+                        instanceOperations: 0,
+                        error: failedCount > 0 ? `${failedCount} operation(s) failed` : null
+                      });
+                    }
+                  },
+                  error: (error) => {
+                    patchState(store, { 
+                      saving: false,
+                      instanceOperations: 0,
+                      error: error.message || 'Failed to process instance operations' 
+                    });
+                  }
+                })
+              );
+            }),
+            catchError((error) => {
+              patchState(store, { 
+                saving: false,
+                error: error.message || 'Failed to save Lidarr configuration' 
+              });
+              return EMPTY;
+            })
+          );
+        })
+      )
     )
   })),
   withHooks({

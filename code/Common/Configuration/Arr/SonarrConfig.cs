@@ -2,7 +2,7 @@
 
 public sealed class SonarrConfig : ArrConfig
 {
-    public SonarrSearchType SearchType { get; init; } = SonarrSearchType.Episode;
+    public SonarrSearchType SearchType { get; set; } = SonarrSearchType.Episode;
     
     public override void Validate()
     {
