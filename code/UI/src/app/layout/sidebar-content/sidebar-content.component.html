@@ -28,11 +28,40 @@
       </div>
       <span>Dashboard</span>
     </a>
+  </div>
+
+  <!-- Settings Group -->
+  <div class="nav-group">
+    <div class="nav-group-title">Settings</div>
+    <a [routerLink]="['/sonarr']" class="nav-item" [class.active]="router.url.includes('/sonarr')" (click)="onNavItemClick()">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-cog"></i>
+      </div>
+      <span>Sonarr</span>
+    </a>
+    <a [routerLink]="['/radarr']" class="nav-item" [class.active]="router.url.includes('/radarr')" (click)="onNavItemClick()">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-cog"></i>
+      </div>
+      <span>Radarr</span>
+    </a>
+    <a [routerLink]="['/lidarr']" class="nav-item" [class.active]="router.url.includes('/lidarr')" (click)="onNavItemClick()">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-cog"></i>
+      </div>
+      <span>Lidarr</span>
+    </a>
+    <a [routerLink]="['/download-clients']" class="nav-item" [class.active]="router.url.includes('/download-clients')" (click)="onNavItemClick()">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-cog"></i>
+      </div>
+      <span>Download Clients</span>
+    </a>
     <a [routerLink]="['/settings']" class="nav-item" [class.active]="router.url.includes('/settings')" (click)="onNavItemClick()">
       <div class="nav-icon-wrapper">
         <i class="pi pi-cog"></i>
       </div>
-      <span>Settings</span>
+      <span>Cleanup</span>
     </a>
   </div>
   
