@@ -58,6 +58,15 @@ public class DataContext : DbContext
             entity.ComplexProperty(e => e.ContentBlocker);
         });
         
+        // Configure ArrConfig -> ArrInstance relationship
+        modelBuilder.Entity<ArrConfig>(entity =>
+        {
+            entity.HasMany(a => a.Instances)
+                  .WithOne(i => i.ArrConfig)
+                  .HasForeignKey(i => i.ArrConfigId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+        
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             var enumProperties = entityType.ClrType.GetProperties()

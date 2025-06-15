@@ -133,10 +133,10 @@ export class ConfigurationService {
     );
   }
   /**
-   * Update Sonarr configuration
+   * Update Sonarr configuration (global settings only)
    */
-  updateSonarrConfig(config: SonarrConfig): Observable<SonarrConfig> {
-    return this.http.put<SonarrConfig>(`${this.apiUrl}/api/configuration/sonarr`, config).pipe(
+  updateSonarrConfig(config: {enabled: boolean, failedImportMaxStrikes: number}): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/api/configuration/sonarr`, config).pipe(
       catchError((error) => {
         console.error("Error updating Sonarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Sonarr configuration"));

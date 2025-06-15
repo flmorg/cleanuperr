@@ -49,18 +49,22 @@ export class SonarrConfigStore extends signalStore(
     ),
     
     /**
-     * Save the Sonarr configuration
+     * Save the Sonarr global configuration
      */
-    saveConfig: rxMethod<SonarrConfig>(
-      (config$: Observable<SonarrConfig>) => config$.pipe(
+    saveConfig: rxMethod<{enabled: boolean, failedImportMaxStrikes: number}>(
+      (globalConfig$: Observable<{enabled: boolean, failedImportMaxStrikes: number}>) => globalConfig$.pipe(
         tap(() => patchState(store, { saving: true, error: null })),
-        switchMap(config => configService.updateSonarrConfig(config).pipe(
+        switchMap(globalConfig => configService.updateSonarrConfig(globalConfig).pipe(
           tap({
             next: () => {
-              patchState(store, { 
-                config, 
-                saving: false 
-              });
+              const currentConfig = store.config();
+              if (currentConfig) {
+                // Update the local config with the new global settings
+                patchState(store, { 
+                  config: { ...currentConfig, ...globalConfig }, 
+                  saving: false 
+                });
+              }
             },
             error: (error) => {
               patchState(store, { 

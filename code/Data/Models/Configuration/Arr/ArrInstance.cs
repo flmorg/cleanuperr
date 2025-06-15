@@ -12,7 +12,7 @@ public sealed class ArrInstance
     
     public Guid ArrConfigId { get; set; }
     
-    public ArrConfig ArrConfig { get; set; }
+    public ArrConfig? ArrConfig { get; set; }
     
     public required string Name { get; set; }
     

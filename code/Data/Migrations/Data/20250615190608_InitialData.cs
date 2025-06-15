@@ -202,7 +202,7 @@ namespace Data.Migrations.Data
                         principalTable: "download_cleaner_configs",
                         principalColumn: "id");
                 });
-
+            
             migrationBuilder.InsertData(
                 table: "queue_cleaner_configs",
                 columns: new[]

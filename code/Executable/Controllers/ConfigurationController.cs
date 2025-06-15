@@ -228,9 +228,10 @@ public class ConfigurationController : ControllerBase
         try
         {
             var config = await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
                 .AsNoTracking()
                 .FirstAsync(x => x.Type == InstanceType.Sonarr);
-            return Ok(config);
+            return Ok(config.Adapt<ArrConfigDto>());
         }
         finally
         {
@@ -577,7 +578,6 @@ public class ConfigurationController : ControllerBase
         {
             // Get the Sonarr config to add the instance to
             var config = await _dataContext.ArrConfigs
-                .Include(c => c.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Sonarr);
 
             // Create the new instance
@@ -585,14 +585,17 @@ public class ConfigurationController : ControllerBase
             {
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
-                ApiKey = newInstance.ApiKey
+                ApiKey = newInstance.ApiKey,
+                ArrConfigId = config.Id,
             };
             
-            // Add to the config
-            config.Instances.Add(instance);
+            // Add to the config's instances collection
+            // config.Instances.Add(instance);
+            await _dataContext.ArrInstances.AddAsync(instance);
+            // Save changes
             await _dataContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetSonarrConfig), new { id = instance.Id }, instance);
+            return CreatedAtAction(nameof(GetSonarrConfig), new { id = instance.Id }, instance.Adapt<ArrInstanceDto>());
         }
         catch (Exception ex)
         {
@@ -629,7 +632,7 @@ public class ConfigurationController : ControllerBase
 
             await _dataContext.SaveChangesAsync();
 
-            return Ok(instance);
+            return Ok(instance.Adapt<ArrInstanceDto>());
         }
         catch (Exception ex)
         {
@@ -692,7 +695,9 @@ public class ConfigurationController : ControllerBase
             {
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
-                ApiKey = newInstance.ApiKey
+                ApiKey = newInstance.ApiKey,
+                ArrConfigId = config.Id,
+                ArrConfig = config // Set the navigation property
             };
             
             // Add to the config
@@ -799,7 +804,9 @@ public class ConfigurationController : ControllerBase
             {
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
-                ApiKey = newInstance.ApiKey
+                ApiKey = newInstance.ApiKey,
+                ArrConfigId = config.Id,
+                ArrConfig = config // Set the navigation property
             };
 
             // Add to the config
