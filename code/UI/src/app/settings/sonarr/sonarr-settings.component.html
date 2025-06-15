@@ -1,25 +1,33 @@
-<div class="sonarr-settings-container">
+<div class="settings-container">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h1>Sonarr</h1>
+  </div>
+
   <!-- Loading/Error State Component -->
-  <app-loading-error-state
-    *ngIf="sonarrLoading() || sonarrError()"
-    [loading]="sonarrLoading()"
-    [error]="sonarrError()"
-    loadingMessage="Loading settings..."
-    errorMessage="Could not connect to server"
-  ></app-loading-error-state>
+  <div class="mb-4">
+    <app-loading-error-state
+      *ngIf="sonarrLoading() || sonarrError()"
+      [loading]="sonarrLoading()"
+      [error]="sonarrError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+  </div>
 
   <!-- Content - only shown when not loading and no error -->
-  <div *ngIf="!sonarrLoading() && !sonarrError()" class="cards-container">
+  <div *ngIf="!sonarrLoading() && !sonarrError()">
     
     <!-- Global Configuration Card -->
-    <p-card styleClass="settings-card">
+    <p-card styleClass="settings-card mb-4">
       <ng-template pTemplate="header">
-        <div class="card-header">
+        <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
           <div class="header-title-container">
-            <h3 class="card-title">Global Settings</h3>
+            <h2 class="card-title m-0">Global Settings</h2>
             <span class="card-subtitle">Configure general Sonarr integration settings</span>
           </div>
-          <i class="pi pi-cog text-xl"></i>
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-cog text-xl"></i>
+          </div>
         </div>
       </ng-template>
 
@@ -55,7 +63,7 @@
           <button
             pButton
             type="button"
-            label="Save Global Settings"
+            label="Save"
             icon="pi pi-save"
             class="p-button-primary"
             [disabled]="!globalForm.dirty || !hasGlobalChanges || globalForm.invalid || sonarrSaving()"
@@ -67,35 +75,21 @@
     </p-card>
 
     <!-- Instance Management Card -->
-    <p-card styleClass="settings-card">
+    <p-card styleClass="settings-card mb-4">
       <ng-template pTemplate="header">
-        <div class="card-header">
+        <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
           <div class="header-title-container">
-            <h3 class="card-title">Sonarr Instances</h3>
-            <span class="card-subtitle">Manage multiple Sonarr server instances</span>
+            <h2 class="card-title m-0">Instances</h2>
+            <span class="card-subtitle">Manage Sonarr server instances</span>
           </div>
-          <button 
-            pButton 
-            type="button" 
-            icon="pi pi-plus" 
-            label="Add Instance"
-            class="p-button-outlined"
-            [disabled]="instanceManagementDisabled"
-            (click)="openAddInstanceModal()"
-          ></button>
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-cog text-xl"></i>
+          </div>
         </div>
       </ng-template>
 
-      <!-- Disabled state overlay -->
-      <div *ngIf="instanceManagementDisabled" class="disabled-overlay">
-        <div class="disabled-message">
-          <i class="pi pi-info-circle"></i>
-          <p>Enable Sonarr integration to manage instances</p>
-        </div>
-      </div>
-
       <!-- Empty state when no instances -->
-      <div *ngIf="instances.length === 0 && !instanceManagementDisabled" class="empty-instances-message p-3 text-center">
+      <div *ngIf="instances.length === 0" class="empty-instances-message p-3 text-center">
         <i class="pi pi-inbox empty-icon"></i>
         <p>No Sonarr instances configured</p>
         <small>Add an instance to start using Sonarr integration</small>
@@ -143,6 +137,19 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button 
+          pButton 
+          type="button" 
+          icon="pi pi-plus" 
+          label="Add Instance"
+          class="p-button-outlined"
+          [disabled]="instanceManagementDisabled"
+          (click)="openAddInstanceModal()"
+        ></button>
       </div>
     </p-card>
   </div>
