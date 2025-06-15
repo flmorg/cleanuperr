@@ -83,7 +83,7 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     // Initialize forms
     this.globalForm = this.formBuilder.group({
       enabled: [false],
-      failedImportMaxStrikes: [-1],
+      failedImportMaxStrikes: [{ value: -1, disabled: true }],
     });
 
     this.instanceForm = this.formBuilder.group({
@@ -94,6 +94,9 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
 
     // Load Sonarr config data
     this.sonarrStore.loadConfig();
+
+    // Setup form value change listeners
+    this.setupFormValueChangeListeners();
 
     // Setup effect to update form when config changes
     effect(() => {
@@ -128,8 +131,50 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
       failedImportMaxStrikes: config.failedImportMaxStrikes,
     });
 
+    // Update form control disabled states
+    this.updateFormControlDisabledStates(config);
+
     // Store original values for dirty checking
     this.storeOriginalGlobalValues();
+  }
+
+  /**
+   * Set up listeners for form control value changes to manage dependent control states
+   */
+  private setupFormValueChangeListeners(): void {
+    // Listen for changes to the 'enabled' control
+    const enabledControl = this.globalForm.get('enabled');
+    if (enabledControl) {
+      enabledControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(enabled => {
+          this.updateMainControlsState(enabled);
+        });
+    }
+  }
+
+  /**
+   * Update form control disabled states based on the configuration
+   */
+  private updateFormControlDisabledStates(config: SonarrConfig): void {
+    const enabled = config.enabled;
+    this.updateMainControlsState(enabled);
+  }
+
+  /**
+   * Update the state of main controls based on the 'enabled' control value
+   */
+  private updateMainControlsState(enabled: boolean): void {
+    const failedImportMaxStrikesControl = this.globalForm.get('failedImportMaxStrikes');
+
+    // Disable emitting events during state changes to prevent infinite loops
+    const options = { emitEvent: false };
+
+    if (enabled) {
+      failedImportMaxStrikesControl?.enable(options);
+    } else {
+      failedImportMaxStrikesControl?.disable(options);
+    }
   }
 
   /**
@@ -417,4 +462,6 @@ export class SonarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   get modalTitle(): string {
     return this.modalMode === 'add' ? 'Add Sonarr Instance' : 'Edit Sonarr Instance';
   }
+
+  // Add any other necessary methods here
 }

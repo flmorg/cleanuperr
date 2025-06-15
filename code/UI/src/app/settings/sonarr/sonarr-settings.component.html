@@ -51,7 +51,6 @@
                 buttonLayout="horizontal"
                 incrementButtonIcon="pi pi-plus"
                 decrementButtonIcon="pi pi-minus"
-                [disabled]="!globalForm.get('enabled')?.value"
               ></p-inputNumber>
             </div>
             <small class="form-helper-text">Maximum number of strikes before removing a failed import (-1 to use global setting; 0 to disable)</small>
