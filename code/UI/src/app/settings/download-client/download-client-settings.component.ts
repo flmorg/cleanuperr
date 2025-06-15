@@ -295,9 +295,18 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     const clientsArray = this.downloadClientForm.get('clients') as FormArray;
     clientsArray.clear();
     
-    // Mark form as dirty so the save button is enabled after reset
-    this.downloadClientForm.markAsDirty();
-    this.hasActualChanges = true;
+    // Check if this reset actually changes anything compared to the original state
+    const hasChangesAfterReset = this.formValuesChanged();
+    
+    if (hasChangesAfterReset) {
+      // Only mark as dirty if the reset actually changes something
+      this.downloadClientForm.markAsDirty();
+      this.hasActualChanges = true;
+    } else {
+      // If reset brings us back to original state, mark as pristine
+      this.downloadClientForm.markAsPristine();
+      this.hasActualChanges = false;
+    }
   }
 
   /**
