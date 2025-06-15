@@ -305,8 +305,12 @@ public class ConfigurationController : ControllerBase
             var oldConfig = await _dataContext.QueueCleanerConfigs
                 .FirstAsync();
 
-            // Apply updates from DTO
-            newConfig.Adapt(oldConfig);
+            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            var config = new TypeAdapterConfig();
+            config.NewConfig<QueueCleanerConfig, QueueCleanerConfig>()
+                .Ignore(dest => dest.Id);
+            
+            newConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -341,8 +345,12 @@ public class ConfigurationController : ControllerBase
                 .Include(x => x.Categories)
                 .FirstAsync();
 
-            // Apply updates from DTO
-            newConfig.Adapt(oldConfig);
+            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            var config = new TypeAdapterConfig();
+            config.NewConfig<DownloadCleanerConfig, DownloadCleanerConfig>()
+                .Ignore(dest => dest.Id);
+            
+            newConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -415,8 +423,12 @@ public class ConfigurationController : ControllerBase
             var oldConfig = await _dataContext.SonarrConfigs
                 .FirstAsync();
 
-            // Apply updates from DTO
-            newConfig.Adapt(oldConfig);
+            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            var config = new TypeAdapterConfig();
+            config.NewConfig<SonarrConfig, SonarrConfig>()
+                .Ignore(dest => dest.Id);
+            
+            newConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -447,8 +459,12 @@ public class ConfigurationController : ControllerBase
             var oldConfig = await _dataContext.RadarrConfigs
                 .FirstAsync();
 
-            // Apply updates from DTO
-            newConfig.Adapt(oldConfig);
+            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            var config = new TypeAdapterConfig();
+            config.NewConfig<RadarrConfig, RadarrConfig>()
+                .Ignore(dest => dest.Id);
+            
+            newConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -479,8 +495,12 @@ public class ConfigurationController : ControllerBase
             var oldConfig = await _dataContext.LidarrConfigs
                 .FirstAsync();
 
-            // Apply updates from DTO
-            newConfig.Adapt(oldConfig);
+            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            var config = new TypeAdapterConfig();
+            config.NewConfig<LidarrConfig, LidarrConfig>()
+                .Ignore(dest => dest.Id);
+            
+            newConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();

@@ -54,8 +54,8 @@ export class QueueCleanerConfigStore extends signalStore(
         switchMap(config => configService.updateQueueCleanerConfig(config).pipe(
           tap({
             next: () => {
+              // Don't set config - let the form stay as-is with string enum values
               patchState(store, { 
-                config, 
                 saving: false 
               });
             },
