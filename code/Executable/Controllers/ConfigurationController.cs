@@ -246,9 +246,10 @@ public class ConfigurationController : ControllerBase
         try
         {
             var config = await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
                 .AsNoTracking()
                 .FirstAsync(x => x.Type == InstanceType.Radarr);
-            return Ok(config);
+            return Ok(config.Adapt<ArrConfigDto>());
         }
         finally
         {
@@ -449,29 +450,14 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get existing config
-            var oldConfig = await _dataContext.ArrConfigs
-                .Include(x => x.Instances)
+            var config = await _dataContext.ArrConfigs
                 .FirstAsync(x => x.Type == InstanceType.Radarr);
 
-            // Create new config with updated basic settings only (instances managed separately)
-            // var updatedConfig = new ArrConfig
-            // {
-            //     Id = oldConfig.Id, // Keep the existing ID
-            //     Enabled = newConfigDto.Enabled,
-            //     FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
-            //     Instances = oldConfig.Instances // Keep existing instances unchanged
-            // };
-            //
-            // // Validate the configuration
-            // updatedConfig.Validate();
-            //
-            // // Update the existing entity using Mapster, excluding the ID
-            // var config = new TypeAdapterConfig();
-            // config.NewConfig<RadarrConfig, RadarrConfig>()
-            //     .Ignore(dest => dest.Id)
-            //     .Ignore(dest => dest.Instances); // Don't update instances here
-            //
-            // updatedConfig.Adapt(oldConfig, config);
+            config.Enabled = newConfigDto.Enabled;
+            config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
+
+            // Validate the configuration
+            config.Validate();
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -687,9 +673,8 @@ public class ConfigurationController : ControllerBase
         {
             // Get the Radarr config to add the instance to
             var config = await _dataContext.ArrConfigs
-                .Include(c => c.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Radarr);
-            
+
             // Create the new instance
             var instance = new ArrInstance
             {
@@ -697,14 +682,14 @@ public class ConfigurationController : ControllerBase
                 Url = new Uri(newInstance.Url),
                 ApiKey = newInstance.ApiKey,
                 ArrConfigId = config.Id,
-                ArrConfig = config // Set the navigation property
             };
             
-            // Add to the config
-            config.Instances.Add(instance);
+            // Add to the config's instances collection
+            await _dataContext.ArrInstances.AddAsync(instance);
+            // Save changes
             await _dataContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetRadarrConfig), new { id = instance.Id }, instance);
+            return CreatedAtAction(nameof(GetRadarrConfig), new { id = instance.Id }, instance.Adapt<ArrInstanceDto>());
         }
         catch (Exception ex)
         {
@@ -727,21 +712,21 @@ public class ConfigurationController : ControllerBase
             var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Radarr);
-            
+
             var instance = config.Instances.FirstOrDefault(i => i.Id == id);
             if (instance == null)
             {
                 return NotFound($"Radarr instance with ID {id} not found");
             }
-            
+
             // Update the instance properties
             instance.Name = updatedInstance.Name;
             instance.Url = new Uri(updatedInstance.Url);
             instance.ApiKey = updatedInstance.ApiKey;
-            
+
             await _dataContext.SaveChangesAsync();
-            
-            return Ok(instance);
+
+            return Ok(instance.Adapt<ArrInstanceDto>());
         }
         catch (Exception ex)
         {

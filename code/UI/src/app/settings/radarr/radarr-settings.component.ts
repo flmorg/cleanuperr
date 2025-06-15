@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnDestroy, Output, effect, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from "@angular/forms";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { RadarrConfigStore } from "./radarr-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
@@ -13,10 +13,11 @@ import { InputTextModule } from "primeng/inputtext";
 import { CheckboxModule } from "primeng/checkbox";
 import { ButtonModule } from "primeng/button";
 import { InputNumberModule } from "primeng/inputnumber";
-import { SelectButtonModule } from "primeng/selectbutton";
 import { ToastModule } from "primeng/toast";
+import { DialogModule } from "primeng/dialog";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { ConfirmationService } from "primeng/api";
 import { NotificationService } from "../../core/services/notification.service";
-import { DropdownModule } from "primeng/dropdown";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 
 @Component({
@@ -30,12 +31,12 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     CheckboxModule,
     ButtonModule,
     InputNumberModule,
-    SelectButtonModule,
     ToastModule,
-    DropdownModule,
+    DialogModule,
+    ConfirmDialogModule,
     LoadingErrorStateComponent,
   ],
-  providers: [RadarrConfigStore],
+  providers: [RadarrConfigStore, ConfirmationService],
   templateUrl: "./radarr-settings.component.html",
   styleUrls: ["./radarr-settings.component.scss"],
 })
@@ -43,22 +44,26 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   @Output() saved = new EventEmitter<void>();
   @Output() error = new EventEmitter<string>();
 
-  // Radarr Configuration Form
-  radarrForm: FormGroup;
+  // Forms
+  globalForm: FormGroup;
+  instanceForm: FormGroup;
+
+  // Modal state
+  showInstanceModal = false;
+  modalMode: 'add' | 'edit' = 'add';
+  editingInstance: ArrInstance | null = null;
 
   // Original form values for tracking changes
-  private originalFormValues: any;
-
-  // Track whether the form has actual changes compared to original values
-  hasActualChanges = false;
+  private originalGlobalValues: any;
+  hasGlobalChanges = false;
 
   // Clean up subscriptions
   private destroy$ = new Subject<void>();
 
-  // Inject the necessary services
+  // Services
   private formBuilder = inject(FormBuilder);
-  // Using the notification service for all toast messages
   private notificationService = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   private radarrStore = inject(RadarrConfigStore);
 
   // Signals from store
@@ -66,41 +71,46 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   radarrLoading = this.radarrStore.loading;
   radarrError = this.radarrStore.error;
   radarrSaving = this.radarrStore.saving;
-  instanceOperations = this.radarrStore.instanceOperations;
 
   /**
    * Check if component can be deactivated (navigation guard)
    */
   canDeactivate(): boolean {
-    return !this.radarrForm?.dirty || !this.hasActualChanges;
+    return !this.globalForm?.dirty || !this.hasGlobalChanges;
   }
 
   constructor() {
-    // Initialize the main form
-    this.radarrForm = this.formBuilder.group({
+    // Initialize forms
+    this.globalForm = this.formBuilder.group({
       enabled: [false],
-      failedImportMaxStrikes: [-1],
+      failedImportMaxStrikes: [{ value: -1, disabled: true }],
     });
 
-    // Add instances FormArray to main form
-    this.radarrForm.addControl('instances', this.formBuilder.array([]));
+    this.instanceForm = this.formBuilder.group({
+      name: ['', Validators.required],
+      url: ['', [Validators.required, this.uriValidator.bind(this)]],
+      apiKey: ['', Validators.required],
+    });
 
     // Load Radarr config data
     this.radarrStore.loadConfig();
+
+    // Setup form value change listeners
+    this.setupFormValueChangeListeners();
 
     // Setup effect to update form when config changes
     effect(() => {
       const config = this.radarrConfig();
       if (config) {
-        this.updateFormFromConfig(config);
+        this.updateGlobalFormFromConfig(config);
       }
     });
 
-    // Track form changes for dirty state
-    this.radarrForm.valueChanges
+    // Track global form changes
+    this.globalForm.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.hasActualChanges = this.formValuesChanged();
+        this.hasGlobalChanges = this.globalFormValuesChanged();
       });
   }
 
@@ -113,51 +123,74 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   }
 
   /**
-   * Update form with values from the configuration
+   * Update global form with values from the configuration
    */
-  private updateFormFromConfig(config: RadarrConfig): void {
-    // Update main form controls
-    this.radarrForm.patchValue({
+  private updateGlobalFormFromConfig(config: RadarrConfig): void {
+    this.globalForm.patchValue({
       enabled: config.enabled,
-      failedImportMaxStrikes: config.failedImportMaxStrikes
+      failedImportMaxStrikes: config.failedImportMaxStrikes,
     });
 
-    // Clear and rebuild the instances form array
-    const instancesArray = this.radarrForm.get('instances') as FormArray;
-    instancesArray.clear();
+    // Update form control disabled states
+    this.updateFormControlDisabledStates(config);
 
-    // Add all instances to the form array
-    if (config.instances && config.instances.length > 0) {
-      config.instances.forEach(instance => {
-        instancesArray.push(
-          this.formBuilder.group({
-            id: [instance.id || ''],
-            name: [instance.name, Validators.required],
-            url: [instance.url, [Validators.required, this.uriValidator.bind(this)]],
-            apiKey: [instance.apiKey, Validators.required],
-          })
-        );
-      });
+    // Store original values for dirty checking
+    this.storeOriginalGlobalValues();
+  }
+
+  /**
+   * Set up listeners for form control value changes to manage dependent control states
+   */
+  private setupFormValueChangeListeners(): void {
+    // Listen for changes to the 'enabled' control
+    const enabledControl = this.globalForm.get('enabled');
+    if (enabledControl) {
+      enabledControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(enabled => {
+          this.updateMainControlsState(enabled);
+        });
     }
-
-    // Store original form values for dirty checking
-    this.storeOriginalValues();
   }
 
   /**
-   * Store original form values for dirty checking
+   * Update form control disabled states based on the configuration
    */
-  private storeOriginalValues(): void {
-    this.originalFormValues = JSON.parse(JSON.stringify(this.radarrForm.value));
-    this.radarrForm.markAsPristine();
-    this.hasActualChanges = false;
+  private updateFormControlDisabledStates(config: RadarrConfig): void {
+    const enabled = config.enabled;
+    this.updateMainControlsState(enabled);
   }
 
   /**
-   * Check if the current form values are different from the original values
+   * Update the state of main controls based on the 'enabled' control value
    */
-  private formValuesChanged(): boolean {
-    return !this.isEqual(this.radarrForm.value, this.originalFormValues);
+  private updateMainControlsState(enabled: boolean): void {
+    const failedImportMaxStrikesControl = this.globalForm.get('failedImportMaxStrikes');
+
+    // Disable emitting events during state changes to prevent infinite loops
+    const options = { emitEvent: false };
+
+    if (enabled) {
+      failedImportMaxStrikesControl?.enable(options);
+    } else {
+      failedImportMaxStrikesControl?.disable(options);
+    }
+  }
+
+  /**
+   * Store original global form values for dirty checking
+   */
+  private storeOriginalGlobalValues(): void {
+    this.originalGlobalValues = JSON.parse(JSON.stringify(this.globalForm.value));
+    this.globalForm.markAsPristine();
+    this.hasGlobalChanges = false;
+  }
+
+  /**
+   * Check if the current global form values are different from the original values
+   */
+  private globalFormValuesChanged(): boolean {
+    return !this.isEqual(this.globalForm.value, this.originalGlobalValues);
   }
 
   /**
@@ -186,93 +219,6 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     }
 
     return true;
-  }
-
-  /**
-   * Update form control disabled states based on the configuration
-   */
-  private updateFormControlDisabledStates(config: RadarrConfig): void {
-    const enabled = config.enabled;
-    this.updateMainControlsState(enabled);
-  }
-
-  /**
-   * Update the state of main controls based on the 'enabled' control value
-   */
-  private updateMainControlsState(enabled: boolean): void {
-    const failedImportMaxStrikesControl = this.radarrForm.get('failedImportMaxStrikes');
-    const searchTypeControl = this.radarrForm.get('searchType');
-
-    if (enabled) {
-      failedImportMaxStrikesControl?.enable();
-      searchTypeControl?.enable();
-    } else {
-      failedImportMaxStrikesControl?.disable();
-      searchTypeControl?.disable();
-    }
-  }
-
-  /**
-   * Add a new instance to the instances form array
-   * @param instance Optional instance configuration to initialize the form with
-   */
-  addInstance(instance: ArrInstance | null = null): void {
-    const instanceForm = this.formBuilder.group({
-      id: [instance?.id || ''],
-      name: [instance?.name || '', Validators.required],
-      url: [instance?.url?.toString() || '', [Validators.required, this.uriValidator.bind(this)]],
-      apiKey: [instance?.apiKey || '', Validators.required]
-    });
-    
-    this.instances.push(instanceForm);
-    
-    // Mark form as dirty to enable save button
-    this.radarrForm.markAsDirty();
-    this.hasActualChanges = this.formValuesChanged();
-  }
-
-  /**
-   * Remove an instance at the specified index
-   */
-  removeInstance(index: number): void {
-    const instanceForm = this.getInstanceAsFormGroup(index);
-    const instanceId = instanceForm.get('id')?.value;
-    
-    // Just remove from the form array - deletion will be handled on save
-    this.instances.removeAt(index);
-    
-    // Mark form as dirty to enable save button
-    this.radarrForm.markAsDirty();
-    this.hasActualChanges = this.formValuesChanged();
-  }
-
-  /**
-   * Get the instances form array
-   */
-  get instances(): FormArray {
-    return this.radarrForm.get('instances') as FormArray;
-  }
-
-  /**
-   * Get an instance at the specified index as a FormGroup
-   */
-  getInstanceAsFormGroup(index: number): FormGroup {
-    return this.instances.at(index) as FormGroup;
-  }
-
-  /**
-   * Check if an instance field has an error
-   * @param instanceIndex The index of the instance in the array
-   * @param fieldName The name of the field to check
-   * @param errorName The name of the error to check for
-   * @returns True if the field has the specified error
-   */
-  hasInstanceFieldError(instanceIndex: number, fieldName: string, errorName: string): boolean {
-    const instancesArray = this.radarrForm.get('instances') as FormArray;
-    if (!instancesArray || !instancesArray.controls[instanceIndex]) return false;
-    
-    const control = (instancesArray.controls[instanceIndex] as FormGroup).get(fieldName);
-    return control !== null && control.hasError(errorName) && control.touched;
   }
 
   /**
@@ -311,148 +257,211 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   }
 
   /**
-   * Check if the form control has an error
-   * @param controlName The name of the control to check
-   * @param errorName The name of the error to check for
-   * @returns True if the control has the specified error
+   * Check if a form control has an error
    */
-  hasError(controlName: string, errorName: string): boolean {
-    const control = this.radarrForm.get(controlName);
+  hasError(form: FormGroup, controlName: string, errorName: string): boolean {
+    const control = form.get(controlName);
     return control !== null && control.hasError(errorName) && control.touched;
   }
 
   /**
-   * Save the Radarr configuration
+   * Save the global Radarr configuration
    */
-  saveRadarrConfig(): void {
-    // Mark all form controls as touched to trigger validation
-    this.markFormGroupTouched(this.radarrForm);
+  saveGlobalConfig(): void {
+    this.markFormGroupTouched(this.globalForm);
 
-    if (this.radarrForm.invalid) {
+    if (this.globalForm.invalid) {
       this.notificationService.showError('Please fix the validation errors before saving');
       return;
     }
 
-    if (!this.hasActualChanges) {
+    if (!this.hasGlobalChanges) {
       this.notificationService.showSuccess('No changes detected');
       return;
     }
 
-    // Get the current config to preserve existing instances
     const currentConfig = this.radarrConfig();
     if (!currentConfig) return;
 
-    // Create the updated main config
-    const updatedConfig: RadarrConfig = {
-      ...currentConfig,
-      enabled: this.radarrForm.get('enabled')?.value,
-      failedImportMaxStrikes: this.radarrForm.get('failedImportMaxStrikes')?.value
+    const updatedConfig = {
+      enabled: this.globalForm.get('enabled')?.value,
+      failedImportMaxStrikes: this.globalForm.get('failedImportMaxStrikes')?.value
     };
 
-    // Get the instances from the form
-    const formInstances = this.instances.getRawValue();
+    this.radarrStore.saveConfig(updatedConfig);
     
-    // Separate creates and updates
-    const creates: CreateArrInstanceDto[] = [];
-    const updates: Array<{ id: string, instance: ArrInstance }> = [];
-    
-    formInstances.forEach((instance: any) => {
-      if (instance.id) {
-        // This is an existing instance, prepare for update
-        const updateInstance: ArrInstance = {
-          id: instance.id,
-          name: instance.name,
-          url: instance.url,
-          apiKey: instance.apiKey
-        };
-        updates.push({ id: instance.id, instance: updateInstance });
-      } else {
-        // This is a new instance, prepare for creation (don't send ID)
-        const createInstance: CreateArrInstanceDto = {
-          name: instance.name,
-          url: instance.url,
-          apiKey: instance.apiKey
-        };
-        creates.push(createInstance);
-      }
-    });
-    
-    // Use the new method that saves config and processes instances sequentially
-    this.radarrStore.saveConfigAndInstances({
-      config: updatedConfig,
-      instanceOperations: { creates, updates, deletes: [] }
-    });
-    
-    // Monitor the saving state to show completion feedback
-    this.monitorSavingCompletion();
+    // Monitor saving completion
+    this.monitorGlobalSaving();
   }
 
   /**
-   * Monitor saving completion and show appropriate feedback
+   * Monitor global saving completion
    */
-  private monitorSavingCompletion(): void {
-    // Use a timeout to check the saving state periodically
+  private monitorGlobalSaving(): void {
     const checkSavingStatus = () => {
       const saving = this.radarrSaving();
       const error = this.radarrError();
-      const pendingOps = this.instanceOperations();
       
-      if (!saving && Object.keys(pendingOps).length === 0) {
-        // Operations are complete
+      if (!saving) {
         if (error) {
-          this.notificationService.showError(`Save completed with issues: ${error}`);
+          this.notificationService.showError(`Save failed: ${error}`);
           this.error.emit(error);
-          // Don't mark as pristine if there were errors
         } else {
-          // Complete success
-          this.notificationService.showSuccess('Radarr configuration saved successfully');
+          this.notificationService.showSuccess('Global configuration saved successfully');
           this.saved.emit();
           
-          // Reload config from backend to ensure UI is in sync
-          this.radarrStore.loadConfig();
-          
-          // Reset form state after successful save
-          setTimeout(() => {
-            this.radarrForm.markAsPristine();
-            this.hasActualChanges = false;
-            this.storeOriginalValues();
-          }, 100);
+          // Reset form state without reloading from backend
+          this.globalForm.markAsPristine();
+          this.hasGlobalChanges = false;
+          this.storeOriginalGlobalValues();
         }
       } else {
-        // Still saving, check again in a short while
         setTimeout(checkSavingStatus, 100);
       }
     };
     
-    // Start monitoring
     setTimeout(checkSavingStatus, 100);
   }
 
   /**
-   * Reset the Radarr configuration form to default values
+   * Get instances from current config
    */
-  resetRadarrConfig(): void {
-    // Clear all instances
-    const instancesArray = this.radarrForm.get('instances') as FormArray;
-    instancesArray.clear();
-    
-    // Reset main config to defaults
-    this.radarrForm.patchValue({
-      enabled: false,
-      failedImportMaxStrikes: -1
-    });
-    
-    // Check if this reset actually changes anything compared to the original state
-    const hasChangesAfterReset = this.formValuesChanged();
-    
-    if (hasChangesAfterReset) {
-      // Only mark as dirty if the reset actually changes something
-      this.radarrForm.markAsDirty();
-      this.hasActualChanges = true;
-    } else {
-      // If reset brings us back to original state, mark as pristine
-      this.radarrForm.markAsPristine();
-      this.hasActualChanges = false;
-    }
+  get instances(): ArrInstance[] {
+    return this.radarrConfig()?.instances || [];
   }
+
+  /**
+   * Check if instance management should be disabled
+   */
+  get instanceManagementDisabled(): boolean {
+    return !this.globalForm.get('enabled')?.value;
+  }
+
+  /**
+   * Open modal to add new instance
+   */
+  openAddInstanceModal(): void {
+    this.modalMode = 'add';
+    this.editingInstance = null;
+    this.instanceForm.reset();
+    this.showInstanceModal = true;
+  }
+
+  /**
+   * Open modal to edit existing instance
+   */
+  openEditInstanceModal(instance: ArrInstance): void {
+    this.modalMode = 'edit';
+    this.editingInstance = instance;
+    this.instanceForm.patchValue({
+      name: instance.name,
+      url: instance.url,
+      apiKey: instance.apiKey,
+    });
+    this.showInstanceModal = true;
+  }
+
+  /**
+   * Close instance modal
+   */
+  closeInstanceModal(): void {
+    this.showInstanceModal = false;
+    this.editingInstance = null;
+    this.instanceForm.reset();
+  }
+
+  /**
+   * Save instance (add or edit)
+   */
+  saveInstance(): void {
+    this.markFormGroupTouched(this.instanceForm);
+
+    if (this.instanceForm.invalid) {
+      this.notificationService.showError('Please fix the validation errors before saving');
+      return;
+    }
+
+    const instanceData: CreateArrInstanceDto = {
+      name: this.instanceForm.get('name')?.value,
+      url: this.instanceForm.get('url')?.value,
+      apiKey: this.instanceForm.get('apiKey')?.value,
+    };
+
+    if (this.modalMode === 'add') {
+      this.radarrStore.createInstance(instanceData);
+    } else if (this.editingInstance) {
+      this.radarrStore.updateInstance({ 
+        id: this.editingInstance.id!, 
+        instance: instanceData 
+      });
+    }
+
+    this.monitorInstanceSaving();
+  }
+
+  /**
+   * Monitor instance saving completion
+   */
+  private monitorInstanceSaving(): void {
+    const checkSavingStatus = () => {
+      const saving = this.radarrSaving();
+      const error = this.radarrError();
+      
+      if (!saving) {
+        if (error) {
+          this.notificationService.showError(`Operation failed: ${error}`);
+        } else {
+          const action = this.modalMode === 'add' ? 'created' : 'updated';
+          this.notificationService.showSuccess(`Instance ${action} successfully`);
+          this.closeInstanceModal();
+        }
+      } else {
+        setTimeout(checkSavingStatus, 100);
+      }
+    };
+    
+    setTimeout(checkSavingStatus, 100);
+  }
+
+  /**
+   * Delete instance with confirmation
+   */
+  deleteInstance(instance: ArrInstance): void {
+    this.confirmationService.confirm({
+      message: `Are you sure you want to delete the instance "${instance.name}"?`,
+      header: 'Confirm Deletion',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.radarrStore.deleteInstance(instance.id!);
+        
+        // Monitor deletion
+        const checkDeletionStatus = () => {
+          const saving = this.radarrSaving();
+          const error = this.radarrError();
+          
+          if (!saving) {
+            if (error) {
+              this.notificationService.showError(`Deletion failed: ${error}`);
+            } else {
+              this.notificationService.showSuccess('Instance deleted successfully');
+            }
+          } else {
+            setTimeout(checkDeletionStatus, 100);
+          }
+        };
+        
+        setTimeout(checkDeletionStatus, 100);
+      }
+    });
+  }
+
+  /**
+   * Get modal title based on mode
+   */
+  get modalTitle(): string {
+    return this.modalMode === 'add' ? 'Add Radarr Instance' : 'Edit Radarr Instance';
+  }
+
+  // Add any other necessary methods here
 }

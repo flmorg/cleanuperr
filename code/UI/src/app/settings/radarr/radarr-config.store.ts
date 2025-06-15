@@ -49,9 +49,51 @@ export class RadarrConfigStore extends signalStore(
     ),
     
     /**
+     * Save the Radarr configuration (basic settings only)
+     */
+    saveConfig: rxMethod<Partial<RadarrConfig>>(
+      (config$: Observable<Partial<RadarrConfig>>) => config$.pipe(
+        tap(() => patchState(store, { saving: true, error: null })),
+        switchMap(configUpdate => {
+          const currentConfig = store.config();
+          if (!currentConfig) {
+            patchState(store, { 
+              saving: false, 
+              error: 'No current configuration available' 
+            });
+            return EMPTY;
+          }
+          
+          const updatedConfig: RadarrConfig = {
+            ...currentConfig,
+            ...configUpdate
+          };
+          
+          return configService.updateRadarrConfig(updatedConfig).pipe(
+            tap({
+              next: () => {
+                patchState(store, { 
+                  config: updatedConfig, 
+                  saving: false 
+                });
+              },
+              error: (error) => {
+                patchState(store, { 
+                  saving: false, 
+                  error: error.message || 'Failed to save Radarr configuration' 
+                });
+              }
+            }),
+            catchError(() => EMPTY)
+          );
+        })
+      )
+    ),
+    
+    /**
      * Save the Radarr configuration
      */
-    saveConfig: rxMethod<RadarrConfig>(
+    saveFullConfig: rxMethod<RadarrConfig>(
       (config$: Observable<RadarrConfig>) => config$.pipe(
         tap(() => patchState(store, { saving: true, error: null })),
         switchMap(config => configService.updateRadarrConfig(config).pipe(
