@@ -1,6 +1,6 @@
-// using Common.Configuration.ContentBlocker;
-// using Common.Configuration.DownloadCleaner;
-// using Common.Configuration.QueueCleaner;
+// using Data.Models.Configuration.ContentBlocker;
+// using Data.Models.Configuration.DownloadCleaner;
+// using Data.Models.Configuration.QueueCleaner;
 // using Infrastructure.Interceptors;
 // using Infrastructure.Verticals.ContentBlocker;
 // using Infrastructure.Verticals.DownloadClient;

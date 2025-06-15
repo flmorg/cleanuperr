@@ -1,19 +1,25 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Common.Configuration;
+using Data.Enums;
 
-namespace Common.Configuration.Arr;
+namespace Data.Models.Configuration.Arr;
 
-public abstract class ArrConfig : IConfig
+public class ArrConfig : IConfig
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; } = Guid.NewGuid();
     
+    public required InstanceType Type { get; set; }
+    
     public bool Enabled { get; set; }
 
     public short FailedImportMaxStrikes { get; set; } = -1;
-    
+
     public List<ArrInstance> Instances { get; set; } = [];
 
-    public abstract void Validate();
+    public void Validate()
+    {
+    }
 }

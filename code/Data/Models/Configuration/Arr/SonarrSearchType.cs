@@ -1,4 +1,4 @@
-﻿namespace Common.Configuration.Arr;
+﻿namespace Data.Models.Configuration.Arr;
 
 public enum SonarrSearchType
 {

@@ -1,5 +1,6 @@
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.QueueCleaner;
+using Common.Configuration;
+using Data.Models.Configuration.DownloadCleaner;
+using Data.Models.Configuration.QueueCleaner;
 using Common.Exceptions;
 using Common.Helpers;
 using Data;
@@ -125,7 +126,7 @@ public class BackgroundJobManager : IHostedService
     /// Helper method to add a job with a cron trigger.
     /// </summary>
     private async Task AddJobWithTrigger<T>(
-        Common.Configuration.IJobConfig config, 
+        IJobConfig config,
         string cronExpression,
         CancellationToken cancellationToken = default) 
         where T : GenericHandler

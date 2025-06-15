@@ -1,4 +1,4 @@
-using Common.Configuration.Notification;
+using Data.Models.Configuration.Notification;
 using Infrastructure.Verticals.Notifications.Models;
 
 namespace Infrastructure.Verticals.Notifications;

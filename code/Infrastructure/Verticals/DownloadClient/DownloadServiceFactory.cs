@@ -76,7 +76,7 @@ public sealed class DownloadServiceFactory
     /// <typeparam name="T">The type of download service to create</typeparam>
     /// <param name="downloadClientConfig">The client configuration</param>
     /// <returns>An implementation of IDownloadService</returns>
-    private T CreateClientService<T>(Common.Configuration.DownloadClientConfig downloadClientConfig) where T : IDownloadService
+    private T CreateClientService<T>(DownloadClientConfig downloadClientConfig) where T : IDownloadService
     {
         var service = _serviceProvider.GetRequiredService<T>();
         service.Initialize(downloadClientConfig);

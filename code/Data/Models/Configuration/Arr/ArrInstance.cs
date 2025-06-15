@@ -2,13 +2,17 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Common.Attributes;
 
-namespace Common.Configuration.Arr;
+namespace Data.Models.Configuration.Arr;
 
 public sealed class ArrInstance
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; } = Guid.NewGuid();
+    
+    public Guid ArrConfigId { get; set; }
+    
+    public ArrConfig ArrConfig { get; set; }
     
     public required string Name { get; set; }
     

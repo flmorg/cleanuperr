@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Common.Configuration.Notification;
+namespace Data.Models.Configuration.Notification;
 
 public abstract record NotificationConfig
 {

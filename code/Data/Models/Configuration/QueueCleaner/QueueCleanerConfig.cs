@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Common.Configuration;
 
-namespace Common.Configuration.QueueCleaner;
+namespace Data.Models.Configuration.QueueCleaner;
 
 public sealed record QueueCleanerConfig : IJobConfig
 {

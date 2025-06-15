@@ -1,11 +1,12 @@
 using Common.Configuration;
-using Common.Configuration.Arr;
-using Common.Configuration.General;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.Arr;
+using Data.Models.Configuration.General;
+using Data.Models.Configuration.QueueCleaner;
 using Common.Enums;
 using Data;
 using Data.Enums;
 using Data.Models.Arr.Queue;
+using Data.Models.Configuration.Arr;
 using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.Arr;
@@ -56,9 +57,9 @@ public sealed class QueueCleaner : GenericHandler
         
         await _blocklistProvider.LoadBlocklistsAsync();
         
-        var sonarrConfig = ContextProvider.Get<SonarrConfig>();
-        var radarrConfig = ContextProvider.Get<RadarrConfig>();
-        var lidarrConfig = ContextProvider.Get<LidarrConfig>();
+        var sonarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Sonarr));
+        var radarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr));
+        var lidarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr));
         var config = ContextProvider.Get<QueueCleanerConfig>();
         
         bool blocklistIsConfigured = sonarrConfig.Enabled && !string.IsNullOrEmpty(config.ContentBlocker.Sonarr.BlocklistPath) ||

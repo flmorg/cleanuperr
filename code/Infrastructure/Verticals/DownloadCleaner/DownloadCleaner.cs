@@ -1,9 +1,10 @@
-using Common.Configuration.Arr;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.General;
+using Data.Models.Configuration.Arr;
+using Data.Models.Configuration.DownloadCleaner;
+using Data.Models.Configuration.General;
 using Data;
 using Data.Enums;
 using Data.Models.Arr.Queue;
+using Data.Models.Configuration.Arr;
 using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.Arr;
@@ -162,9 +163,9 @@ public sealed class DownloadCleaner : GenericHandler
         // wait for the downloads to appear in the arr queue
         await Task.Delay(10 * 1000);
 
-        await ProcessArrConfigAsync(ContextProvider.Get<SonarrConfig>(), InstanceType.Sonarr, true);
-        await ProcessArrConfigAsync(ContextProvider.Get<SonarrConfig>(), InstanceType.Radarr, true);
-        await ProcessArrConfigAsync(ContextProvider.Get<SonarrConfig>(), InstanceType.Lidarr, true);
+        await ProcessArrConfigAsync(ContextProvider.Get<ArrConfig>(nameof(InstanceType.Sonarr)), InstanceType.Sonarr, true);
+        await ProcessArrConfigAsync(ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr)), InstanceType.Radarr, true);
+        await ProcessArrConfigAsync(ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr)), InstanceType.Lidarr, true);
 
         if (isUnlinkedEnabled && downloadsToChangeCategory?.Count > 0)
         {

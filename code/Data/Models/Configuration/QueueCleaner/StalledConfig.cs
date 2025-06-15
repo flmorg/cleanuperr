@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using Common.Exceptions;
 
-namespace Common.Configuration.QueueCleaner;
+namespace Data.Models.Configuration.QueueCleaner;
 
 [ComplexType]
 public sealed record StalledConfig

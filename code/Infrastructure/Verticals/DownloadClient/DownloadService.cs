@@ -1,5 +1,6 @@
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.QueueCleaner;
+using Common.Configuration;
+using Data.Models.Configuration.DownloadCleaner;
+using Data.Models.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Common.Helpers;
 using Data;
@@ -36,7 +37,7 @@ public abstract class DownloadService : IDownloadService
 
     
     // Client-specific configuration
-    protected Common.Configuration.DownloadClientConfig _downloadClientConfig;
+    protected DownloadClientConfig _downloadClientConfig;
     
     // HTTP client for this service
 
@@ -75,7 +76,7 @@ public abstract class DownloadService : IDownloadService
     }
     
     /// <inheritdoc />
-    public virtual void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
+    public virtual void Initialize(DownloadClientConfig downloadClientConfig)
     {
         _downloadClientConfig = downloadClientConfig;
         

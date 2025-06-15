@@ -1,4 +1,4 @@
-﻿namespace Common.Configuration.QueueCleaner;
+﻿namespace Data.Models.Configuration.QueueCleaner;
 
 public enum BlocklistType
 {

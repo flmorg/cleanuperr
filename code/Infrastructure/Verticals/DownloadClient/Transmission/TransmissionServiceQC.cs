@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Common.Attributes;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Data.Enums;
 using Infrastructure.Extensions;

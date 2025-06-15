@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Common.Configuration;
 using ValidationException = Common.Exceptions.ValidationException;
 
-namespace Common.Configuration.DownloadCleaner;
+namespace Data.Models.Configuration.DownloadCleaner;
 
 public sealed record DownloadCleanerConfig : IJobConfig
 {

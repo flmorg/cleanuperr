@@ -1,12 +1,13 @@
 using Common.Configuration;
-using Common.Configuration.Arr;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.General;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.Arr;
+using Data.Models.Configuration.DownloadCleaner;
+using Data.Models.Configuration.General;
+using Data.Models.Configuration.QueueCleaner;
 using Data;
 using Data.Enums;
 using Data.Models.Arr;
 using Data.Models.Arr.Queue;
+using Data.Models.Configuration.Arr;
 using Infrastructure.Events;
 using Infrastructure.Verticals.Arr;
 using Infrastructure.Verticals.Context;
@@ -120,9 +121,15 @@ public abstract class GenericHandler : IHandler
         try
         {
             ContextProvider.Set(nameof(GeneralConfig), await _dataContext.GeneralConfigs.FirstAsync());
-            ContextProvider.Set(nameof(SonarrConfig), await _dataContext.SonarrConfigs.Include(x => x.Instances).FirstAsync());
-            ContextProvider.Set(nameof(RadarrConfig), await _dataContext.RadarrConfigs.Include(x => x.Instances).FirstAsync());
-            ContextProvider.Set(nameof(LidarrConfig), await _dataContext.LidarrConfigs.Include(x => x.Instances).FirstAsync());
+            ContextProvider.Set(nameof(InstanceType.Sonarr), await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
+                .FirstAsync(x => x.Type == InstanceType.Sonarr));
+            ContextProvider.Set(nameof(InstanceType.Radarr), await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
+                .FirstAsync(x => x.Type == InstanceType.Radarr));
+            ContextProvider.Set(nameof(InstanceType.Lidarr), await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
+                .FirstAsync(x => x.Type == InstanceType.Lidarr));
             ContextProvider.Set(nameof(QueueCleanerConfig), await _dataContext.QueueCleanerConfigs.FirstAsync());
             ContextProvider.Set(nameof(DownloadCleanerConfig), await _dataContext.DownloadCleanerConfigs.FirstAsync());
             ContextProvider.Set(nameof(DownloadClientConfig), await _dataContext.DownloadClients

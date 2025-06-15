@@ -40,18 +40,18 @@ public class StatusController : ControllerBase
             var downloadClients = await _dataContext.DownloadClients
                 .AsNoTracking()
                 .ToListAsync();
-            var sonarrConfig = await _dataContext.SonarrConfigs
+            var sonarrConfig = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
                 .AsNoTracking()
-                .FirstAsync();
-            var radarrConfig = await _dataContext.RadarrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Sonarr);
+            var radarrConfig = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
                 .AsNoTracking()
-                .FirstAsync();
-            var lidarrConfig = await _dataContext.LidarrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Radarr);
+            var lidarrConfig = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
                 .AsNoTracking()
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Lidarr);
             
             var status = new
             {
@@ -143,18 +143,18 @@ public class StatusController : ControllerBase
             var status = new Dictionary<string, object>();
             
             // Get configurations
-            var sonarrConfig = await _dataContext.SonarrConfigs
+            var sonarrConfig = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
                 .AsNoTracking()
-                .FirstAsync();
-            var radarrConfig = await _dataContext.RadarrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Sonarr);
+            var radarrConfig = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
                 .AsNoTracking()
-                .FirstAsync();
-            var lidarrConfig = await _dataContext.LidarrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Radarr);
+            var lidarrConfig = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
                 .AsNoTracking()
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Lidarr);
 
             // Check Sonarr instances
             if (sonarrConfig is { Enabled: true, Instances.Count: > 0 })

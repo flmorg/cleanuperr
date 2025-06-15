@@ -1,5 +1,5 @@
 using System.Net;
-using Common.Configuration.General;
+using Data.Models.Configuration.General;
 using Data.Models.Arr;
 using Infrastructure.Health;
 using Infrastructure.Http;

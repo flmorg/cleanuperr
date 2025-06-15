@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Common.Configuration.QueueCleaner;
+namespace Data.Models.Configuration.QueueCleaner;
 
 [ComplexType]
 public sealed record ContentBlockerConfig

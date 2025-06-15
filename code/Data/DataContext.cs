@@ -1,9 +1,9 @@
 ﻿using Common.Configuration;
-using Common.Configuration.Arr;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.General;
-using Common.Configuration.Notification;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.Arr;
+using Data.Models.Configuration.DownloadCleaner;
+using Data.Models.Configuration.General;
+using Data.Models.Configuration.Notification;
+using Data.Models.Configuration.QueueCleaner;
 using Common.Helpers;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,11 +24,7 @@ public class DataContext : DbContext
     
     public DbSet<DownloadCleanerConfig> DownloadCleanerConfigs { get; set; }
     
-    public DbSet<SonarrConfig> SonarrConfigs { get; set; }
-    
-    public DbSet<RadarrConfig> RadarrConfigs { get; set; }
-    
-    public DbSet<LidarrConfig> LidarrConfigs { get; set; }
+    public DbSet<ArrConfig> ArrConfigs { get; set; }
     
     public DbSet<ArrInstance> ArrInstances { get; set; }
     

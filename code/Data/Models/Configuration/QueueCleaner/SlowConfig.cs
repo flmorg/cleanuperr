@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using Common.CustomDataTypes;
 using Common.Exceptions;
 
-namespace Common.Configuration.QueueCleaner;
+namespace Data.Models.Configuration.QueueCleaner;
 
 [ComplexType]
 public sealed record SlowConfig

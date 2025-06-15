@@ -1,3 +1,4 @@
+using Common.Configuration;
 using Common.Exceptions;
 using Data;
 using Data.Models.Deluge.Response;
@@ -37,7 +38,7 @@ public partial class DelugeService : DownloadService, IDelugeService
     }
     
     /// <inheritdoc />
-    public override void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
+    public override void Initialize(DownloadClientConfig downloadClientConfig)
     {
         // Initialize base service first
         base.Initialize(downloadClientConfig);

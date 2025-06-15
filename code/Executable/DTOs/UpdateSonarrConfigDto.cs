@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Common.Configuration.Arr;
+using Data.Models.Configuration.Arr;
 
 namespace Executable.DTOs;
 

@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.QueueCleaner;
+using Common.Configuration;
+using Data.Models.Configuration.DownloadCleaner;
+using Data.Models.Configuration.QueueCleaner;
 using Data.Enums;
 using Infrastructure.Interceptors;
 using QBittorrent.Client;
@@ -20,7 +21,7 @@ public interface IDownloadService : IDisposable
     /// Initializes the download service with client-specific configuration
     /// </summary>
     /// <param name="downloadClientConfig">The client configuration</param>
-    public void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig);
+    public void Initialize(DownloadClientConfig downloadClientConfig);
     
     public Task LoginAsync();
 

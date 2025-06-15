@@ -1,4 +1,4 @@
-﻿using Common.Configuration.Notification;
+﻿using Data.Models.Configuration.Notification;
 
 namespace Infrastructure.Verticals.Notifications.Apprise;
 

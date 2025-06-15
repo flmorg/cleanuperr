@@ -1,17 +1,16 @@
 using Common.Configuration;
-using Common.Configuration.Arr;
-using Common.Configuration.DownloadCleaner;
-using Common.Configuration.General;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.Arr;
+using Data.Models.Configuration.DownloadCleaner;
+using Data.Models.Configuration.General;
+using Data.Models.Configuration.QueueCleaner;
 using Data;
+using Data.Enums;
 using Infrastructure.Logging;
 using Infrastructure.Models;
 using Infrastructure.Services.Interfaces;
-using Infrastructure.Verticals.ContentBlocker;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
 using Executable.DTOs;
 
 namespace Executable.Controllers;
@@ -228,9 +227,9 @@ public class ConfigurationController : ControllerBase
         await DataContext.Lock.WaitAsync();
         try
         {
-            var config = await _dataContext.SonarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .AsNoTracking()
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Sonarr);
             return Ok(config);
         }
         finally
@@ -245,9 +244,9 @@ public class ConfigurationController : ControllerBase
         await DataContext.Lock.WaitAsync();
         try
         {
-            var config = await _dataContext.RadarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .AsNoTracking()
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Radarr);
             return Ok(config);
         }
         finally
@@ -262,9 +261,9 @@ public class ConfigurationController : ControllerBase
         await DataContext.Lock.WaitAsync();
         try
         {
-            var config = await _dataContext.LidarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .AsNoTracking()
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Lidarr);
             return Ok(config);
         }
         finally
@@ -417,8 +416,8 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get existing config
-            var config = await _dataContext.SonarrConfigs
-                .FirstAsync();
+            var config = await _dataContext.ArrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Sonarr);
 
             config.Enabled = newConfigDto.Enabled;
             config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
@@ -449,29 +448,29 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get existing config
-            var oldConfig = await _dataContext.RadarrConfigs
+            var oldConfig = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Radarr);
 
             // Create new config with updated basic settings only (instances managed separately)
-            var updatedConfig = new RadarrConfig
-            {
-                Id = oldConfig.Id, // Keep the existing ID
-                Enabled = newConfigDto.Enabled,
-                FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
-                Instances = oldConfig.Instances // Keep existing instances unchanged
-            };
-
-            // Validate the configuration
-            updatedConfig.Validate();
-
-            // Update the existing entity using Mapster, excluding the ID
-            var config = new TypeAdapterConfig();
-            config.NewConfig<RadarrConfig, RadarrConfig>()
-                .Ignore(dest => dest.Id)
-                .Ignore(dest => dest.Instances); // Don't update instances here
-            
-            updatedConfig.Adapt(oldConfig, config);
+            // var updatedConfig = new ArrConfig
+            // {
+            //     Id = oldConfig.Id, // Keep the existing ID
+            //     Enabled = newConfigDto.Enabled,
+            //     FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
+            //     Instances = oldConfig.Instances // Keep existing instances unchanged
+            // };
+            //
+            // // Validate the configuration
+            // updatedConfig.Validate();
+            //
+            // // Update the existing entity using Mapster, excluding the ID
+            // var config = new TypeAdapterConfig();
+            // config.NewConfig<RadarrConfig, RadarrConfig>()
+            //     .Ignore(dest => dest.Id)
+            //     .Ignore(dest => dest.Instances); // Don't update instances here
+            //
+            // updatedConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -496,29 +495,29 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get existing config
-            var oldConfig = await _dataContext.LidarrConfigs
-                .Include(x => x.Instances)
-                .FirstAsync();
-
-            // Create new config with updated basic settings only (instances managed separately)
-            var updatedConfig = new LidarrConfig
-            {
-                Id = oldConfig.Id, // Keep the existing ID
-                Enabled = newConfigDto.Enabled,
-                FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
-                Instances = oldConfig.Instances // Keep existing instances unchanged
-            };
-
-            // Validate the configuration
-            updatedConfig.Validate();
-
-            // Update the existing entity using Mapster, excluding the ID
-            var config = new TypeAdapterConfig();
-            config.NewConfig<LidarrConfig, LidarrConfig>()
-                .Ignore(dest => dest.Id)
-                .Ignore(dest => dest.Instances); // Don't update instances here
-            
-            updatedConfig.Adapt(oldConfig, config);
+            // var oldConfig = await _dataContext.LidarrConfigs
+            //     .Include(x => x.Instances)
+            //     .FirstAsync();
+            //
+            // // Create new config with updated basic settings only (instances managed separately)
+            // var updatedConfig = new LidarrConfig
+            // {
+            //     Id = oldConfig.Id, // Keep the existing ID
+            //     Enabled = newConfigDto.Enabled,
+            //     FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
+            //     Instances = oldConfig.Instances // Keep existing instances unchanged
+            // };
+            //
+            // // Validate the configuration
+            // updatedConfig.Validate();
+            //
+            // // Update the existing entity using Mapster, excluding the ID
+            // var config = new TypeAdapterConfig();
+            // config.NewConfig<LidarrConfig, LidarrConfig>()
+            //     .Ignore(dest => dest.Id)
+            //     .Ignore(dest => dest.Instances); // Don't update instances here
+            //
+            // updatedConfig.Adapt(oldConfig, config);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -577,9 +576,9 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Sonarr config to add the instance to
-            var config = await _dataContext.SonarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Sonarr);
 
             // Create the new instance
             var instance = new ArrInstance
@@ -590,8 +589,7 @@ public class ConfigurationController : ControllerBase
             };
             
             // Add to the config
-            // config.Instances.Add(instance);
-            _dataContext.ArrInstances.Add(instance);
+            config.Instances.Add(instance);
             await _dataContext.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetSonarrConfig), new { id = instance.Id }, instance);
@@ -614,9 +612,9 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Sonarr config and find the instance
-            var config = await _dataContext.SonarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Sonarr);
 
             var instance = config.Instances.FirstOrDefault(i => i.Id == id);
             if (instance == null)
@@ -651,9 +649,9 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Sonarr config and find the instance
-            var config = await _dataContext.SonarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Sonarr);
 
             var instance = config.Instances.FirstOrDefault(i => i.Id == id);
             if (instance == null)
@@ -685,10 +683,10 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Radarr config to add the instance to
-            var config = await _dataContext.RadarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
-
+                .FirstAsync(x => x.Type == InstanceType.Radarr);
+            
             // Create the new instance
             var instance = new ArrInstance
             {
@@ -696,7 +694,7 @@ public class ConfigurationController : ControllerBase
                 Url = new Uri(newInstance.Url),
                 ApiKey = newInstance.ApiKey
             };
-
+            
             // Add to the config
             config.Instances.Add(instance);
             await _dataContext.SaveChangesAsync();
@@ -721,23 +719,23 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Radarr config and find the instance
-            var config = await _dataContext.RadarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
-
+                .FirstAsync(x => x.Type == InstanceType.Radarr);
+            
             var instance = config.Instances.FirstOrDefault(i => i.Id == id);
             if (instance == null)
             {
                 return NotFound($"Radarr instance with ID {id} not found");
             }
-
+            
             // Update the instance properties
             instance.Name = updatedInstance.Name;
             instance.Url = new Uri(updatedInstance.Url);
             instance.ApiKey = updatedInstance.ApiKey;
-
+            
             await _dataContext.SaveChangesAsync();
-
+            
             return Ok(instance);
         }
         catch (Exception ex)
@@ -758,16 +756,16 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Radarr config and find the instance
-            var config = await _dataContext.RadarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
-
+                .FirstAsync(x => x.Type == InstanceType.Radarr);
+            
             var instance = config.Instances.FirstOrDefault(i => i.Id == id);
             if (instance == null)
             {
                 return NotFound($"Radarr instance with ID {id} not found");
             }
-
+            
             // Remove the instance
             config.Instances.Remove(instance);
             await _dataContext.SaveChangesAsync();
@@ -792,9 +790,9 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Lidarr config to add the instance to
-            var config = await _dataContext.LidarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Lidarr);
 
             // Create the new instance
             var instance = new ArrInstance
@@ -828,9 +826,9 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Lidarr config and find the instance
-            var config = await _dataContext.LidarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Lidarr);
 
             var instance = config.Instances.FirstOrDefault(i => i.Id == id);
             if (instance == null)
@@ -865,9 +863,9 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get the Lidarr config and find the instance
-            var config = await _dataContext.LidarrConfigs
+            var config = await _dataContext.ArrConfigs
                 .Include(c => c.Instances)
-                .FirstAsync();
+                .FirstAsync(x => x.Type == InstanceType.Lidarr);
 
             var instance = config.Instances.FirstOrDefault(i => i.Id == id);
             if (instance == null)

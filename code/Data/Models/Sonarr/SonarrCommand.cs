@@ -1,4 +1,4 @@
-﻿using Common.Configuration.Arr;
+﻿using Data.Models.Configuration.Arr;
 
 namespace Data.Models.Sonarr;
 

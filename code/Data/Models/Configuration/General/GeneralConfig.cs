@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Common.Configuration;
 using Common.Enums;
 using Serilog.Events;
 using ValidationException = Common.Exceptions.ValidationException;
 
-namespace Common.Configuration.General;
+namespace Data.Models.Configuration.General;
 
 public sealed record GeneralConfig : IConfig
 {

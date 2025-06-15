@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using Common.Attributes;
-using Common.Configuration.Arr;
+using Data.Models.Configuration.Arr;
 using Data.Enums;
 using Data.Models.Arr.Queue;
 using Infrastructure.Interceptors;

@@ -1,4 +1,4 @@
-﻿namespace Common.Configuration.Notification;
+﻿namespace Data.Models.Configuration.Notification;
 
 public sealed record AppriseConfig : NotificationConfig
 {

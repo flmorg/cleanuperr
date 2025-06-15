@@ -1,5 +1,5 @@
 ﻿using Common.Attributes;
-using Common.Configuration.DownloadCleaner;
+using Data.Models.Configuration.DownloadCleaner;
 using Data.Enums;
 using Infrastructure.Extensions;
 using Infrastructure.Verticals.Context;

@@ -31,6 +31,20 @@ namespace Data.Migrations.Data
                 });
 
             migrationBuilder.CreateTable(
+                name: "arr_configs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    type = table.Column<string>(type: "TEXT", nullable: false),
+                    enabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    failed_import_max_strikes = table.Column<short>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_arr_configs", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "download_cleaner_configs",
                 columns: table => new
                 {
@@ -87,19 +101,6 @@ namespace Data.Migrations.Data
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_general_configs", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "lidarr_configs",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    enabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    failed_import_max_strikes = table.Column<short>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_lidarr_configs", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -161,30 +162,24 @@ namespace Data.Migrations.Data
                 });
 
             migrationBuilder.CreateTable(
-                name: "radarr_configs",
+                name: "arr_instances",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    enabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    failed_import_max_strikes = table.Column<short>(type: "INTEGER", nullable: false)
+                    arr_config_id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    name = table.Column<string>(type: "TEXT", nullable: false),
+                    url = table.Column<string>(type: "TEXT", nullable: false),
+                    api_key = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_radarr_configs", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "sonarr_configs",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    search_type = table.Column<string>(type: "TEXT", nullable: false),
-                    enabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    failed_import_max_strikes = table.Column<short>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_sonarr_configs", x => x.id);
+                    table.PrimaryKey("pk_arr_instances", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_arr_instances_arr_configs_arr_config_id",
+                        column: x => x.arr_config_id,
+                        principalTable: "arr_configs",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -207,63 +202,6 @@ namespace Data.Migrations.Data
                         principalTable: "download_cleaner_configs",
                         principalColumn: "id");
                 });
-
-            migrationBuilder.CreateTable(
-                name: "arr_instance",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    name = table.Column<string>(type: "TEXT", nullable: false),
-                    url = table.Column<string>(type: "TEXT", nullable: false),
-                    api_key = table.Column<string>(type: "TEXT", nullable: false),
-                    lidarr_config_id = table.Column<Guid>(type: "TEXT", nullable: true),
-                    radarr_config_id = table.Column<Guid>(type: "TEXT", nullable: true),
-                    sonarr_config_id = table.Column<Guid>(type: "TEXT", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_arr_instance", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_arr_instance_lidarr_configs_lidarr_config_id",
-                        column: x => x.lidarr_config_id,
-                        principalTable: "lidarr_configs",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "fk_arr_instance_radarr_configs_radarr_config_id",
-                        column: x => x.radarr_config_id,
-                        principalTable: "radarr_configs",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "fk_arr_instance_sonarr_configs_sonarr_config_id",
-                        column: x => x.sonarr_config_id,
-                        principalTable: "sonarr_configs",
-                        principalColumn: "id");
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "ix_arr_instance_lidarr_config_id",
-                table: "arr_instance",
-                column: "lidarr_config_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_arr_instance_radarr_config_id",
-                table: "arr_instance",
-                column: "radarr_config_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_arr_instance_sonarr_config_id",
-                table: "arr_instance",
-                column: "sonarr_config_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_clean_category_download_cleaner_config_id",
-                table: "clean_category",
-                column: "download_cleaner_config_id");
-            
-            migrationBuilder.InsertData(
-                table: "apprise_configs",
-                columns: new[] { "id", "key", "on_category_changed", "on_download_cleaned", "on_failed_import_strike", "on_queue_item_deleted", "on_slow_strike", "on_stalled_strike", "url" },
-                values: new object[] { new Guid("9c7a346a-2b80-4935-ae4f-5400e336fd07"), null, false, false, false, false, false, false, null });
 
             migrationBuilder.InsertData(
                 table: "queue_cleaner_configs",
@@ -343,24 +281,39 @@ namespace Data.Migrations.Data
                 values: new object[] { new Guid("1490f450-1b29-4111-ab20-8a03dbd9d366"), false, "00253fe9-6c9b-4b0e-a05e-e5d2164f2389", "Enabled", (ushort)0, (ushort)100, "[]", "Information", (ushort)30, true });
 
             migrationBuilder.InsertData(
-                table: "lidarr_configs",
-                columns: new[] { "id", "enabled", "failed_import_max_strikes" },
-                values: new object[] { new Guid("6096303a-399c-42b8-be8f-60a02cec5a51"), false, (short)-1 });
-
-            migrationBuilder.InsertData(
                 table: "notifiarr_configs",
                 columns: new[] { "id", "api_key", "channel_id", "on_category_changed", "on_download_cleaned", "on_failed_import_strike", "on_queue_item_deleted", "on_slow_strike", "on_stalled_strike" },
                 values: new object[] { new Guid("dd468589-e5ee-4e1b-b05e-28b461894846"), null, null, false, false, false, false, false, false });
 
             migrationBuilder.InsertData(
-                table: "radarr_configs",
-                columns: new[] { "id", "enabled", "failed_import_max_strikes" },
-                values: new object[] { new Guid("4fd2b82b-cffd-4b41-bcc0-204058b1e459"), false, (short)-1 });
+                table: "apprise_configs",
+                columns: new[] { "id", "key", "on_category_changed", "on_download_cleaned", "on_failed_import_strike", "on_queue_item_deleted", "on_slow_strike", "on_stalled_strike", "url" },
+                values: new object[] { new Guid("9c7a346a-2b80-4935-ae4f-5400e336fd07"), null, false, false, false, false, false, false, null });
+            
+            migrationBuilder.InsertData(
+                table: "arr_configs",
+                columns: new[] { "id", "enabled", "failed_import_max_strikes", "type" },
+                values: new object[] { new Guid("6096303a-399c-42b8-be8f-60a02cec5a51"), false, (short)-1, "radarr" });
+            
+            migrationBuilder.InsertData(
+                table: "arr_configs",
+                columns: new[] { "id", "enabled", "failed_import_max_strikes", "type" },
+                values: new object[] { new Guid("4fd2b82b-cffd-4b41-bcc0-204058b1e459"), false, (short)-1, "lidarr" });
 
             migrationBuilder.InsertData(
-                table: "sonarr_configs",
-                columns: new[] { "id", "enabled", "failed_import_max_strikes", "search_type" },
-                values: new object[] { new Guid("0b38a68f-3d7b-4d98-ae96-115da62d9af2"), false, (short)-1, "Episode" });
+                table: "arr_configs",
+                columns: new[] { "id", "enabled", "failed_import_max_strikes", "type" },
+                values: new object[] { new Guid("0b38a68f-3d7b-4d98-ae96-115da62d9af2"), false, (short)-1, "sonarr" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_arr_instances_arr_config_id",
+                table: "arr_instances",
+                column: "arr_config_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_clean_category_download_cleaner_config_id",
+                table: "clean_category",
+                column: "download_cleaner_config_id");
         }
 
         /// <inheritdoc />
@@ -370,7 +323,7 @@ namespace Data.Migrations.Data
                 name: "apprise_configs");
 
             migrationBuilder.DropTable(
-                name: "arr_instance");
+                name: "arr_instances");
 
             migrationBuilder.DropTable(
                 name: "clean_category");
@@ -388,13 +341,7 @@ namespace Data.Migrations.Data
                 name: "queue_cleaner_configs");
 
             migrationBuilder.DropTable(
-                name: "lidarr_configs");
-
-            migrationBuilder.DropTable(
-                name: "radarr_configs");
-
-            migrationBuilder.DropTable(
-                name: "sonarr_configs");
+                name: "arr_configs");
 
             migrationBuilder.DropTable(
                 name: "download_cleaner_configs");

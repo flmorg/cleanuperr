@@ -1,3 +1,4 @@
+using Common.Configuration;
 using Infrastructure.Events;
 using Infrastructure.Interceptors;
 using Infrastructure.Verticals.ContentBlocker;
@@ -54,7 +55,7 @@ public partial class TransmissionService : DownloadService, ITransmissionService
     }
     
     /// <inheritdoc />
-    public override void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
+    public override void Initialize(DownloadClientConfig downloadClientConfig)
     {
         // Initialize base service first
         base.Initialize(downloadClientConfig);

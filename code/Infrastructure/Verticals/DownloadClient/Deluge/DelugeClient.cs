@@ -13,7 +13,7 @@ namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
 public sealed class DelugeClient
 {
-    private readonly Common.Configuration.DownloadClientConfig _config;
+    private readonly DownloadClientConfig _config;
     private readonly HttpClient _httpClient;
     
     private static readonly IReadOnlyList<string> Fields =
@@ -33,7 +33,7 @@ public sealed class DelugeClient
         "download_location"
     ];
     
-    public DelugeClient(Common.Configuration.DownloadClientConfig config, HttpClient httpClient)
+    public DelugeClient(DownloadClientConfig config, HttpClient httpClient)
     {
         _config = config;
         _httpClient = httpClient;

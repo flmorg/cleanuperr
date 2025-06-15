@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.QueueCleaner;
 using Shouldly;
 
 namespace Infrastructure.Tests.Verticals.ContentBlocker;

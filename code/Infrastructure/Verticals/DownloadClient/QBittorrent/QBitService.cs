@@ -1,3 +1,4 @@
+using Common.Configuration;
 using Data;
 using Infrastructure.Http;
 using Infrastructure.Interceptors;
@@ -35,7 +36,7 @@ public partial class QBitService : DownloadService, IQBitService
     }
     
     /// <inheritdoc />
-    public override void Initialize(Common.Configuration.DownloadClientConfig downloadClientConfig)
+    public override void Initialize(DownloadClientConfig downloadClientConfig)
     {
         // Initialize base service first
         base.Initialize(downloadClientConfig);

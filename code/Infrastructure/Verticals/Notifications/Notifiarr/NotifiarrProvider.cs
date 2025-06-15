@@ -1,4 +1,4 @@
-using Common.Configuration.Notification;
+using Data.Models.Configuration.Notification;
 using Data;
 using Infrastructure.Verticals.Notifications.Models;
 using Mapster;

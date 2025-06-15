@@ -1,6 +1,6 @@
 using Common.Attributes;
-using Common.Configuration.Arr;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.Arr;
+using Data.Models.Configuration.QueueCleaner;
 using Common.Helpers;
 using Data.Enums;
 using Data.Models.Arr;

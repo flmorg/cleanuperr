@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using Common.Configuration.QueueCleaner;
+using Data.Models.Configuration.QueueCleaner;
 using Common.Helpers;
 using Data;
 using Data.Enums;

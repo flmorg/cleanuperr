@@ -18,7 +18,81 @@ namespace Data.Migrations.Data
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
 
-            modelBuilder.Entity("Common.Configuration.Arr.ArrInstance", b =>
+            modelBuilder.Entity("Common.Configuration.DownloadClientConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("enabled");
+
+                    b.Property<string>("Host")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("host");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("password");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("type");
+
+                    b.Property<string>("TypeName")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("type_name");
+
+                    b.Property<string>("UrlBase")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("url_base");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("username");
+
+                    b.HasKey("Id")
+                        .HasName("pk_download_clients");
+
+                    b.ToTable("download_clients", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Models.Configuration.Arr.ArrConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("enabled");
+
+                    b.Property<short>("FailedImportMaxStrikes")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("failed_import_max_strikes");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_arr_configs");
+
+                    b.ToTable("arr_configs", (string)null);
+                });
+
+            modelBuilder.Entity("Data.Models.Configuration.Arr.ArrInstance", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -30,22 +104,14 @@ namespace Data.Migrations.Data
                         .HasColumnType("TEXT")
                         .HasColumnName("api_key");
 
-                    b.Property<Guid?>("LidarrConfigId")
+                    b.Property<Guid>("ArrConfigId")
                         .HasColumnType("TEXT")
-                        .HasColumnName("lidarr_config_id");
+                        .HasColumnName("arr_config_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT")
                         .HasColumnName("name");
-
-                    b.Property<Guid?>("RadarrConfigId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("radarr_config_id");
-
-                    b.Property<Guid?>("SonarrConfigId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("sonarr_config_id");
 
                     b.Property<string>("Url")
                         .IsRequired()
@@ -53,89 +119,15 @@ namespace Data.Migrations.Data
                         .HasColumnName("url");
 
                     b.HasKey("Id")
-                        .HasName("pk_arr_instance");
+                        .HasName("pk_arr_instances");
 
-                    b.HasIndex("LidarrConfigId")
-                        .HasDatabaseName("ix_arr_instance_lidarr_config_id");
+                    b.HasIndex("ArrConfigId")
+                        .HasDatabaseName("ix_arr_instances_arr_config_id");
 
-                    b.HasIndex("RadarrConfigId")
-                        .HasDatabaseName("ix_arr_instance_radarr_config_id");
-
-                    b.HasIndex("SonarrConfigId")
-                        .HasDatabaseName("ix_arr_instance_sonarr_config_id");
-
-                    b.ToTable("arr_instance", (string)null);
+                    b.ToTable("arr_instances", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Configuration.Arr.LidarrConfig", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("id");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("enabled");
-
-                    b.Property<short>("FailedImportMaxStrikes")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("failed_import_max_strikes");
-
-                    b.HasKey("Id")
-                        .HasName("pk_lidarr_configs");
-
-                    b.ToTable("lidarr_configs", (string)null);
-                });
-
-            modelBuilder.Entity("Common.Configuration.Arr.RadarrConfig", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("id");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("enabled");
-
-                    b.Property<short>("FailedImportMaxStrikes")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("failed_import_max_strikes");
-
-                    b.HasKey("Id")
-                        .HasName("pk_radarr_configs");
-
-                    b.ToTable("radarr_configs", (string)null);
-                });
-
-            modelBuilder.Entity("Common.Configuration.Arr.SonarrConfig", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("id");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("enabled");
-
-                    b.Property<short>("FailedImportMaxStrikes")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("failed_import_max_strikes");
-
-                    b.Property<string>("SearchType")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("search_type");
-
-                    b.HasKey("Id")
-                        .HasName("pk_sonarr_configs");
-
-                    b.ToTable("sonarr_configs", (string)null);
-                });
-
-            modelBuilder.Entity("Common.Configuration.DownloadCleaner.CleanCategory", b =>
+            modelBuilder.Entity("Data.Models.Configuration.DownloadCleaner.CleanCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -172,7 +164,7 @@ namespace Data.Migrations.Data
                     b.ToTable("clean_category", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Configuration.DownloadCleaner.DownloadCleanerConfig", b =>
+            modelBuilder.Entity("Data.Models.Configuration.DownloadCleaner.DownloadCleanerConfig", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,55 +217,7 @@ namespace Data.Migrations.Data
                     b.ToTable("download_cleaner_configs", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Configuration.DownloadClientConfig", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("id");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("enabled");
-
-                    b.Property<string>("Host")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("host");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Password")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("password");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("type");
-
-                    b.Property<string>("TypeName")
-                        .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("type_name");
-
-                    b.Property<string>("UrlBase")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("url_base");
-
-                    b.Property<string>("Username")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("username");
-
-                    b.HasKey("Id")
-                        .HasName("pk_download_clients");
-
-                    b.ToTable("download_clients", (string)null);
-                });
-
-            modelBuilder.Entity("Common.Configuration.General.GeneralConfig", b =>
+            modelBuilder.Entity("Data.Models.Configuration.General.GeneralConfig", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -326,7 +270,7 @@ namespace Data.Migrations.Data
                     b.ToTable("general_configs", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Configuration.Notification.AppriseConfig", b =>
+            modelBuilder.Entity("Data.Models.Configuration.Notification.AppriseConfig", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -371,7 +315,7 @@ namespace Data.Migrations.Data
                     b.ToTable("apprise_configs", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Configuration.Notification.NotifiarrConfig", b =>
+            modelBuilder.Entity("Data.Models.Configuration.Notification.NotifiarrConfig", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -416,7 +360,7 @@ namespace Data.Migrations.Data
                     b.ToTable("notifiarr_configs", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Configuration.QueueCleaner.QueueCleanerConfig", b =>
+            modelBuilder.Entity("Data.Models.Configuration.QueueCleaner.QueueCleanerConfig", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -436,7 +380,7 @@ namespace Data.Migrations.Data
                         .HasColumnType("INTEGER")
                         .HasColumnName("use_advanced_scheduling");
 
-                    b.ComplexProperty<Dictionary<string, object>>("ContentBlocker", "Common.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig", b1 =>
+                    b.ComplexProperty<Dictionary<string, object>>("ContentBlocker", "Data.Models.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig", b1 =>
                         {
                             b1.IsRequired();
 
@@ -452,7 +396,7 @@ namespace Data.Migrations.Data
                                 .HasColumnType("INTEGER")
                                 .HasColumnName("content_blocker_ignore_private");
 
-                            b1.ComplexProperty<Dictionary<string, object>>("Lidarr", "Common.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig.Lidarr#BlocklistSettings", b2 =>
+                            b1.ComplexProperty<Dictionary<string, object>>("Lidarr", "Data.Models.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig.Lidarr#BlocklistSettings", b2 =>
                                 {
                                     b2.IsRequired();
 
@@ -465,7 +409,7 @@ namespace Data.Migrations.Data
                                         .HasColumnName("content_blocker_lidarr_blocklist_type");
                                 });
 
-                            b1.ComplexProperty<Dictionary<string, object>>("Radarr", "Common.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig.Radarr#BlocklistSettings", b2 =>
+                            b1.ComplexProperty<Dictionary<string, object>>("Radarr", "Data.Models.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig.Radarr#BlocklistSettings", b2 =>
                                 {
                                     b2.IsRequired();
 
@@ -478,7 +422,7 @@ namespace Data.Migrations.Data
                                         .HasColumnName("content_blocker_radarr_blocklist_type");
                                 });
 
-                            b1.ComplexProperty<Dictionary<string, object>>("Sonarr", "Common.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig.Sonarr#BlocklistSettings", b2 =>
+                            b1.ComplexProperty<Dictionary<string, object>>("Sonarr", "Data.Models.Configuration.QueueCleaner.QueueCleanerConfig.ContentBlocker#ContentBlockerConfig.Sonarr#BlocklistSettings", b2 =>
                                 {
                                     b2.IsRequired();
 
@@ -492,7 +436,7 @@ namespace Data.Migrations.Data
                                 });
                         });
 
-                    b.ComplexProperty<Dictionary<string, object>>("FailedImport", "Common.Configuration.QueueCleaner.QueueCleanerConfig.FailedImport#FailedImportConfig", b1 =>
+                    b.ComplexProperty<Dictionary<string, object>>("FailedImport", "Data.Models.Configuration.QueueCleaner.QueueCleanerConfig.FailedImport#FailedImportConfig", b1 =>
                         {
                             b1.IsRequired();
 
@@ -514,7 +458,7 @@ namespace Data.Migrations.Data
                                 .HasColumnName("failed_import_max_strikes");
                         });
 
-                    b.ComplexProperty<Dictionary<string, object>>("Slow", "Common.Configuration.QueueCleaner.QueueCleanerConfig.Slow#SlowConfig", b1 =>
+                    b.ComplexProperty<Dictionary<string, object>>("Slow", "Data.Models.Configuration.QueueCleaner.QueueCleanerConfig.Slow#SlowConfig", b1 =>
                         {
                             b1.IsRequired();
 
@@ -549,7 +493,7 @@ namespace Data.Migrations.Data
                                 .HasColumnName("slow_reset_strikes_on_progress");
                         });
 
-                    b.ComplexProperty<Dictionary<string, object>>("Stalled", "Common.Configuration.QueueCleaner.QueueCleanerConfig.Stalled#StalledConfig", b1 =>
+                    b.ComplexProperty<Dictionary<string, object>>("Stalled", "Data.Models.Configuration.QueueCleaner.QueueCleanerConfig.Stalled#StalledConfig", b1 =>
                         {
                             b1.IsRequired();
 
@@ -580,48 +524,32 @@ namespace Data.Migrations.Data
                     b.ToTable("queue_cleaner_configs", (string)null);
                 });
 
-            modelBuilder.Entity("Common.Configuration.Arr.ArrInstance", b =>
+            modelBuilder.Entity("Data.Models.Configuration.Arr.ArrInstance", b =>
                 {
-                    b.HasOne("Common.Configuration.Arr.LidarrConfig", null)
+                    b.HasOne("Data.Models.Configuration.Arr.ArrConfig", "ArrConfig")
                         .WithMany("Instances")
-                        .HasForeignKey("LidarrConfigId")
-                        .HasConstraintName("fk_arr_instance_lidarr_configs_lidarr_config_id");
+                        .HasForeignKey("ArrConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_arr_instances_arr_configs_arr_config_id");
 
-                    b.HasOne("Common.Configuration.Arr.RadarrConfig", null)
-                        .WithMany("Instances")
-                        .HasForeignKey("RadarrConfigId")
-                        .HasConstraintName("fk_arr_instance_radarr_configs_radarr_config_id");
-
-                    b.HasOne("Common.Configuration.Arr.SonarrConfig", null)
-                        .WithMany("Instances")
-                        .HasForeignKey("SonarrConfigId")
-                        .HasConstraintName("fk_arr_instance_sonarr_configs_sonarr_config_id");
+                    b.Navigation("ArrConfig");
                 });
 
-            modelBuilder.Entity("Common.Configuration.DownloadCleaner.CleanCategory", b =>
+            modelBuilder.Entity("Data.Models.Configuration.DownloadCleaner.CleanCategory", b =>
                 {
-                    b.HasOne("Common.Configuration.DownloadCleaner.DownloadCleanerConfig", null)
+                    b.HasOne("Data.Models.Configuration.DownloadCleaner.DownloadCleanerConfig", null)
                         .WithMany("Categories")
                         .HasForeignKey("DownloadCleanerConfigId")
                         .HasConstraintName("fk_clean_category_download_cleaner_configs_download_cleaner_config_id");
                 });
 
-            modelBuilder.Entity("Common.Configuration.Arr.LidarrConfig", b =>
+            modelBuilder.Entity("Data.Models.Configuration.Arr.ArrConfig", b =>
                 {
                     b.Navigation("Instances");
                 });
 
-            modelBuilder.Entity("Common.Configuration.Arr.RadarrConfig", b =>
-                {
-                    b.Navigation("Instances");
-                });
-
-            modelBuilder.Entity("Common.Configuration.Arr.SonarrConfig", b =>
-                {
-                    b.Navigation("Instances");
-                });
-
-            modelBuilder.Entity("Common.Configuration.DownloadCleaner.DownloadCleanerConfig", b =>
+            modelBuilder.Entity("Data.Models.Configuration.DownloadCleaner.DownloadCleanerConfig", b =>
                 {
                     b.Navigation("Categories");
                 });
