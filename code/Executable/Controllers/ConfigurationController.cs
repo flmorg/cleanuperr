@@ -264,9 +264,10 @@ public class ConfigurationController : ControllerBase
         try
         {
             var config = await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
                 .AsNoTracking()
                 .FirstAsync(x => x.Type == InstanceType.Lidarr);
-            return Ok(config);
+            return Ok(config.Adapt<ArrConfigDto>());
         }
         finally
         {
@@ -482,29 +483,14 @@ public class ConfigurationController : ControllerBase
         try
         {
             // Get existing config
-            // var oldConfig = await _dataContext.LidarrConfigs
-            //     .Include(x => x.Instances)
-            //     .FirstAsync();
-            //
-            // // Create new config with updated basic settings only (instances managed separately)
-            // var updatedConfig = new LidarrConfig
-            // {
-            //     Id = oldConfig.Id, // Keep the existing ID
-            //     Enabled = newConfigDto.Enabled,
-            //     FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes,
-            //     Instances = oldConfig.Instances // Keep existing instances unchanged
-            // };
-            //
-            // // Validate the configuration
-            // updatedConfig.Validate();
-            //
-            // // Update the existing entity using Mapster, excluding the ID
-            // var config = new TypeAdapterConfig();
-            // config.NewConfig<LidarrConfig, LidarrConfig>()
-            //     .Ignore(dest => dest.Id)
-            //     .Ignore(dest => dest.Instances); // Don't update instances here
-            //
-            // updatedConfig.Adapt(oldConfig, config);
+            var config = await _dataContext.ArrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Lidarr);
+
+            config.Enabled = newConfigDto.Enabled;
+            config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
+
+            // Validate the configuration
+            config.Validate();
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -781,7 +767,6 @@ public class ConfigurationController : ControllerBase
         {
             // Get the Lidarr config to add the instance to
             var config = await _dataContext.ArrConfigs
-                .Include(c => c.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Lidarr);
 
             // Create the new instance
@@ -791,14 +776,15 @@ public class ConfigurationController : ControllerBase
                 Url = new Uri(newInstance.Url),
                 ApiKey = newInstance.ApiKey,
                 ArrConfigId = config.Id,
-                ArrConfig = config // Set the navigation property
             };
-
-            // Add to the config
-            config.Instances.Add(instance);
+            
+            // Add to the config's instances collection
+            // config.Instances.Add(instance);
+            await _dataContext.ArrInstances.AddAsync(instance);
+            // Save changes
             await _dataContext.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetLidarrConfig), new { id = instance.Id }, instance);
+            return CreatedAtAction(nameof(GetLidarrConfig), new { id = instance.Id }, instance.Adapt<ArrInstanceDto>());
         }
         catch (Exception ex)
         {
@@ -835,7 +821,7 @@ public class ConfigurationController : ControllerBase
 
             await _dataContext.SaveChangesAsync();
 
-            return Ok(instance);
+            return Ok(instance.Adapt<ArrInstanceDto>());
         }
         catch (Exception ex)
         {

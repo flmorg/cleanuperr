@@ -49,9 +49,51 @@ export class LidarrConfigStore extends signalStore(
     ),
     
     /**
+     * Save the Lidarr configuration (basic settings only)
+     */
+    saveConfig: rxMethod<Partial<LidarrConfig>>(
+      (config$: Observable<Partial<LidarrConfig>>) => config$.pipe(
+        tap(() => patchState(store, { saving: true, error: null })),
+        switchMap(configUpdate => {
+          const currentConfig = store.config();
+          if (!currentConfig) {
+            patchState(store, { 
+              saving: false, 
+              error: 'No current configuration available' 
+            });
+            return EMPTY;
+          }
+          
+          const updatedConfig: LidarrConfig = {
+            ...currentConfig,
+            ...configUpdate
+          };
+          
+          return configService.updateLidarrConfig(updatedConfig).pipe(
+            tap({
+              next: () => {
+                patchState(store, { 
+                  config: updatedConfig, 
+                  saving: false 
+                });
+              },
+              error: (error) => {
+                patchState(store, { 
+                  saving: false, 
+                  error: error.message || 'Failed to save Lidarr configuration' 
+                });
+              }
+            }),
+            catchError(() => EMPTY)
+          );
+        })
+      )
+    ),
+    
+    /**
      * Save the Lidarr configuration
      */
-    saveConfig: rxMethod<LidarrConfig>(
+    saveFullConfig: rxMethod<LidarrConfig>(
       (config$: Observable<LidarrConfig>) => config$.pipe(
         tap(() => patchState(store, { saving: true, error: null })),
         switchMap(config => configService.updateLidarrConfig(config).pipe(
