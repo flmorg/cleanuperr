@@ -31,7 +31,7 @@ public class LoggingInitializer : BackgroundService
                 
                 await _eventPublisher.PublishAsync(
                     random.Next(0, 100) > 50 ? EventType.DownloadCleaned : EventType.StalledStrike,
-                    "test",
+                    "This is a very long message to test how it all looks in the frontend. This is just gibberish, but helps us figure out how the layout should be to display messages properly.",
                     EventSeverity.Important,
                     data: new { Hash = "hash", Name = "name", StrikeCount = "1", Type = "stalled" });
                 throw new Exception("test exception");
@@ -42,7 +42,7 @@ public class LoggingInitializer : BackgroundService
                 _logger.LogTrace("test trace");
                 _logger.LogDebug("test debug");
                 _logger.LogWarning("test warn");
-                _logger.LogError(exception, "test");
+                _logger.LogError(exception, "This is a very long message to test how it all looks in the frontend. This is just gibberish, but helps us figure out how the layout should be to display messages properly.");
             }
             
             await Task.Delay(10000, stoppingToken);

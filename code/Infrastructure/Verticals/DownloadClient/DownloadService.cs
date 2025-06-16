@@ -19,6 +19,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
+public class HealthCheckResult
+{
+    public bool IsHealthy { get; set; }
+    public string? ErrorMessage { get; set; }
+    public TimeSpan ResponseTime { get; set; }
+}
+
 public abstract class DownloadService : IDownloadService
 {
     protected readonly ILogger<DownloadService> _logger;
@@ -28,17 +35,11 @@ public abstract class DownloadService : IDownloadService
     protected readonly MemoryCacheEntryOptions _cacheOptions;
     protected readonly IDryRunInterceptor _dryRunInterceptor;
     protected readonly IHardLinkFileService _hardLinkFileService;
-    protected readonly IDynamicHttpClientProvider _httpClientProvider;
     protected readonly EventPublisher _eventPublisher;
     protected readonly BlocklistProvider _blocklistProvider;
-    protected HttpClient? _httpClient;
-
+    protected readonly HttpClient _httpClient;
+    protected readonly DownloadClientConfig _downloadClientConfig;
     
-    // Client-specific configuration
-    protected DownloadClientConfig _downloadClientConfig;
-    
-    // HTTP client for this service
-
     protected DownloadService(
         ILogger<DownloadService> logger,
         IMemoryCache cache,
@@ -48,7 +49,8 @@ public abstract class DownloadService : IDownloadService
         IHardLinkFileService hardLinkFileService,
         IDynamicHttpClientProvider httpClientProvider,
         EventPublisher eventPublisher,
-        BlocklistProvider blocklistProvider
+        BlocklistProvider blocklistProvider,
+        DownloadClientConfig downloadClientConfig
     )
     {
         _logger = logger;
@@ -57,11 +59,12 @@ public abstract class DownloadService : IDownloadService
         _striker = striker;
         _dryRunInterceptor = dryRunInterceptor;
         _hardLinkFileService = hardLinkFileService;
-        _httpClientProvider = httpClientProvider;
         _eventPublisher = eventPublisher;
         _blocklistProvider = blocklistProvider;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
+        _downloadClientConfig = downloadClientConfig;
+        _httpClient = httpClientProvider.CreateClient(downloadClientConfig);
     }
     
     /// <inheritdoc />
@@ -70,21 +73,23 @@ public abstract class DownloadService : IDownloadService
         return _downloadClientConfig.Id;
     }
     
-    /// <inheritdoc />
-    public virtual void Initialize(DownloadClientConfig downloadClientConfig)
-    {
-        _downloadClientConfig = downloadClientConfig;
-        
-        // Create HTTP client for this service
-        _httpClient = _httpClientProvider.CreateClient(downloadClientConfig);
-        
-        _logger.LogDebug("Initialized download service for client {clientId} ({type})", 
-            downloadClientConfig.Id, downloadClientConfig.TypeName);
-    }
+    // /// <inheritdoc />
+    // public virtual void Initialize(DownloadClientConfig downloadClientConfig)
+    // {
+    //     _downloadClientConfig = downloadClientConfig;
+    //     
+    //     // Create HTTP client for this service
+    //     _httpClient = _httpClientProvider.CreateClient(downloadClientConfig);
+    //     
+    //     _logger.LogDebug("Initialized download service for client {clientId} ({type})", 
+    //         downloadClientConfig.Id, downloadClientConfig.TypeName);
+    // }
 
     public abstract void Dispose();
 
     public abstract Task LoginAsync();
+
+    public abstract Task<HealthCheckResult> HealthCheckAsync();
 
     public abstract Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash,
         IReadOnlyList<string> ignoredDownloads);

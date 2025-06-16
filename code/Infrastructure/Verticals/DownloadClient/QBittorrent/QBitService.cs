@@ -14,11 +14,10 @@ namespace Infrastructure.Verticals.DownloadClient.QBittorrent;
 
 public partial class QBitService : DownloadService, IQBitService
 {
-    protected QBittorrentClient? _client;
+    protected readonly QBittorrentClient _client;
 
     public QBitService(
         ILogger<QBitService> logger,
-        IHttpClientFactory httpClientFactory,
         IMemoryCache cache,
         IFilenameEvaluator filenameEvaluator,
         IStriker striker,
@@ -26,35 +25,18 @@ public partial class QBitService : DownloadService, IQBitService
         IHardLinkFileService hardLinkFileService,
         IDynamicHttpClientProvider httpClientProvider,
         EventPublisher eventPublisher,
-        BlocklistProvider blocklistProvider
+        BlocklistProvider blocklistProvider,
+        DownloadClientConfig downloadClientConfig
     ) : base(
         logger, cache, filenameEvaluator, striker, dryRunInterceptor, hardLinkFileService,
-        httpClientProvider, eventPublisher, blocklistProvider
+        httpClientProvider, eventPublisher, blocklistProvider, downloadClientConfig
     )
     {
-        // Client will be initialized when Initialize() is called with a specific client configuration
+        _client = new QBittorrentClient(_httpClient, downloadClientConfig.Url);
     }
     
-    /// <inheritdoc />
-    public override void Initialize(DownloadClientConfig downloadClientConfig)
-    {
-        // Initialize base service first
-        base.Initialize(downloadClientConfig);
-        
-        // Create QBittorrent client
-        _client = new QBittorrentClient(_httpClient, downloadClientConfig.Url);
-        
-        _logger.LogInformation("Initialized QBittorrent service for client {clientName} ({clientId})", 
-            downloadClientConfig.Name, downloadClientConfig.Id);
-    }
-
     public override async Task LoginAsync()
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         if (string.IsNullOrEmpty(_downloadClientConfig.Username) && string.IsNullOrEmpty(_downloadClientConfig.Password))
         {
             _logger.LogDebug("No credentials configured for client {clientId}, skipping login", _downloadClientConfig.Id);
@@ -72,14 +54,54 @@ public partial class QBitService : DownloadService, IQBitService
             throw;
         }
     }
+
+    public override async Task<HealthCheckResult> HealthCheckAsync()
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        
+        try
+        {
+            bool hasCredentials = !string.IsNullOrEmpty(_downloadClientConfig.Username) || 
+                                  !string.IsNullOrEmpty(_downloadClientConfig.Password);
+
+            if (hasCredentials)
+            {
+                // If credentials are provided, we must be able to login for the service to be healthy
+                await _client.LoginAsync(_downloadClientConfig.Username, _downloadClientConfig.Password);
+                _logger.LogDebug("Health check: Successfully logged in to QBittorrent client {clientId}", _downloadClientConfig.Id);
+            }
+            else
+            {
+                // If no credentials, test connectivity using version endpoint
+                await _client.GetApiVersionAsync();
+                _logger.LogDebug("Health check: Successfully connected to QBittorrent client {clientId}", _downloadClientConfig.Id);
+            }
+
+            stopwatch.Stop();
+
+            return new HealthCheckResult
+            {
+                IsHealthy = true,
+                ResponseTime = stopwatch.Elapsed
+            };
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            
+            _logger.LogWarning(ex, "Health check failed for QBittorrent client {clientId}", _downloadClientConfig.Id);
+            
+            return new HealthCheckResult
+            {
+                IsHealthy = false,
+                ErrorMessage = $"Connection failed: {ex.Message}",
+                ResponseTime = stopwatch.Elapsed
+            };
+        }
+    }
     
     private async Task<IReadOnlyList<TorrentTracker>> GetTrackersAsync(string hash)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         return (await _client.GetTorrentTrackersAsync(hash))
             .Where(x => x.Url.Contains("**"))
             .ToList();
@@ -87,7 +109,6 @@ public partial class QBitService : DownloadService, IQBitService
     
     public override void Dispose()
     {
-        _client?.Dispose();
-        _httpClient?.Dispose();
+        _client.Dispose();
     }
 }

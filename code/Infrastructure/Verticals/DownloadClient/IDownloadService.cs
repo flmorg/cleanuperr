@@ -1,11 +1,4 @@
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using Common.Configuration;
 using Data.Models.Configuration.DownloadCleaner;
-using Data.Models.Configuration.QueueCleaner;
-using Data.Enums;
-using Infrastructure.Interceptors;
-using QBittorrent.Client;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
@@ -17,13 +10,13 @@ public interface IDownloadService : IDisposable
     /// <returns>The client ID</returns>
     Guid GetClientId();
 
-    /// <summary>
-    /// Initializes the download service with client-specific configuration
-    /// </summary>
-    /// <param name="downloadClientConfig">The client configuration</param>
-    public void Initialize(DownloadClientConfig downloadClientConfig);
-    
     public Task LoginAsync();
+
+    /// <summary>
+    /// Performs a health check on the download client
+    /// </summary>
+    /// <returns>The health check result</returns>
+    public Task<HealthCheckResult> HealthCheckAsync();
 
     /// <summary>
     /// Checks whether the download should be removed from the *arr queue.

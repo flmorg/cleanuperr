@@ -1,8 +1,15 @@
 using Common.Configuration;
 using Common.Enums;
+using Infrastructure.Events;
+using Infrastructure.Http;
+using Infrastructure.Interceptors;
+using Infrastructure.Verticals.ContentBlocker;
 using Infrastructure.Verticals.DownloadClient.Deluge;
 using Infrastructure.Verticals.DownloadClient.QBittorrent;
 using Infrastructure.Verticals.DownloadClient.Transmission;
+using Infrastructure.Verticals.Files;
+using Infrastructure.Verticals.ItemStriker;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -63,23 +70,73 @@ public sealed class DownloadServiceFactory
         
         return downloadClientConfig.TypeName switch
         {
-            DownloadClientTypeName.QBittorrent => CreateClientService<QBitService>(downloadClientConfig),
-            DownloadClientTypeName.Deluge => CreateClientService<DelugeService>(downloadClientConfig),
-            DownloadClientTypeName.Transmission => CreateClientService<TransmissionService>(downloadClientConfig),
+            DownloadClientTypeName.QBittorrent => CreateQBitService(downloadClientConfig),
+            DownloadClientTypeName.Deluge => CreateDelugeService(downloadClientConfig),
+            DownloadClientTypeName.Transmission => CreateTransmissionService(downloadClientConfig),
             _ => throw new NotSupportedException($"Download client type {downloadClientConfig.TypeName} is not supported")
         };
     }
     
-    /// <summary>
-    /// Creates a download client service for a specific client type
-    /// </summary>
-    /// <typeparam name="T">The type of download service to create</typeparam>
-    /// <param name="downloadClientConfig">The client configuration</param>
-    /// <returns>An implementation of IDownloadService</returns>
-    private T CreateClientService<T>(DownloadClientConfig downloadClientConfig) where T : IDownloadService
+    private QBitService CreateQBitService(DownloadClientConfig downloadClientConfig)
     {
-        var service = _serviceProvider.GetRequiredService<T>();
-        service.Initialize(downloadClientConfig);
+        var logger = _serviceProvider.GetRequiredService<ILogger<QBitService>>();
+        var cache = _serviceProvider.GetRequiredService<IMemoryCache>();
+        var filenameEvaluator = _serviceProvider.GetRequiredService<IFilenameEvaluator>();
+        var striker = _serviceProvider.GetRequiredService<IStriker>();
+        var dryRunInterceptor = _serviceProvider.GetRequiredService<IDryRunInterceptor>();
+        var hardLinkFileService = _serviceProvider.GetRequiredService<IHardLinkFileService>();
+        var httpClientProvider = _serviceProvider.GetRequiredService<IDynamicHttpClientProvider>();
+        var eventPublisher = _serviceProvider.GetRequiredService<EventPublisher>();
+        var blocklistProvider = _serviceProvider.GetRequiredService<BlocklistProvider>();
+        
+        // Create the QBitService instance
+        QBitService service = new(
+            logger, cache, filenameEvaluator, striker, dryRunInterceptor,
+            hardLinkFileService, httpClientProvider, eventPublisher, blocklistProvider, downloadClientConfig
+        );
+        
+        return service;
+    }
+    
+    private DelugeService CreateDelugeService(DownloadClientConfig downloadClientConfig)
+    {
+        var logger = _serviceProvider.GetRequiredService<ILogger<DelugeService>>();
+        var filenameEvaluator = _serviceProvider.GetRequiredService<IFilenameEvaluator>();
+        var cache = _serviceProvider.GetRequiredService<IMemoryCache>();
+        var striker = _serviceProvider.GetRequiredService<IStriker>();
+        var dryRunInterceptor = _serviceProvider.GetRequiredService<IDryRunInterceptor>();
+        var hardLinkFileService = _serviceProvider.GetRequiredService<IHardLinkFileService>();
+        var httpClientProvider = _serviceProvider.GetRequiredService<IDynamicHttpClientProvider>();
+        var eventPublisher = _serviceProvider.GetRequiredService<EventPublisher>();
+        var blocklistProvider = _serviceProvider.GetRequiredService<BlocklistProvider>();
+        
+        // Create the DelugeService instance
+        DelugeService service = new(
+            logger, cache, filenameEvaluator, striker, dryRunInterceptor,
+            hardLinkFileService, httpClientProvider, eventPublisher, blocklistProvider, downloadClientConfig
+        );
+        
+        return service;
+    }
+    
+    private TransmissionService CreateTransmissionService(DownloadClientConfig downloadClientConfig)
+    {
+        var logger = _serviceProvider.GetRequiredService<ILogger<TransmissionService>>();
+        var cache = _serviceProvider.GetRequiredService<IMemoryCache>();
+        var filenameEvaluator = _serviceProvider.GetRequiredService<IFilenameEvaluator>();
+        var striker = _serviceProvider.GetRequiredService<IStriker>();
+        var dryRunInterceptor = _serviceProvider.GetRequiredService<IDryRunInterceptor>();
+        var hardLinkFileService = _serviceProvider.GetRequiredService<IHardLinkFileService>();
+        var httpClientProvider = _serviceProvider.GetRequiredService<IDynamicHttpClientProvider>();
+        var eventPublisher = _serviceProvider.GetRequiredService<EventPublisher>();
+        var blocklistProvider = _serviceProvider.GetRequiredService<BlocklistProvider>();
+        
+        // Create the TransmissionService instance
+        TransmissionService service = new(
+            logger, cache, filenameEvaluator, striker, dryRunInterceptor,
+            hardLinkFileService, httpClientProvider, eventPublisher, blocklistProvider, downloadClientConfig
+        );
+        
         return service;
     }
 }

@@ -1,3 +1,4 @@
+using Common.Enums;
 using Data;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.EntityFrameworkCore;
@@ -61,50 +62,23 @@ public class HealthCheckService : IHealthCheckService
             // Get the client instance
             var client = _downloadServiceFactory.GetDownloadService(downloadClientConfig);
             
-            // Measure response time
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            // Execute the health check
+            var healthResult = await client.HealthCheckAsync();
             
-            try
+            // Create health status object
+            var status = new HealthStatus
             {
-                // Execute the login to check connectivity
-                await client.LoginAsync();
-                
-                stopwatch.Stop();
-                
-                // Create health status object
-                var status = new HealthStatus
-                {
-                    ClientId = clientId,
-                    ClientName = downloadClientConfig.Name,
-                    ClientTypeName = downloadClientConfig.TypeName,
-                    IsHealthy = true,
-                    LastChecked = DateTime.UtcNow,
-                    ResponseTime = stopwatch.Elapsed
-                };
-                
-                UpdateHealthStatus(status);
-                return status;
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                
-                _logger.LogWarning(ex, "Health check failed for client {clientId}", clientId);
-                
-                var status = new HealthStatus
-                {
-                    ClientId = clientId,
-                    ClientName = downloadClientConfig.Name,
-                    ClientTypeName = downloadClientConfig.TypeName,
-                    IsHealthy = false,
-                    LastChecked = DateTime.UtcNow,
-                    ErrorMessage = $"Connection failed: {ex.Message}",
-                    ResponseTime = stopwatch.Elapsed
-                };
-                
-                UpdateHealthStatus(status);
-                return status;
-            }
+                ClientId = clientId,
+                ClientName = downloadClientConfig.Name,
+                ClientTypeName = downloadClientConfig.TypeName,
+                IsHealthy = healthResult.IsHealthy,
+                LastChecked = DateTime.UtcNow,
+                ErrorMessage = healthResult.ErrorMessage,
+                ResponseTime = healthResult.ResponseTime
+            };
+            
+            UpdateHealthStatus(status);
+            return status;
         }
         catch (Exception ex)
         {
@@ -133,6 +107,7 @@ public class HealthCheckService : IHealthCheckService
             // Get all enabled client configurations
             var enabledClients = await _dataContext.DownloadClients
                 .Where(x => x.Enabled)
+                .Where(x => x.TypeName != DownloadClientTypeName.Usenet)
                 .ToListAsync();
             var results = new Dictionary<Guid, HealthStatus>();
             

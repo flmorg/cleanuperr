@@ -1,6 +1,5 @@
 using Common.Configuration;
 using Common.Exceptions;
-using Data;
 using Data.Models.Deluge.Response;
 using Infrastructure.Events;
 using Infrastructure.Interceptors;
@@ -15,7 +14,7 @@ namespace Infrastructure.Verticals.DownloadClient.Deluge;
 
 public partial class DelugeService : DownloadService, IDelugeService
 {
-    private DelugeClient? _client;
+    private readonly DelugeClient _client;
 
     public DelugeService(
         ILogger<DelugeService> logger,
@@ -26,48 +25,19 @@ public partial class DelugeService : DownloadService, IDelugeService
         IHardLinkFileService hardLinkFileService,
         IDynamicHttpClientProvider httpClientProvider,
         EventPublisher eventPublisher,
-        BlocklistProvider blocklistProvider
+        BlocklistProvider blocklistProvider,
+        DownloadClientConfig downloadClientConfig
     ) : base(
         logger, cache,
         filenameEvaluator, striker, dryRunInterceptor, hardLinkFileService,
-        httpClientProvider, eventPublisher, blocklistProvider
+        httpClientProvider, eventPublisher, blocklistProvider, downloadClientConfig
     )
     {
-        // Client will be initialized when Initialize() is called with a specific client configuration
-        // TODO initialize client & httpclient here
-    }
-    
-    /// <inheritdoc />
-    public override void Initialize(DownloadClientConfig downloadClientConfig)
-    {
-        // Initialize base service first
-        base.Initialize(downloadClientConfig);
-        
-        // Ensure client type is correct
-        if (downloadClientConfig.TypeName != Common.Enums.DownloadClientTypeName.Deluge)
-        {
-            throw new InvalidOperationException($"Cannot initialize DelugeService with client type {downloadClientConfig.TypeName}");
-        }
-        
-        if (_httpClient == null)
-        {
-            throw new InvalidOperationException("HTTP client is not initialized");
-        }
-        
-        // Create Deluge client
         _client = new DelugeClient(downloadClientConfig, _httpClient);
-        
-        _logger.LogInformation("Initialized Deluge service for client {clientName} ({clientId})", 
-            downloadClientConfig.Name, downloadClientConfig.Id);
     }
     
     public override async Task LoginAsync()
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("Deluge client is not initialized");
-        }
-        
         try 
         {
             await _client.LoginAsync();
@@ -86,6 +56,68 @@ public partial class DelugeService : DownloadService, IDelugeService
         }
     }
     
+    public override async Task<HealthCheckResult> HealthCheckAsync()
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        
+        try
+        {
+            bool hasCredentials = !string.IsNullOrEmpty(_downloadClientConfig.Username) || 
+                                  !string.IsNullOrEmpty(_downloadClientConfig.Password);
+
+            if (hasCredentials)
+            {
+                // If credentials are provided, we must be able to login and connect for the service to be healthy
+                await _client.LoginAsync();
+                
+                if (!await _client.IsConnected() && !await _client.Connect())
+                {
+                    throw new Exception("Deluge WebUI is not connected to the daemon");
+                }
+                
+                _logger.LogDebug("Health check: Successfully logged in to Deluge client {clientId}", _downloadClientConfig.Id);
+            }
+            else
+            {
+                // If no credentials, test basic connectivity to the web UI
+                // We'll try a simple HTTP request to verify the service is running
+                if (_httpClient == null)
+                {
+                    throw new InvalidOperationException("HTTP client is not initialized");
+                }
+                
+                var response = await _httpClient.GetAsync("/");
+                if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+                {
+                    throw new Exception($"Service returned status code: {response.StatusCode}");
+                }
+                
+                _logger.LogDebug("Health check: Successfully connected to Deluge client {clientId}", _downloadClientConfig.Id);
+            }
+
+            stopwatch.Stop();
+
+            return new HealthCheckResult
+            {
+                IsHealthy = true,
+                ResponseTime = stopwatch.Elapsed
+            };
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            
+            _logger.LogWarning(ex, "Health check failed for Deluge client {clientId}", _downloadClientConfig.Id);
+            
+            return new HealthCheckResult
+            {
+                IsHealthy = false,
+                ErrorMessage = $"Connection failed: {ex.Message}",
+                ResponseTime = stopwatch.Elapsed
+            };
+        }
+    }
+
     private static void ProcessFiles(Dictionary<string, DelugeFileOrDirectory>? contents, Action<string, DelugeFileOrDirectory> processFile)
     {
         if (contents is null)
@@ -110,7 +142,5 @@ public partial class DelugeService : DownloadService, IDelugeService
 
     public override void Dispose()
     {
-        _client = null;
-        _httpClient?.Dispose();
     }
 }
