@@ -56,7 +56,6 @@ public partial class TransmissionService : DownloadService, ITransmissionService
         uriBuilder.Path = string.IsNullOrEmpty(_downloadClientConfig.UrlBase)
             ? $"{uriBuilder.Path.TrimEnd('/')}/rpc"
             : $"{uriBuilder.Path.TrimEnd('/')}/{_downloadClientConfig.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
-        // TODO check if httpClientProvider creates a client as expected
         _client = new Client(
             _httpClient,
             uriBuilder.Uri.ToString(),
