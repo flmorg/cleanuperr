@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnDestroy, Output, effect, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, FormControl } from "@angular/forms";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { DownloadClientConfigStore } from "./download-client-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
@@ -15,6 +15,9 @@ import { ButtonModule } from "primeng/button";
 import { InputNumberModule } from "primeng/inputnumber";
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from "primeng/toast";
+import { DialogModule } from "primeng/dialog";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { ConfirmationService } from "primeng/api";
 import { NotificationService } from "../../core/services/notification.service";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 
@@ -31,9 +34,11 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     InputNumberModule,
     SelectModule,
     ToastModule,
+    DialogModule,
+    ConfirmDialogModule,
     LoadingErrorStateComponent
   ],
-  providers: [DownloadClientConfigStore],
+  providers: [DownloadClientConfigStore, ConfirmationService],
   templateUrl: "./download-client-settings.component.html",
   styleUrls: ["./download-client-settings.component.scss"],
 })
@@ -41,14 +46,13 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   @Output() saved = new EventEmitter<void>();
   @Output() error = new EventEmitter<string>();
 
-  // Download Client Configuration Form
-  downloadClientForm: FormGroup;
+  // Forms
+  clientForm: FormGroup;
 
-  // Original form values for tracking changes
-  private originalFormValues: any;
-
-  // Track whether the form has actual changes compared to original values
-  hasActualChanges = false;
+  // Modal state
+  showClientModal = false;
+  modalMode: 'add' | 'edit' = 'add';
+  editingClient: ClientConfig | null = null;
 
   // Download client type options
   clientTypeOptions = [
@@ -61,9 +65,10 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   // Clean up subscriptions
   private destroy$ = new Subject<void>();
 
-  // Inject the necessary services
+  // Services
   private formBuilder = inject(FormBuilder);
   private notificationService = inject(NotificationService);
+  private confirmationService = inject(ConfirmationService);
   private downloadClientStore = inject(DownloadClientConfigStore);
 
   // Signals from store
@@ -71,45 +76,34 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   downloadClientLoading = this.downloadClientStore.loading;
   downloadClientError = this.downloadClientStore.error;
   downloadClientSaving = this.downloadClientStore.saving;
-  pendingOperations = this.downloadClientStore.pendingOperations;
-
-  /**
-   * Get the clients form array
-   */
-  public get clients(): FormArray {
-    return this.downloadClientForm.get('clients') as FormArray;
-  }
 
   /**
    * Check if component can be deactivated (navigation guard)
    */
   canDeactivate(): boolean {
-    return !this.downloadClientForm?.dirty || !this.hasActualChanges;
+    return true; // No unsaved changes in modal-based approach
   }
 
   constructor() {
-    // Initialize the main form
-    this.downloadClientForm = this.formBuilder.group({});
-
-    // Add clients FormArray to main form
-    this.downloadClientForm.addControl('clients', this.formBuilder.array([]));
+    // Initialize client form for modal
+    this.clientForm = this.formBuilder.group({
+      name: ['', Validators.required],
+      type: [null, Validators.required],
+      host: ['', [Validators.required, this.uriValidator.bind(this)]],
+      username: [''],
+      password: [''],
+      urlBase: [''],
+      enabled: [true]
+    });
 
     // Load Download Client config data
     this.downloadClientStore.loadConfig();
 
-    // Setup effect to update form when config changes
-    effect(() => {
-      const config = this.downloadClientConfig();
-      if (config) {
-        this.updateFormFromConfig(config);
-      }
-    });
-
-    // Track form changes for dirty state
-    this.downloadClientForm.valueChanges
+    // Setup client type change handler
+    this.clientForm.get('type')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.hasActualChanges = this.formValuesChanged();
+        this.onClientTypeChange();
       });
   }
 
@@ -122,222 +116,213 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   }
 
   /**
-   * Update form with values from the configuration
+   * Custom validator to check if the input is a valid URI
    */
-  private updateFormFromConfig(config: DownloadClientConfig): void {
-    // Clear existing clients
-    const clientsArray = this.downloadClientForm.get('clients') as FormArray;
-    clientsArray.clear();
-
-    // Add each client to the form array
-    if (config.clients && config.clients.length > 0) {
-      config.clients.forEach(client => {
-        this.addClient(client);
-      });
-    }
-    // Don't automatically add an empty client - let the template handle the empty state
-
-    // Store the original values for change detection
-    this.storeOriginalValues();
-
-    // Mark the form as pristine after loading data
-    this.downloadClientForm.markAsPristine();
-    this.hasActualChanges = false;
-  }
-
-  /**
-   * Store original form values for dirty checking
-   */
-  private storeOriginalValues(): void {
-    this.originalFormValues = JSON.parse(JSON.stringify(this.downloadClientForm.value));
-  }
-
-  /**
-   * Check if the current form values are different from the original values
-   */
-  private formValuesChanged(): boolean {
-    return !this.isEqual(this.downloadClientForm.value, this.originalFormValues);
-  }
-
-  /**
-   * Deep compare two objects for equality
-   */
-  private isEqual(obj1: any, obj2: any): boolean {
-    if (obj1 === obj2) return true;
-    if (obj1 === null || obj2 === null) return false;
-    if (obj1 === undefined || obj2 === undefined) return false;
-    
-    if (typeof obj1 !== 'object' && typeof obj2 !== 'object') {
-      return obj1 === obj2;
+  private uriValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null; // Let required validator handle empty values
     }
     
-    if (Array.isArray(obj1) && Array.isArray(obj2)) {
-      if (obj1.length !== obj2.length) return false;
-      for (let i = 0; i < obj1.length; i++) {
-        if (!this.isEqual(obj1[i], obj2[i])) return false;
+    try {
+      const url = new URL(control.value);
+      
+      // Check that we have a valid protocol (http or https)
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return { invalidProtocol: true };
       }
-      return true;
+      
+      return null; // Valid URI
+    } catch (e) {
+      return { invalidUri: true }; // Invalid URI
     }
-    
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-    
-    if (keys1.length !== keys2.length) return false;
-    
-    for (const key of keys1) {
-      if (!this.isEqual(obj1[key], obj2[key])) return false;
-    }
-    
-    return true;
   }
 
   /**
-   * Save the Download Client configuration
+   * Mark all controls in a form group as touched
    */
-  saveDownloadClientConfig(): void {
-    // Mark all form controls as touched to trigger validation
-    this.markFormGroupTouched(this.downloadClientForm);
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.values(formGroup.controls).forEach((control) => {
+      control.markAsTouched();
 
-    if (this.downloadClientForm.invalid) {
+      if ((control as any).controls) {
+        this.markFormGroupTouched(control as FormGroup);
+      }
+    });
+  }
+
+  /**
+   * Check if a form control has an error
+   */
+  hasError(form: FormGroup, controlName: string, errorName: string): boolean {
+    const control = form.get(controlName);
+    return control !== null && control.hasError(errorName) && control.touched;
+  }
+
+  /**
+   * Get clients from current config
+   */
+  get clients(): ClientConfig[] {
+    return this.downloadClientConfig()?.clients || [];
+  }
+
+  /**
+   * Open modal to add new client
+   */
+  openAddClientModal(): void {
+    this.modalMode = 'add';
+    this.editingClient = null;
+    this.clientForm.reset();
+    this.clientForm.patchValue({ enabled: true }); // Default enabled to true
+    this.showClientModal = true;
+  }
+
+  /**
+   * Open modal to edit existing client
+   */
+  openEditClientModal(client: ClientConfig): void {
+    this.modalMode = 'edit';
+    this.editingClient = client;
+    
+    // Map backend type to frontend type
+    const frontendType = client.typeName 
+      ? this.mapClientTypeFromBackend(client.typeName)
+      : client.type;
+    
+    this.clientForm.patchValue({
+      name: client.name,
+      type: frontendType,
+      host: client.host,
+      username: client.username,
+      password: client.password,
+      urlBase: client.urlBase,
+      enabled: client.enabled
+    });
+    this.showClientModal = true;
+  }
+
+  /**
+   * Close client modal
+   */
+  closeClientModal(): void {
+    this.showClientModal = false;
+    this.editingClient = null;
+    this.clientForm.reset();
+  }
+
+  /**
+   * Save client (add or edit)
+   */
+  saveClient(): void {
+    this.markFormGroupTouched(this.clientForm);
+
+    if (this.clientForm.invalid) {
       this.notificationService.showError('Please fix the validation errors before saving');
       return;
     }
 
-    if (!this.hasActualChanges) {
-      this.notificationService.showSuccess('No changes detected');
-      return;
-    }
+    const formValue = this.clientForm.value;
+    const mappedType = this.mapClientTypeForBackend(formValue.type);
+    
+    const clientData: CreateDownloadClientDto = {
+      name: formValue.name,
+      typeName: mappedType.typeName,
+      type: mappedType.type,
+      host: formValue.host,
+      username: formValue.username,
+      password: formValue.password,
+      urlBase: formValue.urlBase,
+      enabled: formValue.enabled
+    };
 
-    // Get the clients from the form
-    const formClients = this.clients.getRawValue();
-    
-    if (formClients.length === 0) {
-      this.notificationService.showSuccess('No clients to save');
-      return;
-    }
-    
-    // Separate creates and updates
-    const creates: CreateDownloadClientDto[] = [];
-    const updates: Array<{ id: string, client: ClientConfig }> = [];
-    
-    formClients.forEach((client: any) => {
-      // Map the client type for backend compatibility
-      const mappedType = this.mapClientTypeForBackend(client.type);
-      const backendClient = {
-        ...client,
+    if (this.modalMode === 'add') {
+      this.downloadClientStore.createClient(clientData);
+    } else if (this.editingClient) {
+      // For updates, create a proper ClientConfig object
+      const clientConfig: ClientConfig = {
+        id: this.editingClient.id!,
+        name: formValue.name,
+        type: formValue.type, // Keep the frontend enum type
         typeName: mappedType.typeName,
-        type: mappedType.type
+        host: formValue.host,
+        username: formValue.username,
+        password: formValue.password,
+        urlBase: formValue.urlBase,
+        enabled: formValue.enabled
       };
       
-      if (client.id) {
-        // This is an existing client, prepare for update
-        updates.push({ id: client.id, client: backendClient });
-      } else {
-        // This is a new client, prepare for creation (don't send ID)
-        const { id, ...clientWithoutId } = backendClient;
-        creates.push(clientWithoutId as CreateDownloadClientDto);
-      }
-    });
-    
-    // Use batch operations to handle everything at once
-    this.downloadClientStore.processBatchOperations({ creates, updates });
-    
-    // Monitor the saving state to show completion feedback
-    this.monitorSavingCompletion();
+      this.downloadClientStore.updateClient({ 
+        id: this.editingClient.id!, 
+        client: clientConfig
+      });
+    }
+
+    this.monitorClientSaving();
   }
 
   /**
-   * Monitor saving completion and show appropriate feedback
+   * Monitor client saving completion
    */
-  private monitorSavingCompletion(): void {
-    // Use a timeout to check the saving state periodically
+  private monitorClientSaving(): void {
     const checkSavingStatus = () => {
       const saving = this.downloadClientSaving();
       const error = this.downloadClientError();
-      const pendingOps = this.pendingOperations();
       
-      if (!saving && pendingOps === 0) {
-        // Operations are complete
+      if (!saving) {
         if (error) {
-          this.notificationService.showError(`Save completed with issues: ${error}`);
-          this.error.emit(error);
-          // Don't mark as pristine if there were errors
+          this.notificationService.showError(`Operation failed: ${error}`);
         } else {
-          // Complete success
-          this.notificationService.showSuccess('Download Client configuration saved successfully');
-          this.saved.emit();
-          
-          // Reload config from backend to ensure UI is in sync
-          this.downloadClientStore.loadConfig();
-          
-          // Reset form state after successful save
-          setTimeout(() => {
-            this.downloadClientForm.markAsPristine();
-            this.hasActualChanges = false;
-            this.storeOriginalValues();
-          }, 100);
+          const action = this.modalMode === 'add' ? 'created' : 'updated';
+          this.notificationService.showSuccess(`Client ${action} successfully`);
+          this.closeClientModal();
         }
       } else {
-        // Still saving, check again in a short while
         setTimeout(checkSavingStatus, 100);
       }
     };
     
-    // Start monitoring
     setTimeout(checkSavingStatus, 100);
   }
 
   /**
-   * Reset the Download Client configuration form to default values
+   * Delete client with confirmation
    */
-  resetDownloadClientConfig(): void {
-    // Clear all clients
-    const clientsArray = this.downloadClientForm.get('clients') as FormArray;
-    clientsArray.clear();
-    
-    // Check if this reset actually changes anything compared to the original state
-    const hasChangesAfterReset = this.formValuesChanged();
-    
-    if (hasChangesAfterReset) {
-      // Only mark as dirty if the reset actually changes something
-      this.downloadClientForm.markAsDirty();
-      this.hasActualChanges = true;
-    } else {
-      // If reset brings us back to original state, mark as pristine
-      this.downloadClientForm.markAsPristine();
-      this.hasActualChanges = false;
-    }
+  deleteClient(client: ClientConfig): void {
+    this.confirmationService.confirm({
+      message: `Are you sure you want to delete the client "${client.name}"?`,
+      header: 'Confirm Deletion',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.downloadClientStore.deleteClient(client.id!);
+        
+        // Monitor deletion
+        const checkDeletionStatus = () => {
+          const saving = this.downloadClientSaving();
+          const error = this.downloadClientError();
+          
+          if (!saving) {
+            if (error) {
+              this.notificationService.showError(`Deletion failed: ${error}`);
+            } else {
+              this.notificationService.showSuccess('Client deleted successfully');
+            }
+          } else {
+            setTimeout(checkDeletionStatus, 100);
+          }
+        };
+        
+        setTimeout(checkDeletionStatus, 100);
+      }
+    });
   }
 
   /**
-   * Add a new client to the clients form array
-   * @param client Optional client configuration to initialize the form with
+   * Get modal title based on mode
    */
-  addClient(client: ClientConfig | null = null): void {
-    // If client has typeName from backend, map it to frontend type
-    const frontendType = client?.typeName 
-      ? this.mapClientTypeFromBackend(client.typeName)
-      : client?.type || null;
-    
-    const clientForm = this.formBuilder.group({
-      id: [client?.id || ''],
-      name: [client?.name || '', Validators.required],
-      type: [frontendType, Validators.required],
-      host: [client?.host || '', Validators.required],
-      username: [client?.username || ''],
-      password: [client?.password || ''],
-      urlBase: [client?.urlBase || ''],
-      enabled: [client?.enabled ?? true]
-    });
-    
-    // Set up client type change handler
-    clientForm.get('type')?.valueChanges.subscribe(() => {
-      this.onClientTypeChange(clientForm);
-    });
-    
-    this.clients.push(clientForm);
+  get modalTitle(): string {
+    return this.modalMode === 'add' ? 'Add Download Client' : 'Edit Download Client';
   }
-  
+
   /**
    * Map frontend client type to backend TypeName and Type
    */
@@ -373,95 +358,6 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
         return DownloadClientType.QBittorrent;
     }
   }
-  
-  /**
-   * Remove a client at the specified index
-   */
-  removeClient(index: number): void {
-    const clientForm = this.getClientAsFormGroup(index);
-    const clientId = clientForm.get('id')?.value;
-    
-    // If this is an existing client (has ID), delete it from the backend immediately
-    if (clientId) {
-      this.downloadClientStore.deleteClient(clientId);
-    }
-    
-    // Remove from the form array
-    this.clients.removeAt(index);
-    
-    // Mark form as dirty to enable save button
-    this.downloadClientForm.markAsDirty();
-    this.hasActualChanges = this.formValuesChanged();
-    
-    // Don't automatically add an empty client - let users have a truly empty state
-  }
-
-  /**
-   * Mark all controls in a form group as touched to trigger validation
-   */
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.values(formGroup.controls).forEach((control) => {
-      control.markAsTouched();
-      
-      if ((control as any).controls) {
-        this.markFormGroupTouched(control as FormGroup);
-      }
-    });
-  }
-
-  /**
-   * Get a client at the specified index as a FormGroup
-   */
-  public getClientAsFormGroup(index: number): FormGroup {
-    return this.clients.at(index) as FormGroup;
-  }
-
-  /**
-   * Check if the form control has an error
-   * @param controlName The name of the control to check
-   * @param errorName The name of the error to check for
-   * @returns True if the control has the specified error
-   */
-  hasError(controlName: string, errorName: string): boolean {
-    const control = this.downloadClientForm.get(controlName);
-    return control !== null && control.hasError(errorName) && control.touched;
-  }
-
-  /**
-   * Check if a client field has an error
-   * @param clientIndex The index of the client in the array
-   * @param fieldName The name of the field to check
-   * @param errorName The name of the error to check for
-   * @returns True if the field has the specified error
-   */
-  hasClientFieldError(clientIndex: number, fieldName: string, errorName: string): boolean {
-    if (!this.clients || !this.clients.controls[clientIndex]) return false;
-    
-    const control = this.getClientAsFormGroup(clientIndex).get(fieldName);
-    return control !== null && control.hasError(errorName) && control.touched;
-  }
-
-  /**
-   * Custom validator to check if the input is a valid URI
-   */
-  private uriValidator(control: AbstractControl): ValidationErrors | null {
-    if (!control.value) {
-      return null; // Let required validator handle empty values
-    }
-    
-    try {
-      const url = new URL(control.value);
-      
-      // Check that we have a valid protocol (http or https)
-      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-        return { invalidProtocol: true };
-      }
-      
-      return null; // Valid URI
-    } catch (e) {
-      return { invalidUri: true }; // Invalid URI
-    }
-  }
 
   /**
    * Checks if a client type is Usenet
@@ -472,11 +368,10 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
 
   /**
    * Handle client type changes to update validation
-   * @param clientFormGroup The form group containing the client type and host controls
    */
-  onClientTypeChange(clientFormGroup: FormGroup): void {
-    const clientType = clientFormGroup.get('type')?.value;
-    const hostControl = clientFormGroup.get('host');
+  onClientTypeChange(): void {
+    const clientType = this.clientForm.get('type')?.value;
+    const hostControl = this.clientForm.get('host');
     
     if (!hostControl) return;
     
@@ -495,4 +390,15 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     hostControl.updateValueAndValidity();
   }
 
+  /**
+   * Get client type label for display
+   */
+  getClientTypeLabel(client: ClientConfig): string {
+    const frontendType = client.typeName 
+      ? this.mapClientTypeFromBackend(client.typeName)
+      : client.type;
+    
+    const option = this.clientTypeOptions.find(opt => opt.value === frontendType);
+    return option?.label || 'Unknown';
+  }
 }
