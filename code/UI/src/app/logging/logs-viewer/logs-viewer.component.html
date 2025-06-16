@@ -1,4 +1,4 @@
-<div class="logs-container">
+<div class="viewer-container">
   <div class="flex align-items-center justify-content-between mb-4">
     <div class="flex align-items-center gap-2 header-title-container">
       <h1>Application Logs</h1>
@@ -37,17 +37,16 @@
   </div>
 
   <!-- Logs Card -->
-  <p-card styleClass="dashboard-card h-full">
+  <p-card styleClass="dashboard-card h-full viewer-card">
     <ng-template pTemplate="header">
-      <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
-        <div class="header-title-container">
+      <div class="flex align-items-center justify-content-between border-bottom-1 surface-border w-full">
+        <div class="header-title-container w-full">
           <!-- Filters Section -->
-          <div class="filter-container p-3">
+          <div class="filter-container p-3 w-full">
             <p-toolbar styleClass="filter-toolbar">
               <ng-template pTemplate="start">
                 <div class="flex align-items-center gap-2 flex-wrap filter-inputs-container">
                   <!-- Search Filter -->
-                  <i class="pi pi-search"></i>
                   <input
                     type="text"
                     pInputText
@@ -84,7 +83,7 @@
                 </div>
               </ng-template>
               <ng-template pTemplate="end">
-                <div class="filter-actions-container">
+                <div class="filter-actions-container flex flex-grow-1 justify-content-end align-items-end">
                   <div class="filter-actions-wrapper">
                     <div class="filter-stats" *ngIf="isConnected() && filteredLogs().length > 0">
                       <span class="text-sm text-color-secondary">
@@ -111,18 +110,18 @@
 
     <div class="card-content">
       <!-- Console-style Logs View -->
-      <div class="logs-console" #logsConsole>
+      <div class="viewer-console" #logsConsole>
         <!-- Logs List -->
-        <div class="logs-list" *ngIf="filteredLogs().length > 0; else emptyLogs">
-          <div *ngFor="let log of filteredLogs(); let i = index" class="log-entry" [id]="'log-' + i">
+        <div class="items-list" *ngIf="filteredLogs().length > 0; else emptyLogs">
+          <div *ngFor="let log of filteredLogs(); let i = index" class="item-entry" [id]="'log-' + i">
             <!-- Log Entry Header - only expandable if has exception or metadata -->
             <div
-              class="log-entry-header"
+              class="item-entry-header"
               [class.expandable]="log.exception || log.jobName || log.instanceName"
               (click)="log.exception || log.jobName || log.instanceName ? toggleLogExpansion(i, $event) : null"
             >
               <!-- Actions (Copy button at start) -->
-              <div class="log-actions log-actions-start">
+              <div class="item-actions item-actions-start">
                 <button
                   pButton
                   icon="pi pi-copy"
@@ -133,28 +132,28 @@
               </div>
 
               <!-- Timestamp -->
-              <div class="log-timestamp">
-                <span class="log-date">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
-                <span class="log-time">{{ log.timestamp | date : "HH:mm:ss.SSS" }}</span>
+              <div class="item-timestamp">
+                <span class="item-date">{{ log.timestamp | date : "yyyy-MM-dd" }}</span>
+                <span class="item-time">{{ log.timestamp | date : "HH:mm:ss.SSS" }}</span>
               </div>
 
               <!-- Level Tag -->
-              <div class="log-level">
+              <div class="item-severity">
                 <p-tag [severity]="getSeverity(log.level)" [value]="log.level" [rounded]="true"></p-tag>
               </div>
 
               <!-- Category -->
-              <div class="log-category" *ngIf="log.category">
+              <div class="item-category" *ngIf="log.category">
                 {{ log.category }}
               </div>
 
               <!-- Message -->
-              <div class="log-message">
+              <div class="item-message">
                 {{ log.message }}
               </div>
 
               <!-- Dropdown button (only for logs with exception or metadata) -->
-              <div class="log-actions" *ngIf="log.exception || log.jobName || log.instanceName">
+              <div class="item-actions" *ngIf="log.exception || log.jobName || log.instanceName">
                 <button
                   pButton
                   [icon]="expandedLogs[i] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
@@ -166,14 +165,14 @@
             </div>
 
             <!-- Log Details (Expandable) -->
-            <div class="log-details" *ngIf="expandedLogs[i]">
+            <div class="item-details" *ngIf="expandedLogs[i]">
               <!-- Exception -->
-              <div class="log-exception" *ngIf="log.exception">
+              <div class="item-exception" *ngIf="log.exception">
                 <pre>{{ log.exception }}</pre>
               </div>
 
               <!-- Metadata -->
-              <div class="log-metadata" *ngIf="log.jobName || log.instanceName">
+              <div class="item-metadata" *ngIf="log.jobName || log.instanceName">
                 <div class="metadata-item" *ngIf="log.jobName">
                   <span class="metadata-label">Job:</span>
                   <span class="metadata-value">{{ log.jobName }}</span>
@@ -189,7 +188,7 @@
 
         <!-- Empty State -->
         <ng-template #emptyLogs>
-          <div class="empty-logs">
+          <div class="empty-items">
             <div class="empty-message">
               <i class="pi pi-inbox empty-icon"></i>
               <div class="empty-text" *ngIf="isConnected(); else disconnectedMessage">No logs found</div>

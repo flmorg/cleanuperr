@@ -2,6 +2,7 @@
 .layout-wrapper {
   display: flex;
   min-height: 100vh;
+  min-width: 600px;
   background-color: var(--surface-ground);
   color: var(--text-color);
   font-family: var(--font-family);
