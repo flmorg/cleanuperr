@@ -17,11 +17,6 @@ public partial class TransmissionService
     public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash,
         IReadOnlyList<string> ignoredDownloads)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("Transmission client is not initialized");
-        }
-        
         DownloadCheckResult result = new();
         TorrentInfo? download = await GetTorrentAsync(hash);
 

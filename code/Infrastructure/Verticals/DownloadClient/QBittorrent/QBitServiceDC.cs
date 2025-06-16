@@ -13,11 +13,6 @@ public partial class QBitService
     /// <inheritdoc/>
     public override async Task<List<object>?> GetSeedingDownloads()
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         var torrentList = await _client.GetTorrentListAsync(new TorrentListQuery { Filter = TorrentListFilter.Seeding });
         return torrentList?.Where(x => !string.IsNullOrEmpty(x.Hash))
             .Cast<object>()
@@ -60,11 +55,6 @@ public partial class QBitService
     public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
         HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         if (downloads?.Count is null or 0)
         {
             return;
@@ -149,28 +139,20 @@ public partial class QBitService
 
     public override async Task CreateCategoryAsync(string name)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         IReadOnlyDictionary<string, Category>? existingCategories = await _client.GetCategoriesAsync();
 
         if (existingCategories.Any(x => x.Value.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)))
         {
             return;
         }
+        
+        _logger.LogDebug("Creating category {name}", name);
 
         await _dryRunInterceptor.InterceptAsync(CreateCategory, name);
     }
 
     public override async Task ChangeCategoryForNoHardLinksAsync(List<object>? downloads, HashSet<string> excludedHashes, IReadOnlyList<string> ignoredDownloads)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         if (downloads?.Count is null or 0)
         {
             return;
@@ -275,31 +257,16 @@ public partial class QBitService
     /// <inheritdoc/>
     public override async Task DeleteDownload(string hash)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         await _client.DeleteAsync([hash], deleteDownloadedData: true);
     }
 
     protected async Task CreateCategory(string name)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         await _client.AddCategoryAsync(name);
     }
     
     protected virtual async Task ChangeCategory(string hash, string newCategory)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-        
         var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
         
         if (downloadCleanerConfig.UnlinkedUseTag)

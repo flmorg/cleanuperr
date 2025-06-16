@@ -53,67 +53,67 @@ public abstract class GenericHandler : IHandler
         _dataContext = dataContext;
     }
 
-    /// <summary>
-    /// Initialize download services based on configuration
-    /// </summary>
-    protected async Task<List<IDownloadService>> GetDownloadServices()
-    {
-        var clients = await _dataContext.DownloadClients
-            .AsNoTracking()
-            .ToListAsync();
-        
-        if (clients.Count is 0)
-        {
-            _logger.LogWarning("No download clients configured");
-            return [];
-        }
-        
-        var enabledClients = await _dataContext.DownloadClients
-            .Where(c => c.Enabled)
-            .ToListAsync();
-
-        if (enabledClients.Count == 0)
-        {
-            _logger.LogWarning("No enabled download clients available");
-            return [];
-        }
-        
-        List<IDownloadService> downloadServices = [];
-        
-        // Add all enabled clients
-        foreach (var client in enabledClients)
-        {
-            try
-            {
-                var service = _downloadServiceFactory.GetDownloadService(client);
-                if (service != null)
-                {
-                    await service.LoginAsync();
-                    downloadServices.Add(service);
-                    _logger.LogDebug("Initialized download client: {name}", client.Name);
-                }
-                else
-                {
-                    _logger.LogWarning("Download client service not available for: {name}", client.Name);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to initialize download client: {name}", client.Name);
-            }
-        }
-        
-        if (downloadServices.Count == 0)
-        {
-            _logger.LogWarning("No valid download clients found");
-        }
-        else
-        {
-            _logger.LogDebug("Initialized {count} download clients", downloadServices.Count);
-        }
-
-        return downloadServices;
-    }
+    // /// <summary>
+    // /// Initialize download services based on configuration
+    // /// </summary>
+    // protected async Task<List<IDownloadService>> GetDownloadServices()
+    // {
+    //     var clients = await _dataContext.DownloadClients
+    //         .AsNoTracking()
+    //         .ToListAsync();
+    //     
+    //     if (clients.Count is 0)
+    //     {
+    //         _logger.LogWarning("No download clients configured");
+    //         return [];
+    //     }
+    //     
+    //     var enabledClients = await _dataContext.DownloadClients
+    //         .Where(c => c.Enabled)
+    //         .ToListAsync();
+    //
+    //     if (enabledClients.Count == 0)
+    //     {
+    //         _logger.LogWarning("No enabled download clients available");
+    //         return [];
+    //     }
+    //     
+    //     List<IDownloadService> downloadServices = [];
+    //     
+    //     // Add all enabled clients
+    //     foreach (var client in enabledClients)
+    //     {
+    //         try
+    //         {
+    //             var service = _downloadServiceFactory.GetDownloadService(client);
+    //             if (service != null)
+    //             {
+    //                 await service.LoginAsync();
+    //                 downloadServices.Add(service);
+    //                 _logger.LogDebug("Initialized download client: {name}", client.Name);
+    //             }
+    //             else
+    //             {
+    //                 _logger.LogWarning("Download client service not available for: {name}", client.Name);
+    //             }
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             _logger.LogError(ex, "Failed to initialize download client: {name}", client.Name);
+    //         }
+    //     }
+    //     
+    //     if (downloadServices.Count == 0)
+    //     {
+    //         _logger.LogWarning("No valid download clients found");
+    //     }
+    //     else
+    //     {
+    //         _logger.LogDebug("Initialized {count} download clients", downloadServices.Count);
+    //     }
+    //
+    //     return downloadServices;
+    // }
 
     public async Task ExecuteAsync()
     {
@@ -121,19 +121,19 @@ public abstract class GenericHandler : IHandler
 
         try
         {
-            ContextProvider.Set(nameof(GeneralConfig), await _dataContext.GeneralConfigs.FirstAsync());
-            ContextProvider.Set(nameof(InstanceType.Sonarr), await _dataContext.ArrConfigs
+            ContextProvider.Set(nameof(GeneralConfig), await _dataContext.GeneralConfigs.AsNoTracking().FirstAsync());
+            ContextProvider.Set(nameof(InstanceType.Sonarr), await _dataContext.ArrConfigs.AsNoTracking()
                 .Include(x => x.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Sonarr));
-            ContextProvider.Set(nameof(InstanceType.Radarr), await _dataContext.ArrConfigs
+            ContextProvider.Set(nameof(InstanceType.Radarr), await _dataContext.ArrConfigs.AsNoTracking()
                 .Include(x => x.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Radarr));
-            ContextProvider.Set(nameof(InstanceType.Lidarr), await _dataContext.ArrConfigs
+            ContextProvider.Set(nameof(InstanceType.Lidarr), await _dataContext.ArrConfigs.AsNoTracking()
                 .Include(x => x.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Lidarr));
-            ContextProvider.Set(nameof(QueueCleanerConfig), await _dataContext.QueueCleanerConfigs.FirstAsync());
-            ContextProvider.Set(nameof(DownloadCleanerConfig), await _dataContext.DownloadCleanerConfigs.FirstAsync());
-            ContextProvider.Set(nameof(DownloadClientConfig), await _dataContext.DownloadClients
+            ContextProvider.Set(nameof(QueueCleanerConfig), await _dataContext.QueueCleanerConfigs.AsNoTracking().FirstAsync());
+            ContextProvider.Set(nameof(DownloadCleanerConfig), await _dataContext.DownloadCleanerConfigs.AsNoTracking().FirstAsync());
+            ContextProvider.Set(nameof(DownloadClientConfig), await _dataContext.DownloadClients.AsNoTracking()
                 .Where(x => x.Enabled)
                 .ToListAsync());
         }
@@ -262,11 +262,21 @@ public abstract class GenericHandler : IHandler
                 var downloadService = _downloadServiceFactory.GetDownloadService(config);
                 await downloadService.LoginAsync();
                 downloadServices.Add(downloadService);
+                _logger.LogDebug("Created download service for {name}", config.Name);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating download service for {name}", config.Name);
             }
+        }
+        
+        if (downloadServices.Count == 0)
+        {
+            _logger.LogWarning("No valid download clients found");
+        }
+        else
+        {
+            _logger.LogDebug("Initialized {count} download clients", downloadServices.Count);
         }
         
         foreach (var downloadService in downloadServices)

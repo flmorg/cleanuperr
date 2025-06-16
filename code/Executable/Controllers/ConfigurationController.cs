@@ -134,11 +134,6 @@ public class ConfigurationController : ControllerBase
     [HttpPut("download_client/{id}")]
     public async Task<IActionResult> UpdateDownloadClientConfig(Guid id, [FromBody] DownloadClientConfig updatedClient)
     {
-        if (updatedClient == null)
-        {
-            return BadRequest("Invalid download client data");
-        }
-        
         await DataContext.Lock.WaitAsync();
         try
         {

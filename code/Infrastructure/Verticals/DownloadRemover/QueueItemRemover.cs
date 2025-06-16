@@ -39,7 +39,9 @@ public sealed class QueueItemRemover : IQueueItemRemover
     {
         try
         {
-            var generalConfig = await _dataContext.GeneralConfigs.FirstAsync();
+            var generalConfig = await _dataContext.GeneralConfigs
+                .AsNoTracking()
+                .FirstAsync();
             var arrClient = _arrClientFactory.GetClient(request.InstanceType);
             await arrClient.DeleteQueueItemAsync(request.Instance, request.Record, request.RemoveFromClient, request.DeleteReason);
             

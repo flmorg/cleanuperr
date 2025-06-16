@@ -20,7 +20,9 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        var config = _dataContext.GeneralConfigs.First();
+        var config = _dataContext.GeneralConfigs
+            .AsNoTracking()
+            .First();
         
         if (config.DryRun)
         {
@@ -35,7 +37,9 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        var config = await _dataContext.GeneralConfigs.FirstAsync();
+        var config = await _dataContext.GeneralConfigs
+            .AsNoTracking()
+            .FirstAsync();
         
         if (config.DryRun)
         {
@@ -55,7 +59,9 @@ public class DryRunInterceptor : IDryRunInterceptor
     {
         MethodInfo methodInfo = action.Method;
         
-        var config = await _dataContext.GeneralConfigs.FirstAsync();
+        var config = await _dataContext.GeneralConfigs
+            .AsNoTracking()
+            .FirstAsync();
         
         if (config.DryRun)
         {

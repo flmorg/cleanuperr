@@ -111,6 +111,8 @@ public partial class DelugeService
             return;
         }
         
+        _logger.LogDebug("Creating category {name}", name);
+        
         await _dryRunInterceptor.InterceptAsync(CreateLabel, name);
     }
 

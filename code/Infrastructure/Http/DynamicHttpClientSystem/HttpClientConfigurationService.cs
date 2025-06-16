@@ -30,7 +30,9 @@ public class HttpClientConfigurationService : IHostedService
     {
         try
         {
-            var config = await _dataContext.GeneralConfigs.FirstAsync(cancellationToken);
+            var config = await _dataContext.GeneralConfigs
+                .AsNoTracking()
+                .FirstAsync(cancellationToken);
             
             // Register the retry client (equivalent to Constants.HttpClientWithRetryName)
             _clientFactory.RegisterRetryClient(

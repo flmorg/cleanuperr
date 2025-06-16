@@ -15,11 +15,6 @@ public partial class QBitService
     /// <inheritdoc/>
     public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash, IReadOnlyList<string> ignoredDownloads)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("QBittorrent client is not initialized");
-        }
-
         DownloadCheckResult result = new();
         TorrentInfo? download = (await _client.GetTorrentListAsync(new TorrentListQuery { Hashes = [hash] }))
             .FirstOrDefault();

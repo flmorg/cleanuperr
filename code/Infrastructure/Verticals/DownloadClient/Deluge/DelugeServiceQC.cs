@@ -16,11 +16,6 @@ public partial class DelugeService
     public override async Task<DownloadCheckResult> ShouldRemoveFromArrQueueAsync(string hash,
         IReadOnlyList<string> ignoredDownloads)
     {
-        if (_client == null)
-        {
-            throw new InvalidOperationException("Deluge client is not initialized");
-        }
-        
         hash = hash.ToLowerInvariant();
         
         DelugeContents? contents = null;

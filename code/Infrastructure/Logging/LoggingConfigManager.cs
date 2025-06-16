@@ -1,4 +1,5 @@
 using Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Serilog.Core;
 using Serilog.Events;
@@ -48,7 +49,9 @@ public class LoggingConfigManager
     {
         try
         {
-            var config = _dataContext.GeneralConfigs.First();
+            var config = _dataContext.GeneralConfigs
+                .AsNoTracking()
+                .First();
             LevelSwitch.MinimumLevel = config.LogLevel;
         }
         catch (Exception ex)
