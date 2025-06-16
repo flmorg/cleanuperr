@@ -31,31 +31,6 @@ public sealed class DownloadServiceFactory
         _logger = logger;
     }
 
-    // /// <summary>
-    // /// Creates a download service using the specified client ID
-    // /// </summary>
-    // /// <param name="clientId">The client ID to create a service for</param>
-    // /// <returns>An implementation of IDownloadService or null if the client is not available</returns>
-    // public IDownloadService? GetDownloadService(Guid clientId)
-    // {
-    //     var config = _configManager.GetConfiguration<DownloadClientConfig>();
-    //     var clientConfig = config.GetClientConfig(clientId);
-    //     
-    //     if (clientConfig == null)
-    //     {
-    //         _logger.LogWarning("No download client configuration found for ID {clientId}", clientId);
-    //         return null;
-    //     }
-    //     
-    //     if (!clientConfig.Enabled)
-    //     {
-    //         _logger.LogWarning("Download client {clientId} is disabled", clientId);
-    //         return null;
-    //     }
-    //     
-    //     return GetDownloadService(clientConfig);
-    // }
-    
     /// <summary>
     /// Creates a download service using the specified client configuration
     /// </summary>

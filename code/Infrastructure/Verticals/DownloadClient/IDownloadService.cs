@@ -1,14 +1,12 @@
+using Common.Configuration;
+using Common.Enums;
 using Data.Models.Configuration.DownloadCleaner;
 
 namespace Infrastructure.Verticals.DownloadClient;
 
 public interface IDownloadService : IDisposable
 {
-    /// <summary>
-    /// Gets the unique identifier for this download client
-    /// </summary>
-    /// <returns>The client ID</returns>
-    Guid GetClientId();
+    DownloadClientConfig ClientConfig { get; }
 
     public Task LoginAsync();
 

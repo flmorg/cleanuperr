@@ -1,4 +1,5 @@
 using Common.Configuration;
+using Common.Enums;
 using Data.Models.Configuration.Arr;
 using Data.Models.Configuration.DownloadCleaner;
 using Data.Models.Configuration.General;
@@ -143,26 +144,6 @@ public abstract class GenericHandler : IHandler
         
         await ExecuteInternalAsync();
     }
-    // {
-    //     // Initialize download services
-    //     GetDownloadServices();
-    //     
-    //     if (_downloadServices.Count == 0)
-    //     {
-    //         _logger.LogWarning("No download clients available, skipping execution");
-    //         return;
-    //     }
-    //     
-    //     // Login to all download services
-    //     foreach (var downloadService in _downloadServices)
-    //     {
-    //         await downloadService.LoginAsync();
-    //     }
-    //
-    //     await ProcessArrConfigAsync(_sonarrConfig, InstanceType.Sonarr);
-    //     await ProcessArrConfigAsync(_radarrConfig, InstanceType.Radarr);
-    //     await ProcessArrConfigAsync(_lidarrConfig, InstanceType.Lidarr);
-    // }
 
     protected abstract Task ExecuteInternalAsync();
     
@@ -262,5 +243,37 @@ public abstract class GenericHandler : IHandler
             },
             _ => throw new NotImplementedException($"instance type {type} is not yet supported")
         };
+    }
+
+    protected async Task<IReadOnlyList<IDownloadService>> GetInitializedDownloadServicesAsync()
+    {
+        var downloadClientConfigs = ContextProvider.Get<List<DownloadClientConfig>>(nameof(DownloadClientConfig));
+        List<IDownloadService> downloadServices = [];
+
+        foreach (var config in downloadClientConfigs)
+        {
+            if (config.TypeName is DownloadClientTypeName.Usenet)
+            {
+                continue;
+            }
+
+            try
+            {
+                var downloadService = _downloadServiceFactory.GetDownloadService(config);
+                await downloadService.LoginAsync();
+                downloadServices.Add(downloadService);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating download service for {name}", config.Name);
+            }
+        }
+        
+        foreach (var downloadService in downloadServices)
+        {
+            await downloadService.LoginAsync();
+        }
+
+        return downloadServices;
     }
 }

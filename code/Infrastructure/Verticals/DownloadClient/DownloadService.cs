@@ -2,6 +2,7 @@ using Common.Configuration;
 using Data.Models.Configuration.DownloadCleaner;
 using Data.Models.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
+using Common.Enums;
 using Common.Helpers;
 using Data;
 using Data.Enums;
@@ -67,23 +68,7 @@ public abstract class DownloadService : IDownloadService
         _httpClient = httpClientProvider.CreateClient(downloadClientConfig);
     }
     
-    /// <inheritdoc />
-    public Guid GetClientId()
-    {
-        return _downloadClientConfig.Id;
-    }
-    
-    // /// <inheritdoc />
-    // public virtual void Initialize(DownloadClientConfig downloadClientConfig)
-    // {
-    //     _downloadClientConfig = downloadClientConfig;
-    //     
-    //     // Create HTTP client for this service
-    //     _httpClient = _httpClientProvider.CreateClient(downloadClientConfig);
-    //     
-    //     _logger.LogDebug("Initialized download service for client {clientId} ({type})", 
-    //         downloadClientConfig.Id, downloadClientConfig.TypeName);
-    // }
+    public DownloadClientConfig ClientConfig => _downloadClientConfig;
 
     public abstract void Dispose();
 

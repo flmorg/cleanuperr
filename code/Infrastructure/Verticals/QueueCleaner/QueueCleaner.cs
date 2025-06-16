@@ -6,7 +6,6 @@ using Common.Enums;
 using Data;
 using Data.Enums;
 using Data.Models.Arr.Queue;
-using Data.Models.Configuration.Arr;
 using Infrastructure.Events;
 using Infrastructure.Helpers;
 using Infrastructure.Verticals.Arr;
@@ -42,9 +41,6 @@ public sealed class QueueCleaner : GenericHandler
     )
     {
         _blocklistProvider = blocklistProvider;
-        
-        // // Optional: Register for configuration changes
-        // _configProvider.RegisterChangeHandler<QueueCleanerConfig>(OnConfigChanged);
     }
     
     protected override async Task ExecuteInternalAsync()
@@ -60,23 +56,6 @@ public sealed class QueueCleaner : GenericHandler
         var sonarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Sonarr));
         var radarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr));
         var lidarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr));
-        var config = ContextProvider.Get<QueueCleanerConfig>();
-        
-        bool blocklistIsConfigured = sonarrConfig.Enabled && !string.IsNullOrEmpty(config.ContentBlocker.Sonarr.BlocklistPath) ||
-                                     radarrConfig.Enabled && !string.IsNullOrEmpty(config.ContentBlocker.Radarr.BlocklistPath) ||
-                                     lidarrConfig.Enabled && !string.IsNullOrEmpty(config.ContentBlocker.Lidarr.BlocklistPath);
-
-        if (config.ContentBlocker.Enabled && blocklistIsConfigured)
-        {
-            
-        }
-        
-        // TODO create download services based on configuration
-        // Login to all download services
-        // foreach (var downloadService in _downloadServices)
-        // {
-        //     await downloadService.LoginAsync();
-        // }
         
         await ProcessArrConfigAsync(sonarrConfig, InstanceType.Sonarr);
         await ProcessArrConfigAsync(radarrConfig, InstanceType.Radarr);
@@ -94,6 +73,8 @@ public sealed class QueueCleaner : GenericHandler
         // push to context
         ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
         ContextProvider.Set(nameof(InstanceType), instanceType);
+
+        IReadOnlyList<IDownloadService> downloadServices = await GetInitializedDownloadServicesAsync();
 
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
@@ -138,37 +119,37 @@ public sealed class QueueCleaner : GenericHandler
 
                 if (record.Protocol is "torrent")
                 {
-                    var torrentClients = ContextProvider.Get<List<DownloadClientConfig>>(nameof(DownloadClientConfig))
-                        .Where(x => x.Type is DownloadClientType.Torrent)
+                    var torrentClients = downloadServices
+                        .Where(x => x.ClientConfig.Type is DownloadClientType.Torrent)
                         .ToList();
+                    
                     if (torrentClients.Count > 0)
                     {
-                        // TODO
                         // Check each download client for the download item
-                        // foreach (var downloadService in _downloadClientFactory.GetAllEnabledClients())
-                        // {
-                        //     try
-                        //     {
-                        //         // stalled download check
-                        //         DownloadCheckResult result = await downloadService
-                        //             .ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
-                        //         
-                        //         if (result.Found)
-                        //         {
-                        //             downloadCheckResult = result;
-                        //             break;
-                        //         }
-                        //     }
-                        //     catch (Exception ex)
-                        //     {
-                        //         _logger.LogError(ex, "Error checking download {id} with download client {clientId}", 
-                        //             record.DownloadId, downloadService.GetClientId());
-                        //     }
-                        // }
+                        foreach (var downloadService in downloadServices)
+                        {
+                            try
+                            {
+                                // stalled download check
+                                DownloadCheckResult result = await downloadService
+                                    .ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
+                                
+                                if (result.Found)
+                                {
+                                    downloadCheckResult = result;
+                                    break;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Error checking download {dName} with download client {cName}", 
+                                    record.Title, downloadService.ClientConfig.Name);
+                            }
+                        }
                     
                         if (!downloadCheckResult.Found)
                         {
-                            _logger.LogWarning("download not found {title}", record.Title);
+                            _logger.LogWarning("Download not found in any torrent client | {title}", record.Title);
                         }
                     }
                 }
