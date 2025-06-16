@@ -52,4 +52,9 @@ public interface IDynamicHttpClientFactory
     /// Gets all currently registered client names
     /// </summary>
     IEnumerable<string> GetRegisteredClientNames();
+    
+    /// <summary>
+    /// Forces cache invalidation for all registered clients (for debugging/testing)
+    /// </summary>
+    void InvalidateAllCachedConfigurations();
 } 

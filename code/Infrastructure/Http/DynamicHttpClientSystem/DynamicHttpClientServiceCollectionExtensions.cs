@@ -20,6 +20,9 @@ public static class DynamicHttpClientServiceCollectionExtensions
         services.AddSingleton<IConfigureOptions<HttpClientFactoryOptions>, DynamicHttpClientConfiguration>();
         services.AddSingleton<IDynamicHttpClientFactory, DynamicHttpClientFactory>();
         
+        // Register the cache invalidation service
+        services.AddSingleton<IHttpClientOptionsInvalidator, HttpClientOptionsInvalidator>();
+        
         // Add base HttpClient factory
         services.AddHttpClient();
 
