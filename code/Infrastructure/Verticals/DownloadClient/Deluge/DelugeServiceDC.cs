@@ -1,5 +1,4 @@
-﻿using Common.Attributes;
-using Data.Models.Configuration.DownloadCleaner;
+﻿using Data.Models.Configuration.DownloadCleaner;
 using Data.Enums;
 using Data.Models.Deluge.Response;
 using Infrastructure.Extensions;
@@ -207,7 +206,6 @@ public partial class DelugeService
     }
 
     /// <inheritdoc/>
-    [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)
     {
         hash = hash.ToLowerInvariant();
@@ -215,13 +213,11 @@ public partial class DelugeService
         await _client.DeleteTorrents([hash]);
     }
 
-    [DryRunSafeguard]
     protected async Task CreateLabel(string name)
     {
         await _client.CreateLabel(name);
     }
     
-    [DryRunSafeguard]
     protected virtual async Task ChangeLabel(string hash, string newLabel)
     {
         await _client.SetTorrentLabel(hash, newLabel);

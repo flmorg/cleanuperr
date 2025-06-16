@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Common.Attributes;
 using Data.Models.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Data.Enums;
@@ -158,7 +157,6 @@ public partial class DelugeService
         return (false, DeleteReason.None);
     }
 
-    [DryRunSafeguard]
     protected virtual async Task ChangeFilesPriority(string hash, List<int> sortedPriorities)
     {
         await _client.ChangeFilesPriority(hash, sortedPriorities);

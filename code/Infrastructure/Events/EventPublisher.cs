@@ -7,7 +7,6 @@ using Data.Models.Events;
 using Infrastructure.Verticals.Notifications;
 using Infrastructure.Verticals.Context;
 using Infrastructure.Interceptors;
-using Common.Attributes;
 using Infrastructure.Hubs;
 
 namespace Infrastructure.Events;
@@ -146,7 +145,6 @@ public class EventPublisher
         await _notificationPublisher.NotifyCategoryChanged(oldCategory, newCategory, isTag);
     }
 
-    [DryRunSafeguard]
     private async Task SaveEventToDatabase(AppEvent eventEntity)
     {
         _context.Events.Add(eventEntity);

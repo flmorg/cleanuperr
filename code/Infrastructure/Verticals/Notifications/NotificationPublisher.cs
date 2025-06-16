@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using Common.Attributes;
 using Data.Models.Configuration.Arr;
 using Data.Enums;
 using Data.Models.Arr.Queue;
@@ -154,7 +153,6 @@ public class NotificationPublisher : INotificationPublisher
         return _dryRunInterceptor.InterceptAsync(Notify<T>, message);
     }
 
-    [DryRunSafeguard]
     private Task Notify<T>(T message) where T: notnull
     {
         return _messageBus.Publish(message);

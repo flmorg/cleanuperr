@@ -273,7 +273,6 @@ public partial class QBitService
     }
 
     /// <inheritdoc/>
-    [DryRunSafeguard]
     public override async Task DeleteDownload(string hash)
     {
         if (_client == null)
@@ -284,7 +283,6 @@ public partial class QBitService
         await _client.DeleteAsync([hash], deleteDownloadedData: true);
     }
 
-    [DryRunSafeguard]
     protected async Task CreateCategory(string name)
     {
         if (_client == null)
@@ -295,7 +293,6 @@ public partial class QBitService
         await _client.AddCategoryAsync(name);
     }
     
-    [DryRunSafeguard]
     protected virtual async Task ChangeCategory(string hash, string newCategory)
     {
         if (_client == null)

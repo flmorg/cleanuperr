@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Common.Attributes;
 using Data.Models.Configuration.QueueCleaner;
 using Common.CustomDataTypes;
 using Data.Enums;
@@ -158,7 +157,6 @@ public partial class QBitService
         return (false, DeleteReason.None);
     }
 
-    [DryRunSafeguard]
     protected virtual async Task MarkFileAsSkipped(string hash, int fileIndex)
     {
         await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);

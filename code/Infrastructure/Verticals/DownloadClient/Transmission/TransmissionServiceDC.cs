@@ -1,5 +1,4 @@
-﻿using Common.Attributes;
-using Data.Models.Configuration.DownloadCleaner;
+﻿using Data.Models.Configuration.DownloadCleaner;
 using Data.Enums;
 using Infrastructure.Extensions;
 using Infrastructure.Verticals.Context;
@@ -215,7 +214,6 @@ public partial class TransmissionService
         }
     }
 
-    [DryRunSafeguard]
     protected virtual async Task ChangeDownloadLocation(long downloadId, string newLocation)
     {
         await _client.TorrentSetLocationAsync([downloadId], newLocation, true);
@@ -233,7 +231,6 @@ public partial class TransmissionService
         await _client.TorrentRemoveAsync([torrent.Id], true);
     }
     
-    [DryRunSafeguard]
     protected virtual async Task RemoveDownloadAsync(long downloadId)
     {
         await _client.TorrentRemoveAsync([downloadId], true);

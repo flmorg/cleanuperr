@@ -1,4 +1,3 @@
-using Common.Attributes;
 using Data.Models.Configuration.Arr;
 using Data.Models.Configuration.QueueCleaner;
 using Common.Helpers;
@@ -198,7 +197,6 @@ public abstract class ArrClient : IArrClient
         request.Headers.Add("x-api-key", apiKey);
     }
 
-    [DryRunSafeguard]
     protected virtual async Task<HttpResponseMessage> SendRequestAsync(HttpRequestMessage request)
     {
         HttpResponseMessage response = await _httpClient.SendAsync(request);
