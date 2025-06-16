@@ -2,6 +2,7 @@ using Common.Enums;
 using Data;
 using Infrastructure.Verticals.DownloadClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Health;
@@ -12,7 +13,7 @@ namespace Infrastructure.Health;
 public class HealthCheckService : IHealthCheckService
 {
     private readonly ILogger<HealthCheckService> _logger;
-    private readonly DataContext _dataContext;
+    private readonly IServiceProvider _serviceProvider;
     private readonly DownloadServiceFactory _downloadServiceFactory;
     private readonly Dictionary<Guid, HealthStatus> _healthStatuses = new();
     private readonly object _lockObject = new();
@@ -24,11 +25,11 @@ public class HealthCheckService : IHealthCheckService
 
     public HealthCheckService(
         ILogger<HealthCheckService> logger,
-        DataContext dataContext,
+        IServiceProvider serviceProvider,
         DownloadServiceFactory downloadServiceFactory)
     {
         _logger = logger;
-        _dataContext = dataContext;
+        _serviceProvider = serviceProvider;
         _downloadServiceFactory = downloadServiceFactory;
     }
 
@@ -39,8 +40,10 @@ public class HealthCheckService : IHealthCheckService
 
         try
         {
+            var dataContext = _serviceProvider.GetRequiredService<DataContext>();
+            
             // Get the client configuration
-            var downloadClientConfig = await _dataContext.DownloadClients
+            var downloadClientConfig = await dataContext.DownloadClients
                 .Where(x => x.Id == clientId)
                 .FirstOrDefaultAsync();
             
@@ -104,8 +107,10 @@ public class HealthCheckService : IHealthCheckService
         
         try
         {
+            var dataContext = _serviceProvider.GetRequiredService<DataContext>();
+            
             // Get all enabled client configurations
-            var enabledClients = await _dataContext.DownloadClients
+            var enabledClients = await dataContext.DownloadClients
                 .Where(x => x.Enabled)
                 .Where(x => x.TypeName != DownloadClientTypeName.Usenet)
                 .ToListAsync();

@@ -10,6 +10,7 @@ using Data.Enums;
 using Infrastructure.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Verticals.ContentBlocker;
@@ -17,7 +18,7 @@ namespace Infrastructure.Verticals.ContentBlocker;
 public sealed class BlocklistProvider
 {
     private readonly ILogger<BlocklistProvider> _logger;
-    private readonly DataContext _dataContext;
+    private readonly IServiceProvider _serviceProvider;
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
     private readonly Dictionary<InstanceType, string> _configHashes = new();
@@ -26,13 +27,13 @@ public sealed class BlocklistProvider
 
     public BlocklistProvider(
         ILogger<BlocklistProvider> logger,
-        DataContext dataContext,
+        IServiceProvider serviceProvider,
         IMemoryCache cache,
         IHttpClientFactory httpClientFactory
     )
     {
         _logger = logger;
-        _dataContext = dataContext;
+        _serviceProvider = serviceProvider;
         _cache = cache;
         _httpClient = httpClientFactory.CreateClient(Constants.HttpClientWithRetryName);
     }
@@ -41,8 +42,9 @@ public sealed class BlocklistProvider
     {
         try
         {
+            var dataContext = _serviceProvider.GetRequiredService<DataContext>();
             int changedCount = 0;
-            var queueCleanerConfig = await _dataContext.QueueCleanerConfigs
+            var queueCleanerConfig = await dataContext.QueueCleanerConfigs
                 .AsNoTracking()
                 .FirstAsync();
             bool shouldReload = false;

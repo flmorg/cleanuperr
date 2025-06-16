@@ -4,6 +4,7 @@ using Data;
 using Infrastructure.Http.DynamicHttpClientSystem;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Http;
 
@@ -13,16 +14,16 @@ namespace Infrastructure.Http;
 public class DynamicHttpClientProvider : IDynamicHttpClientProvider
 {
     private readonly ILogger<DynamicHttpClientProvider> _logger;
-    private readonly DataContext _dataContext;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IDynamicHttpClientFactory _dynamicHttpClientFactory;
 
     public DynamicHttpClientProvider(
         ILogger<DynamicHttpClientProvider> logger,
-        DataContext dataContext,
+        IServiceProvider serviceProvider,
         IDynamicHttpClientFactory dynamicHttpClientFactory)
     {
         _logger = logger;
-        _dataContext = dataContext;
+        _serviceProvider = serviceProvider;
         _dynamicHttpClientFactory = dynamicHttpClientFactory;
     }
 
@@ -49,7 +50,8 @@ public class DynamicHttpClientProvider : IDynamicHttpClientProvider
     /// <returns>A configured HttpClient instance</returns>
     private HttpClient CreateGenericClient(DownloadClientConfig downloadClientConfig)
     {
-        var httpConfig = _dataContext.GeneralConfigs.First();
+        var dataContext = _serviceProvider.GetRequiredService<DataContext>();
+        var httpConfig = dataContext.GeneralConfigs.First();
         var clientName = GetClientName(downloadClientConfig);
         
         // Determine the client type based on the download client type
