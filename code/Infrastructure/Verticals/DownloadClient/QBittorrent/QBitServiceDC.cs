@@ -34,22 +34,27 @@ public partial class QBitService
             .ToList();
 
     /// <inheritdoc/>
-    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories) =>
-        downloads
+    public override List<object>? FilterDownloadsToChangeCategoryAsync(List<object>? downloads, List<string> categories)
+    {
+        var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
+        
+        return downloads
             ?.Cast<TorrentInfo>()
             .Where(x => !string.IsNullOrEmpty(x.Hash))
             .Where(x => categories.Any(cat => cat.Equals(x.Category, StringComparison.InvariantCultureIgnoreCase)))
             .Where(x =>
             {
-                if (_downloadCleanerConfig.UnlinkedUseTag)
+                if (downloadCleanerConfig.UnlinkedUseTag)
                 {
-                    return !x.Tags.Any(tag => tag.Equals(_downloadCleanerConfig.UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
+                    return !x.Tags.Any(tag =>
+                        tag.Equals(downloadCleanerConfig.UnlinkedTargetCategory, StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 return true;
             })
             .Cast<object>()
             .ToList();
+    }
 
     /// <inheritdoc/>
     public override async Task CleanDownloadsAsync(List<object>? downloads, List<CleanCategory> categoriesToClean,
@@ -94,8 +99,10 @@ public partial class QBitService
             {
                 continue;
             }
+            
+            var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
 
-            if (!_downloadCleanerConfig.DeletePrivate)
+            if (!downloadCleanerConfig.DeletePrivate)
             {
                 TorrentProperties? torrentProperties = await _client.GetTorrentPropertiesAsync(download.Hash);
 
@@ -168,10 +175,12 @@ public partial class QBitService
         {
             return;
         }
+        
+        var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
 
-        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+        if (!string.IsNullOrEmpty(downloadCleanerConfig.UnlinkedIgnoredRootDir))
         {
-            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+            _hardLinkFileService.PopulateFileCounts(downloadCleanerConfig.UnlinkedIgnoredRootDir);
         }
 
         foreach (TorrentInfo download in downloads)
@@ -225,7 +234,7 @@ public partial class QBitService
                     continue;
                 }
 
-                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(downloadCleanerConfig.UnlinkedIgnoredRootDir));
 
                 if (hardlinkCount < 0)
                 {
@@ -247,19 +256,19 @@ public partial class QBitService
                 continue;
             }
 
-            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
+            await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, downloadCleanerConfig.UnlinkedTargetCategory);
 
-            if (_downloadCleanerConfig.UnlinkedUseTag)
+            if (downloadCleanerConfig.UnlinkedUseTag)
             {
                 _logger.LogInformation("tag added for {name}", download.Name);
             }
             else
             {
                 _logger.LogInformation("category changed for {name}", download.Name);
-                download.Category = _downloadCleanerConfig.UnlinkedTargetCategory;
+                download.Category = downloadCleanerConfig.UnlinkedTargetCategory;
             }
 
-            await _eventPublisher.PublishCategoryChanged(download.Category, _downloadCleanerConfig.UnlinkedTargetCategory, _downloadCleanerConfig.UnlinkedUseTag);
+            await _eventPublisher.PublishCategoryChanged(download.Category, downloadCleanerConfig.UnlinkedTargetCategory, downloadCleanerConfig.UnlinkedUseTag);
         }
     }
 
@@ -294,7 +303,9 @@ public partial class QBitService
             throw new InvalidOperationException("QBittorrent client is not initialized");
         }
         
-        if (_downloadCleanerConfig.UnlinkedUseTag)
+        var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
+        
+        if (downloadCleanerConfig.UnlinkedUseTag)
         {
             await _client.AddTorrentTagAsync([hash], newCategory);
             return;

@@ -69,8 +69,10 @@ public partial class DelugeService
             {
                 continue;
             }
+            
+            var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
 
-            if (!_downloadCleanerConfig.DeletePrivate && download.Private)
+            if (!downloadCleanerConfig.DeletePrivate && download.Private)
             {
                 _logger.LogDebug("skip | download is private | {name}", download.Name);
                 continue;
@@ -119,10 +121,12 @@ public partial class DelugeService
         {
             return;
         }
+        
+        var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
 
-        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+        if (!string.IsNullOrEmpty(downloadCleanerConfig.UnlinkedIgnoredRootDir))
         {
-            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+            _hardLinkFileService.PopulateFileCounts(downloadCleanerConfig.UnlinkedIgnoredRootDir);
         }
         
         foreach (DownloadStatus download in downloads.Cast<DownloadStatus>())
@@ -171,7 +175,7 @@ public partial class DelugeService
                 }
                 
                 long hardlinkCount = _hardLinkFileService
-                    .GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+                    .GetHardLinkCount(filePath, !string.IsNullOrEmpty(downloadCleanerConfig.UnlinkedIgnoredRootDir));
         
                 if (hardlinkCount < 0)
                 {
@@ -192,13 +196,13 @@ public partial class DelugeService
                 continue;
             }
             
-            await _dryRunInterceptor.InterceptAsync(ChangeLabel, download.Hash, _downloadCleanerConfig.UnlinkedTargetCategory);
+            await _dryRunInterceptor.InterceptAsync(ChangeLabel, download.Hash, downloadCleanerConfig.UnlinkedTargetCategory);
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
-            await _eventPublisher.PublishCategoryChanged(download.Label, _downloadCleanerConfig.UnlinkedTargetCategory);
+            await _eventPublisher.PublishCategoryChanged(download.Label, downloadCleanerConfig.UnlinkedTargetCategory);
             
-            download.Label = _downloadCleanerConfig.UnlinkedTargetCategory;
+            download.Label = downloadCleanerConfig.UnlinkedTargetCategory;
         }
     }
 

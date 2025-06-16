@@ -31,8 +31,6 @@ public abstract class DownloadService : IDownloadService
     protected readonly IDynamicHttpClientProvider _httpClientProvider;
     protected readonly EventPublisher _eventPublisher;
     protected readonly BlocklistProvider _blocklistProvider;
-    protected readonly QueueCleanerConfig _queueCleanerConfig;
-    protected readonly DownloadCleanerConfig _downloadCleanerConfig;
     protected HttpClient? _httpClient;
 
     
@@ -64,9 +62,6 @@ public abstract class DownloadService : IDownloadService
         _blocklistProvider = blocklistProvider;
         _cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(StaticConfiguration.TriggerValue + Constants.CacheLimitBuffer);
-        
-        _queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
-        _downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
     }
     
     /// <inheritdoc />
@@ -117,7 +112,9 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetStalledStrikesOnProgress(string hash, long downloaded)
     {
-        if (!_queueCleanerConfig.Stalled.ResetStrikesOnProgress)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+
+        if (!queueCleanerConfig.Stalled.ResetStrikesOnProgress)
         {
             return;
         }
@@ -135,7 +132,9 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetSlowSpeedStrikesOnProgress(string downloadName, string hash)
     {
-        if (_queueCleanerConfig.Slow.ResetStrikesOnProgress)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+        
+        if (queueCleanerConfig.Slow.ResetStrikesOnProgress)
         {
             return;
         }
@@ -153,7 +152,9 @@ public abstract class DownloadService : IDownloadService
     
     protected void ResetSlowTimeStrikesOnProgress(string downloadName, string hash)
     {
-        if (_queueCleanerConfig.Slow.ResetStrikesOnProgress)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+        
+        if (queueCleanerConfig.Slow.ResetStrikesOnProgress)
         {
             return;
         }
@@ -178,12 +179,14 @@ public abstract class DownloadService : IDownloadService
         SmartTimeSpan currentTime
     )
     {
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+        
         if (minSpeed.Bytes > 0 && currentSpeed < minSpeed)
         {
             _logger.LogTrace("slow speed | {speed}/s | {name}", currentSpeed.ToString(), downloadName);
             
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.Slow.MaxStrikes, StrikeType.SlowSpeed);
+                .StrikeAndCheckLimit(downloadHash, downloadName, queueCleanerConfig.Slow.MaxStrikes, StrikeType.SlowSpeed);
 
             if (shouldRemove)
             {
@@ -200,7 +203,7 @@ public abstract class DownloadService : IDownloadService
             _logger.LogTrace("slow estimated time | {time} | {name}", currentTime.ToString(), downloadName);
             
             bool shouldRemove = await _striker
-                .StrikeAndCheckLimit(downloadHash, downloadName, _queueCleanerConfig.Slow.MaxStrikes, StrikeType.SlowTime);
+                .StrikeAndCheckLimit(downloadHash, downloadName, queueCleanerConfig.Slow.MaxStrikes, StrikeType.SlowTime);
 
             if (shouldRemove)
             {

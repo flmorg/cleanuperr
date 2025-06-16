@@ -85,8 +85,10 @@ public partial class TransmissionService
             {
                 continue;
             }
+            
+            var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
 
-            if (!_downloadCleanerConfig.DeletePrivate && download.IsPrivate is true)
+            if (!downloadCleanerConfig.DeletePrivate && download.IsPrivate is true)
             {
                 _logger.LogDebug("skip | download is private | {name}", download.Name);
                 continue;
@@ -129,9 +131,11 @@ public partial class TransmissionService
             return;
         }
         
-        if (!string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir))
+        var downloadCleanerConfig = ContextProvider.Get<DownloadCleanerConfig>(nameof(DownloadCleanerConfig));
+        
+        if (!string.IsNullOrEmpty(downloadCleanerConfig.UnlinkedIgnoredRootDir))
         {
-            _hardLinkFileService.PopulateFileCounts(_downloadCleanerConfig.UnlinkedIgnoredRootDir);
+            _hardLinkFileService.PopulateFileCounts(downloadCleanerConfig.UnlinkedIgnoredRootDir);
         }
         
         foreach (TorrentInfo download in downloads.Cast<TorrentInfo>())
@@ -176,7 +180,7 @@ public partial class TransmissionService
 
                 string filePath = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.DownloadDir, file.Name).Split(['\\', '/']));
                 
-                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(_downloadCleanerConfig.UnlinkedIgnoredRootDir));
+                long hardlinkCount = _hardLinkFileService.GetHardLinkCount(filePath, !string.IsNullOrEmpty(downloadCleanerConfig.UnlinkedIgnoredRootDir));
                 
                 if (hardlinkCount < 0)
                 {
@@ -199,13 +203,13 @@ public partial class TransmissionService
             }
             
             string currentCategory = download.GetCategory();
-            string newLocation = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.DownloadDir, _downloadCleanerConfig.UnlinkedTargetCategory).Split(['\\', '/']));
+            string newLocation = string.Join(Path.DirectorySeparatorChar, Path.Combine(download.DownloadDir, downloadCleanerConfig.UnlinkedTargetCategory).Split(['\\', '/']));
             
             await _dryRunInterceptor.InterceptAsync(ChangeDownloadLocation, download.Id, newLocation);
             
             _logger.LogInformation("category changed for {name}", download.Name);
             
-            await _eventPublisher.PublishCategoryChanged(currentCategory, _downloadCleanerConfig.UnlinkedTargetCategory);
+            await _eventPublisher.PublishCategoryChanged(currentCategory, downloadCleanerConfig.UnlinkedTargetCategory);
 
             download.DownloadDir = newLocation;
         }

@@ -78,12 +78,14 @@ public partial class TransmissionService
         bool isPrivate
     )
     {
-        if (!_queueCleanerConfig.ContentBlocker.Enabled)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+        
+        if (!queueCleanerConfig.ContentBlocker.Enabled)
         {
             return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.ContentBlocker.IgnorePrivate && isPrivate)
+        if (queueCleanerConfig.ContentBlocker.IgnorePrivate && isPrivate)
         {
             // ignore private trackers
             _logger.LogDebug("skip unwanted files check | download is private | {name}", download.Name);
@@ -179,7 +181,9 @@ public partial class TransmissionService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfSlow(TorrentInfo download)
     {
-        if (_queueCleanerConfig.Slow.MaxStrikes is 0)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+        
+        if (queueCleanerConfig.Slow.MaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
@@ -195,22 +199,22 @@ public partial class TransmissionService
             return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.Slow.IgnorePrivate && download.IsPrivate is true)
+        if (queueCleanerConfig.Slow.IgnorePrivate && download.IsPrivate is true)
         {
             // ignore private trackers
             _logger.LogDebug("skip slow check | download is private | {name}", download.Name);
             return (false, DeleteReason.None);
         }
 
-        if (download.TotalSize > (_queueCleanerConfig.Slow.IgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
+        if (download.TotalSize > (queueCleanerConfig.Slow.IgnoreAboveSizeByteSize?.Bytes ?? long.MaxValue))
         {
             _logger.LogDebug("skip slow check | download is too large | {name}", download.Name);
             return (false, DeleteReason.None);
         }
         
-        ByteSize minSpeed = _queueCleanerConfig.Slow.MinSpeedByteSize;
+        ByteSize minSpeed = queueCleanerConfig.Slow.MinSpeedByteSize;
         ByteSize currentSpeed = new ByteSize(download.RateDownload ?? long.MaxValue);
-        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(_queueCleanerConfig.Slow.MaxTime);
+        SmartTimeSpan maxTime = SmartTimeSpan.FromHours(queueCleanerConfig.Slow.MaxTime);
         SmartTimeSpan currentTime = SmartTimeSpan.FromSeconds(download.Eta ?? 0);
 
         return await CheckIfSlow(
@@ -225,7 +229,9 @@ public partial class TransmissionService
 
     private async Task<(bool ShouldRemove, DeleteReason Reason)> CheckIfStuck(TorrentInfo download)
     {
-        if (_queueCleanerConfig.Stalled.MaxStrikes is 0)
+        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
+        
+        if (queueCleanerConfig.Stalled.MaxStrikes is 0)
         {
             return (false, DeleteReason.None);
         }
@@ -241,7 +247,7 @@ public partial class TransmissionService
             return (false, DeleteReason.None);
         }
         
-        if (_queueCleanerConfig.Stalled.IgnorePrivate && (download.IsPrivate ?? false))
+        if (queueCleanerConfig.Stalled.IgnorePrivate && (download.IsPrivate ?? false))
         {
             // ignore private trackers
             _logger.LogDebug("skip stalled check | download is private | {name}", download.Name);
@@ -250,6 +256,6 @@ public partial class TransmissionService
         
         ResetStalledStrikesOnProgress(download.HashString!, download.DownloadedEver ?? 0);
         
-        return (await _striker.StrikeAndCheckLimit(download.HashString!, download.Name!, _queueCleanerConfig.Stalled.MaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
+        return (await _striker.StrikeAndCheckLimit(download.HashString!, download.Name!, queueCleanerConfig.Stalled.MaxStrikes, StrikeType.Stalled), DeleteReason.Stalled);
     }
 }

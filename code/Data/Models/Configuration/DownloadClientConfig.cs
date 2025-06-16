@@ -65,7 +65,7 @@ public sealed record DownloadClientConfig
     /// </summary>
     [NotMapped]
     [JsonIgnore]
-    public Uri Url => new($"{Host?.ToString().TrimEnd('/')}/{UrlBase.TrimStart('/').TrimEnd('/')}");
+    public Uri Url => new($"{Host?.ToString().TrimEnd('/')}/{UrlBase?.TrimStart('/').TrimEnd('/')}");
     
     /// <summary>
     /// Validates the configuration
