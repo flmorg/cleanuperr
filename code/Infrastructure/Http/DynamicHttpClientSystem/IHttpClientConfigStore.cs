@@ -24,4 +24,14 @@ public interface IHttpClientConfigStore
     /// Adds or updates a retry configuration for the specified client name
     /// </summary>
     void AddRetryConfiguration(string clientName, RetryConfig retryConfig);
+    
+    /// <summary>
+    /// Gets all currently registered configurations
+    /// </summary>
+    IEnumerable<KeyValuePair<string, HttpClientConfig>> GetAllConfigurations();
+    
+    /// <summary>
+    /// Updates multiple configurations atomically
+    /// </summary>
+    void UpdateConfigurations(IEnumerable<KeyValuePair<string, HttpClientConfig>> configurations);
 } 

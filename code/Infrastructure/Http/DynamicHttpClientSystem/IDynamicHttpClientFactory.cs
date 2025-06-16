@@ -1,4 +1,5 @@
 using Common.Enums;
+using Data.Models.Configuration.General;
 
 namespace Infrastructure.Http.DynamicHttpClientSystem;
 
@@ -41,4 +42,14 @@ public interface IDynamicHttpClientFactory
     /// Unregisters a configuration
     /// </summary>
     void UnregisterConfiguration(string clientName);
+    
+    /// <summary>
+    /// Updates all registered HTTP client configurations with new general config settings
+    /// </summary>
+    void UpdateAllClientsFromGeneralConfig(GeneralConfig generalConfig);
+    
+    /// <summary>
+    /// Gets all currently registered client names
+    /// </summary>
+    IEnumerable<string> GetRegisteredClientNames();
 } 

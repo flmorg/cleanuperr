@@ -35,4 +35,17 @@ public class HttpClientConfigStore : IHttpClientConfigStore
     {
         return _retryConfigurations.TryGetValue(clientName, out retryConfig!);
     }
+
+    public IEnumerable<KeyValuePair<string, HttpClientConfig>> GetAllConfigurations()
+    {
+        return _configurations.ToList(); // Return a snapshot to avoid collection modification issues
+    }
+
+    public void UpdateConfigurations(IEnumerable<KeyValuePair<string, HttpClientConfig>> configurations)
+    {
+        foreach (var kvp in configurations)
+        {
+            _configurations.AddOrUpdate(kvp.Key, kvp.Value, (_, _) => kvp.Value);
+        }
+    }
 } 

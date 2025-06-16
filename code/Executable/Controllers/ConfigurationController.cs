@@ -5,6 +5,7 @@ using Data.Models.Configuration.General;
 using Data.Models.Configuration.QueueCleaner;
 using Data;
 using Data.Enums;
+using Infrastructure.Http.DynamicHttpClientSystem;
 using Infrastructure.Logging;
 using Infrastructure.Models;
 using Infrastructure.Services.Interfaces;
@@ -190,6 +191,15 @@ public class ConfigurationController : ControllerBase
             // Remove the client from the database
             _dataContext.DownloadClients.Remove(existingClient);
             await _dataContext.SaveChangesAsync();
+            
+            // Clean up any registered HTTP client configuration
+            var dynamicHttpClientFactory = HttpContext.RequestServices
+                .GetRequiredService<IDynamicHttpClientFactory>();
+                
+            var clientName = $"DownloadClient_{id}";
+            dynamicHttpClientFactory.UnregisterConfiguration(clientName);
+            
+            _logger.LogInformation("Removed HTTP client configuration for deleted download client {ClientName}", clientName);
             
             return NoContent();
         }
@@ -395,6 +405,14 @@ public class ConfigurationController : ControllerBase
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
+
+            // Update all HTTP client configurations with new general settings
+            var dynamicHttpClientFactory = HttpContext.RequestServices
+                .GetRequiredService<IDynamicHttpClientFactory>();
+            
+            dynamicHttpClientFactory.UpdateAllClientsFromGeneralConfig(oldConfig);
+            
+            _logger.LogInformation("Updated all HTTP client configurations with new general settings");
 
             // Set the logging level based on the new configuration
             _loggingConfigManager.SetLogLevel(newConfig.LogLevel);

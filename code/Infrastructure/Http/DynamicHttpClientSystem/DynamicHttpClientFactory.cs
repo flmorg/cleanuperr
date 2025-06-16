@@ -1,5 +1,7 @@
 using System.Net;
 using Common.Enums;
+using Data.Models.Configuration.General;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Http.DynamicHttpClientSystem;
 
@@ -10,11 +12,16 @@ public class DynamicHttpClientFactory : IDynamicHttpClientFactory
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IHttpClientConfigStore _configStore;
+    private readonly ILogger<DynamicHttpClientFactory> _logger;
 
-    public DynamicHttpClientFactory(IHttpClientFactory httpClientFactory, IHttpClientConfigStore configStore)
+    public DynamicHttpClientFactory(
+        IHttpClientFactory httpClientFactory, 
+        IHttpClientConfigStore configStore,
+        ILogger<DynamicHttpClientFactory> logger)
     {
         _httpClientFactory = httpClientFactory;
         _configStore = configStore;
+        _logger = logger;
     }
 
     public HttpClient CreateClient(string clientName, HttpClientConfig config)
@@ -92,5 +99,48 @@ public class DynamicHttpClientFactory : IDynamicHttpClientFactory
     public void UnregisterConfiguration(string clientName)
     {
         _configStore.RemoveConfiguration(clientName);
+    }
+
+    public void UpdateAllClientsFromGeneralConfig(GeneralConfig generalConfig)
+    {
+        var allConfigurations = _configStore.GetAllConfigurations().ToList();
+        
+        if (!allConfigurations.Any())
+        {
+            _logger.LogDebug("No HTTP client configurations to update");
+            return;
+        }
+
+        var updatedConfigurations = allConfigurations.Select(kvp =>
+        {
+            var config = kvp.Value;
+            
+            // Update timeout and certificate validation for all clients
+            config.Timeout = generalConfig.HttpTimeout;
+            config.CertificateValidationType = generalConfig.HttpCertificateValidation;
+            
+            // Update retry configuration if it exists
+            if (config.RetryConfig != null)
+            {
+                config.RetryConfig.MaxRetries = generalConfig.HttpMaxRetries;
+            }
+            
+            return new KeyValuePair<string, HttpClientConfig>(kvp.Key, config);
+        }).ToList();
+
+        // Apply all updates
+        _configStore.UpdateConfigurations(updatedConfigurations);
+        
+        _logger.LogInformation("Updated {Count} HTTP client configurations with new general settings: " +
+                              "Timeout={Timeout}s, MaxRetries={MaxRetries}, CertificateValidation={CertValidation}",
+                              updatedConfigurations.Count, 
+                              generalConfig.HttpTimeout,
+                              generalConfig.HttpMaxRetries,
+                              generalConfig.HttpCertificateValidation);
+    }
+
+    public IEnumerable<string> GetRegisteredClientNames()
+    {
+        return _configStore.GetAllConfigurations().Select(kvp => kvp.Key);
     }
 } 
