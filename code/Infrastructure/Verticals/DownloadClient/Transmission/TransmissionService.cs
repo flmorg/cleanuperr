@@ -63,38 +63,6 @@ public partial class TransmissionService : DownloadService, ITransmissionService
             password: _downloadClientConfig.Password
         );
     }
-    
-    // /// <inheritdoc />
-    // public override void Initialize(DownloadClientConfig downloadClientConfig)
-    // {
-    //     // Initialize base service first
-    //     base.Initialize(downloadClientConfig);
-    //     
-    //     // Ensure client type is correct
-    //     if (downloadClientConfig.TypeName != Common.Enums.DownloadClientTypeName.Transmission)
-    //     {
-    //         throw new InvalidOperationException($"Cannot initialize TransmissionService with client type {downloadClientConfig.TypeName}");
-    //     }
-    //     
-    //     if (_httpClient == null)
-    //     {
-    //         throw new InvalidOperationException("HTTP client is not initialized");
-    //     }
-    //     
-    //     // Create the RPC path
-    //     string rpcPath = string.IsNullOrEmpty(downloadClientConfig.UrlBase)
-    //         ? "/rpc"
-    //         : $"/{downloadClientConfig.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
-    //     
-    //     // Create full RPC URL
-    //     string rpcUrl = new UriBuilder(downloadClientConfig.Url) { Path = rpcPath }.Uri.ToString();
-    //     
-    //     // Create Transmission client
-    //     _client = new Client(_httpClient, rpcUrl, login: downloadClientConfig.Username, password: downloadClientConfig.Password);
-    //     
-    //     _logger.LogInformation("Initialized Transmission service for client {clientName} ({clientId})", 
-    //         downloadClientConfig.Name, downloadClientConfig.Id);
-    // }
 
     public override async Task LoginAsync()
     {
