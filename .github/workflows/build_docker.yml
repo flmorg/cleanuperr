@@ -1,0 +1,125 @@
+name: Build Docker Images
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  pull_request:
+    paths:
+      - 'code/**'
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build_app:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set github context
+        timeout-minutes: 1
+        run: |
+          echo 'githubRepository=${{ github.repository }}' >> $GITHUB_ENV
+          echo 'githubSha=${{ github.sha }}' >> $GITHUB_ENV
+          echo 'githubRef=${{ github.ref }}' >> $GITHUB_ENV
+          echo 'githubHeadRef=${{ github.head_ref }}' >> $GITHUB_ENV
+
+      - name: Initialize build info
+        timeout-minutes: 1
+        run: |
+          githubHeadRef=${{ env.githubHeadRef }}
+          latestDockerTag=""
+          versionDockerTag=""
+          version="0.0.1"
+
+          if [[ "$githubRef" =~ ^"refs/tags/" ]]; then
+            branch=${githubRef##*/}
+            latestDockerTag="latest"
+            versionDockerTag=${branch#v}
+            version=${branch#v}
+          else
+            # Determine if this run is for the main branch or another branch
+            if [[ -z "$githubHeadRef" ]]; then
+              # Main branch
+              githubRef=${{ env.githubRef }}
+              branch=${githubRef##*/}
+              versionDockerTag="$branch"
+            else
+              # Pull request
+              branch=$githubHeadRef
+              versionDockerTag="$branch"
+            fi
+          fi
+
+          githubTags=""
+
+          if [ -n "$latestDockerTag" ]; then
+            githubTags="$githubTags,ghcr.io/cleanuparr:$latestDockerTag"
+          fi
+
+          if [ -n "$versionDockerTag" ]; then
+            githubTags="$githubTags,ghcr.io/cleanuparr:$versionDockerTag"
+          fi
+
+          # set env vars
+          echo "branch=$branch" >> $GITHUB_ENV
+          echo "githubTags=$githubTags" >> $GITHUB_ENV
+          echo "versionDockerTag=$versionDockerTag" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_ENV
+
+      - name: Get vault secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_HOST }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets:
+            secrets/data/docker username | DOCKER_USERNAME;
+            secrets/data/docker password | DOCKER_PASSWORD;
+            secrets/data/github repo_readonly_pat | REPO_READONLY_PAT;
+            secrets/data/github packages_pat | PACKAGES_PAT
+
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        timeout-minutes: 1
+        with:
+          repository: ${{ env.githubRepository }}
+          ref: ${{ env.branch }}
+          token: ${{ env.REPO_READONLY_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        timeout-minutes: 5
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push docker image
+        timeout-minutes: 15
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ github.workspace }}/code
+          file: ${{ github.workspace }}/code/Dockerfile
+          provenance: false
+          labels: |
+            commit=sha-${{ env.githubSha }}
+            version=${{ env.versionDockerTag }}
+          build-args: |
+            VERSION=${{ env.version }}
+            PACKAGES_USERNAME=${{ env.PACKAGES_USERNAME }}
+            PACKAGES_PAT=${{ env.PACKAGES_PAT }}
+          outputs: |
+            type=image
+          platforms: |
+            linux/amd64
+            linux/arm64
+          push: true
+          tags: |
+            ${{ env.githubTags }}
