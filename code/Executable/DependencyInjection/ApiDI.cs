@@ -3,6 +3,7 @@ using Infrastructure.Health;
 using Infrastructure.Logging;
 using Executable.Middleware;
 using Infrastructure.Hubs;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.OpenApi.Models;
 
 namespace Executable.DependencyInjection;
@@ -11,12 +12,19 @@ public static class ApiDI
 {
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
+        services.Configure<JsonOptions>(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
+        
         // Add API-specific services
         services
             .AddControllers()
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
         services.AddEndpointsApiExplorer();
         
@@ -26,7 +34,7 @@ public static class ApiDI
             .AddJsonProtocol(options =>
             {
                 options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });;
+            });
         
         // Add health status broadcaster
         services.AddHostedService<HealthStatusBroadcaster>();

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json.Serialization;
 using Data.Models.Configuration.General;
 using Data.Models.Arr;
 using Infrastructure.Health;
@@ -43,6 +44,14 @@ public static class MainDI
 
                 config.UsingInMemory((context, cfg) =>
                 {
+                    cfg.ConfigureJsonSerializerOptions(options =>
+                    {
+                        options.Converters.Add(new JsonStringEnumConverter());
+                        options.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+
+                        return options;
+                    });
+                    
                     cfg.ReceiveEndpoint("download-remover-queue", e =>
                     {
                         e.ConfigureConsumer<DownloadRemoverConsumer<SearchItem>>(context);

@@ -537,8 +537,6 @@ public class ConfigurationController : ControllerBase
                 _logger.LogInformation("{name} is enabled, updating job schedule with cron expression: {CronExpression}",
                     jobType.ToString(), config.CronExpression);
 
-                _logger.LogCritical("This is a random test log");
-
                 // Create a Quartz job schedule with the cron expression
                 await _jobManagementService.StartJob(jobType, null, config.CronExpression);
             }
