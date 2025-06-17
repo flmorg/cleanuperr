@@ -1144,37 +1144,6 @@
           margin: 0 5px;
         }
       }
-
-      // Phone-specific styling for very small screens
-      @media (max-width: 480px) {
-        height: 80px;
-        flex-direction: column;
-        justify-content: center;
-        padding: 5px 10px;
-
-        .topbar-section.left {
-          margin: 0 0 5px 0;
-          justify-content: center;
-          width: 100%;
-        }
-
-        .topbar-section.center {
-          justify-content: center;
-          width: 100%;
-        }
-
-        .version-bar {
-          justify-content: center;
-          flex-wrap: wrap !important;
-          gap: 5px !important;
-        }
-
-        .page-title {
-          width: 100%;
-          text-align: center;
-          margin: 0 0 4px 0;
-        }
-      }
     }
 
     // Main content area
