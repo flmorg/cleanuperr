@@ -10,7 +10,7 @@ export enum ScheduleUnit {
 export const ScheduleOptions = {
   [ScheduleUnit.Seconds]: [30],
   [ScheduleUnit.Minutes]: [1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30],
-  [ScheduleUnit.Hours]: [1, 2, 3, 4, 6, 8, 12]
+  [ScheduleUnit.Hours]: [1, 2, 3, 4, 6]
 };
 
 export interface JobSchedule {

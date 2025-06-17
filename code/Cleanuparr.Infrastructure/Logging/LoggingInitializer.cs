@@ -22,6 +22,7 @@ public class LoggingInitializer : BackgroundService
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        return;
         while (true)
         {
             using var _ = LogContext.PushProperty(LogProperties.Category,

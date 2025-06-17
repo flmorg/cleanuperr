@@ -20,12 +20,12 @@ using LogContext = Serilog.Context.LogContext;
 
 namespace Cleanuparr.Application.Features.QueueCleaner;
 
-public sealed class QueueCleanerHandler : GenericHandler
+public sealed class QueueCleaner : GenericHandler
 {
     private readonly BlocklistProvider _blocklistProvider;
 
-    public QueueCleanerHandler(
-        ILogger<QueueCleanerHandler> logger,
+    public QueueCleaner(
+        ILogger<QueueCleaner> logger,
         DataContext dataContext,
         IMemoryCache cache,
         IBus messageBus,

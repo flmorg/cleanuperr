@@ -41,12 +41,19 @@ public class BackgroundJobManager : IHostedService
     /// </summary>
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting BackgroundJobManager");
-        _scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
+        try
+        {
+            _logger.LogInformation("Starting BackgroundJobManager");
+            _scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
         
-        await InitializeJobsFromConfiguration(cancellationToken);
+            await InitializeJobsFromConfiguration(cancellationToken);
         
-        _logger.LogInformation("BackgroundJobManager started");
+            _logger.LogInformation("BackgroundJobManager started");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start BackgroundJobManager");
+        }
     }
 
     /// <summary>
@@ -100,7 +107,7 @@ public class BackgroundJobManager : IHostedService
             return;
         }
         
-        await AddJobWithTrigger<QueueCleanerHandler>(
+        await AddJobWithTrigger<QueueCleaner>(
             config, 
             config.CronExpression, 
             cancellationToken);
@@ -116,7 +123,7 @@ public class BackgroundJobManager : IHostedService
             return;
         }
         
-        await AddJobWithTrigger<DownloadCleanerHandler>(
+        await AddJobWithTrigger<DownloadCleaner>(
             config, 
             config.CronExpression, 
             cancellationToken);

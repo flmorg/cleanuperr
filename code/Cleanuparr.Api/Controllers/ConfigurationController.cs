@@ -4,6 +4,7 @@ using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Http.DynamicHttpClientSystem;
 using Cleanuparr.Infrastructure.Logging;
 using Cleanuparr.Infrastructure.Models;
+using Cleanuparr.Infrastructure.Utilities;
 using Cleanuparr.Persistence;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
@@ -309,6 +310,12 @@ public class ConfigurationController : ControllerBase
             // Validate the configuration
             newConfig.Validate();
 
+            // Validate cron expression if present
+            if (!string.IsNullOrEmpty(newConfig.CronExpression))
+            {
+                CronValidationHelper.ValidateCronExpression(newConfig.CronExpression);
+            }
+
             // Get existing config
             var oldConfig = await _dataContext.QueueCleanerConfigs
                 .FirstAsync();
@@ -347,6 +354,12 @@ public class ConfigurationController : ControllerBase
         {
             // Validate the configuration
             newConfig.Validate();
+
+            // Validate cron expression if present
+            if (!string.IsNullOrEmpty(newConfig.CronExpression))
+            {
+                CronValidationHelper.ValidateCronExpression(newConfig.CronExpression);
+            }
 
             // Get existing config
             var oldConfig = await _dataContext.DownloadCleanerConfigs

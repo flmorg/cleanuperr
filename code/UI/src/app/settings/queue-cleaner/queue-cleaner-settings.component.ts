@@ -312,6 +312,24 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         this.updateContentBlockerDependentControls(enabled);
       });
     }
+
+    // Listen for changes to the schedule type to ensure dropdown isn't empty
+    const scheduleTypeControl = this.queueCleanerForm.get('jobSchedule.type');
+    if (scheduleTypeControl) {
+      scheduleTypeControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          // Ensure the selected value is valid for the new type
+          const everyControl = this.queueCleanerForm.get('jobSchedule.every');
+          const currentValue = everyControl?.value;
+          const scheduleType = this.queueCleanerForm.get('jobSchedule.type')?.value;
+          
+          const validValues = ScheduleOptions[scheduleType as keyof typeof ScheduleOptions];
+          if (currentValue && !validValues.includes(currentValue)) {
+            everyControl?.setValue(validValues[0]);
+          }
+        });
+    }
       
     // Listen to all form changes to check for actual differences from original values
     this.queueCleanerForm.valueChanges.pipe(takeUntil(this.destroy$))

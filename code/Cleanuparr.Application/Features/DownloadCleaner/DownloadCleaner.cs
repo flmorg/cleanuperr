@@ -18,12 +18,12 @@ using LogContext = Serilog.Context.LogContext;
 
 namespace Cleanuparr.Application.Features.DownloadCleaner;
 
-public sealed class DownloadCleanerHandler : GenericHandler
+public sealed class DownloadCleaner : GenericHandler
 {
     private readonly HashSet<string> _excludedHashes = [];
     
-    public DownloadCleanerHandler(
-        ILogger<DownloadCleanerHandler> logger,
+    public DownloadCleaner(
+        ILogger<DownloadCleaner> logger,
         DataContext dataContext,
         IMemoryCache cache,
         IBus messageBus,
@@ -55,7 +55,7 @@ public sealed class DownloadCleanerHandler : GenericHandler
         
         if (!isUnlinkedEnabled && !isCleaningEnabled)
         {
-            _logger.LogWarning("{name} is not configured properly", nameof(DownloadCleanerHandler));
+            _logger.LogWarning("{name} is not configured properly", nameof(DownloadCleaner));
             return;
         }
         
