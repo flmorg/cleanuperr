@@ -88,8 +88,6 @@ public sealed class QueueCleaner : GenericHandler
                     continue;
                 }
                 
-                _logger.LogTrace("processing | {title} | {id}", record.Title, record.DownloadId);
-                
                 // push record to context
                 ContextProvider.Set(nameof(QueueRecord), record);
 
