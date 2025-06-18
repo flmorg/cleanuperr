@@ -24,7 +24,7 @@ export class DownloadCleanerConfigStore {
   readonly error = this._error.asReadonly();
 
   // API endpoints
-  private apiUrl = `${environment.apiUrl}/api/Configuration`;
+  private apiUrl = `${environment.apiUrl}/api/configuration`;
 
   constructor() {
     // Load config on initialization

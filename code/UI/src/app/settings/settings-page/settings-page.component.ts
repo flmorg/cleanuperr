@@ -20,6 +20,7 @@ import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
 import { RadarrSettingsComponent } from "../radarr/radarr-settings.component";
 import { LidarrSettingsComponent } from "../lidarr/lidarr-settings.component";
 import { DownloadClientSettingsComponent } from "../download-client/download-client-settings.component";
+import { NotificationSettingsComponent } from "../notification-settings/notification-settings.component";
 
 // Define interfaces for settings page
 interface LogLevel {
@@ -50,7 +51,8 @@ interface Category {
     SonarrSettingsComponent,
     RadarrSettingsComponent,
     LidarrSettingsComponent,
-    DownloadClientSettingsComponent
+    DownloadClientSettingsComponent,
+    NotificationSettingsComponent
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
@@ -89,6 +91,7 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
   @ViewChild(GeneralSettingsComponent) generalSettings!: GeneralSettingsComponent;
   @ViewChild(DownloadCleanerSettingsComponent) downloadCleanerSettings!: DownloadCleanerSettingsComponent;
   @ViewChild(SonarrSettingsComponent) sonarrSettings!: SonarrSettingsComponent;
+  @ViewChild(NotificationSettingsComponent) notificationSettings!: NotificationSettingsComponent;
 
   ngOnInit(): void {
     // Future implementation for other settings sections
@@ -116,6 +119,11 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
     
     // Check if sonarr settings has unsaved changes
     if (this.sonarrSettings?.canDeactivate() === false) {
+      return false;
+    }
+    
+    // Check if notification settings has unsaved changes
+    if (this.notificationSettings?.canDeactivate() === false) {
       return false;
     }
     

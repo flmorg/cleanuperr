@@ -10,6 +10,7 @@ using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Cleanuparr.Persistence.Models.Configuration.General;
+using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Infrastructure.Services.Interfaces;
 using Mapster;
@@ -285,15 +286,90 @@ public class ConfigurationController : ControllerBase
     [HttpGet("notifications")]
     public async Task<IActionResult> GetNotificationsConfig()
     {
-        // TODO get all notification configs
         await DataContext.Lock.WaitAsync();
         try
         {
-            // var config = await _dataContext.NotificationsConfigs
-            //     .AsNoTracking()
-            //     .FirstAsync();
-            // return Ok(config);
-            return null; // Placeholder for future implementation
+            var notifiarrConfig = await _dataContext.NotifiarrConfigs
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+            
+            var appriseConfig = await _dataContext.AppriseConfigs
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+            
+            // Return in the expected format with wrapper object
+            var config = new 
+            { 
+                notifiarr = notifiarrConfig,
+                apprise = appriseConfig
+            };
+            return Ok(config);
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    public class UpdateNotificationConfigDto
+    {
+        public NotifiarrConfig? Notifiarr { get; set; }
+        public AppriseConfig? Apprise { get; set; }
+    }
+
+    [HttpPut("notifications")]
+    public async Task<IActionResult> UpdateNotificationsConfig([FromBody] UpdateNotificationConfigDto newConfig)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Update Notifiarr config if provided
+            if (newConfig.Notifiarr != null)
+            {
+                var existingNotifiarr = await _dataContext.NotifiarrConfigs.FirstOrDefaultAsync();
+                if (existingNotifiarr != null)
+                {
+                    // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+                    var config = new TypeAdapterConfig();
+                    config.NewConfig<NotifiarrConfig, NotifiarrConfig>()
+                        .Ignore(dest => dest.Id);
+                    
+                    newConfig.Notifiarr.Adapt(existingNotifiarr, config);
+                }
+                else
+                {
+                    _dataContext.NotifiarrConfigs.Add(newConfig.Notifiarr);
+                }
+            }
+
+            // Update Apprise config if provided
+            if (newConfig.Apprise != null)
+            {
+                var existingApprise = await _dataContext.AppriseConfigs.FirstOrDefaultAsync();
+                if (existingApprise != null)
+                {
+                    // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+                    var config = new TypeAdapterConfig();
+                    config.NewConfig<AppriseConfig, AppriseConfig>()
+                        .Ignore(dest => dest.Id);
+                    
+                    newConfig.Apprise.Adapt(existingApprise, config);
+                }
+                else
+                {
+                    _dataContext.AppriseConfigs.Add(newConfig.Apprise);
+                }
+            }
+
+            // Persist the configuration
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(new { Message = "Notifications configuration updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save Notifications configuration");
+            return StatusCode(500, "Failed to save Notifications configuration");
         }
         finally
         {
