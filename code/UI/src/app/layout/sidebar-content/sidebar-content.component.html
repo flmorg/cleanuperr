@@ -63,6 +63,12 @@
       </div>
       <span>Cleanup</span>
     </a>
+    <a [routerLink]="['/notifications']" class="nav-item" [class.active]="router.url.includes('/notifications')" (click)="onNavItemClick()">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-cog"></i>
+      </div>
+      <span>Notifications</span>
+    </a>
   </div>
   
   <!-- Activity Group -->
