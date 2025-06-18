@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace Cleanuparr.Api.Controllers;
 
 [ApiController]
-[Route("")]
+[Route("api")]
 public class ApiDocumentationController : ControllerBase
 {
     [HttpGet]
     public IActionResult RedirectToSwagger()
     {
-        return Redirect("/swagger");
+        return Redirect("/api/swagger");
     }
 }

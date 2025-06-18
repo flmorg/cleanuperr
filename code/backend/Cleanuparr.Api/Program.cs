@@ -7,8 +7,22 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+int? port = builder.Configuration.GetValue<int>("PORT");
+
+if (port is null or 0)
+{
+    port = 11011;
+}
+
+builder.WebHost.UseUrls($"http://*:{port}");
+
 builder.Configuration
     .AddJsonFile(Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.json"), optional: true, reloadOnChange: true);
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
 
 // Configure JSON options to serialize enums as strings
 builder.Services.ConfigureHttpJsonOptions(options =>
