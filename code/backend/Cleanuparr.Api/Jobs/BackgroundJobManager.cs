@@ -75,6 +75,7 @@ public class BackgroundJobManager : IHostedService
     
     /// <summary>
     /// Initializes jobs based on current configuration settings.
+    /// Always registers jobs in the scheduler, but only adds triggers for enabled jobs.
     /// </summary>
     private async Task InitializeJobsFromConfiguration(CancellationToken cancellationToken = default)
     {
@@ -91,42 +92,61 @@ public class BackgroundJobManager : IHostedService
             .AsNoTracking()
             .FirstAsync(cancellationToken);
         
-        await AddQueueCleanerJob(queueCleanerConfig, cancellationToken);
-        await AddDownloadCleanerJob(downloadCleanerConfig, cancellationToken);
+        // Always register jobs, regardless of enabled status
+        await RegisterQueueCleanerJob(queueCleanerConfig, cancellationToken);
+        await RegisterDownloadCleanerJob(downloadCleanerConfig, cancellationToken);
     }
     
     /// <summary>
-    /// Adds the QueueCleaner job to the scheduler.
+    /// Registers the QueueCleaner job and optionally adds triggers based on configuration.
+    /// </summary>
+    public async Task RegisterQueueCleanerJob(
+        QueueCleanerConfig config, 
+        CancellationToken cancellationToken = default)
+    {
+        // Always register the job definition
+        await AddJobWithoutTrigger<QueueCleaner>(cancellationToken);
+        
+        // Only add triggers if the job is enabled
+        if (config.Enabled)
+        {
+            await AddTriggersForJob<QueueCleaner>(config, config.CronExpression, cancellationToken);
+        }
+    }
+    
+    /// <summary>
+    /// Registers the DownloadCleaner job and optionally adds triggers based on configuration.
+    /// </summary>
+    public async Task RegisterDownloadCleanerJob(DownloadCleanerConfig config, CancellationToken cancellationToken = default)
+    {
+        // Always register the job definition
+        await AddJobWithoutTrigger<DownloadCleaner>(cancellationToken);
+        
+        // Only add triggers if the job is enabled
+        if (config.Enabled)
+        {
+            await AddTriggersForJob<DownloadCleaner>(config, config.CronExpression, cancellationToken);
+        }
+    }
+    
+    /// <summary>
+    /// Legacy method maintained for backward compatibility.
+    /// Use RegisterQueueCleanerJob instead.
     /// </summary>
     public async Task AddQueueCleanerJob(
         QueueCleanerConfig config, 
         CancellationToken cancellationToken = default)
     {
-        if (!config.Enabled)
-        {
-            return;
-        }
-        
-        await AddJobWithTrigger<QueueCleaner>(
-            config, 
-            config.CronExpression, 
-            cancellationToken);
+        await RegisterQueueCleanerJob(config, cancellationToken);
     }
     
     /// <summary>
-    /// Adds the DownloadCleaner job to the scheduler.
+    /// Legacy method maintained for backward compatibility.
+    /// Use RegisterDownloadCleanerJob instead.
     /// </summary>
     public async Task AddDownloadCleanerJob(DownloadCleanerConfig config, CancellationToken cancellationToken = default)
     {
-        if (!config.Enabled)
-        {
-            return;
-        }
-        
-        await AddJobWithTrigger<DownloadCleaner>(
-            config, 
-            config.CronExpression, 
-            cancellationToken);
+        await RegisterDownloadCleanerJob(config, cancellationToken);
     }
     
     /// <summary>
@@ -148,17 +168,29 @@ public class BackgroundJobManager : IHostedService
             return;
         }
         
+        // First ensure the job exists
+        await AddJobWithoutTrigger<T>(cancellationToken);
+        
+        // Then add triggers
+        await AddTriggersForJob<T>(config, cronExpression, cancellationToken);
+    }
+    
+    /// <summary>
+    /// Helper method to add triggers for an existing job.
+    /// </summary>
+    private async Task AddTriggersForJob<T>(
+        IJobConfig config,
+        string cronExpression,
+        CancellationToken cancellationToken = default) 
+        where T : GenericHandler
+    {
+        if (_scheduler == null)
+        {
+            throw new InvalidOperationException("Scheduler not initialized");
+        }
+        
         string typeName = typeof(T).Name;
         var jobKey = new JobKey(typeName);
-        
-        // Create job detail
-        var jobDetail = JobBuilder.Create<GenericJob<T>>()
-            .StoreDurably()
-            .WithIdentity(jobKey)
-            .Build();
-        
-        // Add job to scheduler
-        await _scheduler.AddJob(jobDetail, true, cancellationToken);
         
         // Validate the cron expression
         if (!string.IsNullOrEmpty(cronExpression))
@@ -207,7 +239,7 @@ public class BackgroundJobManager : IHostedService
         await _scheduler.ScheduleJob(trigger, cancellationToken);
         await _scheduler.ScheduleJob(startupTrigger, cancellationToken);
         
-        _logger.LogInformation("Added job {name} with cron expression {CronExpression}", 
+        _logger.LogInformation("Added triggers for job {name} with cron expression {CronExpression}", 
             typeName, cronExpression);
     }
     
@@ -225,6 +257,13 @@ public class BackgroundJobManager : IHostedService
         string typeName = typeof(T).Name;
         var jobKey = new JobKey(typeName);
         
+        // Check if job already exists
+        if (await _scheduler.CheckExists(jobKey, cancellationToken))
+        {
+            _logger.LogDebug("Job {name} already exists, skipping registration", typeName);
+            return;
+        }
+        
         // Create job detail that is durable (can exist without triggers)
         var jobDetail = JobBuilder.Create<GenericJob<T>>()
             .WithIdentity(jobKey)
@@ -234,6 +273,6 @@ public class BackgroundJobManager : IHostedService
         // Add job to scheduler
         await _scheduler.AddJob(jobDetail, true, cancellationToken);
         
-        _logger.LogInformation("Added job {name} without trigger (will be chained)", typeName);
+        _logger.LogInformation("Registered job {name} without trigger", typeName);
     }
 }

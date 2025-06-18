@@ -56,11 +56,17 @@ public class JobManagementService : IJobManagementService
             var scheduler = await _schedulerFactory.GetScheduler();
             var jobKey = new JobKey(jobName);
             
-            // Check if job exists
+            // Check if job exists, create it if it doesn't
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogError("Job {name} does not exist", jobName);
-                return false;
+                _logger.LogInformation("Job {name} does not exist, creating it", jobName);
+                
+                // Create the job based on its type
+                if (!await CreateJobIfNotExists(scheduler, jobType, jobKey))
+                {
+                    _logger.LogError("Failed to create job {name}", jobName);
+                    return false;
+                }
             }
 
             // Store the job key for later use
@@ -119,6 +125,19 @@ public class JobManagementService : IJobManagementService
             _logger.LogError(ex, "Error starting job {jobName}", jobName);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Creates a job in the scheduler if it doesn't exist based on the job type.
+    /// Note: Since this is in the Infrastructure layer, we cannot directly reference Application layer job types.
+    /// Job creation is now handled at startup by BackgroundJobManager.
+    /// </summary>
+    private Task<bool> CreateJobIfNotExists(IScheduler scheduler, JobType jobType, JobKey jobKey)
+    {
+        _logger.LogError("Job {jobName} of type {jobType} does not exist in scheduler. " +
+                        "Jobs should be created at startup by BackgroundJobManager, regardless of enabled status.", 
+                        jobKey.Name, jobType);
+        return Task.FromResult(false);
     }
 
     public async Task<bool> StopJob(JobType jobType)
