@@ -13,13 +13,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 // Custom Components and Services
 import { QueueCleanerSettingsComponent } from '../queue-cleaner/queue-cleaner-settings.component';
-import { SettingsCardComponent } from '../components/settings-card/settings-card.component';
 import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
 import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-cleaner-settings.component';
 import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
-import { RadarrSettingsComponent } from "../radarr/radarr-settings.component";
-import { LidarrSettingsComponent } from "../lidarr/lidarr-settings.component";
-import { DownloadClientSettingsComponent } from "../download-client/download-client-settings.component";
 import { NotificationSettingsComponent } from "../notification-settings/notification-settings.component";
 
 // Define interfaces for settings page
@@ -44,14 +40,9 @@ interface Category {
     ButtonModule,
     ToastModule,
     ConfirmDialogModule,
-    SettingsCardComponent,
     QueueCleanerSettingsComponent,
     GeneralSettingsComponent,
     DownloadCleanerSettingsComponent,
-    SonarrSettingsComponent,
-    RadarrSettingsComponent,
-    LidarrSettingsComponent,
-    DownloadClientSettingsComponent,
     NotificationSettingsComponent
 ],
   providers: [MessageService, ConfirmationService],

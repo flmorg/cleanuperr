@@ -1,8 +1,8 @@
 /* Global styles and PrimeNG theme setup */
 
 /* Import PrimeNG Theme (Lara Dark with Purple accent) */
-@import "primeicons/primeicons.css";
-@import "primeflex/primeflex.css";
+@use "primeicons/primeicons.css";
+@use "primeflex/primeflex.css";
 
 /* Global Variables */
 :root {
