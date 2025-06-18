@@ -1,12 +1,14 @@
-// using Infrastructure.Logging;
-// using Serilog;
 using System.Text.Json.Serialization;
 using Cleanuparr.Api;
 using Cleanuparr.Api.DependencyInjection;
 using Cleanuparr.Infrastructure.Logging;
+using Cleanuparr.Shared.Helpers;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration
+    .AddJsonFile(Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.json"), optional: true, reloadOnChange: true);
 
 // Configure JSON options to serialize enums as strings
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -22,9 +24,11 @@ builder.Services
 // Add CORS before SignalR
 builder.Services.AddCors(options => 
 {
-    options.AddPolicy("SignalRPolicy", policy => 
+    options.AddPolicy("Any", policy => 
     {
-        policy.WithOrigins("http://localhost:4200") // Your Angular URL
+        policy
+            // https://github.com/dotnet/aspnetcore/issues/4457#issuecomment-465669576
+            .SetIsOriginAllowed(_ => true)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials(); // Required for SignalR auth
@@ -62,6 +66,6 @@ logConfig.WriteTo.Sink(signalRSink);
 Log.Logger = logConfig.CreateLogger();
 
 // Configure the HTTP request pipeline
-app.ConfigureApi();
+app.ConfigureApi(builder.Configuration);
 
 await app.RunAsync();

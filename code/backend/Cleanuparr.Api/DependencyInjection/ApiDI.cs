@@ -59,12 +59,38 @@ public static class ApiDI
         return services;
     }
 
-    public static WebApplication ConfigureApi(this WebApplication app)
+    public static WebApplication ConfigureApi(this WebApplication app, IConfiguration configuration)
     {
+        ILogger<Program> logger = app.Services.GetRequiredService<ILogger<Program>>();
+        
+        string? basePath = configuration.GetValue<string>("BASE_PATH");
+
+        if (basePath is not null)
+        {
+            logger.LogInformation("Using base path: {basePath}", basePath);
+            app.UsePathBase(basePath);
+        }
+        
+        // Enable compression
+        app.UseResponseCompression();
+        
+        // Serve static files with caching
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            OnPrepareResponse = ctx =>
+            {
+                // Cache static assets for 30 days
+                // if (ctx.File.Name.EndsWith(".js") || ctx.File.Name.EndsWith(".css"))
+                // {
+                //     ctx.Context.Response.Headers.CacheControl = "public,max-age=2592000";
+                // }
+            }
+        });
+        
         // Add the global exception handling middleware first
         app.UseMiddleware<ExceptionMiddleware>();
         
-        app.UseCors("SignalRPolicy");
+        app.UseCors("Any");
         app.UseRouting();
 
         // Configure middleware pipeline for API
@@ -82,6 +108,9 @@ public static class ApiDI
         app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();
+        
+        // SPA fallback - must be last
+        app.MapFallbackToFile("index.html");
         
         // Map SignalR hubs
         app.MapHub<HealthStatusHub>("/api/hubs/health");

@@ -7,7 +7,6 @@ namespace Cleanuparr.Shared.Helpers;
 public static class ConfigurationPathProvider
 {
     private static string? _configPath;
-    private static string? _settingsPath;
     
     static ConfigurationPathProvider()
     {
@@ -18,13 +17,6 @@ public static class ConfigurationPathProvider
             if (!Directory.Exists(configPath))
             {
                 Directory.CreateDirectory(configPath);
-            }
-            
-            string settingsPath = InitializeSettingsPath();
-            
-            if (!Directory.Exists(settingsPath))
-            {
-                Directory.CreateDirectory(settingsPath);
             }
         }
         catch (Exception ex)
@@ -51,25 +43,9 @@ public static class ConfigurationPathProvider
 
         return _configPath;
     }
-
-    private static string InitializeSettingsPath()
-    {
-        if (string.IsNullOrEmpty(_settingsPath))
-        {
-            string configPath = _configPath ?? InitializeConfigPath();
-            _settingsPath = Path.Combine(configPath, "settings");
-        }
-
-        return _settingsPath;
-    }
     
     public static string GetConfigPath()
     {
         return _configPath ?? InitializeConfigPath();
-    }
-
-    public static string GetSettingsPath()
-    {
-        return _settingsPath ?? InitializeConfigPath();
     }
 }
