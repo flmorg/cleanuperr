@@ -16,7 +16,6 @@ import { QueueCleanerSettingsComponent } from '../queue-cleaner/queue-cleaner-se
 import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
 import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-cleaner-settings.component';
 import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
-import { NotificationSettingsComponent } from "../notification-settings/notification-settings.component";
 
 // Define interfaces for settings page
 interface LogLevel {
@@ -42,8 +41,7 @@ interface Category {
     ConfirmDialogModule,
     QueueCleanerSettingsComponent,
     GeneralSettingsComponent,
-    DownloadCleanerSettingsComponent,
-    NotificationSettingsComponent
+    DownloadCleanerSettingsComponent
 ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
@@ -82,7 +80,6 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
   @ViewChild(GeneralSettingsComponent) generalSettings!: GeneralSettingsComponent;
   @ViewChild(DownloadCleanerSettingsComponent) downloadCleanerSettings!: DownloadCleanerSettingsComponent;
   @ViewChild(SonarrSettingsComponent) sonarrSettings!: SonarrSettingsComponent;
-  @ViewChild(NotificationSettingsComponent) notificationSettings!: NotificationSettingsComponent;
 
   ngOnInit(): void {
     // Future implementation for other settings sections
@@ -110,11 +107,6 @@ export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
     
     // Check if sonarr settings has unsaved changes
     if (this.sonarrSettings?.canDeactivate() === false) {
-      return false;
-    }
-    
-    // Check if notification settings has unsaved changes
-    if (this.notificationSettings?.canDeactivate() === false) {
       return false;
     }
     
