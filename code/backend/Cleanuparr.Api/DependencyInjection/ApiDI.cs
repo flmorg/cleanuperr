@@ -59,17 +59,9 @@ public static class ApiDI
         return services;
     }
 
-    public static WebApplication ConfigureApi(this WebApplication app, IConfiguration configuration)
+    public static WebApplication ConfigureApi(this WebApplication app)
     {
         ILogger<Program> logger = app.Services.GetRequiredService<ILogger<Program>>();
-        
-        string? basePath = configuration.GetValue<string>("BASE_PATH");
-
-        if (basePath is not null)
-        {
-            logger.LogInformation("Using base path: {basePath}", basePath);
-            app.UsePathBase(basePath);
-        }
         
         // Enable compression
         app.UseResponseCompression();
@@ -93,13 +85,12 @@ public static class ApiDI
         app.UseCors("Any");
         app.UseRouting();
 
-        // Configure middleware pipeline for API
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Cleanuparr API v1");
+                options.SwaggerEndpoint("v1/swagger.json", "Cleanuparr API v1");
                 options.RoutePrefix = "swagger";
                 options.DocumentTitle = "Cleanuparr API Documentation";
             });

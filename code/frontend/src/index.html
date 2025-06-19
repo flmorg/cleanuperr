@@ -3,7 +3,21 @@
 <head>
   <meta charset="utf-8">
   <title>UI</title>
-  <base href="/">
+  <script>
+    (function() {
+      // Extract base path from URL (everything before the Angular app)
+      const pathSegments = window.location.pathname.split('/').filter(segment => segment);
+      const basePath = pathSegments.length > 0 ? '/' + pathSegments[0] : '/';
+      
+      // Store for Angular to use
+      window['_app_base'] = basePath;
+      
+      // Dynamically set base href for static assets (JS chunks, CSS, etc.)
+      const baseTag = document.createElement('base');
+      baseTag.href = basePath === '/' ? '/' : basePath + '/';
+      document.head.appendChild(baseTag);
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="icons/128.png">
   <link rel="manifest" href="manifest.webmanifest">

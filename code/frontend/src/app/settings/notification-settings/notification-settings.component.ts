@@ -5,8 +5,6 @@ import { Subject, takeUntil } from "rxjs";
 import { NotificationConfigStore } from "./notification-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
 import { NotificationsConfig } from "../../shared/models/notifications-config.model";
-import { NotifiarrConfig } from "../../shared/models/notifiarr-config.model";
-import { AppriseConfig } from "../../shared/models/apprise-config.model";
 
 // PrimeNG Components
 import { CardModule } from "primeng/card";

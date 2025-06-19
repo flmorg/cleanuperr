@@ -1,26 +1,27 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
-import { environment } from "../../../environments/environment";
 import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/models/queue-cleaner-config.model";
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
 import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../../shared/models/download-client-config.model";
 import { ArrInstance, CreateArrInstanceDto } from "../../shared/models/arr-config.model";
+import { BasePathService } from "./base-path.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class ConfigurationService {
-  private readonly apiUrl = environment.apiUrl;
+  private readonly basePathService = inject(BasePathService);
   private readonly http = inject(HttpClient);
+
 
   /**
    * Get queue cleaner configuration
    */
   getQueueCleanerConfig(): Observable<QueueCleanerConfig> {
-    return this.http.get<QueueCleanerConfig>(`${this.apiUrl}/api/configuration/queue_cleaner`).pipe(
+    return this.http.get<QueueCleanerConfig>(this.basePathService.buildApiUrl('/configuration/queue_cleaner')).pipe(
       map((response) => {
         response.jobSchedule = this.tryExtractJobScheduleFromCron(response.cronExpression);
         return response;
@@ -37,7 +38,7 @@ export class ConfigurationService {
    */
   updateQueueCleanerConfig(config: QueueCleanerConfig): Observable<QueueCleanerConfig> {
     config.cronExpression = this.convertJobScheduleToCron(config.jobSchedule!);
-    return this.http.put<QueueCleanerConfig>(`${this.apiUrl}/api/configuration/queue_cleaner`, config).pipe(
+    return this.http.put<QueueCleanerConfig>(this.basePathService.buildApiUrl('/configuration/queue_cleaner'), config).pipe(
       catchError((error) => {
         console.error("Error updating queue cleaner config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update queue cleaner configuration"));
@@ -125,7 +126,7 @@ export class ConfigurationService {
    * Get Sonarr configuration
    */
   getSonarrConfig(): Observable<SonarrConfig> {
-    return this.http.get<SonarrConfig>(`${this.apiUrl}/api/configuration/sonarr`).pipe(
+    return this.http.get<SonarrConfig>(this.basePathService.buildApiUrl('/configuration/sonarr')).pipe(
       catchError((error) => {
         console.error("Error fetching Sonarr config:", error);
         return throwError(() => new Error("Failed to load Sonarr configuration"));
@@ -136,7 +137,7 @@ export class ConfigurationService {
    * Update Sonarr configuration (global settings only)
    */
   updateSonarrConfig(config: {enabled: boolean, failedImportMaxStrikes: number}): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/api/configuration/sonarr`, config).pipe(
+    return this.http.put<any>(this.basePathService.buildApiUrl('/configuration/sonarr'), config).pipe(
       catchError((error) => {
         console.error("Error updating Sonarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Sonarr configuration"));
@@ -148,7 +149,7 @@ export class ConfigurationService {
    * Get Radarr configuration
    */
   getRadarrConfig(): Observable<RadarrConfig> {
-    return this.http.get<RadarrConfig>(`${this.apiUrl}/api/configuration/radarr`).pipe(
+    return this.http.get<RadarrConfig>(this.basePathService.buildApiUrl('/configuration/radarr')).pipe(
       catchError((error) => {
         console.error("Error fetching Radarr config:", error);
         return throwError(() => new Error("Failed to load Radarr configuration"));
@@ -159,7 +160,7 @@ export class ConfigurationService {
    * Update Radarr configuration
    */
   updateRadarrConfig(config: RadarrConfig): Observable<RadarrConfig> {
-    return this.http.put<RadarrConfig>(`${this.apiUrl}/api/configuration/radarr`, config).pipe(
+    return this.http.put<RadarrConfig>(this.basePathService.buildApiUrl('/configuration/radarr'), config).pipe(
       catchError((error) => {
         console.error("Error updating Radarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Radarr configuration"));
@@ -171,7 +172,7 @@ export class ConfigurationService {
    * Get Lidarr configuration
    */
   getLidarrConfig(): Observable<LidarrConfig> {
-    return this.http.get<LidarrConfig>(`${this.apiUrl}/api/configuration/lidarr`).pipe(
+    return this.http.get<LidarrConfig>(this.basePathService.buildApiUrl('/configuration/lidarr')).pipe(
       catchError((error) => {
         console.error("Error fetching Lidarr config:", error);
         return throwError(() => new Error("Failed to load Lidarr configuration"));
@@ -182,7 +183,7 @@ export class ConfigurationService {
    * Update Lidarr configuration
    */
   updateLidarrConfig(config: LidarrConfig): Observable<LidarrConfig> {
-    return this.http.put<LidarrConfig>(`${this.apiUrl}/api/configuration/lidarr`, config).pipe(
+    return this.http.put<LidarrConfig>(this.basePathService.buildApiUrl('/configuration/lidarr'), config).pipe(
       catchError((error) => {
         console.error("Error updating Lidarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Lidarr configuration"));
@@ -194,7 +195,7 @@ export class ConfigurationService {
    * Get Download Client configuration
    */
   getDownloadClientConfig(): Observable<DownloadClientConfig> {
-    return this.http.get<DownloadClientConfig>(`${this.apiUrl}/api/configuration/download_client`).pipe(
+    return this.http.get<DownloadClientConfig>(this.basePathService.buildApiUrl('/configuration/download_client')).pipe(
       catchError((error) => {
         console.error("Error fetching Download Client config:", error);
         return throwError(() => new Error("Failed to load Download Client configuration"));
@@ -206,7 +207,7 @@ export class ConfigurationService {
    * Update Download Client configuration
    */
   updateDownloadClientConfig(config: DownloadClientConfig): Observable<DownloadClientConfig> {
-    return this.http.put<DownloadClientConfig>(`${this.apiUrl}/api/configuration/download_client`, config).pipe(
+    return this.http.put<DownloadClientConfig>(this.basePathService.buildApiUrl('/configuration/download_client'), config).pipe(
       catchError((error) => {
         console.error("Error updating Download Client config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Download Client configuration"));
@@ -218,7 +219,7 @@ export class ConfigurationService {
    * Create a new Download Client
    */
   createDownloadClient(client: CreateDownloadClientDto): Observable<ClientConfig> {
-    return this.http.post<ClientConfig>(`${this.apiUrl}/api/configuration/download_client`, client).pipe(
+    return this.http.post<ClientConfig>(this.basePathService.buildApiUrl('/configuration/download_client'), client).pipe(
       catchError((error) => {
         console.error("Error creating Download Client:", error);
         return throwError(() => new Error(error.error?.error || "Failed to create Download Client"));
@@ -230,7 +231,7 @@ export class ConfigurationService {
    * Update a specific Download Client by ID
    */
   updateDownloadClient(id: string, client: ClientConfig): Observable<ClientConfig> {
-    return this.http.put<ClientConfig>(`${this.apiUrl}/api/configuration/download_client/${id}`, client).pipe(
+    return this.http.put<ClientConfig>(this.basePathService.buildApiUrl(`/configuration/download_client/${id}`), client).pipe(
       catchError((error) => {
         console.error(`Error updating Download Client with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to update Download Client with ID ${id}`));
@@ -242,7 +243,7 @@ export class ConfigurationService {
    * Delete a Download Client by ID
    */
   deleteDownloadClient(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/configuration/download_client/${id}`).pipe(
+    return this.http.delete<void>(this.basePathService.buildApiUrl(`/configuration/download_client/${id}`)).pipe(
       catchError((error) => {
         console.error(`Error deleting Download Client with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to delete Download Client with ID ${id}`));
@@ -256,7 +257,7 @@ export class ConfigurationService {
    * Create a new Sonarr instance
    */
   createSonarrInstance(instance: CreateArrInstanceDto): Observable<ArrInstance> {
-    return this.http.post<ArrInstance>(`${this.apiUrl}/api/configuration/sonarr/instances`, instance).pipe(
+    return this.http.post<ArrInstance>(this.basePathService.buildApiUrl('/configuration/sonarr/instances'), instance).pipe(
       catchError((error) => {
         console.error("Error creating Sonarr instance:", error);
         return throwError(() => new Error(error.error?.error || "Failed to create Sonarr instance"));
@@ -268,7 +269,7 @@ export class ConfigurationService {
    * Update a Sonarr instance by ID
    */
   updateSonarrInstance(id: string, instance: CreateArrInstanceDto): Observable<ArrInstance> {
-    return this.http.put<ArrInstance>(`${this.apiUrl}/api/configuration/sonarr/instances/${id}`, instance).pipe(
+    return this.http.put<ArrInstance>(this.basePathService.buildApiUrl(`/configuration/sonarr/instances/${id}`), instance).pipe(
       catchError((error) => {
         console.error(`Error updating Sonarr instance with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to update Sonarr instance with ID ${id}`));
@@ -280,7 +281,7 @@ export class ConfigurationService {
    * Delete a Sonarr instance by ID
    */
   deleteSonarrInstance(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/configuration/sonarr/instances/${id}`).pipe(
+    return this.http.delete<void>(this.basePathService.buildApiUrl(`/configuration/sonarr/instances/${id}`)).pipe(
       catchError((error) => {
         console.error(`Error deleting Sonarr instance with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to delete Sonarr instance with ID ${id}`));
@@ -294,7 +295,7 @@ export class ConfigurationService {
    * Create a new Radarr instance
    */
   createRadarrInstance(instance: CreateArrInstanceDto): Observable<ArrInstance> {
-    return this.http.post<ArrInstance>(`${this.apiUrl}/api/configuration/radarr/instances`, instance).pipe(
+    return this.http.post<ArrInstance>(this.basePathService.buildApiUrl('/configuration/radarr/instances'), instance).pipe(
       catchError((error) => {
         console.error("Error creating Radarr instance:", error);
         return throwError(() => new Error(error.error?.error || "Failed to create Radarr instance"));
@@ -306,7 +307,7 @@ export class ConfigurationService {
    * Update a Radarr instance by ID
    */
   updateRadarrInstance(id: string, instance: CreateArrInstanceDto): Observable<ArrInstance> {
-    return this.http.put<ArrInstance>(`${this.apiUrl}/api/configuration/radarr/instances/${id}`, instance).pipe(
+    return this.http.put<ArrInstance>(this.basePathService.buildApiUrl(`/configuration/radarr/instances/${id}`), instance).pipe(
       catchError((error) => {
         console.error(`Error updating Radarr instance with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to update Radarr instance with ID ${id}`));
@@ -318,7 +319,7 @@ export class ConfigurationService {
    * Delete a Radarr instance by ID
    */
   deleteRadarrInstance(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/configuration/radarr/instances/${id}`).pipe(
+    return this.http.delete<void>(this.basePathService.buildApiUrl(`/configuration/radarr/instances/${id}`)).pipe(
       catchError((error) => {
         console.error(`Error deleting Radarr instance with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to delete Radarr instance with ID ${id}`));
@@ -332,7 +333,7 @@ export class ConfigurationService {
    * Create a new Lidarr instance
    */
   createLidarrInstance(instance: CreateArrInstanceDto): Observable<ArrInstance> {
-    return this.http.post<ArrInstance>(`${this.apiUrl}/api/configuration/lidarr/instances`, instance).pipe(
+    return this.http.post<ArrInstance>(this.basePathService.buildApiUrl('/configuration/lidarr/instances'), instance).pipe(
       catchError((error) => {
         console.error("Error creating Lidarr instance:", error);
         return throwError(() => new Error(error.error?.error || "Failed to create Lidarr instance"));
@@ -344,7 +345,7 @@ export class ConfigurationService {
    * Update a Lidarr instance by ID
    */
   updateLidarrInstance(id: string, instance: CreateArrInstanceDto): Observable<ArrInstance> {
-    return this.http.put<ArrInstance>(`${this.apiUrl}/api/configuration/lidarr/instances/${id}`, instance).pipe(
+    return this.http.put<ArrInstance>(this.basePathService.buildApiUrl(`/configuration/lidarr/instances/${id}`), instance).pipe(
       catchError((error) => {
         console.error(`Error updating Lidarr instance with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to update Lidarr instance with ID ${id}`));
@@ -356,7 +357,7 @@ export class ConfigurationService {
    * Delete a Lidarr instance by ID
    */
   deleteLidarrInstance(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/api/configuration/lidarr/instances/${id}`).pipe(
+    return this.http.delete<void>(this.basePathService.buildApiUrl(`/configuration/lidarr/instances/${id}`)).pipe(
       catchError((error) => {
         console.error(`Error deleting Lidarr instance with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to delete Lidarr instance with ID ${id}`));

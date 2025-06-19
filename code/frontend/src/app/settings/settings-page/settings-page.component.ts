@@ -1,13 +1,15 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { environment } from '../../../environments/environment';
+import { RouterModule } from '@angular/router';
+import { PanelModule } from 'primeng/panel';
+import { ButtonModule } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
 import { CanComponentDeactivate } from '../../core/guards';
 
 // PrimeNG Components
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
-import { ButtonModule } from 'primeng/button';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
@@ -17,17 +19,6 @@ import { GeneralSettingsComponent } from '../general-settings/general-settings.c
 import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-cleaner-settings.component';
 import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
 
-// Define interfaces for settings page
-interface LogLevel {
-  name: string;
-  value: string;
-}
-
-interface Category {
-  name: string;
-  code: string;
-}
-
 @Component({
   selector: 'app-settings-page',
   standalone: true,
@@ -35,46 +26,22 @@ interface Category {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    CardModule,
+    RouterModule,
+    PanelModule,
     ButtonModule,
+    DropdownModule,
+    CardModule,
     ToastModule,
     ConfirmDialogModule,
     QueueCleanerSettingsComponent,
     GeneralSettingsComponent,
     DownloadCleanerSettingsComponent
-],
+  ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
   styleUrl: './settings-page.component.scss'
 })
-export class SettingsPageComponent implements OnInit, CanComponentDeactivate {
-  logLevels: LogLevel[] = [
-    { name: 'Trace', value: 'trace' },
-    { name: 'Debug', value: 'debug' },
-    { name: 'Information', value: 'information' },
-    { name: 'Warning', value: 'warning' },
-    { name: 'Error', value: 'error' },
-    { name: 'Critical', value: 'critical' },
-    { name: 'None', value: 'none' }
-  ];
-
-  categories: Category[] = [
-    { name: 'All', code: '*' },
-    { name: 'System', code: 'SYS' },
-    { name: 'Commands', code: 'CMD' },
-    { name: 'Database', code: 'DB' },
-    { name: 'Network', code: 'NET' },
-    { name: 'Jobs', code: 'JOBS' },
-    { name: 'Imports', code: 'IMPORTS' },
-    { name: 'Media', code: 'MEDIA' }
-  ];
-  
-  // API URLs from environment
-  private apiUrl = environment.apiUrl;
-  
-  // Services
-  private messageService = inject(MessageService);
-  
+export class SettingsPageComponent implements CanComponentDeactivate {
   // Reference to the settings components
   @ViewChild(QueueCleanerSettingsComponent) queueCleanerSettings!: QueueCleanerSettingsComponent;
   @ViewChild(GeneralSettingsComponent) generalSettings!: GeneralSettingsComponent;

@@ -7,17 +7,25 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-int? port = builder.Configuration.GetValue<int>("PORT");
-
-if (port is null or 0)
-{
-    port = 11011;
-}
-
-builder.WebHost.UseUrls($"http://*:{port}");
-
 builder.Configuration
     .AddJsonFile(Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.json"), optional: true, reloadOnChange: true);
+
+// Configure PORT before building the app
+string? portConfig = builder.Configuration.GetValue<string>("PORT");
+
+// Validate the port configuration
+var portValidationResult = PortValidator.Validate(portConfig);
+if (!portValidationResult.IsValid)
+{
+    throw new InvalidOperationException($"Invalid PORT configuration: {portValidationResult.ErrorMessage}");
+}
+
+// Get the normalized port (uses default if null/empty)
+int port = PortValidator.Normalize(portConfig);
+
+// Configure the URLs for the application
+string[] urls = [$"http://[::]:{port}"];
+builder.WebHost.UseUrls(urls);
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -59,6 +67,45 @@ builder.Logging.AddLogging();
 
 var app = builder.Build();
 
+// Configure BASE_PATH immediately after app build and before any other configuration
+string? basePath = app.Configuration.GetValue<string>("BASE_PATH");
+ILogger<Program> logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+if (basePath is not null)
+{
+    // Validate the base path
+    var validationResult = BasePathValidator.Validate(basePath);
+    if (!validationResult.IsValid)
+    {
+        logger.LogError("Invalid BASE_PATH configuration: {ErrorMessage}", validationResult.ErrorMessage);
+        return;
+    }
+
+    // Normalize the base path
+    basePath = BasePathValidator.Normalize(basePath);
+    
+    if (!string.IsNullOrEmpty(basePath))
+    {
+        app.Use(async (context, next) =>
+        {
+            if (!string.IsNullOrEmpty(basePath) && !context.Request.Path.StartsWithSegments(basePath, StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                return;
+            }
+
+            await next();
+        });
+        app.UsePathBase(basePath);
+    }
+    else
+    {
+        logger.LogInformation("No base path configured - serving from root");
+    }
+}
+
+logger.LogInformation("Server configuration: PORT={port}, BASE_PATH={basePath}", port, basePath ?? "/");
+
 // Initialize the host
 await app.Init();
 
@@ -79,7 +126,6 @@ logConfig.WriteTo.Sink(signalRSink);
 
 Log.Logger = logConfig.CreateLogger();
 
-// Configure the HTTP request pipeline
-app.ConfigureApi(builder.Configuration);
+app.ConfigureApi();
 
 await app.RunAsync();

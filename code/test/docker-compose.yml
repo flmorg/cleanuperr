@@ -185,6 +185,8 @@ services:
   cleanuperr:
     image: ghcr.io/flmorg/cleanuperr:latest
     container_name: cleanuperr
+    ports:
+      - "11011:11011"
     environment:
       - TZ=Europe/Bucharest
       - DRY_RUN=false

@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BaseSignalRService } from './base-signalr.service';
+import { BasePathService } from './base-path.service';
 import { SignalRHubConfig } from '../models/signalr.models';
-import { environment } from '../../../environments/environment';
 import * as signalR from '@microsoft/signalr';
 
 /**
@@ -28,7 +28,7 @@ export class SystemHubService extends BaseSignalRService<SystemStatus> {
   constructor() {
     // Default configuration for the system hub
     const config: SignalRHubConfig = {
-      hubUrl: `${environment.apiUrl}/api/hubs/system`,
+      hubUrl: '',
       maxReconnectAttempts: 0, // Infinite reconnection attempts
       reconnectDelayMs: 2000,
       bufferSize: 10, // Only need a few status updates

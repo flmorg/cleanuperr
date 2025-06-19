@@ -1,15 +1,16 @@
 import { Injectable, inject, signal } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { finalize } from "rxjs/operators";
-import { CleanCategory, DownloadCleanerConfig, defaultDownloadCleanerConfig } from "../../shared/models/download-cleaner-config.model";
-import { environment } from "../../../environments/environment";
+import { DownloadCleanerConfig, defaultDownloadCleanerConfig } from "../../shared/models/download-cleaner-config.model";
 import { NotificationService } from "../../core/services/notification.service";
+import { BasePathService } from "../../core/services/base-path.service";
 
 @Injectable()
 export class DownloadCleanerConfigStore {
   // Inject required services
   private http = inject(HttpClient);
   private notificationService = inject(NotificationService);
+  private readonly basePathService = inject(BasePathService);
 
   // State signals
   private _loading = signal<boolean>(false);
@@ -22,9 +23,6 @@ export class DownloadCleanerConfigStore {
   readonly config = this._config.asReadonly();
   readonly saving = this._saving.asReadonly();
   readonly error = this._error.asReadonly();
-
-  // API endpoints
-  private apiUrl = `${environment.apiUrl}/api/configuration`;
 
   constructor() {
     // Load config on initialization
@@ -40,7 +38,7 @@ export class DownloadCleanerConfigStore {
     this._loading.set(true);
 
     // API call to get download cleaner config
-    this.http.get<DownloadCleanerConfig>(`${this.apiUrl}/download_cleaner`)
+    this.http.get<DownloadCleanerConfig>(this.basePathService.buildApiUrl('/configuration/download_cleaner'))
       .pipe(
         // Always finalize to reset loading state
         finalize(() => this._loading.set(false))
@@ -70,7 +68,7 @@ export class DownloadCleanerConfigStore {
 
     return new Promise<boolean>((resolve, reject) => {
       // API call to update download cleaner config
-      this.http.put<any>(`${this.apiUrl}/download_cleaner`, config)
+      this.http.put<any>(this.basePathService.buildApiUrl('/configuration/download_cleaner'), config)
         .pipe(
           // Always finalize to reset saving state
           finalize(() => this._saving.set(false))

@@ -474,36 +474,14 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       };
 
       // Save the configuration
-      this.downloadCleanerStore.saveDownloadCleanerConfig(config)
-        .then(() => {
-          this.notificationService.showSuccess('Download cleaner configuration saved successfully');
-          this.saved.emit();
-          this.storeOriginalValues();
-          this.downloadCleanerForm.markAsPristine();
-          this.hasActualChanges = false;
-        })
-        .catch((err) => {
-          console.error('Failed to save download cleaner config', err);
-          
-          // Extract meaningful message from error response for toast notification
-          let errorMessage = 'Failed to save download cleaner configuration';
-          
-          // If it's a 400 error with a message, use that message
-          if (err && err.status === 400) {
-            if (typeof err.error === 'string') {
-              errorMessage = err.error;
-            } else if (err.error && err.error.message) {
-              errorMessage = err.error.message;
-            } else if (err.error && err.error.title) {
-              errorMessage = err.error.title;
-            } else if (err.message) {
-              errorMessage = err.message;
-            }
-          }
-          
-          this.notificationService.showError(errorMessage);
-          this.error.emit(errorMessage);
-        });
+      this.downloadCleanerStore.saveDownloadCleanerConfig(config);
+      
+      // The store now handles success/error through signals, so just update local state
+      this.notificationService.showSuccess('Download cleaner configuration saved successfully');
+      this.saved.emit();
+      this.storeOriginalValues();
+      this.downloadCleanerForm.markAsPristine();
+      this.hasActualChanges = false;
     } else {
       this.notificationService.showValidationError();
     }

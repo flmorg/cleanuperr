@@ -1,14 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { GeneralConfig } from '../../shared/models/general-config.model';
 import { catchError, finalize, of, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { GeneralConfig } from '../../shared/models/general-config.model';
+import { BasePathService } from '../../core/services/base-path.service';
 
 @Injectable()
 export class GeneralConfigStore {
-  // API endpoints
-  private readonly baseUrl = environment.apiUrl;
-  
   // State signals
   private _config = signal<GeneralConfig | null>(null);
   private _loading = signal<boolean>(false);
@@ -21,8 +18,9 @@ export class GeneralConfigStore {
   readonly saving = this._saving.asReadonly();
   readonly error = this._error.asReadonly();
 
-  // Inject HttpClient
-  private http = inject(HttpClient);
+  // Inject dependencies
+  private readonly http = inject(HttpClient);
+  private readonly basePathService = inject(BasePathService);
 
   constructor() {
     // Load the configuration when the store is created
@@ -38,7 +36,7 @@ export class GeneralConfigStore {
     this._loading.set(true);
     this._error.set(null);
 
-    this.http.get<GeneralConfig>(`${this.baseUrl}/api/configuration/general`)
+    this.http.get<GeneralConfig>(this.basePathService.buildApiUrl('/configuration/general'))
       .pipe(
         tap((config) => {
           this._config.set(config);
@@ -65,7 +63,7 @@ export class GeneralConfigStore {
     this._saving.set(true);
     this._error.set(null);
 
-    this.http.put<any>(`${this.baseUrl}/api/configuration/general`, config)
+    this.http.put<any>(this.basePathService.buildApiUrl('/configuration/general'), config)
       .pipe(
         tap(() => {
           // Don't set config - let the form stay as-is with string enum values

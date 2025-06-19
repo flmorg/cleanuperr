@@ -1,10 +1,9 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
-import { SignalRHubConfig } from '../models/signalr.models';
-import { environment } from '../../../environments/environment';
 import { LogEntry } from '../models/signalr.models';
 import { AppEvent } from '../models/event.models';
+import { BasePathService } from './base-path.service';
 
 /**
  * Unified SignalR hub service
@@ -17,6 +16,7 @@ export class AppHubService {
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
   private logsSubject = new BehaviorSubject<LogEntry[]>([]);
   private eventsSubject = new BehaviorSubject<AppEvent[]>([]);
+  private readonly basePathService = inject(BasePathService);
   
   private logBuffer: LogEntry[] = [];
   private eventBuffer: AppEvent[] = [];
@@ -35,7 +35,7 @@ export class AppHubService {
 
     // Build a new connection
     this.hubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.apiUrl}/api/hubs/app`)
+      .withUrl(this.basePathService.buildApiUrl('/hubs/app'))
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (retryContext) => {
           // Implement exponential backoff with max 30 seconds
