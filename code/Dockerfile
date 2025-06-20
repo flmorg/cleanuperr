@@ -41,16 +41,30 @@ RUN dotnet publish ./backend/Cleanuparr.Api/Cleanuparr.Api.csproj \
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim
-RUN apt-get update && apt-get install -y tzdata && rm -rf /var/lib/apt/lists/*
-ENV TZ=Etc/UTC
+
+# Install required packages for user management and timezone support
+RUN apt-get update && apt-get install -y \
+    tzdata \
+    gosu \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUID=1000 \
+    PGID=1000 \
+    UMASK=022 \
+    TZ=Etc/UTC
+
 # Fix FileSystemWatcher in Docker: https://github.com/dotnet/dotnet-docker/issues/3546
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true
+
 WORKDIR /app
 
 # Copy backend
 COPY --from=build /app/publish .
-
 # Copy frontend to wwwroot
 COPY --from=frontend-build /app/dist/ui/browser ./wwwroot
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["./cleanuparr"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["./cleanuparr"]
