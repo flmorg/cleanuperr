@@ -24,13 +24,10 @@ public sealed record QueueCleanerConfig : IJobConfig
     
     public SlowConfig Slow { get; init; } = new();
     
-    public ContentBlockerConfig ContentBlocker { get; init; } = new();
-    
     public void Validate()
     {
         FailedImport.Validate();
         Stalled.Validate();
         Slow.Validate();
-        ContentBlocker.Validate();
     }
 }

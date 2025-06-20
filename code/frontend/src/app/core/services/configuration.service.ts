@@ -2,6 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable, inject } from "@angular/core";
 import { Observable, catchError, map, throwError } from "rxjs";
 import { JobSchedule, QueueCleanerConfig, ScheduleUnit } from "../../shared/models/queue-cleaner-config.model";
+import { ContentBlockerConfig, JobSchedule as ContentBlockerJobSchedule, ScheduleUnit as ContentBlockerScheduleUnit } from "../../shared/models/content-blocker-config.model";
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
@@ -42,6 +43,38 @@ export class ConfigurationService {
       catchError((error) => {
         console.error("Error updating queue cleaner config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update queue cleaner configuration"));
+      })
+    );
+  }
+
+  /**
+   * Get content blocker configuration
+   */
+  getContentBlockerConfig(): Observable<ContentBlockerConfig> {
+    return this.http.get<ContentBlockerConfig>(this.basePathService.buildApiUrl('/configuration/content_blocker')).pipe(
+      map((response) => {
+        response.jobSchedule = this.tryExtractContentBlockerJobScheduleFromCron(response.cronExpression);
+        return response;
+      }),
+      catchError((error) => {
+        console.error("Error fetching content blocker config:", error);
+        return throwError(() => new Error("Failed to load content blocker configuration"));
+      })
+    );
+  }
+
+  /**
+   * Update content blocker configuration
+   */
+  updateContentBlockerConfig(config: ContentBlockerConfig): Observable<void> {
+    // Generate cron expression if using basic scheduling
+    if (!config.useAdvancedScheduling && config.jobSchedule) {
+      config.cronExpression = this.convertContentBlockerJobScheduleToCron(config.jobSchedule);
+    }
+    return this.http.put<void>(this.basePathService.buildApiUrl('/configuration/content_blocker'), config).pipe(
+      catchError((error) => {
+        console.error("Error updating content blocker config:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to update content blocker configuration"));
       })
     );
   }
@@ -112,6 +145,82 @@ export class ConfigurationService {
         break;
 
       case ScheduleUnit.Hours:
+        if (schedule.every < 24) {
+          return `0 0 */${schedule.every} ? * * *`;
+        }
+        break;
+    }
+
+    // Fallback to default
+    return "0 0/5 * * * ?";
+  }
+
+  /**
+   * Try to extract a ContentBlockerJobSchedule from a cron expression
+   * Only handles the simple cases we're generating
+   */
+  private tryExtractContentBlockerJobScheduleFromCron(cronExpression: string): ContentBlockerJobSchedule | undefined {
+    // Patterns we support:
+    // Seconds: */n * * ? * * *
+    // Minutes: 0 */n * ? * * *
+    // Hours: 0 0 */n ? * * *
+    try {
+      const parts = cronExpression.split(" ");
+
+      if (parts.length !== 7) return undefined;
+
+      // Every n seconds
+      if (parts[0].startsWith("*/") && parts[1] === "*") {
+        const seconds = parseInt(parts[0].substring(2));
+        if (!isNaN(seconds) && seconds > 0 && seconds < 60) {
+          return { every: seconds, type: ContentBlockerScheduleUnit.Seconds };
+        }
+      }
+
+      // Every n minutes
+      if (parts[0] === "0" && parts[1].startsWith("*/")) {
+        const minutes = parseInt(parts[1].substring(2));
+        if (!isNaN(minutes) && minutes > 0 && minutes < 60) {
+          return { every: minutes, type: ContentBlockerScheduleUnit.Minutes };
+        }
+      }
+
+      // Every n hours
+      if (parts[0] === "0" && parts[1] === "0" && parts[2].startsWith("*/")) {
+        const hours = parseInt(parts[2].substring(2));
+        if (!isNaN(hours) && hours > 0 && hours < 24) {
+          return { every: hours, type: ContentBlockerScheduleUnit.Hours };
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse cron expression:", cronExpression);
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Convert a ContentBlockerJobSchedule to a cron expression
+   */
+  private convertContentBlockerJobScheduleToCron(schedule: ContentBlockerJobSchedule): string {
+    if (!schedule || schedule.every <= 0) {
+      return "0 0/5 * * * ?"; // Default: every 5 minutes
+    }
+
+    switch (schedule.type) {
+      case ContentBlockerScheduleUnit.Seconds:
+        if (schedule.every < 60) {
+          return `*/${schedule.every} * * ? * * *`;
+        }
+        break;
+
+      case ContentBlockerScheduleUnit.Minutes:
+        if (schedule.every < 60) {
+          return `0 */${schedule.every} * ? * * *`;
+        }
+        break;
+
+      case ContentBlockerScheduleUnit.Hours:
         if (schedule.every < 24) {
           return `0 0 */${schedule.every} ? * * *`;
         }

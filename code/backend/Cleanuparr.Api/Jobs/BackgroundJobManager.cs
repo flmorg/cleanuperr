@@ -1,9 +1,11 @@
+using Cleanuparr.Application.Features.ContentBlocker;
 using Cleanuparr.Application.Features.DownloadCleaner;
 using Cleanuparr.Application.Features.QueueCleaner;
 using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Features.Jobs;
 using Cleanuparr.Persistence;
 using Cleanuparr.Persistence.Models.Configuration;
+using Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Cleanuparr.Shared.Helpers;
@@ -88,12 +90,16 @@ public class BackgroundJobManager : IHostedService
         QueueCleanerConfig queueCleanerConfig = await _dataContext.QueueCleanerConfigs
             .AsNoTracking()
             .FirstAsync(cancellationToken);
+        ContentBlockerConfig contentBlockerConfig = await _dataContext.ContentBlockerConfigs
+            .AsNoTracking()
+            .FirstAsync(cancellationToken);
         DownloadCleanerConfig downloadCleanerConfig = await _dataContext.DownloadCleanerConfigs
             .AsNoTracking()
             .FirstAsync(cancellationToken);
         
         // Always register jobs, regardless of enabled status
         await RegisterQueueCleanerJob(queueCleanerConfig, cancellationToken);
+        await RegisterContentBlockerJob(contentBlockerConfig, cancellationToken);
         await RegisterDownloadCleanerJob(downloadCleanerConfig, cancellationToken);
     }
     
@@ -115,6 +121,23 @@ public class BackgroundJobManager : IHostedService
     }
     
     /// <summary>
+    /// Registers the QueueCleaner job and optionally adds triggers based on configuration.
+    /// </summary>
+    public async Task RegisterContentBlockerJob(
+        ContentBlockerConfig config, 
+        CancellationToken cancellationToken = default)
+    {
+        // Always register the job definition
+        await AddJobWithoutTrigger<ContentBlocker>(cancellationToken);
+        
+        // Only add triggers if the job is enabled
+        if (config.Enabled)
+        {
+            await AddTriggersForJob<ContentBlocker>(config, config.CronExpression, cancellationToken);
+        }
+    }
+    
+    /// <summary>
     /// Registers the DownloadCleaner job and optionally adds triggers based on configuration.
     /// </summary>
     public async Task RegisterDownloadCleanerJob(DownloadCleanerConfig config, CancellationToken cancellationToken = default)
@@ -127,52 +150,6 @@ public class BackgroundJobManager : IHostedService
         {
             await AddTriggersForJob<DownloadCleaner>(config, config.CronExpression, cancellationToken);
         }
-    }
-    
-    /// <summary>
-    /// Legacy method maintained for backward compatibility.
-    /// Use RegisterQueueCleanerJob instead.
-    /// </summary>
-    public async Task AddQueueCleanerJob(
-        QueueCleanerConfig config, 
-        CancellationToken cancellationToken = default)
-    {
-        await RegisterQueueCleanerJob(config, cancellationToken);
-    }
-    
-    /// <summary>
-    /// Legacy method maintained for backward compatibility.
-    /// Use RegisterDownloadCleanerJob instead.
-    /// </summary>
-    public async Task AddDownloadCleanerJob(DownloadCleanerConfig config, CancellationToken cancellationToken = default)
-    {
-        await RegisterDownloadCleanerJob(config, cancellationToken);
-    }
-    
-    /// <summary>
-    /// Helper method to add a job with a cron trigger.
-    /// </summary>
-    private async Task AddJobWithTrigger<T>(
-        IJobConfig config,
-        string cronExpression,
-        CancellationToken cancellationToken = default) 
-        where T : GenericHandler
-    {
-        if (_scheduler == null)
-        {
-            throw new InvalidOperationException("Scheduler not initialized");
-        }
-        
-        if (!config.Enabled)
-        {
-            return;
-        }
-        
-        // First ensure the job exists
-        await AddJobWithoutTrigger<T>(cancellationToken);
-        
-        // Then add triggers
-        await AddTriggersForJob<T>(config, cronExpression, cancellationToken);
     }
     
     /// <summary>
@@ -209,7 +186,7 @@ public class BackgroundJobManager : IHostedService
                 throw new ValidationException($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
             }
             
-            if (triggerValue < Constants.TriggerMinLimit)
+            if (typeof(T) != typeof(ContentBlocker) && triggerValue < Constants.TriggerMinLimit)
             {
                 throw new ValidationException($"{cronExpression} should have a fire time of minimum {Constants.TriggerMinLimit.TotalSeconds} seconds");
             }

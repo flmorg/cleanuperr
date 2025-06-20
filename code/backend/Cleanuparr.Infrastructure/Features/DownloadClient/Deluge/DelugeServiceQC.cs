@@ -67,110 +67,14 @@ public partial class DelugeService
         }
         
         // remove if download is stuck
-        (result.ShouldRemove, result.DeleteReason) = await EvaluateDownloadRemoval(download, download.Private, contents.Contents);
+        (result.ShouldRemove, result.DeleteReason) = await EvaluateDownloadRemoval(download);
 
         return result;
     }
 
-    private async Task<(bool ShouldRemove, DeleteReason Reason)> BlockUnwantedFilesAsync(
-        DownloadStatus download,
-        bool isPrivate,
-        Dictionary<string, DelugeFileOrDirectory>? files
-    )
+    private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(DownloadStatus status)
     {
-        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
-        
-        if (!queueCleanerConfig.ContentBlocker.Enabled)
-        {
-            return (false, DeleteReason.None);
-        }
-
-        if (queueCleanerConfig.ContentBlocker.IgnorePrivate && isPrivate)
-        {
-            // ignore private trackers
-            _logger.LogDebug("skip unwanted files check | download is private | {name}", download.Name);
-            return (false, DeleteReason.None);
-        }
-        
-        if (files is null)
-        {
-            _logger.LogDebug("failed to find files for {name}", download.Name);
-            return (false, DeleteReason.None);
-        }
-        
-        InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
-        BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
-        ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
-        ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
-        
-        Dictionary<int, int> priorities = [];
-        bool hasPriorityUpdates = false;
-        long totalFiles = 0;
-        long totalUnwantedFiles = 0;
-
-        ProcessFiles(files, (name, file) =>
-        {
-            totalFiles++;
-            int priority = file.Priority;
-
-            if (file.Priority is 0)
-            {
-                totalUnwantedFiles++;
-            }
-
-            if (file.Priority is not 0 && !_filenameEvaluator.IsValid(name, blocklistType, patterns, regexes))
-            {
-                totalUnwantedFiles++;
-                priority = 0;
-                hasPriorityUpdates = true;
-                _logger.LogInformation("unwanted file found | {file}", file.Path);
-            }
-            
-            priorities.Add(file.Index, priority);
-        });
-
-        if (!hasPriorityUpdates)
-        {
-            return (false, DeleteReason.None);
-        }
-        
-        _logger.LogTrace("marking {count} unwanted files as skipped for {name}", totalUnwantedFiles, download.Name);
-
-        List<int> sortedPriorities = priorities
-            .OrderBy(x => x.Key)
-            .Select(x => x.Value)
-            .ToList();
-
-        if (totalUnwantedFiles == totalFiles)
-        {
-            // Skip marking files as unwanted. The download will be removed completely.
-            return (true, DeleteReason.AllFilesBlocked);
-        }
-
-        await _dryRunInterceptor.InterceptAsync(ChangeFilesPriority, download.Hash, sortedPriorities);
-
-        return (false, DeleteReason.None);
-    }
-
-    protected virtual async Task ChangeFilesPriority(string hash, List<int> sortedPriorities)
-    {
-        await _client.ChangeFilesPriority(hash, sortedPriorities);
-    }
-    
-    private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(
-        DownloadStatus status,
-        bool isPrivate,
-        Dictionary<string, DelugeFileOrDirectory>? files
-    )
-    {
-        (bool ShouldRemove, DeleteReason Reason) result = await BlockUnwantedFilesAsync(status, isPrivate, files);
-
-        if (result.ShouldRemove)
-        {
-            return result;
-        }
-        
-        result = await CheckIfSlow(status);
+        (bool ShouldRemove, DeleteReason Reason) result = await CheckIfSlow(status);
 
         if (result.ShouldRemove)
         {

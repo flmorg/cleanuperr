@@ -1,4 +1,5 @@
 using Cleanuparr.Domain.Exceptions;
+using Cleanuparr.Infrastructure.Models;
 using Cleanuparr.Shared.Helpers;
 using Quartz;
 using Quartz.Spi;
@@ -15,7 +16,7 @@ public static class CronValidationHelper
     /// </summary>
     /// <param name="cronExpression">The cron expression to validate</param>
     /// <exception cref="ValidationException">Thrown when the cron expression is invalid or violates trigger limits</exception>
-    public static void ValidateCronExpression(string cronExpression)
+    public static void ValidateCronExpression(string cronExpression, JobType? jobType = null)
     {
         if (string.IsNullOrWhiteSpace(cronExpression))
         {
@@ -51,7 +52,7 @@ public static class CronValidationHelper
                 throw new ValidationException($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
             }
             
-            if (triggerValue < Constants.TriggerMinLimit)
+            if (jobType is not JobType.ContentBlocker && triggerValue < Constants.TriggerMinLimit)
             {
                 throw new ValidationException($"{cronExpression} should have a fire time of minimum {Constants.TriggerMinLimit.TotalSeconds} seconds");
             }
@@ -64,24 +65,6 @@ public static class CronValidationHelper
         catch (Exception ex)
         {
             throw new ValidationException($"Error validating cron expression '{cronExpression}': {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Checks if a cron expression is valid without throwing exceptions
-    /// </summary>
-    /// <param name="cronExpression">The cron expression to check</param>
-    /// <returns>True if valid, false otherwise</returns>
-    public static bool IsValidCronExpression(string cronExpression)
-    {
-        try
-        {
-            ValidateCronExpression(cronExpression);
-            return true;
-        }
-        catch
-        {
-            return false;
         }
     }
 } 

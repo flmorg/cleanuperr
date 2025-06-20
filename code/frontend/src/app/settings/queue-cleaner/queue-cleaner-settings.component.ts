@@ -7,11 +7,9 @@ import { CanComponentDeactivate } from "../../core/guards";
 import {
   QueueCleanerConfig,
   ScheduleUnit,
-  BlocklistType,
   FailedImportConfig,
   StalledConfig,
   SlowConfig,
-  ContentBlockerConfig,
   ScheduleOptions
 } from "../../shared/models/queue-cleaner-config.model";
 import { SettingsCardComponent } from "../components/settings-card/settings-card.component";
@@ -156,24 +154,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         ignoreAboveSize: [{ value: "", disabled: true }],
       }),
 
-      // Content Blocker settings - nested group
-      contentBlocker: this.formBuilder.group({
-        enabled: [{ value: false, disabled: true }],
-        ignorePrivate: [{ value: false, disabled: true }],
-        deletePrivate: [{ value: false, disabled: true }],
-        sonarrBlocklist: this.formBuilder.group({
-          path: [{ value: "", disabled: true }],
-          type: [{ value: BlocklistType.Blacklist, disabled: true }],
-        }),
-        radarrBlocklist: this.formBuilder.group({
-          path: [{ value: "", disabled: true }],
-          type: [{ value: BlocklistType.Blacklist, disabled: true }],
-        }),
-        lidarrBlocklist: this.formBuilder.group({
-          path: [{ value: "", disabled: true }],
-          type: [{ value: BlocklistType.Blacklist, disabled: true }],
-        }),
-      }),
+
     });
 
     // Create an effect to update the form when the configuration changes
@@ -196,15 +177,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
           failedImport: config.failedImport,
           stalled: config.stalled,
           slow: config.slow,
-          contentBlocker: config.contentBlocker,
         });
-
-        // First ensure content blocker's enabled state gets properly set based on main enabled status
-        if (config.enabled) {
-          this.queueCleanerForm.get("contentBlocker.enabled")?.enable({ emitEvent: false });
-        } else {
-          this.queueCleanerForm.get("contentBlocker.enabled")?.disable({ emitEvent: false });
-        }
 
         // Then update all other dependent form control states
         this.updateFormControlDisabledStates(config);
@@ -304,14 +277,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       });
     }
 
-    // Update content blocker dependent controls when enabled changes
-    const contentBlockerEnabledControl = this.queueCleanerForm.get("contentBlocker.enabled");
-    if (contentBlockerEnabledControl) {
-      contentBlockerEnabledControl.valueChanges.pipe(takeUntil(this.destroy$))
-      .subscribe((enabled) => {
-        this.updateContentBlockerDependentControls(enabled);
-      });
-    }
+
 
     // Listen for changes to the schedule type to ensure dropdown isn't empty
     const scheduleTypeControl = this.queueCleanerForm.get('jobSchedule.type');
@@ -399,11 +365,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     if (config.slow?.maxStrikes !== undefined) {
       this.updateSlowDependentControls(config.slow.maxStrikes);
     }
-
-    // Check if content blocker is enabled and update dependent controls
-    if (config.contentBlocker?.enabled !== undefined) {
-      this.updateContentBlockerDependentControls(config.contentBlocker.enabled);
-    }
   }
 
   /**
@@ -428,28 +389,20 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         typeControl?.enable();
       }
       
-      // Enable the content blocker primary checkbox when queue cleaner is enabled
-      this.queueCleanerForm.get("contentBlocker.enabled")?.enable({ emitEvent: false });
-
       // Update individual config sections only if they are enabled
       const failedImportMaxStrikes = this.queueCleanerForm.get("failedImport.maxStrikes")?.value;
       const stalledMaxStrikes = this.queueCleanerForm.get("stalled.maxStrikes")?.value;
       const slowMaxStrikes = this.queueCleanerForm.get("slow.maxStrikes")?.value;
-      const contentBlockerEnabled = this.queueCleanerForm.get("contentBlocker.enabled")?.value;
       
       this.updateFailedImportDependentControls(failedImportMaxStrikes);
       this.updateStalledDependentControls(stalledMaxStrikes);
       this.updateSlowDependentControls(slowMaxStrikes);
-      this.updateContentBlockerDependentControls(contentBlockerEnabled);
     } else {
       // Disable all scheduling controls
       cronExpressionControl?.disable();
       everyControl?.disable();
       typeControl?.disable();
       
-      // Disable the content blocker primary checkbox when queue cleaner is disabled
-      this.queueCleanerForm.get("contentBlocker.enabled")?.disable({ emitEvent: false });
-
       // Save current active accordion state before clearing it
       // This will be empty when we collapse all accordions
       this.activeAccordionIndices = [];
@@ -516,46 +469,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     }
   }
 
-  /**
-   * Update the state of Content Blocker dependent controls based on the 'enabled' value
-   */
-  private updateContentBlockerDependentControls(enabled: boolean): void {
-    const options = { onlySelf: true };
 
-    if (enabled) {
-      // Enable blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("ignorePrivate")?.enable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("deletePrivate")?.enable(options);
-
-      // Enable Sonarr blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("path")?.enable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("type")?.enable(options);
-
-      // Enable Radarr blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("path")?.enable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("type")?.enable(options);
-
-      // Enable Lidarr blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("path")?.enable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("type")?.enable(options);
-    } else {
-      // Disable blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("ignorePrivate")?.disable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("deletePrivate")?.disable(options);
-
-      // Disable Sonarr blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("path")?.disable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("sonarrBlocklist")?.get("type")?.disable(options);
-
-      // Disable Radarr blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("path")?.disable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("radarrBlocklist")?.get("type")?.disable(options);
-
-      // Disable Lidarr blocklist settings
-      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("path")?.disable(options);
-      this.queueCleanerForm.get("contentBlocker")?.get("lidarrBlocklist")?.get("type")?.disable(options);
-    }
-  }
 
   /**
    * Save the queue cleaner configuration
@@ -598,23 +512,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
           minSpeed: formValue.slow?.minSpeed || "",
           maxTime: formValue.slow?.maxTime || 0,
           ignoreAboveSize: formValue.slow?.ignoreAboveSize || "",
-        },
-        contentBlocker: {
-          enabled: formValue.contentBlocker?.enabled || false,
-          ignorePrivate: formValue.contentBlocker?.ignorePrivate || false,
-          deletePrivate: formValue.contentBlocker?.deletePrivate || false,
-          sonarrBlocklist: formValue.contentBlocker?.sonarrBlocklist || {
-            path: "",
-            type: BlocklistType.Blacklist,
-          },
-          radarrBlocklist: formValue.contentBlocker?.radarrBlocklist || {
-            path: "",
-            type: BlocklistType.Blacklist,
-          },
-          lidarrBlocklist: formValue.contentBlocker?.lidarrBlocklist || {
-            path: "",
-            type: BlocklistType.Blacklist,
-          },
         },
       };
       
@@ -699,24 +596,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         ignoreAboveSize: "",
       },
 
-      // Content Blocker settings (nested)
-      contentBlocker: {
-        enabled: false,
-        ignorePrivate: false,
-        deletePrivate: false,
-        sonarrBlocklist: {
-          path: "",
-          type: BlocklistType.Blacklist,
-        },
-        radarrBlocklist: {
-          path: "",
-          type: BlocklistType.Blacklist,
-        },
-        lidarrBlocklist: {
-          path: "",
-          type: BlocklistType.Blacklist,
-        },
-      },
+
     });
 
     // Manually update control states after reset
@@ -724,7 +604,6 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     this.updateFailedImportDependentControls(0);
     this.updateStalledDependentControls(0);
     this.updateSlowDependentControls(0);
-    this.updateContentBlockerDependentControls(false);
     
     // Mark form as dirty so the save button is enabled after reset
     this.queueCleanerForm.markAsDirty();

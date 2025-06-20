@@ -18,6 +18,7 @@ import { QueueCleanerSettingsComponent } from '../queue-cleaner/queue-cleaner-se
 import { GeneralSettingsComponent } from '../general-settings/general-settings.component';
 import { DownloadCleanerSettingsComponent } from '../download-cleaner/download-cleaner-settings.component';
 import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
+import { ContentBlockerSettingsComponent } from "../content-blocker/content-blocker-settings.component";
 
 @Component({
   selector: 'app-settings-page',
@@ -35,8 +36,9 @@ import { SonarrSettingsComponent } from '../sonarr/sonarr-settings.component';
     ConfirmDialogModule,
     QueueCleanerSettingsComponent,
     GeneralSettingsComponent,
-    DownloadCleanerSettingsComponent
-  ],
+    DownloadCleanerSettingsComponent,
+    ContentBlockerSettingsComponent
+],
   providers: [MessageService, ConfirmationService],
   templateUrl: './settings-page.component.html',
   styleUrl: './settings-page.component.scss'

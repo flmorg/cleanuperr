@@ -7,6 +7,7 @@ using Cleanuparr.Infrastructure.Features.DownloadRemover.Models;
 using Cleanuparr.Persistence;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
+using Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Cleanuparr.Persistence.Models.Configuration.General;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
@@ -130,6 +131,7 @@ public abstract class GenericHandler : IHandler
                 .Include(x => x.Instances)
                 .FirstAsync(x => x.Type == InstanceType.Lidarr));
             ContextProvider.Set(nameof(QueueCleanerConfig), await _dataContext.QueueCleanerConfigs.AsNoTracking().FirstAsync());
+            ContextProvider.Set(nameof(ContentBlockerConfig), await _dataContext.ContentBlockerConfigs.AsNoTracking().FirstAsync());
             ContextProvider.Set(nameof(DownloadCleanerConfig), await _dataContext.DownloadCleanerConfigs.AsNoTracking().FirstAsync());
             ContextProvider.Set(nameof(DownloadClientConfig), await _dataContext.DownloadClients.AsNoTracking()
                 .Where(x => x.Enabled)
@@ -182,6 +184,12 @@ public abstract class GenericHandler : IHandler
         DeleteReason deleteReason
     )
     {
+        if (_cache.TryGetValue(downloadRemovalKey, out bool _))
+        {
+            _logger.LogDebug("skip removal request | already marked for removal | {title}", record.Title);
+            return;
+        }
+        
         if (instanceType is InstanceType.Sonarr)
         {
             QueueItemRemoveRequest<SonarrSearchItem> removeRequest = new()

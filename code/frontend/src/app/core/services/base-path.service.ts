@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +9,11 @@ export class BasePathService {
    * Gets the current base path from the dynamically updated environment
    */
   getBasePath(): string {
+    // If in development mode, use the local API
+    if (isDevMode()) {
+      return `http://localhost:11011`;
+    }
+
     // Fallback to window value if environment hasn't been updated yet
     return (window as any)['_app_base'] || '/api';
   }

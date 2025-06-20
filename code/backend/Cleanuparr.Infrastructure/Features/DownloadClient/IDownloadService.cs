@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
+using Cleanuparr.Domain.Enums;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 
@@ -72,4 +75,12 @@ public interface IDownloadService : IDisposable
     /// </summary>
     /// <param name="name">The category name.</param>
     public Task CreateCategoryAsync(string name);
+    
+    /// <summary>
+    /// Blocks unwanted files from being fully downloaded.
+    /// </summary>
+    /// <param name="hash">The torrent hash.</param>
+    /// <param name="ignoredDownloads">Downloads to ignore from processing.</param>
+    /// <returns>True if all files have been blocked; otherwise false.</returns>
+    public Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, IReadOnlyList<string> ignoredDownloads);
 }

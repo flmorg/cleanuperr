@@ -98,6 +98,9 @@ public abstract class DownloadService : IDownloadService
     /// <inheritdoc/>
     public abstract Task CreateCategoryAsync(string name);
     
+    /// <inheritdoc/>
+    public abstract Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, IReadOnlyList<string> ignoredDownloads);
+    
     protected void ResetStalledStrikesOnProgress(string hash, long downloaded)
     {
         var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));

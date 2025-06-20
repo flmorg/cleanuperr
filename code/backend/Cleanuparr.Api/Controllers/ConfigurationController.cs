@@ -8,6 +8,7 @@ using Cleanuparr.Infrastructure.Utilities;
 using Cleanuparr.Persistence;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
+using Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Cleanuparr.Persistence.Models.Configuration.General;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
@@ -48,6 +49,23 @@ public class ConfigurationController : ControllerBase
         try
         {
             var config = await _dataContext.QueueCleanerConfigs
+                .AsNoTracking()
+                .FirstAsync();
+            return Ok(config);
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+    
+    [HttpGet("content_blocker")]
+    public async Task<IActionResult> GetContentBlockerConfig()
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            var config = await _dataContext.ContentBlockerConfigs
                 .AsNoTracking()
                 .FirstAsync();
             return Ok(config);
@@ -415,6 +433,51 @@ public class ConfigurationController : ControllerBase
         {
             _logger.LogError(ex, "Failed to save QueueCleaner configuration");
             return StatusCode(500, "Failed to save QueueCleaner configuration");
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+    
+    [HttpPut("content_blocker")]
+    public async Task<IActionResult> UpdateContentBlockerConfig([FromBody] ContentBlockerConfig newConfig)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Validate the configuration
+            newConfig.Validate();
+
+            // Validate cron expression if present
+            if (!string.IsNullOrEmpty(newConfig.CronExpression))
+            {
+                CronValidationHelper.ValidateCronExpression(newConfig.CronExpression, JobType.ContentBlocker);
+            }
+
+            // Get existing config
+            var oldConfig = await _dataContext.ContentBlockerConfigs
+                .FirstAsync();
+
+            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
+            var config = new TypeAdapterConfig();
+            config.NewConfig<ContentBlockerConfig, ContentBlockerConfig>()
+                .Ignore(dest => dest.Id);
+            
+            newConfig.Adapt(oldConfig, config);
+
+            // Persist the configuration
+            await _dataContext.SaveChangesAsync();
+
+            // Update the scheduler based on configuration changes
+            await UpdateJobSchedule(oldConfig, JobType.ContentBlocker);
+
+            return Ok(new { Message = "ContentBlocker configuration updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save ContentBlocker configuration");
+            return StatusCode(500, "Failed to save ContentBlocker configuration");
         }
         finally
         {

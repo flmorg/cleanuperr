@@ -1,7 +1,8 @@
-using Cleanuparr.Domain.Enums;
+﻿using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Events;
 using Cleanuparr.Infrastructure.Features.Arr;
 using Cleanuparr.Infrastructure.Features.Arr.Interfaces;
+using Cleanuparr.Infrastructure.Features.ContentBlocker;
 using Cleanuparr.Infrastructure.Features.Context;
 using Cleanuparr.Infrastructure.Features.DownloadClient;
 using Cleanuparr.Infrastructure.Features.Jobs;
@@ -9,34 +10,38 @@ using Cleanuparr.Infrastructure.Helpers;
 using Cleanuparr.Persistence;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
+using Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 using Cleanuparr.Persistence.Models.Configuration.General;
-using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Data.Models.Arr.Queue;
 using MassTransit;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using LogContext = Serilog.Context.LogContext;
 
-namespace Cleanuparr.Application.Features.QueueCleaner;
+namespace Cleanuparr.Application.Features.ContentBlocker;
 
-public sealed class QueueCleaner : GenericHandler
+public sealed class ContentBlocker : GenericHandler
 {
-    public QueueCleaner(
-        ILogger<QueueCleaner> logger,
+    private readonly BlocklistProvider _blocklistProvider;
+
+    public ContentBlocker(
+        ILogger<ContentBlocker> logger,
         DataContext dataContext,
         IMemoryCache cache,
         IBus messageBus,
         ArrClientFactory arrClientFactory,
         ArrQueueIterator arrArrQueueIterator,
         DownloadServiceFactory downloadServiceFactory,
+        BlocklistProvider blocklistProvider,
         EventPublisher eventPublisher
     ) : base(
         logger, dataContext, cache, messageBus,
         arrClientFactory, arrArrQueueIterator, downloadServiceFactory, eventPublisher
     )
     {
+        _blocklistProvider = blocklistProvider;
     }
-    
+
     protected override async Task ExecuteInternalAsync()
     {
         if (ContextProvider.Get<List<DownloadClientConfig>>(nameof(DownloadClientConfig)).Count is 0)
@@ -44,11 +49,13 @@ public sealed class QueueCleaner : GenericHandler
             _logger.LogWarning("No download clients configured");
             return;
         }
-        
+
+        await _blocklistProvider.LoadBlocklistsAsync();
+
         var sonarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Sonarr));
         var radarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr));
         var lidarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr));
-        
+
         await ProcessArrConfigAsync(sonarrConfig, InstanceType.Sonarr);
         await ProcessArrConfigAsync(radarrConfig, InstanceType.Radarr);
         await ProcessArrConfigAsync(lidarrConfig, InstanceType.Lidarr);
@@ -57,17 +64,17 @@ public sealed class QueueCleaner : GenericHandler
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig)
     {
         IReadOnlyList<string> ignoredDownloads = ContextProvider.Get<GeneralConfig>().IgnoredDownloads;
-        
+
         using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
         
         IArrClient arrClient = _arrClientFactory.GetClient(instanceType);
-        
+
         // push to context
         ContextProvider.Set(nameof(ArrInstance) + nameof(ArrInstance.Url), instance.Url);
         ContextProvider.Set(nameof(InstanceType), instanceType);
-
+        
         IReadOnlyList<IDownloadService> downloadServices = await GetInitializedDownloadServicesAsync();
-
+        
         await _arrArrQueueIterator.Iterate(arrClient, instance, async items =>
         {
             var groups = items
@@ -107,13 +114,15 @@ public sealed class QueueCleaner : GenericHandler
                 // push record to context
                 ContextProvider.Set(nameof(QueueRecord), record);
 
-                DownloadCheckResult downloadCheckResult = new();
+                BlockFilesResult result = new();
 
                 if (record.Protocol is "torrent")
                 {
                     var torrentClients = downloadServices
                         .Where(x => x.ClientConfig.Type is DownloadClientType.Torrent)
                         .ToList();
+                    
+                    _logger.LogDebug("searching unwanted files for {title}", record.Title);
                     
                     if (torrentClients.Count > 0)
                     {
@@ -123,10 +132,10 @@ public sealed class QueueCleaner : GenericHandler
                             try
                             {
                                 // stalled download check
-                                downloadCheckResult = await downloadService
-                                    .ShouldRemoveFromArrQueueAsync(record.DownloadId, ignoredDownloads);
+                                result = await downloadService
+                                    .BlockUnwantedFilesAsync(record.DownloadId, ignoredDownloads);
                                 
-                                if (downloadCheckResult.Found)
+                                if (result.Found)
                                 {
                                     break;
                                 }
@@ -138,46 +147,25 @@ public sealed class QueueCleaner : GenericHandler
                             }
                         }
                     
-                        if (!downloadCheckResult.Found)
+                        if (!result.Found)
                         {
                             _logger.LogWarning("Download not found in any torrent client | {title}", record.Title);
                         }
                     }
                 }
-                
-                var config = ContextProvider.Get<QueueCleanerConfig>();
-                
-                // failed import check
-                bool shouldRemoveFromArr = await arrClient.ShouldRemoveFromQueue(instanceType, record, downloadCheckResult.IsPrivate, config.FailedImport.MaxStrikes);
-                DeleteReason deleteReason = downloadCheckResult.ShouldRemove ? downloadCheckResult.DeleteReason : DeleteReason.FailedImport;
-                
-                if (!shouldRemoveFromArr && !downloadCheckResult.ShouldRemove)
+
+                if (!result.ShouldRemove)
                 {
-                    _logger.LogInformation("skip | {title}", record.Title);
                     continue;
                 }
-
+                
+                var config = ContextProvider.Get<ContentBlockerConfig>();
+                
                 bool removeFromClient = true;
                 
-                if (downloadCheckResult.IsPrivate)
+                if (result.IsPrivate && !config.DeletePrivate)
                 {
-                    bool isStalledWithoutPruneFlag = 
-                        downloadCheckResult.DeleteReason is DeleteReason.Stalled &&
-                        !config.Stalled.DeletePrivate;
-    
-                    bool isSlowWithoutPruneFlag = 
-                        downloadCheckResult.DeleteReason is DeleteReason.SlowSpeed or DeleteReason.SlowTime &&
-                        !config.Slow.DeletePrivate;
-    
-                    bool shouldKeepDueToDeleteRules = downloadCheckResult.ShouldRemove && 
-                        (isStalledWithoutPruneFlag || isSlowWithoutPruneFlag);
-                        
-                    bool shouldKeepDueToImportRules = shouldRemoveFromArr && !config.FailedImport.DeletePrivate;
-
-                    if (shouldKeepDueToDeleteRules || shouldKeepDueToImportRules)
-                    {
-                        removeFromClient = false;
-                    }
+                    removeFromClient = false;
                 }
                 
                 await PublishQueueItemRemoveRequest(
@@ -187,7 +175,7 @@ public sealed class QueueCleaner : GenericHandler
                     record,
                     group.Count() > 1,
                     removeFromClient,
-                    deleteReason
+                    DeleteReason.AllFilesBlocked
                 );
             }
         });

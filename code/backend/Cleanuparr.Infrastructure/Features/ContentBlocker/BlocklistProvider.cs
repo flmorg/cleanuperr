@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Helpers;
 using Cleanuparr.Persistence;
+using Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Cleanuparr.Shared.Helpers;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,7 @@ public sealed class BlocklistProvider
         {
             var dataContext = _serviceProvider.GetRequiredService<DataContext>();
             int changedCount = 0;
-            var queueCleanerConfig = await dataContext.QueueCleanerConfigs
+            var contentBlockerConfig = await dataContext.ContentBlockerConfigs
                 .AsNoTracking()
                 .FirstAsync();
             bool shouldReload = false;
@@ -55,41 +56,41 @@ public sealed class BlocklistProvider
                 _lastLoadTime = DateTime.UtcNow;
             }
             
-            if (!queueCleanerConfig.ContentBlocker.Enabled)
+            if (!contentBlockerConfig.Enabled)
             {
                 _logger.LogDebug("Content blocker is disabled, skipping blocklist loading");
                 return;
             }
             
             // Check and update Sonarr blocklist if needed
-            string sonarrHash = GenerateSettingsHash(queueCleanerConfig.ContentBlocker.Sonarr);
+            string sonarrHash = GenerateSettingsHash(contentBlockerConfig.Sonarr);
             if (shouldReload || !_configHashes.TryGetValue(InstanceType.Sonarr, out string? oldSonarrHash) || sonarrHash != oldSonarrHash)
             {
                 _logger.LogDebug("Loading Sonarr blocklist");
                 
-                await LoadPatternsAndRegexesAsync(queueCleanerConfig.ContentBlocker.Sonarr, InstanceType.Sonarr);
+                await LoadPatternsAndRegexesAsync(contentBlockerConfig.Sonarr, InstanceType.Sonarr);
                 _configHashes[InstanceType.Sonarr] = sonarrHash;
                 changedCount++;
             }
             
             // Check and update Radarr blocklist if needed
-            string radarrHash = GenerateSettingsHash(queueCleanerConfig.ContentBlocker.Radarr);
+            string radarrHash = GenerateSettingsHash(contentBlockerConfig.Radarr);
             if (shouldReload || !_configHashes.TryGetValue(InstanceType.Radarr, out string? oldRadarrHash) || radarrHash != oldRadarrHash)
             {
                 _logger.LogDebug("Loading Radarr blocklist");
                 
-                await LoadPatternsAndRegexesAsync(queueCleanerConfig.ContentBlocker.Radarr, InstanceType.Radarr);
+                await LoadPatternsAndRegexesAsync(contentBlockerConfig.Radarr, InstanceType.Radarr);
                 _configHashes[InstanceType.Radarr] = radarrHash;
                 changedCount++;
             }
             
             // Check and update Lidarr blocklist if needed
-            string lidarrHash = GenerateSettingsHash(queueCleanerConfig.ContentBlocker.Lidarr);
+            string lidarrHash = GenerateSettingsHash(contentBlockerConfig.Lidarr);
             if (shouldReload || !_configHashes.TryGetValue(InstanceType.Lidarr, out string? oldLidarrHash) || lidarrHash != oldLidarrHash)
             {
                 _logger.LogDebug("Loading Lidarr blocklist");
                 
-                await LoadPatternsAndRegexesAsync(queueCleanerConfig.ContentBlocker.Lidarr, InstanceType.Lidarr);
+                await LoadPatternsAndRegexesAsync(contentBlockerConfig.Lidarr, InstanceType.Lidarr);
                 _configHashes[InstanceType.Lidarr] = lidarrHash;
                 changedCount++;
             }

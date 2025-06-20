@@ -1,6 +1,8 @@
-﻿using Cleanuparr.Persistence.Converters;
+﻿using Cleanuparr.Domain.Enums;
+using Cleanuparr.Persistence.Converters;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
+using Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Cleanuparr.Persistence.Models.Configuration.General;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
@@ -23,6 +25,8 @@ public class DataContext : DbContext
     public DbSet<DownloadClientConfig> DownloadClients { get; set; }
     
     public DbSet<QueueCleanerConfig> QueueCleanerConfigs { get; set; }
+    
+    public DbSet<ContentBlockerConfig> ContentBlockerConfigs { get; set; }
     
     public DbSet<DownloadCleanerConfig> DownloadCleanerConfigs { get; set; }
     
@@ -55,7 +59,22 @@ public class DataContext : DbContext
             entity.ComplexProperty(e => e.FailedImport);
             entity.ComplexProperty(e => e.Stalled);
             entity.ComplexProperty(e => e.Slow);
-            entity.ComplexProperty(e => e.ContentBlocker);
+        });
+        
+        modelBuilder.Entity<ContentBlockerConfig>(entity =>
+        {
+            entity.ComplexProperty(e => e.Sonarr, cp =>
+            {
+                cp.Property(s => s.BlocklistType).HasConversion<LowercaseEnumConverter<BlocklistType>>();
+            });
+            entity.ComplexProperty(e => e.Radarr, cp =>
+            {
+                cp.Property(s => s.BlocklistType).HasConversion<LowercaseEnumConverter<BlocklistType>>();
+            });
+            entity.ComplexProperty(e => e.Lidarr, cp =>
+            {
+                cp.Property(s => s.BlocklistType).HasConversion<LowercaseEnumConverter<BlocklistType>>();
+            });
         });
         
         // Configure ArrConfig -> ArrInstance relationship

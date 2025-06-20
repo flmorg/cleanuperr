@@ -66,83 +66,6 @@ public partial class TransmissionService
 
         return result;
     }
-
-    private async Task<(bool ShouldRemove, DeleteReason Reason)> BlockUnwantedFilesAsync(
-        TorrentInfo download,
-        bool isPrivate
-    )
-    {
-        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
-        
-        if (!queueCleanerConfig.ContentBlocker.Enabled)
-        {
-            return (false, DeleteReason.None);
-        }
-        
-        if (queueCleanerConfig.ContentBlocker.IgnorePrivate && isPrivate)
-        {
-            // ignore private trackers
-            _logger.LogDebug("skip unwanted files check | download is private | {name}", download.Name);
-            return (false, DeleteReason.None);
-        }
-        
-        if (download.Files is null)
-        {
-            _logger.LogDebug("failed to find files for {name}", download.Name);
-            return (false, DeleteReason.None);
-        }
-        
-        InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
-        BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
-        ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
-        ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
-        
-        List<long> unwantedFiles = [];
-        long totalFiles = 0;
-        long totalUnwantedFiles = 0;
-        
-        for (int i = 0; i < download.Files.Length; i++)
-        {
-            if (download.FileStats?[i].Wanted == null)
-            {
-                continue;
-            }
-
-            totalFiles++;
-            
-            if (!download.FileStats[i].Wanted.Value)
-            {
-                totalUnwantedFiles++;
-                continue;
-            }
-
-            if (_filenameEvaluator.IsValid(download.Files[i].Name, blocklistType, patterns, regexes))
-            {
-                continue;
-            }
-            
-            _logger.LogInformation("unwanted file found | {file}", download.Files[i].Name);
-            unwantedFiles.Add(i);
-            totalUnwantedFiles++;
-        }
-
-        if (unwantedFiles.Count is 0)
-        {
-            return (false, DeleteReason.None);
-        }
-
-        if (totalUnwantedFiles == totalFiles)
-        {
-            // Skip marking files as unwanted. The download will be removed completely.
-            return (true, DeleteReason.AllFilesBlocked);
-        }
-        
-        _logger.LogTrace("marking {count} unwanted files as skipped for {name}", totalUnwantedFiles, download.Name);
-
-        await _dryRunInterceptor.InterceptAsync(SetUnwantedFiles, download.Id, unwantedFiles.ToArray());
-
-        return (false, DeleteReason.None);
-    }
     
     protected virtual async Task SetUnwantedFiles(long downloadId, long[] unwantedFiles)
     {
@@ -155,14 +78,7 @@ public partial class TransmissionService
     
     private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(TorrentInfo download, bool isPrivate)
     {
-        (bool ShouldRemove, DeleteReason Reason) result = await BlockUnwantedFilesAsync(download, isPrivate);
-
-        if (result.ShouldRemove)
-        {
-            return result;
-        }
-        
-        result = await CheckIfSlow(download);
+        (bool ShouldRemove, DeleteReason Reason) result = await CheckIfSlow(download);
 
         if (result.ShouldRemove)
         {

@@ -18,16 +18,6 @@ export interface JobSchedule {
   type: ScheduleUnit;
 }
 
-export enum BlocklistType {
-  Blacklist = 'Blacklist',
-  Whitelist = 'Whitelist'
-}
-
-export interface BlocklistSettings {
-  path: string;
-  type: BlocklistType;
-}
-
 // Nested configuration interfaces
 export interface FailedImportConfig {
   maxStrikes: number;
@@ -54,16 +44,6 @@ export interface SlowConfig {
   ignoreAboveSize: string;
 }
 
-export interface ContentBlockerConfig {
-  enabled: boolean;
-  ignorePrivate: boolean;
-  deletePrivate: boolean;
-  sonarrBlocklist?: BlocklistSettings;
-  radarrBlocklist?: BlocklistSettings;
-  lidarrBlocklist?: BlocklistSettings;
-  customBlocklists?: BlocklistSettings[];
-}
-
 export interface QueueCleanerConfig {
   enabled: boolean;
   cronExpression: string;
@@ -74,7 +54,6 @@ export interface QueueCleanerConfig {
   failedImport: FailedImportConfig;
   stalled: StalledConfig;
   slow: SlowConfig;
-  contentBlocker: ContentBlockerConfig;
   
   // Legacy flat properties for backward compatibility
   // These will be mapped to/from the nested structure

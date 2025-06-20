@@ -1,3 +1,4 @@
+using Cleanuparr.Application.Features.ContentBlocker;
 using Cleanuparr.Application.Features.DownloadCleaner;
 using Cleanuparr.Application.Features.QueueCleaner;
 using Cleanuparr.Infrastructure.Events;
@@ -38,6 +39,7 @@ public static class ServicesDI
             .AddTransient<LidarrClient>()
             .AddTransient<ArrClientFactory>()
             .AddTransient<QueueCleaner>()
+            .AddTransient<ContentBlocker>()
             .AddTransient<DownloadCleaner>()
             .AddTransient<IQueueItemRemover, QueueItemRemover>()
             .AddTransient<IFilenameEvaluator, FilenameEvaluator>()

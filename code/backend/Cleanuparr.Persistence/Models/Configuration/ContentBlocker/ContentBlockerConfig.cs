@@ -1,12 +1,20 @@
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
+namespace Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 
-[ComplexType]
-public sealed record ContentBlockerConfig
+public sealed record ContentBlockerConfig : IJobConfig
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; init; } = Guid.NewGuid();
+    
     public bool Enabled { get; init; }
     
+    public string CronExpression { get; init; } = "0/5 * * * * ?";
+    
+    public bool UseAdvancedScheduling { get; init; }
+
     public bool IgnorePrivate { get; init; }
     
     public bool DeletePrivate { get; init; }

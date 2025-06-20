@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Cleanuparr.Domain.Enums;
 
-namespace Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
+namespace Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 
 /// <summary>
 /// Settings for a blocklist

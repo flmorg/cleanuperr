@@ -1,0 +1,221 @@
+<!-- Toast notifications handled by central toast container -->
+
+<p-card styleClass="settings-card h-full">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+      <div class="header-title-container">
+        <h2 class="card-title m-0">Content Blocker Configuration</h2>
+        <span class="card-subtitle">Configure automatic content filtering and blocking</span>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-ban text-xl"></i>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="card-content">
+    <!-- Loading/Error State Component -->
+    <app-loading-error-state
+      *ngIf="contentBlockerLoading() || contentBlockerError()"
+      [loading]="contentBlockerLoading()"
+      [error]="contentBlockerError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+
+    <!-- Form Content - only shown when not loading and no error -->
+    <form *ngIf="!contentBlockerLoading() && !contentBlockerError()" [formGroup]="contentBlockerForm" class="p-fluid">
+      <!-- Main Settings -->
+      <div class="field-row">
+        <label class="field-label">Enable Content Blocker</label>
+        <div class="field-input">
+          <p-checkbox formControlName="enabled" [binary]="true" inputId="cbEnabled"></p-checkbox>
+          <small class="form-helper-text">When enabled, the content blocker will run according to the schedule</small>
+        </div>
+      </div>
+
+      <!-- Scheduling Mode Toggle -->
+      <div class="field-row">
+        <label class="field-label">Scheduling Mode</label>
+        <div class="field-input">
+          <p-selectButton
+            formControlName="useAdvancedScheduling"
+            [options]="scheduleModeOptions"
+            optionLabel="label"
+            optionValue="value"
+          >
+          </p-selectButton>
+          <small class="form-helper-text">Choose between basic scheduling or advanced cron expression</small>
+        </div>
+      </div>
+
+      <!-- Basic Schedule Controls - shown when useAdvancedScheduling is false -->
+      <div class="field-row" formGroupName="jobSchedule" *ngIf="!contentBlockerForm.get('useAdvancedScheduling')?.value">
+        <label class="field-label">Run Schedule</label>
+        <div>
+          <div class="field-input schedule-input flex flex-wrap">
+            <span class="schedule-label">Every</span>
+            <p-select 
+              formControlName="every"
+              [options]="getScheduleValueOptions()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select interval"
+            ></p-select>
+
+            <p-selectButton
+              formControlName="type"
+              [options]="scheduleUnitOptions"
+              optionLabel="label"
+              optionValue="value"
+            >
+            </p-selectButton>
+          </div>
+          <small *ngIf="hasNestedError('jobSchedule', 'every', 'required')" class="p-error">This field is required</small>
+          <small class="form-helper-text">How often the content blocker should run</small>
+        </div>
+      </div>
+
+      <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
+      <div class="field-row" *ngIf="contentBlockerForm.get('useAdvancedScheduling')?.value">
+        <label class="field-label">Cron Expression</label>
+        <div>
+          <div class="field-input">
+            <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
+          </div>
+          <small *ngIf="contentBlockerForm.get('cronExpression')?.hasError('required') && contentBlockerForm.get('cronExpression')?.touched" class="p-error">Cron expression is required</small>
+          <small class="form-helper-text">Enter a valid Quartz cron expression (e.g., "0 0/5 * ? * * *" runs every 5 minutes)</small>
+        </div>
+      </div>
+
+      <!-- Content Blocker Specific Settings -->
+      <div class="field-row">
+        <label class="field-label">Ignore Private</label>
+        <div class="field-input">
+          <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
+          <small class="form-helper-text">When enabled, private torrents will be skipped</small>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">Delete Private</label>
+        <div class="field-input">
+          <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
+          <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+        </div>
+      </div>
+
+      <!-- Sonarr Blocklist Settings -->
+      <div formGroupName="sonarr">
+        <div class="field-row">
+          <label class="field-label">Blocklist Path</label>
+          <div class="field-input">
+            <input pInputText formControlName="path" placeholder="Path to blocklist file or URL" />
+            <small class="form-helper-text">Path to the blocklist file or URL</small>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Blocklist Type</label>
+          <div class="field-input">
+            <p-select
+              formControlName="type"
+              [options]="[
+                { label: 'Blacklist', value: 'Blacklist' },
+                { label: 'Whitelist', value: 'Whitelist' }
+              ]"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+            ></p-select>
+            <small class="form-helper-text"
+              >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Radarr Blocklist Settings -->
+      <div formGroupName="radarr">
+        <div class="field-row">
+          <label class="field-label">Blocklist Path</label>
+          <div class="field-input">
+            <input pInputText formControlName="path" placeholder="Path to blocklist file or URL" />
+            <small class="form-helper-text">Path to the blocklist file or URL</small>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Blocklist Type</label>
+          <div class="field-input">
+            <p-select
+              formControlName="type"
+              [options]="[
+                { label: 'Blacklist', value: 'Blacklist' },
+                { label: 'Whitelist', value: 'Whitelist' }
+              ]"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+            ></p-select>
+            <small class="form-helper-text"
+              >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Lidarr Blocklist Settings -->
+      <div formGroupName="lidarr">
+        <div class="field-row">
+          <label class="field-label">Blocklist Path</label>
+          <div class="field-input">
+            <input pInputText formControlName="path" placeholder="Path to blocklist file or URL" />
+            <small class="form-helper-text">Path to the blocklist file or URL</small>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label class="field-label">Blocklist Type</label>
+          <div class="field-input">
+            <p-select
+              formControlName="type"
+              [options]="[
+                { label: 'Blacklist', value: 'Blacklist' },
+                { label: 'Whitelist', value: 'Whitelist' }
+              ]"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+            ></p-select>
+            <small class="form-helper-text"
+              >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button
+          pButton
+          type="button"
+          label="Save"
+          icon="pi pi-save"
+          class="p-button-primary"
+          [disabled]="(!contentBlockerForm.dirty || !hasActualChanges) || contentBlockerForm.invalid || contentBlockerSaving()"
+          [loading]="contentBlockerSaving()"
+          (click)="saveContentBlockerConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Reset"
+          icon="pi pi-refresh"
+          class="p-button-secondary p-button-outlined ml-2"
+          (click)="resetContentBlockerConfig()"
+        ></button>
+      </div>
+    </form>
+  </div>
+</p-card> 

@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using Cleanuparr.Domain.Entities;
+﻿using Cleanuparr.Domain.Entities;
 using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Extensions;
 using Cleanuparr.Infrastructure.Features.Context;
@@ -66,111 +64,14 @@ public partial class QBitService
             return result;
         }
 
-        (result.ShouldRemove, result.DeleteReason) = await EvaluateDownloadRemoval(download, result.IsPrivate, files);
+        (result.ShouldRemove, result.DeleteReason) = await EvaluateDownloadRemoval(download, result.IsPrivate);
 
         return result;
     }
     
-    private async Task<(bool ShouldRemove, DeleteReason Reason)> BlockUnwantedFilesAsync(
-        TorrentInfo torrent,
-        bool isPrivate,
-        IReadOnlyList<TorrentContent>? files
-    )
+    private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(TorrentInfo torrent, bool isPrivate)
     {
-        var queueCleanerConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig));
-        
-        if (!queueCleanerConfig.ContentBlocker.Enabled)
-        {
-            return (false, DeleteReason.None);
-        }
-
-        if (queueCleanerConfig.ContentBlocker.IgnorePrivate && isPrivate)
-        {
-            // ignore private trackers
-            _logger.LogDebug("skip unwanted files check | download is private | {name}", torrent.Name);
-            return (false, DeleteReason.None);
-        }
-
-        if (files is null)
-        {
-            _logger.LogDebug("failed to find files for {name}", torrent.Name);
-            return (false, DeleteReason.None);
-        }
-
-        List<int> unwantedFiles = [];
-        long totalFiles = 0;
-        long totalUnwantedFiles = 0;
-
-        InstanceType instanceType = (InstanceType)ContextProvider.Get<object>(nameof(InstanceType));
-        BlocklistType blocklistType = _blocklistProvider.GetBlocklistType(instanceType);
-        ConcurrentBag<string> patterns = _blocklistProvider.GetPatterns(instanceType);
-        ConcurrentBag<Regex> regexes = _blocklistProvider.GetRegexes(instanceType);
-
-        foreach (TorrentContent file in files)
-        {
-            if (!file.Index.HasValue)
-            {
-                continue;
-            }
-
-            totalFiles++;
-
-            if (file.Priority is TorrentContentPriority.Skip)
-            {
-                totalUnwantedFiles++;
-                continue;
-            }
-
-            if (_filenameEvaluator.IsValid(file.Name, blocklistType, patterns, regexes))
-            {
-                continue;
-            }
-
-            _logger.LogInformation("unwanted file found | {file}", file.Name);
-            unwantedFiles.Add(file.Index.Value);
-            totalUnwantedFiles++;
-        }
-
-        if (unwantedFiles.Count is 0)
-        {
-            return (false, DeleteReason.None);
-        }
-
-        if (totalUnwantedFiles == totalFiles)
-        {
-            // Skip marking files as unwanted. The download will be removed completely.
-            return (true, DeleteReason.AllFilesBlocked);
-        }
-        
-        _logger.LogTrace("marking {count} unwanted files as skipped for {name}", unwantedFiles.Count, torrent.Name);
-
-        foreach (int fileIndex in unwantedFiles)
-        {
-            await _dryRunInterceptor.InterceptAsync(MarkFileAsSkipped, torrent.Hash, fileIndex);
-        }
-
-        return (false, DeleteReason.None);
-    }
-
-    protected virtual async Task MarkFileAsSkipped(string hash, int fileIndex)
-    {
-        await _client.SetFilePriorityAsync(hash, fileIndex, TorrentContentPriority.Skip);
-    }
-
-    private async Task<(bool, DeleteReason)> EvaluateDownloadRemoval(
-        TorrentInfo torrent,
-        bool isPrivate,
-        IReadOnlyList<TorrentContent>? files
-    )
-    {
-        (bool ShouldRemove, DeleteReason Reason) result = await BlockUnwantedFilesAsync(torrent, isPrivate, files);
-
-        if (result.ShouldRemove)
-        {
-            return result;
-        }
-        
-        result = await CheckIfSlow(torrent, isPrivate);
+        (bool ShouldRemove, DeleteReason Reason) result = await CheckIfSlow(torrent, isPrivate);
 
         if (result.ShouldRemove)
         {
