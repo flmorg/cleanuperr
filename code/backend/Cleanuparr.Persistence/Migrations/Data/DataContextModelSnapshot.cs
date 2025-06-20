@@ -312,6 +312,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                         .HasColumnType("TEXT")
                         .HasColumnName("id");
 
+                    b.Property<bool>("DisplaySupportBanner")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("display_support_banner");
+
                     b.Property<bool>("DryRun")
                         .HasColumnType("INTEGER")
                         .HasColumnName("dry_run");

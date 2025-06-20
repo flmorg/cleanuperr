@@ -3,6 +3,11 @@
     <h1>Dashboard</h1>
   </div>
   
+  <!-- Support Section -->
+  <div class="mb-4" *ngIf="showSupportSection()">
+    <app-support-section></app-support-section>
+  </div>
+  
   <!-- Real-time Cards -->
   <div class="grid">
     <!-- Recent Logs Card -->

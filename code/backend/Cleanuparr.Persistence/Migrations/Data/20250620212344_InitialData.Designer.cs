@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cleanuparr.Persistence.Migrations.Data
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250620105749_InitialData")]
+    [Migration("20250620212344_InitialData")]
     partial class InitialData
     {
         /// <inheritdoc />
@@ -314,6 +314,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
                         .HasColumnName("id");
+
+                    b.Property<bool>("DisplaySupportBanner")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("display_support_banner");
 
                     b.Property<bool>("DryRun")
                         .HasColumnType("INTEGER")

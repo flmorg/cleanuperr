@@ -12,6 +12,8 @@ public sealed record GeneralConfig : IConfig
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; } = Guid.NewGuid();
     
+    public bool DisplaySupportBanner { get; set; } = true;
+    
     public bool DryRun { get; set; }
     
     public ushort HttpMaxRetries { get; set; }

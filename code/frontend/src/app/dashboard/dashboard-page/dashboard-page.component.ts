@@ -12,8 +12,13 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 // Services & Models
 import { AppHubService } from '../../core/services/app-hub.service';
+import { ConfigurationService } from '../../core/services/configuration.service';
 import { LogEntry } from '../../core/models/signalr.models';
 import { AppEvent } from '../../core/models/event.models';
+import { GeneralConfig } from '../../shared/models/general-config.model';
+
+// Components
+import { SupportSectionComponent } from '../../shared/components/support-section/support-section.component';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -27,25 +32,28 @@ import { AppEvent } from '../../core/models/event.models';
     ButtonModule,
     TagModule,
     TooltipModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+    SupportSectionComponent
   ],
   templateUrl: './dashboard-page.component.html',
   styleUrl: './dashboard-page.component.scss'
 })
 export class DashboardPageComponent implements OnInit, OnDestroy {
   private appHubService = inject(AppHubService);
+  private configurationService = inject(ConfigurationService);
   private destroy$ = new Subject<void>();
 
   // Signals for reactive state
   recentLogs = signal<LogEntry[]>([]);
   recentEvents = signal<AppEvent[]>([]);
   connected = signal<boolean>(false);
+  generalConfig = signal<GeneralConfig | null>(null);
 
   // Computed values for display
   displayLogs = computed(() => {
     return this.recentLogs()
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) // Sort chronologically (oldest first)
-      .slice(-5); // Take the last 5 (most recent)
+      .slice(-5); // Take the last 5 (most recent);
   });
   
   displayEvents = computed(() => {
@@ -54,13 +62,33 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
       .slice(-5); // Take the last 5 (most recent)
   });
 
+  // Computed value for showing support section
+  showSupportSection = computed(() => {
+    return this.generalConfig()?.displaySupportBanner ?? false;
+  });
+
   ngOnInit() {
+    this.loadConfigurations();
     this.initializeHub();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private loadConfigurations(): void {
+    // Load general configuration
+    this.configurationService.getGeneralConfig()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.generalConfig.set(config);
+        },
+        error: (error) => {
+          console.error('Failed to load general configuration:', error);
+        }
+      });
   }
 
   private initializeHub(): void {
@@ -89,8 +117,6 @@ export class DashboardPageComponent implements OnInit, OnDestroy {
         this.connected.set(status);
       });
   }
-
-
 
   // Log-related methods
   getLogIcon(level: string): string {

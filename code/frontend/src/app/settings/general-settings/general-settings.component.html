@@ -25,6 +25,15 @@
 
     <!-- Settings Form -->
     <form *ngIf="!generalLoading() && !generalError()" [formGroup]="generalForm" class="p-fluid">
+      <!-- Display Support Banner -->
+      <div class="field-row">
+        <label class="field-label">Display Support Banner</label>
+        <div class="field-input">
+          <p-checkbox formControlName="displaySupportBanner" [binary]="true" inputId="displaySupportBanner"></p-checkbox>
+          <small class="form-helper-text">Show the support section on the dashboard with links to GitHub and sponsors</small>
+        </div>
+      </div>
+
       <!-- Dry Run -->
       <div class="field-row">
         <label class="field-label">Dry Run</label>

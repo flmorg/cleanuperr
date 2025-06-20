@@ -8,6 +8,7 @@ import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
 import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../../shared/models/download-client-config.model";
 import { ArrInstance, CreateArrInstanceDto } from "../../shared/models/arr-config.model";
+import { GeneralConfig } from "../../shared/models/general-config.model";
 import { BasePathService } from "./base-path.service";
 
 @Injectable({
@@ -17,6 +18,29 @@ export class ConfigurationService {
   private readonly basePathService = inject(BasePathService);
   private readonly http = inject(HttpClient);
 
+  /**
+   * Get general configuration
+   */
+  getGeneralConfig(): Observable<GeneralConfig> {
+    return this.http.get<GeneralConfig>(this.basePathService.buildApiUrl('/configuration/general')).pipe(
+      catchError((error) => {
+        console.error("Error fetching general config:", error);
+        return throwError(() => new Error("Failed to load general configuration"));
+      })
+    );
+  }
+
+  /**
+   * Update general configuration
+   */
+  updateGeneralConfig(config: GeneralConfig): Observable<any> {
+    return this.http.put<any>(this.basePathService.buildApiUrl('/configuration/general'), config).pipe(
+      catchError((error) => {
+        console.error("Error updating general config:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to update general configuration"));
+      })
+    );
+  }
 
   /**
    * Get queue cleaner configuration
