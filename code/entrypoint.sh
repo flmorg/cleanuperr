@@ -1,35 +1,33 @@
 #!/bin/bash
 set -e
 
-# Check if user and group exist, fall back to root if not
-EFFECTIVE_PUID="$PUID"
-EFFECTIVE_PGID="$PGID"
-
-if ! getent passwd "$PUID" > /dev/null 2>&1; then
-    echo "Warning: User ID $PUID not found, falling back to root"
-    EFFECTIVE_PUID=0
+# Create group if it doesn't exist
+if ! getent group "$PGID" > /dev/null 2>&1; then
+    echo "Creating group with GID $PGID"
+    groupadd -g "$PGID" appgroup
 fi
 
-if ! getent group "$PGID" > /dev/null 2>&1; then
-    echo "Warning: Group ID $PGID not found, falling back to root"
-    EFFECTIVE_PGID=0
+# Create user if it doesn't exist
+if ! getent passwd "$PUID" > /dev/null 2>&1; then
+    echo "Creating user with UID $PUID"
+    useradd -u "$PUID" -g "$PGID" -s /bin/bash -M appuser
 fi
 
 # Set umask
 umask "$UMASK"
 
 # Change ownership of app directory if not running as root
-if [ "$EFFECTIVE_PUID" != "0" ] || [ "$EFFECTIVE_PGID" != "0" ]; then
+if [ "$PUID" != "0" ] || [ "$PGID" != "0" ]; then
     mkdir -p /config
-    chown -R "$EFFECTIVE_PUID:$EFFECTIVE_PGID" /app
-    chown -R "$EFFECTIVE_PUID:$EFFECTIVE_PGID" /config
+    chown -R "$PUID:$PGID" /app
+    chown -R "$PUID:$PGID" /config
 fi
 
 # Execute the main command as the specified user
-if [ "$EFFECTIVE_PUID" = "0" ] && [ "$EFFECTIVE_PGID" = "0" ]; then
+if [ "$PUID" = "0" ] && [ "$PGID" = "0" ]; then
     # Running as root, no need for gosu
     exec "$@"
 else
     # Use gosu to drop privileges
-    exec gosu "$EFFECTIVE_PUID:$EFFECTIVE_PGID" "$@"
+    exec gosu "$PUID:$PGID" "$@"
 fi
