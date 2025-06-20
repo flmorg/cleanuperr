@@ -56,7 +56,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
 
   // Download client type options
   clientTypeOptions = [
-    { label: "QBittorrent", value: DownloadClientType.QBittorrent },
+    { label: "qBittorrent", value: DownloadClientType.QBittorrent },
     { label: "Deluge", value: DownloadClientType.Deluge },
     { label: "Transmission", value: DownloadClientType.Transmission },
     { label: "Usenet", value: DownloadClientType.Usenet }
@@ -329,7 +329,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   private mapClientTypeForBackend(frontendType: DownloadClientType): { typeName: string, type: string } {
     switch (frontendType) {
       case DownloadClientType.QBittorrent:
-        return { typeName: 'QBittorrent', type: 'Torrent' };
+        return { typeName: 'qBittorrent', type: 'Torrent' };
       case DownloadClientType.Deluge:
         return { typeName: 'Deluge', type: 'Torrent' };
       case DownloadClientType.Transmission:
