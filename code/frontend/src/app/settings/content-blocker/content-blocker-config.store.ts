@@ -95,7 +95,7 @@ export class ContentBlockerConfigStore extends signalStore(
      */
     generateCronExpression(schedule: JobSchedule): string {
       if (!schedule) {
-        return "0 0/5 * * * ?"; // Default: every 5 minutes
+        return "0/5 * * * * ?"; // Default: every 5 seconds
       }
       
       // Cron format: Seconds Minutes Hours Day-of-month Month Day-of-week Year
@@ -110,7 +110,7 @@ export class ContentBlockerConfigStore extends signalStore(
           return `0 0 0/${schedule.every} ? * * *`; // Every n hours
         
         default:
-          return "0 0/5 * * * ?"; // Default: every 5 minutes
+          return "0/5 * * * * ?"; // Default: every 5 seconds
       }
     }
   })),

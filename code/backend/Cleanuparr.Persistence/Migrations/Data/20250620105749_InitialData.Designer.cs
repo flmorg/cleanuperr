@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cleanuparr.Persistence.Migrations.Data
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250620082427_InitialData")]
+    [Migration("20250620105749_InitialData")]
     partial class InitialData
     {
         /// <inheritdoc />
@@ -122,6 +122,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                                 .IsRequired()
                                 .HasColumnType("TEXT")
                                 .HasColumnName("lidarr_blocklist_type");
+
+                            b1.Property<bool>("Enabled")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("lidarr_enabled");
                         });
 
                     b.ComplexProperty<Dictionary<string, object>>("Radarr", "Cleanuparr.Persistence.Models.Configuration.ContentBlocker.ContentBlockerConfig.Radarr#BlocklistSettings", b1 =>
@@ -136,6 +140,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                                 .IsRequired()
                                 .HasColumnType("TEXT")
                                 .HasColumnName("radarr_blocklist_type");
+
+                            b1.Property<bool>("Enabled")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("radarr_enabled");
                         });
 
                     b.ComplexProperty<Dictionary<string, object>>("Sonarr", "Cleanuparr.Persistence.Models.Configuration.ContentBlocker.ContentBlockerConfig.Sonarr#BlocklistSettings", b1 =>
@@ -150,6 +158,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                                 .IsRequired()
                                 .HasColumnType("TEXT")
                                 .HasColumnName("sonarr_blocklist_type");
+
+                            b1.Property<bool>("Enabled")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("sonarr_enabled");
                         });
 
                     b.HasKey("Id")

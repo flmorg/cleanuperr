@@ -29,7 +29,7 @@ public sealed class ArrQueueIterator
             {
                 totalRecords = queueResponse.TotalRecords;
                 
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "{items} items found in queue | {url}",
                     queueResponse.TotalRecords, arrInstance.Url);
             }

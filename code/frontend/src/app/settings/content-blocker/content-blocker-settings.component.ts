@@ -120,16 +120,19 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
 
       // Blocklist settings for each Arr
       sonarr: this.formBuilder.group({
-        path: [{ value: "", disabled: true }],
-        type: [{ value: BlocklistType.Blacklist, disabled: true }],
+        enabled: [{ value: false, disabled: true }],
+        blocklistPath: [{ value: "", disabled: true }],
+        blocklistType: [{ value: BlocklistType.Blacklist, disabled: true }],
       }),
       radarr: this.formBuilder.group({
-        path: [{ value: "", disabled: true }],
-        type: [{ value: BlocklistType.Blacklist, disabled: true }],
+        enabled: [{ value: false, disabled: true }],
+        blocklistPath: [{ value: "", disabled: true }],
+        blocklistType: [{ value: BlocklistType.Blacklist, disabled: true }],
       }),
       lidarr: this.formBuilder.group({
-        path: [{ value: "", disabled: true }],
-        type: [{ value: BlocklistType.Blacklist, disabled: true }],
+        enabled: [{ value: false, disabled: true }],
+        blocklistPath: [{ value: "", disabled: true }],
+        blocklistType: [{ value: BlocklistType.Blacklist, disabled: true }],
       }),
     });
 
@@ -242,6 +245,18 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
         });
     }
       
+    // Listen for changes to blocklist enabled states
+    ['sonarr', 'radarr', 'lidarr'].forEach(arrType => {
+      const enabledControl = this.contentBlockerForm.get(`${arrType}.enabled`);
+      
+      if (enabledControl) {
+        enabledControl.valueChanges.pipe(takeUntil(this.destroy$))
+          .subscribe((enabled: boolean) => {
+            this.updateBlocklistDependentControls(arrType, enabled);
+          });
+      }
+    });
+    
     // Listen to all form changes to check for actual differences from original values
     this.contentBlockerForm.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -295,6 +310,35 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
   private updateFormControlDisabledStates(config: ContentBlockerConfig): void {
     // Update main form controls based on the 'enabled' state
     this.updateMainControlsState(config.enabled);
+
+    // Update blocklist dependent controls if the main feature is enabled
+    if (config.enabled) {
+      this.updateBlocklistDependentControls('sonarr', config.sonarr?.enabled || false);
+      this.updateBlocklistDependentControls('radarr', config.radarr?.enabled || false);
+      this.updateBlocklistDependentControls('lidarr', config.lidarr?.enabled || false);
+    }
+  }
+
+  /**
+   * Update the state of blocklist dependent controls based on the 'enabled' control value
+   */
+  private updateBlocklistDependentControls(arrType: string, enabled: boolean): void {
+    const pathControl = this.contentBlockerForm.get(`${arrType}.blocklistPath`);
+    const typeControl = this.contentBlockerForm.get(`${arrType}.blocklistType`);
+    const options = { onlySelf: true };
+
+    if (enabled) {
+      // Enable dependent controls and set validation
+      pathControl?.enable(options);
+      typeControl?.enable(options);
+      pathControl?.setValidators([Validators.required]);
+    } else {
+      // Disable dependent controls and clear validation
+      pathControl?.disable(options);
+      typeControl?.disable(options);
+      pathControl?.clearValidators();
+    }
+    pathControl?.updateValueAndValidity();
   }
 
   /**
@@ -324,12 +368,18 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       this.contentBlockerForm.get("deletePrivate")?.enable({ onlySelf: true });
 
       // Enable blocklist settings for each Arr
-      this.contentBlockerForm.get("sonarr.path")?.enable({ onlySelf: true });
-      this.contentBlockerForm.get("sonarr.type")?.enable({ onlySelf: true });
-      this.contentBlockerForm.get("radarr.path")?.enable({ onlySelf: true });
-      this.contentBlockerForm.get("radarr.type")?.enable({ onlySelf: true });
-      this.contentBlockerForm.get("lidarr.path")?.enable({ onlySelf: true });
-      this.contentBlockerForm.get("lidarr.type")?.enable({ onlySelf: true });
+      this.contentBlockerForm.get("sonarr.enabled")?.enable({ onlySelf: true });
+      this.contentBlockerForm.get("radarr.enabled")?.enable({ onlySelf: true });
+      this.contentBlockerForm.get("lidarr.enabled")?.enable({ onlySelf: true });
+      
+      // Update dependent controls based on current enabled states
+      const sonarrEnabled = this.contentBlockerForm.get("sonarr.enabled")?.value || false;
+      const radarrEnabled = this.contentBlockerForm.get("radarr.enabled")?.value || false;
+      const lidarrEnabled = this.contentBlockerForm.get("lidarr.enabled")?.value || false;
+      
+      this.updateBlocklistDependentControls('sonarr', sonarrEnabled);
+      this.updateBlocklistDependentControls('radarr', radarrEnabled);
+      this.updateBlocklistDependentControls('lidarr', lidarrEnabled);
     } else {
       // Disable all scheduling controls
       cronExpressionControl?.disable();
@@ -340,13 +390,16 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       this.contentBlockerForm.get("ignorePrivate")?.disable({ onlySelf: true });
       this.contentBlockerForm.get("deletePrivate")?.disable({ onlySelf: true });
 
-      // Disable blocklist settings for each Arr
-      this.contentBlockerForm.get("sonarr.path")?.disable({ onlySelf: true });
-      this.contentBlockerForm.get("sonarr.type")?.disable({ onlySelf: true });
-      this.contentBlockerForm.get("radarr.path")?.disable({ onlySelf: true });
-      this.contentBlockerForm.get("radarr.type")?.disable({ onlySelf: true });
-      this.contentBlockerForm.get("lidarr.path")?.disable({ onlySelf: true });
-      this.contentBlockerForm.get("lidarr.type")?.disable({ onlySelf: true });
+      // Disable all blocklist settings for each Arr
+      this.contentBlockerForm.get("sonarr.enabled")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("sonarr.blocklistPath")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("sonarr.blocklistType")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("radarr.enabled")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("radarr.blocklistPath")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("radarr.blocklistType")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("lidarr.enabled")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("lidarr.blocklistPath")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("lidarr.blocklistType")?.disable({ onlySelf: true });
 
       // Save current active accordion state before clearing it
       this.activeAccordionIndices = [];
@@ -376,16 +429,19 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
         ignorePrivate: formValue.ignorePrivate || false,
         deletePrivate: formValue.deletePrivate || false,
         sonarr: formValue.sonarr || {
-          path: "",
-          type: BlocklistType.Blacklist,
+          enabled: false,
+          blocklistPath: "",
+          blocklistType: BlocklistType.Blacklist,
         },
         radarr: formValue.radarr || {
-          path: "",
-          type: BlocklistType.Blacklist,
+          enabled: false,
+          blocklistPath: "",
+          blocklistType: BlocklistType.Blacklist,
         },
         lidarr: formValue.lidarr || {
-          path: "",
-          type: BlocklistType.Blacklist,
+          enabled: false,
+          blocklistPath: "",
+          blocklistType: BlocklistType.Blacklist,
         },
       };
       
@@ -433,29 +489,35 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
     this.contentBlockerForm.reset({
       enabled: false,
       useAdvancedScheduling: false,
-      cronExpression: "0 0/5 * * * ?",
+      cronExpression: "0/5 * * * * ?",
       jobSchedule: {
         every: 5,
-        type: ScheduleUnit.Minutes,
+        type: ScheduleUnit.Seconds,
       },
       ignorePrivate: false,
       deletePrivate: false,
       sonarr: {
-        path: "",
-        type: BlocklistType.Blacklist,
+        enabled: false,
+        blocklistPath: "",
+        blocklistType: BlocklistType.Blacklist,
       },
       radarr: {
-        path: "",
-        type: BlocklistType.Blacklist,
+        enabled: false,
+        blocklistPath: "",
+        blocklistType: BlocklistType.Blacklist,
       },
       lidarr: {
-        path: "",
-        type: BlocklistType.Blacklist,
+        enabled: false,
+        blocklistPath: "",
+        blocklistType: BlocklistType.Blacklist,
       },
     });
 
     // Manually update control states after reset
     this.updateMainControlsState(false);
+    this.updateBlocklistDependentControls('sonarr', false);
+    this.updateBlocklistDependentControls('radarr', false);
+    this.updateBlocklistDependentControls('lidarr', false);
     
     // Mark form as dirty so the save button is enabled after reset
     this.contentBlockerForm.markAsDirty();

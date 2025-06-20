@@ -24,8 +24,9 @@ export enum BlocklistType {
 }
 
 export interface BlocklistSettings {
-  path: string;
-  type: BlocklistType;
+  enabled: boolean;
+  blocklistPath: string;
+  blocklistType: BlocklistType;
 }
 
 export interface ContentBlockerConfig {

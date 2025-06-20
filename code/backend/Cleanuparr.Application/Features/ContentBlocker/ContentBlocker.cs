@@ -49,6 +49,14 @@ public sealed class ContentBlocker : GenericHandler
             _logger.LogWarning("No download clients configured");
             return;
         }
+        
+        var config = ContextProvider.Get<ContentBlockerConfig>();
+        
+        if (!config.Sonarr.Enabled && !config.Radarr.Enabled && !config.Lidarr.Enabled)
+        {
+            _logger.LogWarning("No blocklists are enabled");
+            return;
+        }
 
         await _blocklistProvider.LoadBlocklistsAsync();
 
@@ -56,9 +64,20 @@ public sealed class ContentBlocker : GenericHandler
         var radarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr));
         var lidarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr));
 
-        await ProcessArrConfigAsync(sonarrConfig, InstanceType.Sonarr);
-        await ProcessArrConfigAsync(radarrConfig, InstanceType.Radarr);
-        await ProcessArrConfigAsync(lidarrConfig, InstanceType.Lidarr);
+        if (config.Sonarr.Enabled)
+        {
+            await ProcessArrConfigAsync(sonarrConfig, InstanceType.Sonarr);
+        }
+        
+        if (config.Radarr.Enabled)
+        {
+            await ProcessArrConfigAsync(radarrConfig, InstanceType.Radarr);
+        }
+        
+        if (config.Lidarr.Enabled)
+        {
+            await ProcessArrConfigAsync(lidarrConfig, InstanceType.Lidarr);
+        }
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig)

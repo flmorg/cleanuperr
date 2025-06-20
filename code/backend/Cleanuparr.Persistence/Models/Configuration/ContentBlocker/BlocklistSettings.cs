@@ -9,6 +9,8 @@ namespace Cleanuparr.Persistence.Models.Configuration.ContentBlocker;
 [ComplexType]
 public sealed record BlocklistSettings
 {
+    public bool Enabled { get; init; }
+    
     public BlocklistType BlocklistType { get; init; }
     
     public string? BlocklistPath { get; init; }
