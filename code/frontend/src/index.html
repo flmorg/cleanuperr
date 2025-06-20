@@ -5,9 +5,20 @@
   <title>UI</title>
   <script>
     (function() {
-      // Extract base path from URL (everything before the Angular app)
-      const pathSegments = window.location.pathname.split('/').filter(segment => segment);
-      const basePath = pathSegments.length > 0 ? '/' + pathSegments[0] : '/';
+      // Check if we're running with a custom base path
+      // This should be injected by the server when serving the index.html
+      // For now, we'll detect if we're at root level or have a configured base path
+      
+      let basePath = '/';
+      
+      // If the server has injected a base path, use it
+      if (window['_server_base_path']) {
+        basePath = window['_server_base_path'];
+      } else {
+        // For development or when no base path is configured, always use root
+        // Don't try to extract base path from current URL as that breaks SPA routing
+        basePath = '/';
+      }
       
       // Store for Angular to use
       window['_app_base'] = basePath;

@@ -14,8 +14,8 @@ export class BasePathService {
       return `http://localhost:11011`;
     }
 
-    // Fallback to window value if environment hasn't been updated yet
-    return (window as any)['_app_base'] || '/api';
+    // Use the server-injected base path or fallback to root
+    return (window as any)['_server_base_path'] || '/';
   }
 
   /**
@@ -34,6 +34,11 @@ export class BasePathService {
   buildApiUrl(apiPath: string): string {
     const basePath = this.getBasePath();
     const cleanApiPath = apiPath.startsWith('/') ? apiPath : '/' + apiPath;
+    
+    // In development mode, return full URL directly
+    if (isDevMode()) {
+      return basePath + '/api' + cleanApiPath;
+    }
     
     return basePath === '/' ? '/api' + cleanApiPath : basePath + '/api' + cleanApiPath;
   }

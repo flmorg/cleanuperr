@@ -5,6 +5,7 @@ using Cleanuparr.Infrastructure.Hubs;
 using Cleanuparr.Infrastructure.Logging;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 namespace Cleanuparr.Api.DependencyInjection;
 
@@ -100,8 +101,44 @@ public static class ApiDI
         app.UseAuthorization();
         app.MapControllers();
         
-        // SPA fallback - must be last
-        app.MapFallbackToFile("index.html");
+        // Custom SPA fallback to inject base path
+        app.MapFallback(async context =>
+        {
+            var basePath = app.Configuration.GetValue<string>("BASE_PATH") ?? "/";
+            
+            // Normalize the base path (remove trailing slash if not root)
+            if (basePath != "/" && basePath.EndsWith("/"))
+            {
+                basePath = basePath.TrimEnd('/');
+            }
+            
+            var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+            var indexPath = Path.Combine(webRoot, "index.html");
+            
+            if (!File.Exists(indexPath))
+            {
+                context.Response.StatusCode = 404;
+                await context.Response.WriteAsync("index.html not found");
+                return;
+            }
+            
+            var indexContent = await File.ReadAllTextAsync(indexPath);
+            
+            // Inject the base path into the HTML
+            var scriptInjection = $@"
+    <script>
+      window['_server_base_path'] = '{basePath}';
+    </script>";
+            
+            // Insert the script right before the existing script tag
+            indexContent = indexContent.Replace(
+                "  <script>",
+                scriptInjection + "\n  <script>"
+            );
+            
+            context.Response.ContentType = "text/html";
+            await context.Response.WriteAsync(indexContent, Encoding.UTF8);
+        });
         
         // Map SignalR hubs
         app.MapHub<HealthStatusHub>("/api/hubs/health");
