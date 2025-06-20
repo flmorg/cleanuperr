@@ -97,7 +97,6 @@ public static class ApiDI
             });
         }
 
-        app.UseHttpsRedirection();
         app.UseAuthorization();
         app.MapControllers();
         
