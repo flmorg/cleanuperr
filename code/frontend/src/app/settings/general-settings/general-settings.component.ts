@@ -1,8 +1,8 @@
-import { Component, EventEmitter, OnDestroy, Output, effect, inject, signal } from "@angular/core";
+import { Component, EventEmitter, OnDestroy, Output, effect, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
-import { ConfigurationService } from "../../core/services/configuration.service";
+import { GeneralConfigStore } from "./general-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
 import { GeneralConfig } from "../../shared/models/general-config.model";
 import { LogEventLevel } from "../../shared/models/log-event-level.enum";
@@ -38,6 +38,7 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     AutoCompleteModule,
     LoadingErrorStateComponent,
   ],
+  providers: [GeneralConfigStore],
   templateUrl: "./general-settings.component.html",
   styleUrls: ["./general-settings.component.scss"],
 })
@@ -53,12 +54,6 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   
   // Track whether the form has actual changes compared to original values
   hasActualChanges = false;
-  
-  // Signals for reactive state
-  generalConfig = signal<GeneralConfig | null>(null);
-  generalLoading = signal<boolean>(false);
-  generalSaving = signal<boolean>(false);
-  generalError = signal<string | null>(null);
   
   // Log level options for dropdown
   logLevelOptions = [
@@ -80,7 +75,13 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   // Inject the necessary services
   private formBuilder = inject(FormBuilder);
   private notificationService = inject(NotificationService);
-  private configurationService = inject(ConfigurationService);
+  private generalConfigStore = inject(GeneralConfigStore);
+
+  // Signals from the store
+  readonly generalConfig = this.generalConfigStore.config;
+  readonly generalLoading = this.generalConfigStore.loading;
+  readonly generalSaving = this.generalConfigStore.saving;
+  readonly generalError = this.generalConfigStore.error;
 
   // Subject for unsubscribing from observables when component is destroyed
   private destroy$ = new Subject<void>();
@@ -106,56 +107,52 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
       ignoredDownloads: [[]],
     });
 
-    // Load initial configuration
-    this.loadGeneralConfig();
-
-    // Setup effect to react to config changes
+    // Effect to handle configuration changes
     effect(() => {
       const config = this.generalConfig();
       if (config) {
-        this.generalForm.patchValue(config);
+        // Reset form with the config values
+        this.generalForm.patchValue({
+          displaySupportBanner: config.displaySupportBanner,
+          dryRun: config.dryRun,
+          httpMaxRetries: config.httpMaxRetries,
+          httpTimeout: config.httpTimeout,
+          httpCertificateValidation: config.httpCertificateValidation,
+          searchEnabled: config.searchEnabled,
+          searchDelay: config.searchDelay,
+          logLevel: config.logLevel,
+          ignoredDownloads: config.ignoredDownloads || [],
+        });
+
+        // Store original values for dirty checking
         this.storeOriginalValues();
+
+        // Mark form as pristine since we've just loaded the data
         this.generalForm.markAsPristine();
-        this.hasActualChanges = false;
       }
     });
 
-    // Track form changes for dirty state
-    this.generalForm.valueChanges
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.hasActualChanges = this.formValuesChanged();
-      });
-
-    // Setup effect to react to error changes
+    // Effect to handle errors
     effect(() => {
       const errorMessage = this.generalError();
       if (errorMessage) {
+        // Only emit the error for parent components
         this.error.emit(errorMessage);
       }
     });
+
+    // Set up listeners for form value changes
+    this.setupFormValueChangeListeners();
   }
 
   /**
-   * Load general configuration from the API
+   * Set up listeners for form control value changes
    */
-  private loadGeneralConfig(): void {
-    this.generalLoading.set(true);
-    this.generalError.set(null);
-
-    this.configurationService.getGeneralConfig()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (config) => {
-          this.generalConfig.set(config);
-          this.generalError.set(null);
-          this.generalLoading.set(false);
-        },
-        error: (error) => {
-          console.error('Error loading general configuration:', error);
-          this.generalError.set(error.message || 'Failed to load general configuration');
-          this.generalLoading.set(false);
-        }
+  private setupFormValueChangeListeners(): void {
+    // Listen to all form changes to check for actual differences from original values
+    this.generalForm.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.hasActualChanges = this.formValuesChanged();
       });
   }
 
@@ -171,7 +168,10 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
    * Check if the current form values are different from the original values
    */
   private formValuesChanged(): boolean {
-    return !this.isEqual(this.generalForm.value, this.originalFormValues);
+    if (!this.originalFormValues) return false;
+    
+    const currentValues = this.generalForm.getRawValue();
+    return !this.isEqual(currentValues, this.originalFormValues);
   }
 
   /**
@@ -179,10 +179,9 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
    */
   private isEqual(obj1: any, obj2: any): boolean {
     if (obj1 === obj2) return true;
-    if (obj1 === null || obj2 === null) return false;
-    if (obj1 === undefined || obj2 === undefined) return false;
     
-    if (typeof obj1 !== 'object' && typeof obj2 !== 'object') {
+    if (typeof obj1 !== 'object' || obj1 === null ||
+        typeof obj2 !== 'object' || obj2 === null) {
       return obj1 === obj2;
     }
     
@@ -200,6 +199,8 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
     if (keys1.length !== keys2.length) return false;
     
     for (const key of keys1) {
+      if (!keys2.includes(key)) return false;
+      
       if (!this.isEqual(obj1[key], obj2[key])) return false;
     }
     
@@ -210,67 +211,64 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
    * Store original form values for dirty checking
    */
   private storeOriginalValues(): void {
-    this.originalFormValues = JSON.parse(JSON.stringify(this.generalForm.value));
+    // Create a deep copy of the form values to ensure proper comparison
+    this.originalFormValues = JSON.parse(JSON.stringify(this.generalForm.getRawValue()));
+    this.hasActualChanges = false;
   }
 
   /**
    * Save the general configuration
    */
   saveGeneralConfig(): void {
-    if (this.generalForm.invalid) {
-      this.markFormGroupTouched(this.generalForm);
-      this.notificationService.showValidationError();
-      return;
-    }
+    // Mark all form controls as touched to trigger validation
+    this.markFormGroupTouched(this.generalForm);
 
-    if (!this.hasActualChanges) {
-      this.notificationService.showSuccess('No changes detected');
-      return;
-    }
+    if (this.generalForm.valid) {
+      const formValues = this.generalForm.getRawValue();
 
-    const formValues = this.generalForm.value;
+      const config: GeneralConfig = {
+        displaySupportBanner: formValues.displaySupportBanner,
+        dryRun: formValues.dryRun,
+        httpMaxRetries: formValues.httpMaxRetries,
+        httpTimeout: formValues.httpTimeout,
+        httpCertificateValidation: formValues.httpCertificateValidation,
+        searchEnabled: formValues.searchEnabled,
+        searchDelay: formValues.searchDelay,
+        logLevel: formValues.logLevel,
+        ignoredDownloads: formValues.ignoredDownloads || [],
+      };
 
-    const config: GeneralConfig = {
-      displaySupportBanner: formValues.displaySupportBanner,
-      dryRun: formValues.dryRun,
-      httpMaxRetries: formValues.httpMaxRetries,
-      httpTimeout: formValues.httpTimeout,
-      httpCertificateValidation: formValues.httpCertificateValidation,
-      searchEnabled: formValues.searchEnabled,
-      searchDelay: formValues.searchDelay,
-      logLevel: formValues.logLevel,
-      ignoredDownloads: formValues.ignoredDownloads || [],
-    };
-
-    // Set saving state
-    this.generalSaving.set(true);
-    this.generalError.set(null);
-
-    // Save the configuration
-    this.configurationService.updateGeneralConfig(config)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          // Update the stored config
-          this.generalConfig.set(config);
-          this.generalError.set(null);
-          this.generalSaving.set(false);
-          
+      // Save the configuration
+      this.generalConfigStore.saveConfig(config);
+      
+      // Setup a one-time check to mark form as pristine after successful save
+      const checkSaveCompletion = () => {
+        const saving = this.generalSaving();
+        const error = this.generalError();
+        
+        if (!saving && !error) {
           // Mark form as pristine after successful save
           this.generalForm.markAsPristine();
-          this.hasActualChanges = false;
+          // Update original values reference
           this.storeOriginalValues();
-          
-          // Emit saved event and show success message
+          // Emit saved event 
           this.saved.emit();
-          this.notificationService.showSuccess('General configuration saved successfully!');
-        },
-        error: (error) => {
-          console.error('Error saving general configuration:', error);
-          this.generalError.set(error.message || 'Failed to save general configuration');
-          this.generalSaving.set(false);
+          // Display success message
+          this.notificationService.showSuccess('General configuration saved successfully.');
+        } else if (!saving && error) {
+          // If there's an error, we can stop checking
+          // No need to show error toast here, it's handled by the LoadingErrorStateComponent
+        } else {
+          // If still saving, check again in a moment
+          setTimeout(checkSaveCompletion, 100);
         }
-      });
+      };
+      
+      // Start checking for save completion
+      checkSaveCompletion();
+    } else {
+      this.notificationService.showValidationError();
+    }
   }
 
   /**
@@ -289,18 +287,8 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
       ignoredDownloads: [],
     });
     
-    // Check if this reset actually changes anything compared to the original state
-    const hasChangesAfterReset = this.formValuesChanged();
-    
-    if (hasChangesAfterReset) {
-      // Only mark as dirty if the reset actually changes something
-      this.generalForm.markAsDirty();
-      this.hasActualChanges = true;
-    } else {
-      // If reset brings us back to original state, mark as pristine
-      this.generalForm.markAsPristine();
-      this.hasActualChanges = false;
-    }
+    // Mark form as dirty so the save button is enabled after reset
+    this.generalForm.markAsDirty();
   }
 
   /**
