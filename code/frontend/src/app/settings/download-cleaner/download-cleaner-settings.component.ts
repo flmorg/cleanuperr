@@ -80,32 +80,18 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     return this.downloadCleanerForm.get('categories') as FormArray;
   }
   
-  // Schedule options
+  // Schedule unit options for job schedules
   scheduleUnitOptions = [
-    { label: 'Seconds', value: ScheduleUnit.Seconds },
-    { label: 'Minutes', value: ScheduleUnit.Minutes },
-    { label: 'Hours', value: ScheduleUnit.Hours },
+    { label: "Seconds", value: ScheduleUnit.Seconds },
+    { label: "Minutes", value: ScheduleUnit.Minutes },
+    { label: "Hours", value: ScheduleUnit.Hours },
   ];
-
-  scheduleValueOptions: Record<ScheduleUnit, {label: string, value: number}[]> = {
-    [ScheduleUnit.Seconds]: [
-      { label: '15s', value: 15 },
-      { label: '30s', value: 30 },
-      { label: '45s', value: 45 }
-    ],
-    [ScheduleUnit.Minutes]: [
-      { label: '1m', value: 1 },
-      { label: '5m', value: 5 },
-      { label: '15m', value: 15 },
-      { label: '30m', value: 30 },
-      { label: '45m', value: 45 }
-    ],
-    [ScheduleUnit.Hours]: [
-      { label: '1h', value: 1 },
-      { label: '3h', value: 3 },
-      { label: '6h', value: 6 },
-      { label: '12h', value: 12 }
-    ]
+  
+  // Options for each schedule unit
+  scheduleValueOptions = {
+    [ScheduleUnit.Seconds]: ScheduleOptions[ScheduleUnit.Seconds].map(v => ({ label: v.toString(), value: v })),
+    [ScheduleUnit.Minutes]: ScheduleOptions[ScheduleUnit.Minutes].map(v => ({ label: v.toString(), value: v })),
+    [ScheduleUnit.Hours]: ScheduleOptions[ScheduleUnit.Hours].map(v => ({ label: v.toString(), value: v }))
   };
 
   // Display modes for schedule
@@ -313,7 +299,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
         });
     }
 
-    // Listen for changes to the schedule type to update available values
+    // Listen for changes to the schedule type to ensure dropdown isn't empty
     const scheduleTypeControl = this.downloadCleanerForm.get('jobSchedule.type');
     if (scheduleTypeControl) {
       scheduleTypeControl.valueChanges
@@ -325,7 +311,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
           const scheduleType = this.downloadCleanerForm.get('jobSchedule.type')?.value;
           
           const validValues = ScheduleOptions[scheduleType as keyof typeof ScheduleOptions];
-          if (currentValue && !validValues.includes(currentValue)) {
+          if (validValues && currentValue && !validValues.includes(currentValue)) {
             everyControl?.setValue(validValues[0]);
           }
         });

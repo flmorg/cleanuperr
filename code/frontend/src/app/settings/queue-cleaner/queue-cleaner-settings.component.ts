@@ -291,7 +291,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
           const scheduleType = this.queueCleanerForm.get('jobSchedule.type')?.value;
           
           const validValues = ScheduleOptions[scheduleType as keyof typeof ScheduleOptions];
-          if (currentValue && !validValues.includes(currentValue)) {
+          if (validValues && currentValue && !validValues.includes(currentValue)) {
             everyControl?.setValue(validValues[0]);
           }
         });
