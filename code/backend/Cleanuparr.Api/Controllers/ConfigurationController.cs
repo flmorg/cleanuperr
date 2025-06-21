@@ -1,3 +1,4 @@
+using Cleanuparr.Api.Models;
 using Cleanuparr.Application.Features.Arr.Dtos;
 using Cleanuparr.Application.Features.DownloadClient.Dtos;
 using Cleanuparr.Domain.Enums;
@@ -83,6 +84,7 @@ public class ConfigurationController : ControllerBase
         try
         {
             var config = await _dataContext.DownloadCleanerConfigs
+                .Include(x => x.Categories)
                 .AsNoTracking()
                 .FirstAsync();
             return Ok(config);
@@ -486,18 +488,73 @@ public class ConfigurationController : ControllerBase
     }
 
     [HttpPut("download_cleaner")]
-    public async Task<IActionResult> UpdateDownloadCleanerConfig([FromBody] DownloadCleanerConfig newConfig)
+    public async Task<IActionResult> UpdateDownloadCleanerConfig([FromBody] UpdateDownloadCleanerConfigDto newConfigDto)
     {
         await DataContext.Lock.WaitAsync();
         try
         {
-            // Validate the configuration
-            newConfig.Validate();
-
             // Validate cron expression if present
-            if (!string.IsNullOrEmpty(newConfig.CronExpression))
+            if (!string.IsNullOrEmpty(newConfigDto.CronExpression))
             {
-                CronValidationHelper.ValidateCronExpression(newConfig.CronExpression);
+                CronValidationHelper.ValidateCronExpression(newConfigDto.CronExpression);
+            }
+            
+            // Validate categories
+            if (newConfigDto.Enabled && newConfigDto.Categories.Any())
+            {
+                // Check for duplicate category names
+                if (newConfigDto.Categories.GroupBy(x => x.Name).Any(x => x.Count() > 1))
+                {
+                    return BadRequest("Duplicate clean categories found");
+                }
+                
+                // Validate each category
+                foreach (var categoryDto in newConfigDto.Categories)
+                {
+                    if (string.IsNullOrEmpty(categoryDto.Name?.Trim()))
+                    {
+                        return BadRequest("Category name cannot be empty");
+                    }
+                    
+                    if (categoryDto.MaxRatio < 0 && categoryDto.MaxSeedTime < 0)
+                    {
+                        return BadRequest("Both max ratio and max seed time cannot be disabled");
+                    }
+                    
+                    if (categoryDto.MinSeedTime < 0)
+                    {
+                        return BadRequest("Min seed time cannot be negative");
+                    }
+                }
+            }
+            
+            // Validate unlinked settings if enabled
+            if (newConfigDto.UnlinkedEnabled)
+            {
+                if (string.IsNullOrEmpty(newConfigDto.UnlinkedTargetCategory))
+                {
+                    return BadRequest("Unlinked target category is required");
+                }
+
+                if (newConfigDto.UnlinkedCategories?.Count is null or 0)
+                {
+                    return BadRequest("No unlinked categories configured");
+                }
+
+                if (newConfigDto.UnlinkedCategories.Contains(newConfigDto.UnlinkedTargetCategory))
+                {
+                    return BadRequest("The unlinked target category should not be present in unlinked categories");
+                }
+
+                if (newConfigDto.UnlinkedCategories.Any(string.IsNullOrEmpty))
+                {
+                    return BadRequest("Empty unlinked category filter found");
+                }
+
+                if (!string.IsNullOrEmpty(newConfigDto.UnlinkedIgnoredRootDir) && !Directory.Exists(newConfigDto.UnlinkedIgnoredRootDir))
+                {
+                    return BadRequest($"{newConfigDto.UnlinkedIgnoredRootDir} root directory does not exist");
+                }
             }
 
             // Get existing config
@@ -505,12 +562,36 @@ public class ConfigurationController : ControllerBase
                 .Include(x => x.Categories)
                 .FirstAsync();
 
-            // Apply updates from DTO, excluding the ID property to avoid EF key modification error
-            var config = new TypeAdapterConfig();
-            config.NewConfig<DownloadCleanerConfig, DownloadCleanerConfig>()
-                .Ignore(dest => dest.Id);
+            // Update the main properties from DTO
+            oldConfig = oldConfig with
+            {
+                Enabled = newConfigDto.Enabled,
+                CronExpression = newConfigDto.CronExpression,
+                UseAdvancedScheduling = newConfigDto.UseAdvancedScheduling,
+                DeletePrivate = newConfigDto.DeletePrivate,
+                UnlinkedEnabled = newConfigDto.UnlinkedEnabled,
+                UnlinkedTargetCategory = newConfigDto.UnlinkedTargetCategory,
+                UnlinkedUseTag = newConfigDto.UnlinkedUseTag,
+                UnlinkedIgnoredRootDir = newConfigDto.UnlinkedIgnoredRootDir,
+                UnlinkedCategories = newConfigDto.UnlinkedCategories
+            };
+
+            // Handle Categories collection separately to avoid EF tracking issues
+            // Clear existing categories
+            _dataContext.CleanCategories.RemoveRange(oldConfig.Categories);
             
-            newConfig.Adapt(oldConfig, config);
+            // Add new categories
+            foreach (var categoryDto in newConfigDto.Categories)
+            {
+                _dataContext.CleanCategories.Add(new CleanCategory
+                {
+                    Name = categoryDto.Name,
+                    MaxRatio = categoryDto.MaxRatio,
+                    MinSeedTime = categoryDto.MinSeedTime,
+                    MaxSeedTime = categoryDto.MaxSeedTime,
+                    DownloadCleanerConfigId = oldConfig.Id
+                });
+            }
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();

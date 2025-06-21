@@ -200,24 +200,25 @@ namespace Cleanuparr.Persistence.Migrations.Data
                 });
 
             migrationBuilder.CreateTable(
-                name: "clean_category",
+                name: "clean_categories",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    download_cleaner_config_id = table.Column<Guid>(type: "TEXT", nullable: false),
                     name = table.Column<string>(type: "TEXT", nullable: false),
                     max_ratio = table.Column<double>(type: "REAL", nullable: false),
                     min_seed_time = table.Column<double>(type: "REAL", nullable: false),
-                    max_seed_time = table.Column<double>(type: "REAL", nullable: false),
-                    download_cleaner_config_id = table.Column<Guid>(type: "TEXT", nullable: true)
+                    max_seed_time = table.Column<double>(type: "REAL", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_clean_category", x => x.id);
+                    table.PrimaryKey("pk_clean_categories", x => x.id);
                     table.ForeignKey(
-                        name: "fk_clean_category_download_cleaner_configs_download_cleaner_config_id",
+                        name: "fk_clean_categories_download_cleaner_configs_download_cleaner_config_id",
                         column: x => x.download_cleaner_config_id,
                         principalTable: "download_cleaner_configs",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
             
             migrationBuilder.InsertData(
@@ -295,8 +296,8 @@ namespace Cleanuparr.Persistence.Migrations.Data
                 column: "arr_config_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_clean_category_download_cleaner_config_id",
-                table: "clean_category",
+                name: "ix_clean_categories_download_cleaner_config_id",
+                table: "clean_categories",
                 column: "download_cleaner_config_id");
         }
 
@@ -310,7 +311,7 @@ namespace Cleanuparr.Persistence.Migrations.Data
                 name: "arr_instances");
 
             migrationBuilder.DropTable(
-                name: "clean_category");
+                name: "clean_categories");
 
             migrationBuilder.DropTable(
                 name: "content_blocker_configs");

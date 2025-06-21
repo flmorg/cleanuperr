@@ -174,7 +174,7 @@ namespace Cleanuparr.Persistence.Migrations.Data
                         .HasColumnType("TEXT")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("DownloadCleanerConfigId")
+                    b.Property<Guid>("DownloadCleanerConfigId")
                         .HasColumnType("TEXT")
                         .HasColumnName("download_cleaner_config_id");
 
@@ -196,12 +196,12 @@ namespace Cleanuparr.Persistence.Migrations.Data
                         .HasColumnName("name");
 
                     b.HasKey("Id")
-                        .HasName("pk_clean_category");
+                        .HasName("pk_clean_categories");
 
                     b.HasIndex("DownloadCleanerConfigId")
-                        .HasDatabaseName("ix_clean_category_download_cleaner_config_id");
+                        .HasDatabaseName("ix_clean_categories_download_cleaner_config_id");
 
-                    b.ToTable("clean_category", (string)null);
+                    b.ToTable("clean_categories", (string)null);
                 });
 
             modelBuilder.Entity("Cleanuparr.Persistence.Models.Configuration.DownloadCleaner.DownloadCleanerConfig", b =>
@@ -574,10 +574,14 @@ namespace Cleanuparr.Persistence.Migrations.Data
 
             modelBuilder.Entity("Cleanuparr.Persistence.Models.Configuration.DownloadCleaner.CleanCategory", b =>
                 {
-                    b.HasOne("Cleanuparr.Persistence.Models.Configuration.DownloadCleaner.DownloadCleanerConfig", null)
+                    b.HasOne("Cleanuparr.Persistence.Models.Configuration.DownloadCleaner.DownloadCleanerConfig", "DownloadCleanerConfig")
                         .WithMany("Categories")
                         .HasForeignKey("DownloadCleanerConfigId")
-                        .HasConstraintName("fk_clean_category_download_cleaner_configs_download_cleaner_config_id");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_clean_categories_download_cleaner_configs_download_cleaner_config_id");
+
+                    b.Navigation("DownloadCleanerConfig");
                 });
 
             modelBuilder.Entity("Cleanuparr.Persistence.Models.Configuration.Arr.ArrConfig", b =>

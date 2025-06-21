@@ -1,4 +1,4 @@
-﻿using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Enums;
 using Cleanuparr.Persistence.Converters;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
@@ -29,6 +29,8 @@ public class DataContext : DbContext
     public DbSet<ContentBlockerConfig> ContentBlockerConfigs { get; set; }
     
     public DbSet<DownloadCleanerConfig> DownloadCleanerConfigs { get; set; }
+    
+    public DbSet<CleanCategory> CleanCategories { get; set; }
     
     public DbSet<ArrConfig> ArrConfigs { get; set; }
     

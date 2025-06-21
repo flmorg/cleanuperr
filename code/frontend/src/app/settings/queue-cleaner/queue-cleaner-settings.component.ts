@@ -119,7 +119,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     // Initialize the queue cleaner form with proper disabled states
     this.queueCleanerForm = this.formBuilder.group({
       enabled: [false],
-      useAdvancedScheduling: [false],
+      useAdvancedScheduling: [{ value: false, disabled: true }],
       cronExpression: [{ value: '', disabled: true }, [Validators.required]],
       jobSchedule: this.formBuilder.group({
         every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
@@ -372,12 +372,16 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
    */
   private updateMainControlsState(enabled: boolean): void {
     const useAdvancedScheduling = this.queueCleanerForm.get('useAdvancedScheduling')?.value || false;
+    const useAdvancedSchedulingControl = this.queueCleanerForm.get('useAdvancedScheduling');
     const cronExpressionControl = this.queueCleanerForm.get('cronExpression');
     const jobScheduleGroup = this.queueCleanerForm.get('jobSchedule') as FormGroup;
     const everyControl = jobScheduleGroup.get('every');
     const typeControl = jobScheduleGroup.get('type');
 
     if (enabled) {
+      // Enable the scheduling mode toggle
+      useAdvancedSchedulingControl?.enable();
+      
       // Enable scheduling controls based on mode
       if (useAdvancedScheduling) {
         cronExpressionControl?.enable();
@@ -398,7 +402,8 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       this.updateStalledDependentControls(stalledMaxStrikes);
       this.updateSlowDependentControls(slowMaxStrikes);
     } else {
-      // Disable all scheduling controls
+      // Disable all scheduling controls including the mode toggle
+      useAdvancedSchedulingControl?.disable();
       cronExpressionControl?.disable();
       everyControl?.disable();
       typeControl?.disable();

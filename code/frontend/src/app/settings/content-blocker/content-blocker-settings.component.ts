@@ -108,7 +108,7 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
     // Initialize the content blocker form
     this.contentBlockerForm = this.formBuilder.group({
       enabled: [false],
-      useAdvancedScheduling: [false],
+      useAdvancedScheduling: [{ value: false, disabled: true }],
       cronExpression: [{ value: '', disabled: true }, [Validators.required]],
       jobSchedule: this.formBuilder.group({
         every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
@@ -346,12 +346,16 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
    */
   private updateMainControlsState(enabled: boolean): void {
     const useAdvancedScheduling = this.contentBlockerForm.get('useAdvancedScheduling')?.value || false;
+    const useAdvancedSchedulingControl = this.contentBlockerForm.get('useAdvancedScheduling');
     const cronExpressionControl = this.contentBlockerForm.get('cronExpression');
     const jobScheduleGroup = this.contentBlockerForm.get('jobSchedule') as FormGroup;
     const everyControl = jobScheduleGroup.get('every');
     const typeControl = jobScheduleGroup.get('type');
 
     if (enabled) {
+      // Enable the scheduling mode toggle
+      useAdvancedSchedulingControl?.enable();
+      
       // Enable scheduling controls based on mode
       if (useAdvancedScheduling) {
         cronExpressionControl?.enable();
@@ -381,7 +385,8 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       this.updateBlocklistDependentControls('radarr', radarrEnabled);
       this.updateBlocklistDependentControls('lidarr', lidarrEnabled);
     } else {
-      // Disable all scheduling controls
+      // Disable all scheduling controls including the mode toggle
+      useAdvancedSchedulingControl?.disable();
       cronExpressionControl?.disable();
       everyControl?.disable();
       typeControl?.disable();

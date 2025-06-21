@@ -10,6 +10,10 @@ public sealed record CleanCategory : IConfig
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; init; } = Guid.NewGuid();
     
+    public Guid DownloadCleanerConfigId { get; set; }
+    
+    public DownloadCleanerConfig DownloadCleanerConfig { get; set; }
+    
     public required string Name { get; init; }
     
     /// <summary>

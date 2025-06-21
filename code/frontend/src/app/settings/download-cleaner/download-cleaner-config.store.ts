@@ -57,6 +57,59 @@ export class DownloadCleanerConfigStore {
   }
 
   /**
+   * Generate a cron expression from a job schedule
+   */
+  generateCronExpression(schedule: { every: number; type: string }): string {
+    if (!schedule) {
+      return "0 0 * * * ?"; // Default: every hour
+    }
+    
+    // Cron format: Seconds Minutes Hours Day-of-month Month Day-of-week Year
+    switch (schedule.type) {
+      case 'Seconds':
+        return `0/${schedule.every} * * ? * * *`; // Every n seconds
+      
+      case 'Minutes':
+        return `0 0/${schedule.every} * ? * * *`; // Every n minutes
+      
+      case 'Hours':
+        return `0 0 0/${schedule.every} ? * * *`; // Every n hours
+      
+      default:
+        return "0 0 * * * ?"; // Default: every hour
+    }
+  }
+
+  /**
+   * Parse a cron expression back to a job schedule
+   */
+  parseCronExpression(cronExpression: string): { every: number; type: string } | null {
+    if (!cronExpression) {
+      return null;
+    }
+
+    // Handle common patterns
+    const patterns = [
+      // Every n seconds: "0/n * * ? * * *"
+      { regex: /^0\/(\d+) \* \* \? \* \* \*$/, type: 'Seconds' },
+      // Every n minutes: "0 0/n * ? * * *"
+      { regex: /^0 0\/(\d+) \* \? \* \* \*$/, type: 'Minutes' },
+      // Every n hours: "0 0 0/n ? * * *"
+      { regex: /^0 0 0\/(\d+) \? \* \* \*$/, type: 'Hours' },
+    ];
+
+    for (const pattern of patterns) {
+      const match = cronExpression.match(pattern.regex);
+      if (match) {
+        const every = parseInt(match[1], 10);
+        return { every, type: pattern.type };
+      }
+    }
+
+    return null; // Couldn't parse, use advanced mode
+  }
+
+  /**
    * Save download cleaner configuration to the API
    * @param config The configuration to save
    * @returns Promise that resolves when save is complete
