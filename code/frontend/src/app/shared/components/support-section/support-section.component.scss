@@ -77,6 +77,10 @@
   flex-shrink: 0;
   position: relative;
   font-size: 1.5rem;
+
+  ::ng-deep i {
+    font-size: 2rem;
+  }
   
   &.github-icon {
     background: linear-gradient(135deg, #24292e, #1a202c);
@@ -85,7 +89,7 @@
     
     .star-overlay {
       position: absolute;
-      font-size: 0.75rem;
+      font-size: 1.5rem;
       top: -2px;
       right: -2px;
       color: #ffc107;
@@ -100,7 +104,7 @@
   }
   
   &.donate-icon {
-    background: linear-gradient(135deg, #ef4444, #f97316);
+    background: linear-gradient(135deg, #9300ff, #c266ff);
     color: #ffffff;
     box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
     animation: pulse-donate 2s infinite alternate;
