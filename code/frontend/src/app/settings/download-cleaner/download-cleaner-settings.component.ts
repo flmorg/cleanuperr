@@ -75,6 +75,9 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   private destroy$ = new Subject<void>();
   hasActualChanges = false; // Flag to track actual form changes
   
+  // Store unlinkedCategories value separately to preserve it when control is disabled
+  private preservedUnlinkedCategories: string[] = [];
+  
   // Get the categories form array for easier access in the template
   get categoriesFormArray(): FormArray {
     return this.downloadCleanerForm.get('categories') as FormArray;
@@ -158,6 +161,9 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
           }
         }
         
+        // Initialize preserved unlinkedCategories
+        this.preservedUnlinkedCategories = config.unlinkedCategories || [];
+
         // Reset form with the config values
         this.downloadCleanerForm.patchValue({
           enabled: config.enabled,
@@ -455,7 +461,17 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       useTagControl?.enable(options);
       ignoredRootDirControl?.enable(options);
       categoriesControl?.enable(options);
+      
+      // Restore preserved unlinkedCategories value
+      if (this.preservedUnlinkedCategories.length > 0) {
+        categoriesControl?.setValue(this.preservedUnlinkedCategories, options);
+      }
     } else {
+      // Preserve current unlinkedCategories value before disabling
+      if (categoriesControl?.value && Array.isArray(categoriesControl.value)) {
+        this.preservedUnlinkedCategories = [...categoriesControl.value];
+      }
+      
       // Disable all unlinked controls
       targetCategoryControl?.disable(options);
       useTagControl?.disable(options);
@@ -475,6 +491,20 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       // Get form values including disabled controls
       const formValues = this.downloadCleanerForm.getRawValue();
 
+
+
+      // Get unlinkedCategories value - use preserved value if control is disabled
+      const unlinkedCategoriesControl = this.downloadCleanerForm.get('unlinkedCategories');
+      let unlinkedCategories: string[] = [];
+      
+      if (unlinkedCategoriesControl?.disabled && this.preservedUnlinkedCategories.length > 0) {
+        // Use preserved value when control is disabled
+        unlinkedCategories = this.preservedUnlinkedCategories;
+      } else if (formValues.unlinkedCategories && Array.isArray(formValues.unlinkedCategories)) {
+        // Use form value when control is enabled
+        unlinkedCategories = formValues.unlinkedCategories;
+      }
+
       // Create config object from form values
       const config: DownloadCleanerConfig = {
         enabled: formValues.enabled,
@@ -490,7 +520,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
         unlinkedTargetCategory: formValues.unlinkedTargetCategory,
         unlinkedUseTag: formValues.unlinkedUseTag,
         unlinkedIgnoredRootDir: formValues.unlinkedIgnoredRootDir,
-        unlinkedCategories: formValues.unlinkedCategories || []
+        unlinkedCategories: unlinkedCategories
       };
 
       // Save the configuration
@@ -532,6 +562,9 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   resetDownloadCleanerConfig(): void {
     // Clear categories
     this.categoriesFormArray.clear();
+    
+    // Clear preserved values
+    this.preservedUnlinkedCategories = [];
     
     // Reset form to default values
     this.downloadCleanerForm.reset({
