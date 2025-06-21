@@ -588,7 +588,6 @@ public class ConfigurationController : ControllerBase
             var config = await _dataContext.ArrConfigs
                 .FirstAsync(x => x.Type == InstanceType.Sonarr);
 
-            config.Enabled = newConfigDto.Enabled;
             config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
 
             // Validate the configuration
@@ -620,7 +619,6 @@ public class ConfigurationController : ControllerBase
             var config = await _dataContext.ArrConfigs
                 .FirstAsync(x => x.Type == InstanceType.Radarr);
 
-            config.Enabled = newConfigDto.Enabled;
             config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
 
             // Validate the configuration
@@ -652,7 +650,6 @@ public class ConfigurationController : ControllerBase
             var config = await _dataContext.ArrConfigs
                 .FirstAsync(x => x.Type == InstanceType.Lidarr);
 
-            config.Enabled = newConfigDto.Enabled;
             config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
 
             // Validate the configuration
@@ -719,6 +716,7 @@ public class ConfigurationController : ControllerBase
             // Create the new instance
             var instance = new ArrInstance
             {
+                Enabled = newInstance.Enabled,
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
                 ApiKey = newInstance.ApiKey,
@@ -762,6 +760,7 @@ public class ConfigurationController : ControllerBase
             }
 
             // Update the instance properties
+            instance.Enabled = updatedInstance.Enabled;
             instance.Name = updatedInstance.Name;
             instance.Url = new Uri(updatedInstance.Url);
             instance.ApiKey = updatedInstance.ApiKey;
@@ -828,6 +827,7 @@ public class ConfigurationController : ControllerBase
             // Create the new instance
             var instance = new ArrInstance
             {
+                Enabled = newInstance.Enabled,
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
                 ApiKey = newInstance.ApiKey,
@@ -870,6 +870,7 @@ public class ConfigurationController : ControllerBase
             }
 
             // Update the instance properties
+            instance.Enabled = updatedInstance.Enabled;
             instance.Name = updatedInstance.Name;
             instance.Url = new Uri(updatedInstance.Url);
             instance.ApiKey = updatedInstance.ApiKey;
@@ -936,6 +937,7 @@ public class ConfigurationController : ControllerBase
             // Create the new instance
             var instance = new ArrInstance
             {
+                Enabled = newInstance.Enabled,
                 Name = newInstance.Name,
                 Url = new Uri(newInstance.Url),
                 ApiKey = newInstance.ApiKey,
@@ -979,6 +981,7 @@ public class ConfigurationController : ControllerBase
             }
 
             // Update the instance properties
+            instance.Enabled = updatedInstance.Enabled;
             instance.Name = updatedInstance.Name;
             instance.Url = new Uri(updatedInstance.Url);
             instance.ApiKey = updatedInstance.ApiKey;

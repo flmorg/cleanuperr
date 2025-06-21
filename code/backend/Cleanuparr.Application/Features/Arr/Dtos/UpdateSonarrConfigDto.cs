@@ -7,8 +7,6 @@ namespace Cleanuparr.Application.Features.Arr.Dtos;
 /// </summary>
 public record UpdateSonarrConfigDto
 {
-    public bool Enabled { get; init; }
-    
     public short FailedImportMaxStrikes { get; init; } = -1;
 }
 
@@ -21,6 +19,8 @@ public record ArrInstanceDto
     /// ID for existing instances, null for new instances
     /// </summary>
     public Guid? Id { get; init; }
+    
+    public bool Enabled { get; init; } = true;
     
     [Required]
     public required string Name { get; init; }

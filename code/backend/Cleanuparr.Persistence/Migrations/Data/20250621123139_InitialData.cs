@@ -36,7 +36,6 @@ namespace Cleanuparr.Persistence.Migrations.Data
                 {
                     id = table.Column<Guid>(type: "TEXT", nullable: false),
                     type = table.Column<string>(type: "TEXT", nullable: false),
-                    enabled = table.Column<bool>(type: "INTEGER", nullable: false),
                     failed_import_max_strikes = table.Column<short>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
@@ -183,6 +182,7 @@ namespace Cleanuparr.Persistence.Migrations.Data
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    enabled = table.Column<bool>(type: "INTEGER", nullable: false),
                     arr_config_id = table.Column<Guid>(type: "TEXT", nullable: false),
                     name = table.Column<string>(type: "TEXT", nullable: false),
                     url = table.Column<string>(type: "TEXT", nullable: false),
@@ -276,18 +276,18 @@ namespace Cleanuparr.Persistence.Migrations.Data
             
             migrationBuilder.InsertData(
                 table: "arr_configs",
-                columns: new[] { "id", "enabled", "failed_import_max_strikes", "type" },
-                values: new object[] { new Guid("6096303a-399c-42b8-be8f-60a02cec5a51"), false, (short)-1, "radarr" });
+                columns: new[] { "id", "failed_import_max_strikes", "type" },
+                values: new object[] { new Guid("6096303a-399c-42b8-be8f-60a02cec5a51"), (short)-1, "radarr" });
             
             migrationBuilder.InsertData(
                 table: "arr_configs",
-                columns: new[] { "id", "enabled", "failed_import_max_strikes", "type" },
-                values: new object[] { new Guid("4fd2b82b-cffd-4b41-bcc0-204058b1e459"), false, (short)-1, "lidarr" });
+                columns: new[] { "id", "failed_import_max_strikes", "type" },
+                values: new object[] { new Guid("4fd2b82b-cffd-4b41-bcc0-204058b1e459"), (short)-1, "lidarr" });
 
             migrationBuilder.InsertData(
                 table: "arr_configs",
-                columns: new[] { "id", "enabled", "failed_import_max_strikes", "type" },
-                values: new object[] { new Guid("0b38a68f-3d7b-4d98-ae96-115da62d9af2"), false, (short)-1, "sonarr" });
+                columns: new[] { "id", "failed_import_max_strikes", "type" },
+                values: new object[] { new Guid("0b38a68f-3d7b-4d98-ae96-115da62d9af2"), (short)-1, "sonarr" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_arr_instances_arr_config_id",

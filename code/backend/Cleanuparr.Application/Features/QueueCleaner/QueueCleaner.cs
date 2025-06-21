@@ -54,7 +54,7 @@ public sealed class QueueCleaner : GenericHandler
         await ProcessArrConfigAsync(lidarrConfig, InstanceType.Lidarr);
     }
 
-    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
         IReadOnlyList<string> ignoredDownloads = ContextProvider.Get<GeneralConfig>().IgnoredDownloads;
         

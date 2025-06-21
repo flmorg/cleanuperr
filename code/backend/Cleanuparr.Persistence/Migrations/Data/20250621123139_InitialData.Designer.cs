@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cleanuparr.Persistence.Migrations.Data
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250620212344_InitialData")]
+    [Migration("20250621123139_InitialData")]
     partial class InitialData
     {
         /// <inheritdoc />
@@ -27,10 +27,6 @@ namespace Cleanuparr.Persistence.Migrations.Data
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
                         .HasColumnName("id");
-
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("enabled");
 
                     b.Property<short>("FailedImportMaxStrikes")
                         .HasColumnType("INTEGER")
@@ -62,6 +58,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                     b.Property<Guid>("ArrConfigId")
                         .HasColumnType("TEXT")
                         .HasColumnName("arr_config_id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("enabled");
 
                     b.Property<string>("Name")
                         .IsRequired()

@@ -33,14 +33,6 @@
 
       <form [formGroup]="globalForm" class="p-fluid">
         <div class="field-row">
-          <label class="field-label">Enable Radarr Integration</label>
-          <div class="field-input">
-            <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
-            <small class="form-helper-text">When enabled, Radarr API integration will be used</small>
-          </div>
-        </div>
-
-        <div class="field-row">
           <label class="field-label">Failed Import Max Strikes</label>
           <div>
             <div class="field-input">
@@ -108,7 +100,7 @@
                 type="button" 
                 icon="pi pi-pencil" 
                 class="p-button-text p-button-sm"
-                [disabled]="instanceManagementDisabled"
+                [disabled]="radarrSaving()"
                 (click)="openEditInstanceModal(instance)"
                 pTooltip="Edit instance"
               ></button>
@@ -117,7 +109,7 @@
                 type="button" 
                 icon="pi pi-trash" 
                 class="p-button-text p-button-sm p-button-danger"
-                [disabled]="instanceManagementDisabled"
+                [disabled]="radarrSaving()"
                 (click)="deleteInstance(instance)"
                 pTooltip="Delete instance"
               ></button>
@@ -127,6 +119,13 @@
           <div class="instance-content">
             <div class="instance-field">
               <label>{{ instance.url }}</label>
+            </div>
+            <div class="instance-field">
+              <label>Status: 
+                <span [class]="instance.enabled ? 'text-green-500' : 'text-red-500'">
+                  {{ instance.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </label>
             </div>
           </div>
         </div>
@@ -140,7 +139,7 @@
           icon="pi pi-plus" 
           label="Add Instance"
           class="p-button-outlined"
-          [disabled]="instanceManagementDisabled"
+          [disabled]="radarrSaving()"
           (click)="openAddInstanceModal()"
         ></button>
       </div>
@@ -160,6 +159,14 @@
   (onHide)="closeInstanceModal()"
 >
   <form [formGroup]="instanceForm" class="p-fluid instance-form">
+    <div class="field flex flex-row">
+      <label class="field-label">Enabled</label>
+      <div class="field-input">
+        <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+        <small class="form-helper-text">Enable this Radarr instance</small>
+      </div>
+    </div>
+
     <div class="field">
       <label for="instance-name">Name *</label>
       <input 

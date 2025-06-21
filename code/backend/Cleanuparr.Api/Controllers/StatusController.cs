@@ -71,17 +71,14 @@ public class StatusController : ControllerBase
                 {
                     Sonarr = new
                     {
-                        IsEnabled = sonarrConfig.Enabled,
                         InstanceCount = sonarrConfig.Instances.Count
                     },
                     Radarr = new
                     {
-                        IsEnabled = radarrConfig.Enabled,
                         InstanceCount = radarrConfig.Instances.Count
                     },
                     Lidarr = new
                     {
-                        IsEnabled = lidarrConfig.Enabled,
                         InstanceCount = lidarrConfig.Instances.Count
                     }
                 }
@@ -143,123 +140,124 @@ public class StatusController : ControllerBase
             var status = new Dictionary<string, object>();
             
             // Get configurations
-            var sonarrConfig = await _dataContext.ArrConfigs
+            var enabledSonarrInstances = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
+                .Where(x => x.Type == InstanceType.Sonarr)
+                .SelectMany(x => x.Instances)
+                .Where(x => x.Enabled)
                 .AsNoTracking()
-                .FirstAsync(x => x.Type == InstanceType.Sonarr);
-            var radarrConfig = await _dataContext.ArrConfigs
+                .ToListAsync();
+            var enabledRadarrInstances = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
+                .Where(x => x.Type == InstanceType.Radarr)
+                .SelectMany(x => x.Instances)
+                .Where(x => x.Enabled)
                 .AsNoTracking()
-                .FirstAsync(x => x.Type == InstanceType.Radarr);
-            var lidarrConfig = await _dataContext.ArrConfigs
+                .ToListAsync();
+            var enabledLidarrInstances = await _dataContext.ArrConfigs
                 .Include(x => x.Instances)
+                .Where(x => x.Type == InstanceType.Lidarr)
+                .SelectMany(x => x.Instances)
+                .Where(x => x.Enabled)
                 .AsNoTracking()
-                .FirstAsync(x => x.Type == InstanceType.Lidarr);
+                .ToListAsync();;
 
+            
             // Check Sonarr instances
-            if (sonarrConfig is { Enabled: true, Instances.Count: > 0 })
+            var sonarrStatus = new List<object>();
+            
+            foreach (var instance in enabledSonarrInstances)
             {
-                var sonarrStatus = new List<object>();
-                
-                foreach (var instance in sonarrConfig.Instances)
+                try
                 {
-                    try
+                    var sonarrClient = _arrClientFactory.GetClient(InstanceType.Sonarr);
+                    await sonarrClient.TestConnectionAsync(instance);
+                    
+                    sonarrStatus.Add(new
                     {
-                        var sonarrClient = _arrClientFactory.GetClient(InstanceType.Sonarr);
-                        await sonarrClient.TestConnectionAsync(instance);
-                        
-                        sonarrStatus.Add(new
-                        {
-                            instance.Name,
-                            instance.Url,
-                            IsConnected = true,
-                            Message = "Successfully connected"
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        sonarrStatus.Add(new
-                        {
-                            instance.Name,
-                            instance.Url,
-                            IsConnected = false,
-                            Message = $"Connection failed: {ex.Message}"
-                        });
-                    }
+                        instance.Name,
+                        instance.Url,
+                        IsConnected = true,
+                        Message = "Successfully connected"
+                    });
                 }
-
-                status["Sonarr"] = sonarrStatus;
+                catch (Exception ex)
+                {
+                    sonarrStatus.Add(new
+                    {
+                        instance.Name,
+                        instance.Url,
+                        IsConnected = false,
+                        Message = $"Connection failed: {ex.Message}"
+                    });
+                }
             }
+
+            status["Sonarr"] = sonarrStatus;
 
             // Check Radarr instances
-            if (radarrConfig is { Enabled: true, Instances.Count: > 0 })
+            var radarrStatus = new List<object>();
+            
+            foreach (var instance in enabledRadarrInstances)
             {
-                var radarrStatus = new List<object>();
-                
-                foreach (var instance in radarrConfig.Instances)
+                try
                 {
-                    try
+                    var radarrClient = _arrClientFactory.GetClient(InstanceType.Radarr);
+                    await radarrClient.TestConnectionAsync(instance);
+                    
+                    radarrStatus.Add(new
                     {
-                        var radarrClient = _arrClientFactory.GetClient(InstanceType.Radarr);
-                        await radarrClient.TestConnectionAsync(instance);
-                        
-                        radarrStatus.Add(new
-                        {
-                            instance.Name,
-                            instance.Url,
-                            IsConnected = true,
-                            Message = "Successfully connected"
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        radarrStatus.Add(new
-                        {
-                            instance.Name,
-                            instance.Url,
-                            IsConnected = false,
-                            Message = $"Connection failed: {ex.Message}"
-                        });
-                    }
+                        instance.Name,
+                        instance.Url,
+                        IsConnected = true,
+                        Message = "Successfully connected"
+                    });
                 }
-
-                status["Radarr"] = radarrStatus;
+                catch (Exception ex)
+                {
+                    radarrStatus.Add(new
+                    {
+                        instance.Name,
+                        instance.Url,
+                        IsConnected = false,
+                        Message = $"Connection failed: {ex.Message}"
+                    });
+                }
             }
+
+            status["Radarr"] = radarrStatus;
 
             // Check Lidarr instances
-            if (lidarrConfig is { Enabled: true, Instances.Count: > 0 })
+            var lidarrStatus = new List<object>();
+            
+            foreach (var instance in enabledLidarrInstances)
             {
-                var lidarrStatus = new List<object>();
-                
-                foreach (var instance in lidarrConfig.Instances)
+                try
                 {
-                    try
+                    var lidarrClient = _arrClientFactory.GetClient(InstanceType.Lidarr);
+                    await lidarrClient.TestConnectionAsync(instance);
+                    
+                    lidarrStatus.Add(new
                     {
-                        var lidarrClient = _arrClientFactory.GetClient(InstanceType.Lidarr);
-                        await lidarrClient.TestConnectionAsync(instance);
-                        
-                        lidarrStatus.Add(new
-                        {
-                            instance.Name,
-                            instance.Url,
-                            IsConnected = true,
-                            Message = "Successfully connected"
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        lidarrStatus.Add(new
-                        {
-                            instance.Name,
-                            instance.Url,
-                            IsConnected = false,
-                            Message = $"Connection failed: {ex.Message}"
-                        });
-                    }
+                        instance.Name,
+                        instance.Url,
+                        IsConnected = true,
+                        Message = "Successfully connected"
+                    });
                 }
-
-                status["Lidarr"] = lidarrStatus;
+                catch (Exception ex)
+                {
+                    lidarrStatus.Add(new
+                    {
+                        instance.Name,
+                        instance.Url,
+                        IsConnected = false,
+                        Message = $"Connection failed: {ex.Message}"
+                    });
+                }
             }
+
+            status["Lidarr"] = lidarrStatus;
 
             return Ok(status);
         }

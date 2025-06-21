@@ -3,6 +3,7 @@
  */
 export interface ArrInstance {
   id?: string;
+  enabled: boolean;
   name: string;
   url: string;
   apiKey: string;
@@ -12,6 +13,7 @@ export interface ArrInstance {
  * DTO for creating new Arr instances without requiring an ID
  */
 export interface CreateArrInstanceDto {
+  enabled: boolean;
   name: string;
   url: string;
   apiKey: string;

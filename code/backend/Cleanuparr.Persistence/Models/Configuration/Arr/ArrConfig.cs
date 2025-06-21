@@ -12,8 +12,6 @@ public class ArrConfig : IConfig
     
     public required InstanceType Type { get; set; }
     
-    public bool Enabled { get; set; }
-
     public short FailedImportMaxStrikes { get; set; } = -1;
 
     public List<ArrInstance> Instances { get; set; } = [];

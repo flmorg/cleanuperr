@@ -5,7 +5,5 @@ namespace Cleanuparr.Application.Features.Arr.Dtos;
 /// </summary>
 public record UpdateLidarrConfigDto
 {
-    public bool Enabled { get; init; }
-    
     public short FailedImportMaxStrikes { get; init; } = -1;
 } 

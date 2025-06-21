@@ -82,11 +82,11 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   constructor() {
     // Initialize forms
     this.globalForm = this.formBuilder.group({
-      enabled: [false],
-      failedImportMaxStrikes: [{ value: -1, disabled: true }],
+      failedImportMaxStrikes: [-1],
     });
 
     this.instanceForm = this.formBuilder.group({
+      enabled: [true],
       name: ['', Validators.required],
       url: ['', [Validators.required, this.uriValidator.bind(this)]],
       apiKey: ['', Validators.required],
@@ -94,9 +94,6 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
 
     // Load Radarr config data
     this.radarrStore.loadConfig();
-
-    // Setup form value change listeners
-    this.setupFormValueChangeListeners();
 
     // Setup effect to update form when config changes
     effect(() => {
@@ -127,54 +124,11 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
    */
   private updateGlobalFormFromConfig(config: RadarrConfig): void {
     this.globalForm.patchValue({
-      enabled: config.enabled,
       failedImportMaxStrikes: config.failedImportMaxStrikes,
     });
 
-    // Update form control disabled states
-    this.updateFormControlDisabledStates(config);
-
     // Store original values for dirty checking
     this.storeOriginalGlobalValues();
-  }
-
-  /**
-   * Set up listeners for form control value changes to manage dependent control states
-   */
-  private setupFormValueChangeListeners(): void {
-    // Listen for changes to the 'enabled' control
-    const enabledControl = this.globalForm.get('enabled');
-    if (enabledControl) {
-      enabledControl.valueChanges
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(enabled => {
-          this.updateMainControlsState(enabled);
-        });
-    }
-  }
-
-  /**
-   * Update form control disabled states based on the configuration
-   */
-  private updateFormControlDisabledStates(config: RadarrConfig): void {
-    const enabled = config.enabled;
-    this.updateMainControlsState(enabled);
-  }
-
-  /**
-   * Update the state of main controls based on the 'enabled' control value
-   */
-  private updateMainControlsState(enabled: boolean): void {
-    const failedImportMaxStrikesControl = this.globalForm.get('failedImportMaxStrikes');
-
-    // Disable emitting events during state changes to prevent infinite loops
-    const options = { emitEvent: false };
-
-    if (enabled) {
-      failedImportMaxStrikesControl?.enable(options);
-    } else {
-      failedImportMaxStrikesControl?.disable(options);
-    }
   }
 
   /**
@@ -280,11 +234,7 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
       return;
     }
 
-    const currentConfig = this.radarrConfig();
-    if (!currentConfig) return;
-
     const updatedConfig = {
-      enabled: this.globalForm.get('enabled')?.value,
       failedImportMaxStrikes: this.globalForm.get('failedImportMaxStrikes')?.value
     };
 
@@ -331,19 +281,17 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
   }
 
   /**
-   * Check if instance management should be disabled
-   */
-  get instanceManagementDisabled(): boolean {
-    return !this.globalForm.get('enabled')?.value;
-  }
-
-  /**
    * Open modal to add new instance
    */
   openAddInstanceModal(): void {
     this.modalMode = 'add';
     this.editingInstance = null;
-    this.instanceForm.reset();
+    this.instanceForm.reset({
+      enabled: true,
+      name: '',
+      url: '',
+      apiKey: ''
+    });
     this.showInstanceModal = true;
   }
 
@@ -354,6 +302,7 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     this.modalMode = 'edit';
     this.editingInstance = instance;
     this.instanceForm.patchValue({
+      enabled: instance.enabled,
       name: instance.name,
       url: instance.url,
       apiKey: instance.apiKey,
@@ -382,6 +331,7 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     }
 
     const instanceData: CreateArrInstanceDto = {
+      enabled: this.instanceForm.get('enabled')?.value,
       name: this.instanceForm.get('name')?.value,
       url: this.instanceForm.get('url')?.value,
       apiKey: this.instanceForm.get('apiKey')?.value,
@@ -456,12 +406,12 @@ export class RadarrSettingsComponent implements OnDestroy, CanComponentDeactivat
     });
   }
 
+
+
   /**
    * Get modal title based on mode
    */
   get modalTitle(): string {
     return this.modalMode === 'add' ? 'Add Radarr Instance' : 'Edit Radarr Instance';
   }
-
-  // Add any other necessary methods here
 }

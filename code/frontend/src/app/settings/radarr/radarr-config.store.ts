@@ -49,44 +49,32 @@ export class RadarrConfigStore extends signalStore(
     ),
     
     /**
-     * Save the Radarr configuration (basic settings only)
+     * Save the Radarr global configuration
      */
-    saveConfig: rxMethod<Partial<RadarrConfig>>(
-      (config$: Observable<Partial<RadarrConfig>>) => config$.pipe(
+    saveConfig: rxMethod<{failedImportMaxStrikes: number}>(
+      (globalConfig$: Observable<{failedImportMaxStrikes: number}>) => globalConfig$.pipe(
         tap(() => patchState(store, { saving: true, error: null })),
-        switchMap(configUpdate => {
-          const currentConfig = store.config();
-          if (!currentConfig) {
-            patchState(store, { 
-              saving: false, 
-              error: 'No current configuration available' 
-            });
-            return EMPTY;
-          }
-          
-          const updatedConfig: RadarrConfig = {
-            ...currentConfig,
-            ...configUpdate
-          };
-          
-          return configService.updateRadarrConfig(updatedConfig).pipe(
-            tap({
-              next: () => {
+        switchMap(globalConfig => configService.updateRadarrConfig(globalConfig).pipe(
+          tap({
+            next: () => {
+              const currentConfig = store.config();
+              if (currentConfig) {
+                // Update the local config with the new global settings
                 patchState(store, { 
-                  config: updatedConfig, 
+                  config: { ...currentConfig, ...globalConfig }, 
                   saving: false 
                 });
-              },
-              error: (error) => {
-                patchState(store, { 
-                  saving: false, 
-                  error: error.message || 'Failed to save Radarr configuration' 
-                });
               }
-            }),
-            catchError(() => EMPTY)
-          );
-        })
+            },
+            error: (error) => {
+              patchState(store, { 
+                saving: false, 
+                error: error.message || 'Failed to save Radarr configuration' 
+              });
+            }
+          }),
+          catchError(() => EMPTY)
+        ))
       )
     ),
     

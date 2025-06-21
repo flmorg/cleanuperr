@@ -51,8 +51,8 @@ export class SonarrConfigStore extends signalStore(
     /**
      * Save the Sonarr global configuration
      */
-    saveConfig: rxMethod<{enabled: boolean, failedImportMaxStrikes: number}>(
-      (globalConfig$: Observable<{enabled: boolean, failedImportMaxStrikes: number}>) => globalConfig$.pipe(
+    saveConfig: rxMethod<{failedImportMaxStrikes: number}>(
+      (globalConfig$: Observable<{failedImportMaxStrikes: number}>) => globalConfig$.pipe(
         tap(() => patchState(store, { saving: true, error: null })),
         switchMap(globalConfig => configService.updateSonarrConfig(globalConfig).pipe(
           tap({

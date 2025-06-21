@@ -49,44 +49,32 @@ export class LidarrConfigStore extends signalStore(
     ),
     
     /**
-     * Save the Lidarr configuration (basic settings only)
+     * Save the Lidarr global configuration
      */
-    saveConfig: rxMethod<Partial<LidarrConfig>>(
-      (config$: Observable<Partial<LidarrConfig>>) => config$.pipe(
+    saveConfig: rxMethod<{failedImportMaxStrikes: number}>(
+      (globalConfig$: Observable<{failedImportMaxStrikes: number}>) => globalConfig$.pipe(
         tap(() => patchState(store, { saving: true, error: null })),
-        switchMap(configUpdate => {
-          const currentConfig = store.config();
-          if (!currentConfig) {
-            patchState(store, { 
-              saving: false, 
-              error: 'No current configuration available' 
-            });
-            return EMPTY;
-          }
-          
-          const updatedConfig: LidarrConfig = {
-            ...currentConfig,
-            ...configUpdate
-          };
-          
-          return configService.updateLidarrConfig(updatedConfig).pipe(
-            tap({
-              next: () => {
+        switchMap(globalConfig => configService.updateLidarrConfig(globalConfig).pipe(
+          tap({
+            next: () => {
+              const currentConfig = store.config();
+              if (currentConfig) {
+                // Update the local config with the new global settings
                 patchState(store, { 
-                  config: updatedConfig, 
+                  config: { ...currentConfig, ...globalConfig }, 
                   saving: false 
                 });
-              },
-              error: (error) => {
-                patchState(store, { 
-                  saving: false, 
-                  error: error.message || 'Failed to save Lidarr configuration' 
-                });
               }
-            }),
-            catchError(() => EMPTY)
-          );
-        })
+            },
+            error: (error) => {
+              patchState(store, { 
+                saving: false, 
+                error: error.message || 'Failed to save Lidarr configuration' 
+              });
+            }
+          }),
+          catchError(() => EMPTY)
+        ))
       )
     ),
     

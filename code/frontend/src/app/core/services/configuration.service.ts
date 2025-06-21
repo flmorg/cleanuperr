@@ -269,7 +269,7 @@ export class ConfigurationService {
   /**
    * Update Sonarr configuration (global settings only)
    */
-  updateSonarrConfig(config: {enabled: boolean, failedImportMaxStrikes: number}): Observable<any> {
+  updateSonarrConfig(config: {failedImportMaxStrikes: number}): Observable<any> {
     return this.http.put<any>(this.basePathService.buildApiUrl('/configuration/sonarr'), config).pipe(
       catchError((error) => {
         console.error("Error updating Sonarr config:", error);
@@ -292,8 +292,8 @@ export class ConfigurationService {
   /**
    * Update Radarr configuration
    */
-  updateRadarrConfig(config: RadarrConfig): Observable<RadarrConfig> {
-    return this.http.put<RadarrConfig>(this.basePathService.buildApiUrl('/configuration/radarr'), config).pipe(
+  updateRadarrConfig(config: {failedImportMaxStrikes: number}): Observable<any> {
+    return this.http.put<any>(this.basePathService.buildApiUrl('/configuration/radarr'), config).pipe(
       catchError((error) => {
         console.error("Error updating Radarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Radarr configuration"));
@@ -315,8 +315,8 @@ export class ConfigurationService {
   /**
    * Update Lidarr configuration
    */
-  updateLidarrConfig(config: LidarrConfig): Observable<LidarrConfig> {
-    return this.http.put<LidarrConfig>(this.basePathService.buildApiUrl('/configuration/lidarr'), config).pipe(
+  updateLidarrConfig(config: {failedImportMaxStrikes: number}): Observable<any> {
+    return this.http.put<any>(this.basePathService.buildApiUrl('/configuration/lidarr'), config).pipe(
       catchError((error) => {
         console.error("Error updating Lidarr config:", error);
         return throwError(() => new Error(error.error?.error || "Failed to update Lidarr configuration"));

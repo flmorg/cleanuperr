@@ -25,10 +25,6 @@ namespace Cleanuparr.Persistence.Migrations.Data
                         .HasColumnType("TEXT")
                         .HasColumnName("id");
 
-                    b.Property<bool>("Enabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("enabled");
-
                     b.Property<short>("FailedImportMaxStrikes")
                         .HasColumnType("INTEGER")
                         .HasColumnName("failed_import_max_strikes");
@@ -59,6 +55,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                     b.Property<Guid>("ArrConfigId")
                         .HasColumnType("TEXT")
                         .HasColumnName("arr_config_id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("enabled");
 
                     b.Property<string>("Name")
                         .IsRequired()

@@ -9,7 +9,6 @@ import { ArrInstance } from "./arr-config.model";
  * Main LidarrConfig model representing the configuration for Lidarr integration
  */
 export interface LidarrConfig {
-  enabled: boolean;
   failedImportMaxStrikes: number;
   instances: ArrInstance[];
 }

@@ -7,6 +7,8 @@ namespace Cleanuparr.Application.Features.Arr.Dtos;
 /// </summary>
 public record CreateArrInstanceDto
 {
+    public bool Enabled { get; init; } = true;
+    
     [Required]
     public required string Name { get; init; }
     

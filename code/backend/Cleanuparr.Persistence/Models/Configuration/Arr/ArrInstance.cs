@@ -10,6 +10,8 @@ public sealed class ArrInstance
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; set; } = Guid.NewGuid();
     
+    public bool Enabled { get; set; }
+    
     public Guid ArrConfigId { get; set; }
     
     public ArrConfig? ArrConfig { get; set; }

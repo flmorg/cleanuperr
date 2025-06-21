@@ -200,7 +200,7 @@ public sealed class DownloadCleaner : GenericHandler
         }
     }
 
-    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig)
+    protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)
     {
         using var _ = LogContext.PushProperty(LogProperties.Category, instanceType.ToString());
         

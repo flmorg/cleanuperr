@@ -9,7 +9,6 @@ import { ArrInstance } from "./arr-config.model";
  * Main SonarrConfig model representing the configuration for Sonarr integration
  */
 export interface SonarrConfig {
-  enabled: boolean;
   failedImportMaxStrikes: number;
   instances: ArrInstance[];
 }

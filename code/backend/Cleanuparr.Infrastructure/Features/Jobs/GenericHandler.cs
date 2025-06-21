@@ -147,12 +147,17 @@ public abstract class GenericHandler : IHandler
 
     protected abstract Task ExecuteInternalAsync();
     
-    protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType, ArrConfig arrConfig);
+    protected abstract Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType);
     
     protected async Task ProcessArrConfigAsync(ArrConfig config, InstanceType instanceType, bool throwOnFailure = false)
     {
-        if (!config.Enabled)
+        var enabledInstances = config.Instances
+            .Where(x => x.Enabled)
+            .ToList();
+        
+        if (enabledInstances.Count is 0)
         {
+            _logger.LogDebug($"Skip processing {instanceType}. No enabled instances found");
             return;
         }
 
@@ -160,7 +165,7 @@ public abstract class GenericHandler : IHandler
         {
             try
             {
-                await ProcessInstanceAsync(arrInstance, instanceType, config);
+                await ProcessInstanceAsync(arrInstance, instanceType);
             }
             catch (Exception exception)
             {
