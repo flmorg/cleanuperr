@@ -51,7 +51,8 @@ RUN apt-get update && apt-get install -y \
 ENV PUID=1000 \
     PGID=1000 \
     UMASK=022 \
-    TZ=Etc/UTC
+    TZ=Etc/UTC \
+    HTTP_PORTS=11011
 
 # Fix FileSystemWatcher in Docker: https://github.com/dotnet/dotnet-docker/issues/3546
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true

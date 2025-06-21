@@ -10,23 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile(Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.json"), optional: true, reloadOnChange: true);
 
-// Configure PORT before building the app
-string? portConfig = builder.Configuration.GetValue<string>("PORT");
-
-// Validate the port configuration
-var portValidationResult = PortValidator.Validate(portConfig);
-if (!portValidationResult.IsValid)
-{
-    throw new InvalidOperationException($"Invalid PORT configuration: {portValidationResult.ErrorMessage}");
-}
-
-// Get the normalized port (uses default if null/empty)
-int port = PortValidator.Normalize(portConfig);
-
-// Configure the URLs for the application
-string[] urls = [$"http://[::]:{port}"];
-builder.WebHost.UseUrls(urls);
-
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
@@ -104,7 +87,7 @@ if (basePath is not null)
     }
 }
 
-logger.LogInformation("Server configuration: PORT={port}, BASE_PATH={basePath}", port, basePath ?? "/");
+logger.LogInformation("Server configuration: PORT={port}, BASE_PATH={basePath}", app.Configuration.GetValue<string>("HTTP_PORTS"), basePath ?? "/");
 
 // Initialize the host
 await app.Init();

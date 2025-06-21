@@ -11,7 +11,7 @@ export class BasePathService {
   getBasePath(): string {
     // If in development mode, use the local API
     if (isDevMode()) {
-      return `http://localhost:11011`;
+      return `http://localhost:5000`;
     }
 
     // Use the server-injected base path or fallback to root
