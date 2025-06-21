@@ -217,6 +217,7 @@
 *.log
 *.loop-vbs
 *.ls
+*.lz
 *.m3u
 *.m4a
 *.mac

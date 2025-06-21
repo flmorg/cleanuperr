@@ -23,6 +23,7 @@
 *.js
 *.link
 *.lnk
+*.lz
 *.msi
 *.nfo
 *.perl
