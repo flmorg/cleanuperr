@@ -19,16 +19,12 @@
     <span>Become A Sponsor</span>
   </a>
   
-  <!-- Core Navigation Group -->
-  <div class="nav-group" style="margin-top: -10px;">
-    <div class="nav-group-title">Core</div>
-    <a [routerLink]="['/dashboard']" class="nav-item" [class.active]="router.url.includes('/dashboard')" (click)="onNavItemClick()">
-      <div class="nav-icon-wrapper">
-        <i class="pi pi-home"></i>
-      </div>
-      <span>Dashboard</span>
-    </a>
-  </div>
+  <a [routerLink]="['/dashboard']" class="nav-item" [class.active]="router.url.includes('/dashboard')" (click)="onNavItemClick()">
+    <div class="nav-icon-wrapper">
+      <i class="pi pi-home"></i>
+    </div>
+    <span>Dashboard</span>
+  </a>
 
   <!-- Settings Group -->
   <div class="nav-group">
@@ -89,18 +85,28 @@
   <!-- Resources Group -->
   <div class="nav-group">
     <div class="nav-group-title">Resources</div>
-    <a href="https://github.com/username/cleanuparr" class="nav-item" target="_blank" rel="noopener noreferrer">
+    <a href="https://github.com/Cleanuparr/Cleanuparr/issues" class="nav-item" target="_blank" rel="noopener noreferrer">
       <div class="nav-icon-wrapper">
         <i class="pi pi-github"></i>
       </div>
-      <span>GitHub Repository</span>
+      <span>Issues and requests</span>
     </a>
 
+    <a href="https://discord.gg/SCtMCgtsc4" class="nav-item" target="_blank" rel="noopener noreferrer">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-discord"></i>
+      </div>
+      <span>Discord</span>
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Recommended apps</div>
     <a href="https://github.com/plexguide/Huntarr.io" class="nav-item" target="_blank" rel="noopener noreferrer">
       <div class="nav-icon-wrapper">
         <i class="pi pi-github"></i>
       </div>
-      <span>Huntar</span>
+      <span>Huntarr</span>
     </a>
   </div>
 </nav>
