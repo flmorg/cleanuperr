@@ -20,6 +20,8 @@ import { SelectModule } from "primeng/select";
 import { ChipsModule } from "primeng/chips";
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { ConfirmationService } from "primeng/api";
 
 @Component({
   selector: "app-general-settings",
@@ -37,8 +39,9 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     SelectModule,
     AutoCompleteModule,
     LoadingErrorStateComponent,
+    ConfirmDialogModule,
   ],
-  providers: [GeneralConfigStore],
+  providers: [GeneralConfigStore, ConfirmationService],
   templateUrl: "./general-settings.component.html",
   styleUrls: ["./general-settings.component.scss"],
 })
@@ -76,6 +79,7 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   private formBuilder = inject(FormBuilder);
   private notificationService = inject(NotificationService);
   private generalConfigStore = inject(GeneralConfigStore);
+  private confirmationService = inject(ConfirmationService);
 
   // Signals from the store
   readonly generalConfig = this.generalConfigStore.config;
@@ -85,6 +89,12 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
 
   // Subject for unsubscribing from observables when component is destroyed
   private destroy$ = new Subject<void>();
+  
+  // Track the previous support banner state to detect when user is trying to disable
+  private previousSupportBannerState = true;
+  
+  // Flag to track if form has been initially loaded to avoid showing dialog on page load
+  private formInitialized = false;
 
   /**
    * Check if component can be deactivated (navigation guard)
@@ -127,6 +137,12 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
         // Store original values for dirty checking
         this.storeOriginalValues();
 
+        // Track the support banner state for confirmation dialog logic
+        this.previousSupportBannerState = config.displaySupportBanner;
+        
+        // Mark form as initialized to enable confirmation dialogs for user actions
+        this.formInitialized = true;
+
         // Mark form as pristine since we've just loaded the data
         this.generalForm.markAsPristine();
       }
@@ -149,6 +165,22 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
    * Set up listeners for form control value changes
    */
   private setupFormValueChangeListeners(): void {
+    // Listen for changes to the 'displaySupportBanner' control
+    const supportBannerControl = this.generalForm.get('displaySupportBanner');
+    if (supportBannerControl) {
+      supportBannerControl.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(enabled => {
+          // Only show confirmation dialog if form is initialized and user is trying to disable
+          if (this.formInitialized && !enabled && this.previousSupportBannerState) {
+            this.showDisableSupportBannerConfirmationDialog();
+          } else {
+            // Update state tracking
+            this.previousSupportBannerState = enabled;
+          }
+        });
+    }
+    
     // Listen to all form changes to check for actual differences from original values
     this.generalForm.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -310,5 +342,34 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   hasError(controlName: string, errorName: string): boolean {
     const control = this.generalForm.get(controlName);
     return control ? control.touched && control.hasError(errorName) : false;
+  }
+
+  /**
+   * Show disable support banner confirmation dialog
+   */
+  private showDisableSupportBannerConfirmationDialog(): void {
+    this.confirmationService.confirm({
+      header: 'Support Cleanuparr',
+      message: `
+        <div style="text-align: left; line-height: 1.6;">
+          <p style="margin-bottom: 15px; color: #60a5fa; font-weight: 500;">
+            If you haven't already, please consider giving us a <i class="pi pi-star"></i> on 
+            <a href="https://github.com/Cleanuparr/Cleanuparr" target="_blank" style="color: #60a5fa; text-decoration: underline;">GitHub</a> 
+            to help spread the word!
+          </p>
+          <p style="margin-bottom: 20px; font-style: italic; font-size: 14px; color: #9ca3af;">
+            Thank you for using Cleanuparr and for your support! <i class="pi pi-heart"></i>
+          </p>
+        </div>
+      `,
+      icon: 'pi pi-heart',
+      acceptIcon: 'pi pi-check',
+      acceptLabel: 'OK',
+      rejectVisible: false,
+      accept: () => {
+        // User acknowledged the message, update state tracking to allow disabling
+        this.previousSupportBannerState = false;
+      }
+    });
   }
 }
