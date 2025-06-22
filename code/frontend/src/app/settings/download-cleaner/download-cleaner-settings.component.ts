@@ -139,7 +139,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       unlinkedUseTag: [{ value: false, disabled: true }],
       unlinkedIgnoredRootDir: [{ value: '', disabled: true }],
       unlinkedCategories: [{ value: [], disabled: true }]
-    });
+    }, { validators: this.validateUnlinkedCategories });
 
     // Load the current configuration
     effect(() => {
@@ -194,6 +194,20 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
 
     if (maxRatio < 0 && maxSeedTime < 0) {
       return { bothDisabled: true };
+    }
+
+    return null;
+  }
+  
+  /**
+   * Custom validator for unlinked categories - requires categories when unlinked handling is enabled
+   */
+  private validateUnlinkedCategories(group: FormGroup): ValidationErrors | null {
+    const unlinkedEnabled = group.get('unlinkedEnabled')?.value;
+    const unlinkedCategories = group.get('unlinkedCategories')?.value;
+
+    if (unlinkedEnabled && (!unlinkedCategories || unlinkedCategories.length === 0)) {
+      return { unlinkedCategoriesRequired: true };
     }
 
     return null;
@@ -590,6 +604,13 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   hasError(controlName: string, errorName: string): boolean {
     const control = this.downloadCleanerForm.get(controlName);
     return control ? control.touched && control.hasError(errorName) : false;
+  }
+  
+  /**
+   * Check if the form has the unlinked categories validation error
+   */
+  hasUnlinkedCategoriesError(): boolean {
+    return this.downloadCleanerForm.touched && this.downloadCleanerForm.hasError('unlinkedCategoriesRequired');
   }
   
   /**

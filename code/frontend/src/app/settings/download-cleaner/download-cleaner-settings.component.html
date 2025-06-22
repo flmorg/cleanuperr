@@ -248,6 +248,7 @@
                   >
                   </p-autocomplete>
                 </div>
+                <small *ngIf="hasUnlinkedCategoriesError()" class="p-error">At least one category is required when unlinked download handling is enabled</small>
                 <small class="form-helper-text">Categories to check for unlinked downloads</small>
               </div>
             </div>
