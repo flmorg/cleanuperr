@@ -109,129 +109,146 @@
         </div>
       </div>
 
-      <!-- Sonarr Blocklist Settings -->
-      <div formGroupName="sonarr">
-        <div class="field-row">
-          <label class="field-label">Enable Sonarr Blocklist</label>
-          <div class="field-input">
-            <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
-            <small class="form-helper-text">When enabled, the Sonarr blocklist will be used for content filtering</small>
-          </div>
-        </div>
+      <!-- Arr Service Settings in Accordion -->
+      <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
+        <!-- Sonarr Settings -->
+        <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="0">
+          <p-accordion-header>Sonarr Settings</p-accordion-header>
+          <p-accordion-content>
+            <div formGroupName="sonarr">
+              <div class="field-row">
+                <label class="field-label">Enable Sonarr Blocklist</label>
+                <div class="field-input">
+                  <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+                  <small class="form-helper-text">When enabled, the Sonarr blocklist will be used for content filtering</small>
+                </div>
+              </div>
 
-        <div class="field-row">
-          <label class="field-label">Blocklist Path</label>
-          <div>
-            <div class="field-input">
-              <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+              <div class="field-row">
+                <label class="field-label">Blocklist Path</label>
+                <div>
+                  <div class="field-input">
+                    <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+                  </div>
+                  <small *ngIf="hasNestedError('sonarr', 'blocklistPath', 'required')" class="p-error">Path is required when Sonarr blocklist is enabled</small>
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">Blocklist Type</label>
+                <div class="field-input">
+                  <p-select
+                    formControlName="blocklistType"
+                    [options]="[
+                      { label: 'Blacklist', value: 'Blacklist' },
+                      { label: 'Whitelist', value: 'Whitelist' }
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                  ></p-select>
+                  <small class="form-helper-text"
+                    >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+                  >
+                </div>
+              </div>
             </div>
-            <small *ngIf="hasNestedError('sonarr', 'blocklistPath', 'required')" class="p-error">Path is required when Sonarr blocklist is enabled</small>
-            <small class="form-helper-text">Path to the blocklist file or URL</small>
-          </div>
-        </div>
+          </p-accordion-content>
+        </p-accordion-panel>
 
-        <div class="field-row">
-          <label class="field-label">Blocklist Type</label>
-          <div class="field-input">
-            <p-select
-              formControlName="blocklistType"
-              [options]="[
-                { label: 'Blacklist', value: 'Blacklist' },
-                { label: 'Whitelist', value: 'Whitelist' }
-              ]"
-              optionLabel="label"
-              optionValue="value"
-              appendTo="body"
-            ></p-select>
-            <small class="form-helper-text"
-              >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
-            >
-          </div>
-        </div>
-      </div>
+        <!-- Radarr Settings -->
+        <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="1">
+          <p-accordion-header>Radarr Settings</p-accordion-header>
+          <p-accordion-content>
+            <div formGroupName="radarr">
+              <div class="field-row">
+                <label class="field-label">Enable Radarr Blocklist</label>
+                <div class="field-input">
+                  <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+                  <small class="form-helper-text">When enabled, the Radarr blocklist will be used for content filtering</small>
+                </div>
+              </div>
 
-      <!-- Radarr Blocklist Settings -->
-      <div formGroupName="radarr">
-        <div class="field-row">
-          <label class="field-label">Enable Radarr Blocklist</label>
-          <div class="field-input">
-            <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
-            <small class="form-helper-text">When enabled, the Radarr blocklist will be used for content filtering</small>
-          </div>
-        </div>
+              <div class="field-row">
+                <label class="field-label">Blocklist Path</label>
+                <div>
+                  <div class="field-input">
+                    <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+                  </div>
+                  <small *ngIf="hasNestedError('radarr', 'blocklistPath', 'required')" class="p-error">Path is required when Radarr blocklist is enabled</small>
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </div>
+              </div>
 
-        <div class="field-row">
-          <label class="field-label">Blocklist Path</label>
-          <div>
-            <div class="field-input">
-              <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+              <div class="field-row">
+                <label class="field-label">Blocklist Type</label>
+                <div class="field-input">
+                  <p-select
+                    formControlName="blocklistType"
+                    [options]="[
+                      { label: 'Blacklist', value: 'Blacklist' },
+                      { label: 'Whitelist', value: 'Whitelist' }
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                  ></p-select>
+                  <small class="form-helper-text"
+                    >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+                  >
+                </div>
+              </div>
             </div>
-            <small *ngIf="hasNestedError('radarr', 'blocklistPath', 'required')" class="p-error">Path is required when Radarr blocklist is enabled</small>
-            <small class="form-helper-text">Path to the blocklist file or URL</small>
-          </div>
-          
-        </div>
+          </p-accordion-content>
+        </p-accordion-panel>
 
-        <div class="field-row">
-          <label class="field-label">Blocklist Type</label>
-          <div class="field-input">
-            <p-select
-              formControlName="blocklistType"
-              [options]="[
-                { label: 'Blacklist', value: 'Blacklist' },
-                { label: 'Whitelist', value: 'Whitelist' }
-              ]"
-              optionLabel="label"
-              optionValue="value"
-              appendTo="body"
-            ></p-select>
-            <small class="form-helper-text"
-              >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
-            >
-          </div>
-        </div>
-      </div>
+        <!-- Lidarr Settings -->
+        <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="2">
+          <p-accordion-header>Lidarr Settings</p-accordion-header>
+          <p-accordion-content>
+            <div formGroupName="lidarr">
+              <div class="field-row">
+                <label class="field-label">Enable Lidarr Blocklist</label>
+                <div class="field-input">
+                  <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+                  <small class="form-helper-text">When enabled, the Lidarr blocklist will be used for content filtering</small>
+                </div>
+              </div>
 
-      <!-- Lidarr Blocklist Settings -->
-      <div formGroupName="lidarr">
-        <div class="field-row">
-          <label class="field-label">Enable Lidarr Blocklist</label>
-          <div class="field-input">
-            <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
-            <small class="form-helper-text">When enabled, the Lidarr blocklist will be used for content filtering</small>
-          </div>
-        </div>
+              <div class="field-row">
+                <label class="field-label">Blocklist Path</label>
+                <div>
+                  <div class="field-input">
+                    <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+                  </div>
+                  <small *ngIf="hasNestedError('lidarr', 'blocklistPath', 'required')" class="p-error">Path is required when Lidarr blocklist is enabled</small>
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </div>
+              </div>
 
-        <div class="field-row">
-          <label class="field-label">Blocklist Path</label>
-          <div>
-            <div class="field-input">
-              <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+              <div class="field-row">
+                <label class="field-label">Blocklist Type</label>
+                <div class="field-input">
+                  <p-select
+                    formControlName="blocklistType"
+                    [options]="[
+                      { label: 'Blacklist', value: 'Blacklist' },
+                      { label: 'Whitelist', value: 'Whitelist' }
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                  ></p-select>
+                  <small class="form-helper-text"
+                    >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+                  >
+                </div>
+              </div>
             </div>
-            <small *ngIf="hasNestedError('lidarr', 'blocklistPath', 'required')" class="p-error">Path is required when Lidarr blocklist is enabled</small>
-            <small class="form-helper-text">Path to the blocklist file or URL</small>
-          </div>
-        </div>
-
-        <div class="field-row">
-          <label class="field-label">Blocklist Type</label>
-          <div class="field-input">
-            <p-select
-              formControlName="blocklistType"
-              [options]="[
-                { label: 'Blacklist', value: 'Blacklist' },
-                { label: 'Whitelist', value: 'Whitelist' }
-              ]"
-              optionLabel="label"
-              optionValue="value"
-              appendTo="body"
-            ></p-select>
-            <small class="form-helper-text"
-              >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
-            >
-          </div>
-        </div>
-      </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+      </p-accordion>
 
       <!-- Action buttons -->
       <div class="card-footer mt-3">
