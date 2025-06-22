@@ -92,158 +92,168 @@
         </div>
       </div>
 
-      <!-- Delete Private Option -->
-      <div class="field-row">
-        <label class="field-label">Delete Private Torrents</label>
-        <div class="field-input">
-          <p-checkbox formControlName="deletePrivate" [binary]="true" inputId="deletePrivate"></p-checkbox>
-          <small class="form-helper-text">When enabled, private torrents will be deleted</small>
-        </div>
-      </div>
-
-      <!-- Categories Management -->
-      <div class="section-header mt-4 mb-2">
-        <h3>Clean Categories</h3>
-        <small>Configure categories for automatic cleanup</small>
-      </div>
-
-      <!-- Categories Vertical Layout -->
-      <div class="categories-container mb-3">
-        <!-- Empty state message when no categories -->
-        <div *ngIf="categoriesFormArray.controls.length === 0" class="empty-categories-message p-3 text-center">
-          <p>No categories defined. Add a category to start cleaning downloads.</p>
-        </div>
-        
-        <!-- Category cards -->
-        <div class="category-list">
-          <div *ngFor="let category of categoriesFormArray.controls; let i = index" class="category-item" [formGroup]="getCategoryAsFormGroup(i)">
-            <div class="category-header">
-              <div class="category-title">
-                <i class="pi pi-tag category-icon"></i>
-                <input type="text" pInputText formControlName="name" placeholder="Category name" class="category-name-input" />
+      <!-- Detailed Settings in Accordion -->
+      <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
+        <!-- Seeding Settings -->
+        <p-accordion-panel [disabled]="!downloadCleanerForm.get('enabled')?.value" [value]="0">
+          <p-accordion-header>Seeding Settings</p-accordion-header>
+          <p-accordion-content>
+            <!-- Delete Private Option -->
+            <div class="field-row">
+              <label class="field-label">Delete Private Torrents</label>
+              <div class="field-input">
+                <p-checkbox formControlName="deletePrivate" [binary]="true" inputId="deletePrivate"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be deleted</small>
               </div>
-              <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm" 
-                (click)="removeCategory(i)" [disabled]="downloadCleanerForm.disabled"></button>
             </div>
-            <small *ngIf="hasCategoryError(i, 'name', 'required')" class="p-error block">Name is required</small>
-            
-            <div class="category-content">
-              <div class="category-field">
-                <label>Max Ratio</label>
-                <div class="field-input">
-                  <p-inputNumber formControlName="maxRatio" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
-                    [minFractionDigits]="2" [maxFractionDigits]="2" [useGrouping]="false"
-                    decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
-                    decrementButtonIcon="pi pi-minus">
-                  </p-inputNumber>
-                  <small *ngIf="hasCategoryError(i, 'maxRatio', 'min')" class="p-error block">Min value is -1</small>
-                  <small class="form-helper-text">Maximum ratio to seed before removing (<code>-1</code> means disabled)</small>
-                </div>
+
+            <!-- Categories Management -->
+            <div class="section-header mt-4 mb-2">
+              <h3>Seeding Rules</h3>
+              <small>Configure categories for automatic cleanup</small>
+            </div>
+
+            <!-- Categories Vertical Layout -->
+            <div class="categories-container mb-3">
+              <!-- Empty state message when no categories -->
+              <div *ngIf="categoriesFormArray.controls.length === 0" class="empty-categories-message p-3 text-center">
+                <p>No categories defined. Add a category to start cleaning downloads.</p>
               </div>
               
-              <div class="category-field">
-                <label>Min Seed Time (hours)</label>
-                <div class="field-input">
-                  <p-inputNumber formControlName="minSeedTime" [min]="0" [showButtons]="true" buttonLayout="horizontal"
-                    decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
-                    decrementButtonIcon="pi pi-minus">
-                  </p-inputNumber>
-                  <small *ngIf="hasCategoryError(i, 'minSeedTime', 'min')" class="p-error block">Min value is 0</small>
-                  <small class="form-helper-text">Minimum time to seed before removing a download that has reached the max ratio (<code>0</code> means disabled)</small>
-                </div>
-              </div>
-              
-              <div class="category-field">
-                <label>Max Seed Time (hours)</label>
-                <div>
-                  <div class="field-input">
-                    <p-inputNumber formControlName="maxSeedTime" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
-                      decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
-                      decrementButtonIcon="pi pi-minus">
-                    </p-inputNumber>
+              <!-- Category cards -->
+              <div class="category-list">
+                <div *ngFor="let category of categoriesFormArray.controls; let i = index" class="category-item" [formGroup]="getCategoryAsFormGroup(i)">
+                  <div class="category-header">
+                    <div class="category-title">
+                      <i class="pi pi-tag category-icon"></i>
+                      <input type="text" pInputText formControlName="name" placeholder="Category name" class="category-name-input" />
+                    </div>
+                    <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-sm" 
+                      (click)="removeCategory(i)" [disabled]="downloadCleanerForm.disabled"></button>
                   </div>
-                  <small class="form-helper-text">Maximum time to seed before removing (<code>-1</code> means disabled)</small>
-                  <small *ngIf="hasCategoryError(i, 'maxSeedTime', 'min')" class="p-error block">Min value is -1</small>
+                  <small *ngIf="hasCategoryError(i, 'name', 'required')" class="p-error block">Name is required</small>
+                  
+                  <div class="category-content">
+                    <div class="category-field">
+                      <label>Max Ratio</label>
+                      <div class="field-input">
+                        <p-inputNumber formControlName="maxRatio" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
+                          [minFractionDigits]="2" [maxFractionDigits]="2" [useGrouping]="false"
+                          decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
+                          decrementButtonIcon="pi pi-minus">
+                        </p-inputNumber>
+                        <small *ngIf="hasCategoryError(i, 'maxRatio', 'min')" class="p-error block">Min value is -1</small>
+                        <small class="form-helper-text">Maximum ratio to seed before removing (<code>-1</code> means disabled)</small>
+                      </div>
+                    </div>
+                    
+                    <div class="category-field">
+                      <label>Min Seed Time (hours)</label>
+                      <div class="field-input">
+                        <p-inputNumber formControlName="minSeedTime" [min]="0" [showButtons]="true" buttonLayout="horizontal"
+                          decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
+                          decrementButtonIcon="pi pi-minus">
+                        </p-inputNumber>
+                        <small *ngIf="hasCategoryError(i, 'minSeedTime', 'min')" class="p-error block">Min value is 0</small>
+                        <small class="form-helper-text">Minimum time to seed before removing a download that has reached the max ratio (<code>0</code> means disabled)</small>
+                      </div>
+                    </div>
+                    
+                    <div class="category-field">
+                      <label>Max Seed Time (hours)</label>
+                      <div>
+                        <div class="field-input">
+                          <p-inputNumber formControlName="maxSeedTime" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
+                            decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" incrementButtonIcon="pi pi-plus"
+                            decrementButtonIcon="pi pi-minus">
+                          </p-inputNumber>
+                        </div>
+                        <small class="form-helper-text">Maximum time to seed before removing (<code>-1</code> means disabled)</small>
+                        <small *ngIf="hasCategoryError(i, 'maxSeedTime', 'min')" class="p-error block">Min value is -1</small>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Error for both maxRatio and maxSeedTime disabled -->
+                  <small *ngIf="hasCategoryGroupError(i, 'bothDisabled')" class="p-error block">
+                    Both max ratio and max seed time cannot be disabled at the same time
+                  </small>
                 </div>
               </div>
+              
+              <div class="flex justify-content-end mt-3">
+                <button pButton type="button" icon="pi pi-plus" label="Add Category" 
+                  (click)="addCategory()" [disabled]="downloadCleanerForm.get('enabled')?.value === false" class="p-button-outlined"></button>
+              </div>
             </div>
-            <!-- Error for both maxRatio and maxSeedTime disabled -->
-            <small *ngIf="hasCategoryGroupError(i, 'bothDisabled')" class="p-error block">
-              Both max ratio and max seed time cannot be disabled at the same time
-            </small>
-          </div>
-        </div>
-        
-        <div class="flex justify-content-end mt-3">
-          <button pButton type="button" icon="pi pi-plus" label="Add Category" 
-            (click)="addCategory()" [disabled]="downloadCleanerForm.get('enabled')?.value === false" class="p-button-outlined"></button>
-        </div>
-      </div>
+          </p-accordion-content>
+        </p-accordion-panel>
 
-      <!-- Unlinked Downloads Settings -->
-      <div class="section-header mt-4 mb-2">
-        <h3>Unlinked Downloads Settings</h3>
-        <div class="field-row">
-          <label class="field-label">Enable Unlinked Download Handling</label>
-          <div class="field-input">
-            <p-checkbox formControlName="unlinkedEnabled" [binary]="true" inputId="unlinkedEnabled"></p-checkbox>
-            <small class="form-helper-text">Enable management of downloads that have no hardlinks</small>
-          </div>
-        </div>
-        <small>Configure handling of unlinked downloads (downloads that have no hardlinks)</small>
-      </div>
+        <!-- Unlinked Download Settings -->
+        <p-accordion-panel [disabled]="!downloadCleanerForm.get('enabled')?.value" [value]="1">
+          <p-accordion-header>Unlinked Download Settings</p-accordion-header>
+          <p-accordion-content>
+            <div class="field-row">
+              <label class="field-label">Enable Unlinked Download Handling</label>
+              <div class="field-input">
+                <p-checkbox formControlName="unlinkedEnabled" [binary]="true" inputId="unlinkedEnabled"></p-checkbox>
+                <small class="form-helper-text">Enable management of downloads that have no hardlinks</small>
+              </div>
+            </div>
 
-      <!-- Unlinked Target Category -->
-      <div class="field-row">
-        <label class="field-label">Target Category</label>
-        <div>
-          <div class="field-input">
-            <input type="text" pInputText formControlName="unlinkedTargetCategory" placeholder="Target category name" />
-          </div>
-          <small *ngIf="hasError('unlinkedTargetCategory', 'required')" class="p-error">Target category is required</small>
-          <small class="form-helper-text">Category to move unlinked downloads to</small>
-        </div>
-      </div>
+            <!-- Unlinked Target Category -->
+            <div class="field-row">
+              <label class="field-label">Target Category</label>
+              <div>
+                <div class="field-input">
+                  <input type="text" pInputText formControlName="unlinkedTargetCategory" placeholder="Target category name" />
+                </div>
+                <small *ngIf="hasError('unlinkedTargetCategory', 'required')" class="p-error">Target category is required</small>
+                <small class="form-helper-text">Category to move unlinked downloads to</small>
+              </div>
+            </div>
 
-      <!-- Use Tag Option -->
-      <div class="field-row">
-        <label class="field-label">Use Tag</label>
-        <div class="field-input">
-          <p-checkbox formControlName="unlinkedUseTag" [binary]="true" inputId="unlinkedUseTag"></p-checkbox>
-          <small class="form-helper-text">When enabled, uses a tag instead of category (qBittorrent only)</small>
-        </div>
-      </div>
+            <!-- Use Tag Option -->
+            <div class="field-row">
+              <label class="field-label">Use Tag</label>
+              <div class="field-input">
+                <p-checkbox formControlName="unlinkedUseTag" [binary]="true" inputId="unlinkedUseTag"></p-checkbox>
+                <small class="form-helper-text">When enabled, uses a tag instead of category (qBittorrent only)</small>
+              </div>
+            </div>
 
-      <!-- Ignored Root Directory -->
-      <div class="field-row">
-        <label class="field-label">Ignored Root Directory</label>
-        <div>
-          <div class="field-input">
-            <input type="text" pInputText formControlName="unlinkedIgnoredRootDir" placeholder="/path/to/directory" />
-          </div>
-          <small class="form-helper-text">Root directory to ignore when checking for unlinked downloads (used for cross-seed)</small>
-        </div>
-      </div>
+            <!-- Ignored Root Directory -->
+            <div class="field-row">
+              <label class="field-label">Ignored Root Directory</label>
+              <div>
+                <div class="field-input">
+                  <input type="text" pInputText formControlName="unlinkedIgnoredRootDir" placeholder="/path/to/directory" />
+                </div>
+                <small class="form-helper-text">Root directory to ignore when checking for unlinked downloads (used for cross-seed)</small>
+              </div>
+            </div>
 
-      <!-- Unlinked Categories -->
-      <div class="field-row">
-        <label class="field-label">Unlinked Categories</label>
-        <div>
-          <div class="field-input">
-            <p-autocomplete
-              formControlName="unlinkedCategories"
-              multiple
-              fluid
-              [typeahead]="false"
-              [suggestions]="unlinkedCategoriesSuggestions"
-              (completeMethod)="onUnlinkedCategoriesComplete($event)"
-              placeholder="Add category and press Enter"
-            >
-            </p-autocomplete>
-          </div>
-          <small class="form-helper-text">Categories to check for unlinked downloads</small>
-        </div>
-      </div>
+            <!-- Unlinked Categories -->
+            <div class="field-row">
+              <label class="field-label">Unlinked Categories</label>
+              <div>
+                <div class="field-input">
+                  <p-autocomplete
+                    formControlName="unlinkedCategories"
+                    multiple
+                    fluid
+                    [typeahead]="false"
+                    [suggestions]="unlinkedCategoriesSuggestions"
+                    (completeMethod)="onUnlinkedCategoriesComplete($event)"
+                    placeholder="Add category and press Enter"
+                  >
+                  </p-autocomplete>
+                </div>
+                <small class="form-helper-text">Categories to check for unlinked downloads</small>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+      </p-accordion>
 
       <!-- Form Actions -->
       <div class="card-footer mt-3">

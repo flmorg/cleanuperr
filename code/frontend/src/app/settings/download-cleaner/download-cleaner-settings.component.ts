@@ -74,6 +74,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   originalFormValues: any;
   private destroy$ = new Subject<void>();
   hasActualChanges = false; // Flag to track actual form changes
+  activeAccordionIndices: number[] = [];
   
   // Minimal autocomplete support - empty suggestions to allow manual input
   unlinkedCategoriesSuggestions: string[] = [];
@@ -517,6 +518,9 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       unlinkedIgnoredRootDir: '',
       unlinkedCategories: []
     });
+
+    // Reset accordion indices
+    this.activeAccordionIndices = [];
 
     // Manually update control states after reset
     this.updateMainControlsState(false);
