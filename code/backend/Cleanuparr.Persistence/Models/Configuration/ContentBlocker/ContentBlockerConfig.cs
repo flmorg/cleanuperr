@@ -8,23 +8,23 @@ public sealed record ContentBlockerConfig : IJobConfig
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
     
-    public bool Enabled { get; init; }
+    public bool Enabled { get; set; }
     
-    public string CronExpression { get; init; } = "0/5 * * * * ?";
+    public string CronExpression { get; set; } = "0/5 * * * * ?";
     
-    public bool UseAdvancedScheduling { get; init; }
+    public bool UseAdvancedScheduling { get; set; }
 
-    public bool IgnorePrivate { get; init; }
+    public bool IgnorePrivate { get; set; }
     
-    public bool DeletePrivate { get; init; }
+    public bool DeletePrivate { get; set; }
 
-    public BlocklistSettings Sonarr { get; init; } = new();
+    public BlocklistSettings Sonarr { get; set; } = new();
     
-    public BlocklistSettings Radarr { get; init; } = new();
+    public BlocklistSettings Radarr { get; set; } = new();
     
-    public BlocklistSettings Lidarr { get; init; } = new();
+    public BlocklistSettings Lidarr { get; set; } = new();
     
     public void Validate()
     {

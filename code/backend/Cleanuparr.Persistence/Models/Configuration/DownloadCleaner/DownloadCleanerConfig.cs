@@ -8,33 +8,33 @@ public sealed record DownloadCleanerConfig : IJobConfig
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid Id { get; set; } = Guid.NewGuid();
     
-    public bool Enabled { get; init; }
+    public bool Enabled { get; set; }
 
-    public string CronExpression { get; init; } = "0 0 * * * ?";
+    public string CronExpression { get; set; } = "0 0 * * * ?";
 
     /// <summary>
     /// Indicates whether to use the CronExpression directly or convert from a user-friendly schedule
     /// </summary>
-    public bool UseAdvancedScheduling { get; init; }
+    public bool UseAdvancedScheduling { get; set; }
 
-    public List<CleanCategory> Categories { get; init; } = [];
+    public List<CleanCategory> Categories { get; set; } = [];
 
-    public bool DeletePrivate { get; init; }
+    public bool DeletePrivate { get; set; }
     
     /// <summary>
     /// Indicates whether unlinked download handling is enabled
     /// </summary>
-    public bool UnlinkedEnabled { get; init; } = false;
+    public bool UnlinkedEnabled { get; set; } = false;
     
-    public string UnlinkedTargetCategory { get; init; } = "cleanuparr-unlinked";
+    public string UnlinkedTargetCategory { get; set; } = "cleanuparr-unlinked";
 
-    public bool UnlinkedUseTag { get; init; }
+    public bool UnlinkedUseTag { get; set; }
 
-    public string UnlinkedIgnoredRootDir { get; init; } = string.Empty;
+    public string UnlinkedIgnoredRootDir { get; set; } = string.Empty;
     
-    public List<string> UnlinkedCategories { get; init; } = [];
+    public List<string> UnlinkedCategories { get; set; } = [];
 
     public void Validate()
     {

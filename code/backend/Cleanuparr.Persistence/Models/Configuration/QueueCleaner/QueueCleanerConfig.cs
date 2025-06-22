@@ -9,20 +9,20 @@ public sealed record QueueCleanerConfig : IJobConfig
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid Id { get; init; } = Guid.NewGuid();
     
-    public bool Enabled { get; init; }
+    public bool Enabled { get; set; }
     
-    public string CronExpression { get; init; } = "0 0/5 * * * ?";
+    public string CronExpression { get; set; } = "0 0/5 * * * ?";
     
     /// <summary>
     /// Indicates whether to use the CronExpression directly or convert from a user-friendly schedule
     /// </summary>
-    public bool UseAdvancedScheduling { get; init; } = false;
+    public bool UseAdvancedScheduling { get; set; } = false;
     
-    public FailedImportConfig FailedImport { get; init; } = new();
+    public FailedImportConfig FailedImport { get; set; } = new();
     
-    public StalledConfig Stalled { get; init; } = new();
+    public StalledConfig Stalled { get; set; } = new();
     
-    public SlowConfig Slow { get; init; } = new();
+    public SlowConfig Slow { get; set; } = new();
     
     public void Validate()
     {

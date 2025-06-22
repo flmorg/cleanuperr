@@ -2,12 +2,12 @@ namespace Cleanuparr.Persistence.Models.Configuration;
 
 public interface IJobConfig : IConfig
 {
-    bool Enabled { get; init; }
+    bool Enabled { get; set; }
     
-    string CronExpression { get; init; }
+    string CronExpression { get; set; }
     
     /// <summary>
     /// Indicates whether to use the CronExpression directly (true) or convert from JobSchedule (false)
     /// </summary>
-    bool UseAdvancedScheduling { get; init; }
+    bool UseAdvancedScheduling { get; set; }
 }

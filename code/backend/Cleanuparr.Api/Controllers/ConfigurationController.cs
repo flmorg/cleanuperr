@@ -417,11 +417,11 @@ public class ConfigurationController : ControllerBase
                 .FirstAsync();
 
             // Apply updates from DTO, excluding the ID property to avoid EF key modification error
-            var config = new TypeAdapterConfig();
-            config.NewConfig<QueueCleanerConfig, QueueCleanerConfig>()
+            var adapterConfig = new TypeAdapterConfig();
+            adapterConfig.NewConfig<QueueCleanerConfig, QueueCleanerConfig>()
                 .Ignore(dest => dest.Id);
             
-            newConfig.Adapt(oldConfig, config);
+            newConfig.Adapt(oldConfig, adapterConfig);
 
             // Persist the configuration
             await _dataContext.SaveChangesAsync();
@@ -563,22 +563,21 @@ public class ConfigurationController : ControllerBase
                 .FirstAsync();
 
             // Update the main properties from DTO
-            oldConfig = oldConfig with
-            {
-                Enabled = newConfigDto.Enabled,
-                CronExpression = newConfigDto.CronExpression,
-                UseAdvancedScheduling = newConfigDto.UseAdvancedScheduling,
-                DeletePrivate = newConfigDto.DeletePrivate,
-                UnlinkedEnabled = newConfigDto.UnlinkedEnabled,
-                UnlinkedTargetCategory = newConfigDto.UnlinkedTargetCategory,
-                UnlinkedUseTag = newConfigDto.UnlinkedUseTag,
-                UnlinkedIgnoredRootDir = newConfigDto.UnlinkedIgnoredRootDir,
-                UnlinkedCategories = newConfigDto.UnlinkedCategories
-            };
+
+            oldConfig.Enabled = newConfigDto.Enabled;
+            oldConfig.CronExpression = newConfigDto.CronExpression;
+            oldConfig.UseAdvancedScheduling = newConfigDto.UseAdvancedScheduling;
+            oldConfig.DeletePrivate = newConfigDto.DeletePrivate;
+            oldConfig.UnlinkedEnabled = newConfigDto.UnlinkedEnabled;
+            oldConfig.UnlinkedTargetCategory = newConfigDto.UnlinkedTargetCategory;
+            oldConfig.UnlinkedUseTag = newConfigDto.UnlinkedUseTag;
+            oldConfig.UnlinkedIgnoredRootDir = newConfigDto.UnlinkedIgnoredRootDir;
+            oldConfig.UnlinkedCategories = newConfigDto.UnlinkedCategories;
 
             // Handle Categories collection separately to avoid EF tracking issues
             // Clear existing categories
             _dataContext.CleanCategories.RemoveRange(oldConfig.Categories);
+            _dataContext.DownloadCleanerConfigs.Update(oldConfig);
             
             // Add new categories
             foreach (var categoryDto in newConfigDto.Categories)
