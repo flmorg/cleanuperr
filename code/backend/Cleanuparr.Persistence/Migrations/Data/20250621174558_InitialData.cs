@@ -263,7 +263,7 @@ namespace Cleanuparr.Persistence.Migrations.Data
             migrationBuilder.InsertData(
                 table: "general_configs",
                 columns: new[] { "id", "dry_run", "encryption_key", "http_certificate_validation", "http_max_retries", "http_timeout", "ignored_downloads", "log_level", "search_delay", "search_enabled", "display_support_banner",  },
-                values: new object[] { new Guid("1490f450-1b29-4111-ab20-8a03dbd9d366"), false, Guid.NewGuid(), "enabled", (ushort)0, (ushort)100, "[]", "information", (ushort)30, true, true });
+                values: new object[] { new Guid("1490f450-1b29-4111-ab20-8a03dbd9d366"), false, Guid.NewGuid().ToString(), "enabled", (ushort)0, (ushort)100, "[]", "information", (ushort)30, true, true });
 
             migrationBuilder.InsertData(
                 table: "notifiarr_configs",
