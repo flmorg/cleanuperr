@@ -28,6 +28,8 @@ import { AutoCompleteModule } from "primeng/autocomplete";
 import { DropdownModule } from "primeng/dropdown";
 import { TableModule } from "primeng/table";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { ConfirmationService } from "primeng/api";
 
 @Component({
   selector: "app-download-cleaner-settings",
@@ -49,8 +51,9 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     DropdownModule,
     TableModule,
     LoadingErrorStateComponent,
+    ConfirmDialogModule,
   ],
-  providers: [DownloadCleanerConfigStore],
+  providers: [DownloadCleanerConfigStore, ConfirmationService],
   templateUrl: "./download-cleaner-settings.component.html",
   styleUrls: ["./download-cleaner-settings.component.scss"],
 })
@@ -62,6 +65,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   private formBuilder = inject(FormBuilder);
   private notificationService = inject(NotificationService);
   private downloadCleanerStore = inject(DownloadCleanerConfigStore);
+  private confirmationService = inject(ConfirmationService);
   
   // Configuration signals
   readonly downloadCleanerConfig = this.downloadCleanerStore.config;
@@ -75,6 +79,12 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   private destroy$ = new Subject<void>();
   hasActualChanges = false; // Flag to track actual form changes
   activeAccordionIndices: number[] = [];
+  
+  // Track the previous enabled state to detect when user is trying to enable
+  private previousEnabledState = false;
+  
+  // Flag to track if form has been initially loaded to avoid showing dialog on page load
+  private formInitialized = false;
   
   // Minimal autocomplete support - empty suggestions to allow manual input
   unlinkedCategoriesSuggestions: string[] = [];
@@ -131,9 +141,6 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       unlinkedCategories: [{ value: [], disabled: true }]
     });
 
-    // Set up form value change listeners
-    this.setupFormValueChangeListeners();
-
     // Load the current configuration
     effect(() => {
       const config = this.downloadCleanerConfig();
@@ -150,6 +157,9 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
         this.error.emit(errorMessage);
       }
     });
+    
+    // Set up listeners for form value changes
+    this.setupFormValueChangeListeners();
   }
   
   /**
@@ -261,6 +271,12 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     // Store original values for change detection
     this.storeOriginalValues();
     
+    // Track the enabled state for confirmation dialog logic
+    this.previousEnabledState = config.enabled;
+    
+    // Mark form as initialized to enable confirmation dialogs for user actions
+    this.formInitialized = true;
+    
     // Mark form as pristine after loading
     this.downloadCleanerForm.markAsPristine();
   }
@@ -283,7 +299,14 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       enabledControl.valueChanges
         .pipe(takeUntil(this.destroy$))
         .subscribe(enabled => {
-          this.updateMainControlsState(enabled);
+          // Only show confirmation dialog if form is initialized and user is trying to enable
+          if (this.formInitialized && enabled && !this.previousEnabledState) {
+            this.showEnableConfirmationDialog();
+          } else {
+            // Update control states normally
+            this.updateMainControlsState(enabled);
+            this.previousEnabledState = enabled;
+          }
         });
     }
 
@@ -397,11 +420,11 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     const jobScheduleControl = this.downloadCleanerForm.get('jobSchedule');
 
     if (config.useAdvancedScheduling) {
-      jobScheduleControl?.disable();
-      cronControl?.enable();
+      jobScheduleControl?.disable({ emitEvent: false });
+      cronControl?.enable({ emitEvent: false });
     } else {
-      cronControl?.disable();
-      jobScheduleControl?.enable();
+      cronControl?.disable({ emitEvent: false });
+      jobScheduleControl?.enable({ emitEvent: false });
     }
   }
   
@@ -480,15 +503,34 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
         unlinkedCategories: formValues.unlinkedCategories || []
       };
 
-      // Save the configuration
+      // Save the configuration using the new store API
       this.downloadCleanerStore.saveDownloadCleanerConfig(config);
       
-      // The store now handles success/error through signals, so just update local state
-      this.notificationService.showSuccess('Download cleaner configuration saved successfully');
-      this.saved.emit();
-      this.storeOriginalValues();
-      this.downloadCleanerForm.markAsPristine();
-      this.hasActualChanges = false;
+      // Setup a one-time check to mark form as pristine after successful save
+      const checkSaveCompletion = () => {
+        const saving = this.downloadCleanerSaving();
+        const error = this.downloadCleanerError();
+        
+        if (!saving && !error) {
+          // Mark form as pristine after successful save
+          this.downloadCleanerForm.markAsPristine();
+          // Update original values reference
+          this.storeOriginalValues();
+          // Emit saved event 
+          this.saved.emit();
+          // Display success message
+          this.notificationService.showSuccess('Download cleaner configuration saved successfully');
+        } else if (!saving && error) {
+          // If there's an error, we can stop checking
+          // No need to show error toast here, it's handled by the LoadingErrorStateComponent
+        } else {
+          // If still saving, check again in a moment
+          setTimeout(checkSaveCompletion, 100);
+        }
+      };
+      
+      // Start checking for save completion
+      checkSaveCompletion();
     } else {
       this.notificationService.showValidationError();
     }
@@ -666,4 +708,35 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
     // PrimeNG requires this method even when we don't want suggestions
     this.unlinkedCategoriesSuggestions = [];
   }
+
+  /**
+   * Show confirmation dialog when enabling the download cleaner
+   */
+  private showEnableConfirmationDialog(): void {
+    this.confirmationService.confirm({
+      header: 'Enable Download Cleaner',
+      message: 'To avoid affecting items that are awaiting to be imported, please ensure that your Sonarr, Radarr, and Lidarr instances have been properly configured prior to enabling the Download Cleaner.<br/><br/>Are you sure you want to proceed?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptIcon: 'pi pi-check',
+      rejectIcon: 'pi pi-times',
+      acceptLabel: 'Yes, Enable',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-warning',
+      accept: () => {
+        // User confirmed, update control states and track state
+        this.updateMainControlsState(true);
+        this.previousEnabledState = true;
+      },
+      reject: () => {
+        // User cancelled, revert the checkbox without triggering value change
+        const enabledControl = this.downloadCleanerForm.get('enabled');
+        if (enabledControl) {
+          enabledControl.setValue(false, { emitEvent: false });
+          this.previousEnabledState = false;
+        }
+      }
+    });
+  }
+
+  // Add any other necessary methods here
 }
