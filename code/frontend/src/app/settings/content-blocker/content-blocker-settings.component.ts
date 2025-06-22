@@ -10,6 +10,8 @@ import {
   BlocklistType,
   ScheduleOptions
 } from "../../shared/models/content-blocker-config.model";
+import { FluidModule } from 'primeng/fluid';
+
 
 // PrimeNG Components
 import { CardModule } from "primeng/card";
@@ -41,6 +43,7 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
     SelectModule,
     DropdownModule,
     LoadingErrorStateComponent,
+    FluidModule,
   ],
   providers: [ContentBlockerConfigStore],
   templateUrl: "./content-blocker-settings.component.html",

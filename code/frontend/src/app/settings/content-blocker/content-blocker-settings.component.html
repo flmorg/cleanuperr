@@ -126,13 +126,13 @@
 
               <div class="field-row">
                 <label class="field-label">Blocklist Path</label>
-                <div>
+                <p-fluid>
                   <div class="field-input">
                     <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
                   </div>
                   <small *ngIf="hasNestedError('sonarr', 'blocklistPath', 'required')" class="p-error">Path is required when Sonarr blocklist is enabled</small>
                   <small class="form-helper-text">Path to the blocklist file or URL</small>
-                </div>
+                </p-fluid>
               </div>
 
               <div class="field-row">
@@ -172,13 +172,13 @@
 
               <div class="field-row">
                 <label class="field-label">Blocklist Path</label>
-                <div>
+                <p-fluid>
                   <div class="field-input">
                     <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
                   </div>
                   <small *ngIf="hasNestedError('radarr', 'blocklistPath', 'required')" class="p-error">Path is required when Radarr blocklist is enabled</small>
                   <small class="form-helper-text">Path to the blocklist file or URL</small>
-                </div>
+                </p-fluid>
               </div>
 
               <div class="field-row">
@@ -218,13 +218,13 @@
 
               <div class="field-row">
                 <label class="field-label">Blocklist Path</label>
-                <div>
+                <p-fluid>
                   <div class="field-input">
                     <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
                   </div>
                   <small *ngIf="hasNestedError('lidarr', 'blocklistPath', 'required')" class="p-error">Path is required when Lidarr blocklist is enabled</small>
                   <small class="form-helper-text">Path to the blocklist file or URL</small>
-                </div>
+                </p-fluid>
               </div>
 
               <div class="field-row">
