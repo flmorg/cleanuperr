@@ -87,19 +87,19 @@ jobs:
           cp -r code/frontend/dist/ui/browser/* code/backend/${{ env.executableName }}/wwwroot/
 
       - name: Build win-x64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-win-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-win-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Build linux-x64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Build linux-arm64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
         
       - name: Build osx-x64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Build osx-arm64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Create sample configuration files
         run: |
@@ -117,36 +117,36 @@ jobs:
           EOF
           
           # Copy to each build directory
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-win-amd64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-linux-amd64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-linux-arm64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-osx-amd64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-osx-arm64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-win-amd64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-amd64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-arm64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-amd64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-arm64/appsettings.json
 
       - name: Zip win-x64
         run: |
           cd ./artifacts
-          zip -r ./${{ env.githubRepositoryName }}-win-amd64.zip ./${{ env.githubRepositoryName }}-win-amd64/
+          zip -r ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-win-amd64.zip ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-win-amd64/
 
       - name: Zip linux-x64
         run: |
           cd ./artifacts
-          zip -r ./${{ env.githubRepositoryName }}-linux-amd64.zip ./${{ env.githubRepositoryName }}-linux-amd64/
+          zip -r ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-amd64.zip ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-amd64/
 
       - name: Zip linux-arm64
         run: |
           cd ./artifacts
-          zip -r ./${{ env.githubRepositoryName }}-linux-arm64.zip ./${{ env.githubRepositoryName }}-linux-arm64/
+          zip -r ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-arm64.zip ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-arm64/
 
       - name: Zip osx-x64
         run: |
           cd ./artifacts
-          zip -r ./${{ env.githubRepositoryName }}-osx-amd64.zip ./${{ env.githubRepositoryName }}-osx-amd64/
+          zip -r ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-amd64.zip ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-amd64/
 
       - name: Zip osx-arm64
         run: |
           cd ./artifacts
-          zip -r ./${{ env.githubRepositoryName }}-osx-arm64.zip ./${{ env.githubRepositoryName }}-osx-arm64/
+          zip -r ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-arm64.zip ./${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-arm64/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -170,8 +170,8 @@ jobs:
           target_commitish: main
           generate_release_notes: true
           files: |
-            ./artifacts/${{ env.githubRepositoryName }}-win-amd64.zip
-            ./artifacts/${{ env.githubRepositoryName }}-linux-amd64.zip
-            ./artifacts/${{ env.githubRepositoryName }}-linux-arm64.zip
-            ./artifacts/${{ env.githubRepositoryName }}-osx-amd64.zip
-            ./artifacts/${{ env.githubRepositoryName }}-osx-arm64.zip
+            ./artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-win-amd64.zip
+            ./artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-amd64.zip
+            ./artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-arm64.zip
+            ./artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-amd64.zip
+            ./artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-arm64.zip
