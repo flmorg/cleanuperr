@@ -28,6 +28,7 @@ ArchitecturesInstallIn64BitMode=x64
 DisableDirPage=no
 DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\{#MyAppExeName}
+SetupIconFile=Logo\favicon.ico
 WizardStyle=modern
 CloseApplications=yes
 RestartApplications=no
@@ -42,16 +43,18 @@ Name: "installservice"; Description: "Install as Windows Service (Recommended)";
 
 [Files]
 Source: "dist\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Application icon
+Source: "Logo\favicon.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; Create sample configuration
-Source: "appsettings.json"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: CreateConfigDirs
+Source: "config\cleanuparr.json"; DestDir: "{app}\config"; Flags: ignoreversion; AfterInstall: CreateConfigDirs
 
 [Dirs]
 Name: "{app}\config"; Permissions: everyone-full
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\favicon.ico"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\favicon.ico"; Tasks: desktopicon
 
 [Run]
 ; Stop any existing service first

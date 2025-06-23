@@ -101,9 +101,9 @@ jobs:
       - name: Verify architecture
         run: |
           echo "Checking architecture of built binary:"
-          file dist/Cleanuparr.app/Contents/MacOS/cleanuparr
+          file dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
           if command -v lipo >/dev/null 2>&1; then
-            lipo -info dist/Cleanuparr.app/Contents/MacOS/cleanuparr
+            lipo -info dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
           fi
 
       - name: Create macOS app bundle structure
@@ -111,16 +111,40 @@ jobs:
           # Create proper app bundle structure
           mkdir -p dist/Cleanuparr.app/Contents/{MacOS,Resources}
           
-          # Create Info.plist
+          # Convert ICO to ICNS for macOS app bundle
+          if command -v iconutil >/dev/null 2>&1; then
+            # Create iconset directory structure
+            mkdir -p Cleanuparr.iconset
+            
+            # Use existing PNG files from Logo directory for different sizes
+            cp Logo/16.png Cleanuparr.iconset/icon_16x16.png
+            cp Logo/32.png Cleanuparr.iconset/icon_16x16@2x.png
+            cp Logo/32.png Cleanuparr.iconset/icon_32x32.png
+            cp Logo/64.png Cleanuparr.iconset/icon_32x32@2x.png
+            cp Logo/128.png Cleanuparr.iconset/icon_128x128.png
+            cp Logo/256.png Cleanuparr.iconset/icon_128x128@2x.png
+            cp Logo/256.png Cleanuparr.iconset/icon_256x256.png
+            cp Logo/512.png Cleanuparr.iconset/icon_256x256@2x.png
+            cp Logo/512.png Cleanuparr.iconset/icon_512x512.png
+            cp Logo/1024.png Cleanuparr.iconset/icon_512x512@2x.png
+            
+            # Create ICNS file
+            iconutil -c icns Cleanuparr.iconset -o dist/Cleanuparr.app/Contents/Resources/Cleanuparr.icns
+            
+            # Clean up iconset directory
+            rm -rf Cleanuparr.iconset
+          fi
+          
+          # Create Info.plist with icon reference
           cat > dist/Cleanuparr.app/Contents/Info.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
               <key>CFBundleExecutable</key>
-              <string>cleanuparr</string>
+              <string>Cleanuparr</string>
               <key>CFBundleIdentifier</key>
-              <string>org.cleanuparr.app</string>
+              <string>Cleanuparr</string>
               <key>CFBundleName</key>
               <string>Cleanuparr</string>
               <key>CFBundleVersion</key>
@@ -133,6 +157,8 @@ jobs:
               <string>APPL</string>
               <key>CFBundleSignature</key>
               <string>????</string>
+              <key>CFBundleIconFile</key>
+              <string>Cleanuparr</string>
               <key>NSHighResolutionCapable</key>
               <true/>
               <key>NSRequiresAquaSystemAppearance</key>
@@ -143,18 +169,12 @@ jobs:
           </plist>
           EOF
           
-          # Create sample configuration
-          mkdir -p dist/Cleanuparr.app/Contents/Resources
-          cat > dist/Cleanuparr.app/Contents/Resources/appsettings.json << EOF
+          # Create sample configuration with simplified settings
+          mkdir -p dist/Cleanuparr.app/Contents/Resources/config
+          cat > dist/Cleanuparr.app/Contents/Resources/config/cleanuparr.json << EOF
           {
-            "Logging": {
-              "LogLevel": {
-                "Default": "Information",
-                "Microsoft.AspNetCore": "Warning"
-              }
-            },
-            "AllowedHosts": "*",
-            "HTTP_PORTS": "11011"
+            "HTTP_PORTS": 11011,
+            "BASE_PATH": "/"
           }
           EOF
 
@@ -169,8 +189,8 @@ jobs:
           mkdir -p "$HOME/Library/Application Support/Cleanuparr"
           
           # Create sample configuration if it doesn't exist
-          if [ ! -f "$HOME/Library/Application Support/Cleanuparr/appsettings.json" ]; then
-              cp "/Applications/Cleanuparr.app/Contents/Resources/appsettings.json" "$HOME/Library/Application Support/Cleanuparr/"
+          if [ ! -f "$HOME/Library/Application Support/Cleanuparr/cleanuparr.json" ]; then
+              cp "/Applications/Cleanuparr.app/Contents/Resources/config/cleanuparr.json" "$HOME/Library/Application Support/Cleanuparr/"
           fi
           
           # Set permissions
@@ -191,7 +211,7 @@ jobs:
           # Create PKG installer
           pkgbuild --root dist/ \
                   --scripts scripts/ \
-                  --identifier org.cleanuparr.app \
+                  --identifier Cleanuparr \
                   --version ${{ env.appVersion }} \
                   --install-location /Applications \
                   ${pkg_name}
@@ -201,7 +221,7 @@ jobs:
       - name: Upload installer as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cleanuparr-macos-intel-installer
+          name: Cleanuparr-macos-intel-installer
           path: '${{ env.pkgName }}'
           retention-days: 30
 

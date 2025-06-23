@@ -91,18 +91,15 @@ jobs:
       - name: Create sample configuration
         shell: pwsh
         run: |
+          # Create config directory
+          New-Item -ItemType Directory -Force -Path "config"
+          
           $config = @{
-            "Logging" = @{
-              "LogLevel" = @{
-                "Default" = "Information"
-                "Microsoft.AspNetCore" = "Warning"
-              }
-            }
-            "AllowedHosts" = "*"
-            "HTTP_PORTS" = "11011"
+            "HTTP_PORTS" = 11011
+            "BASE_PATH" = "/"
           }
           
-          $config | ConvertTo-Json -Depth 3 | Out-File -FilePath "appsettings.json" -Encoding UTF8
+          $config | ConvertTo-Json | Out-File -FilePath "config/cleanuparr.json" -Encoding UTF8
 
       - name: Setup Inno Setup
         shell: pwsh
@@ -133,6 +130,9 @@ jobs:
           # Copy installer script to root
           Copy-Item "installers/windows/cleanuparr-installer.iss" -Destination "cleanuparr-installer.iss"
           
+          # The installer script has been pre-updated with proper icon and config paths
+          # No dynamic modifications needed as the base script now includes correct references
+          
           # Run Inno Setup compiler
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "cleanuparr-installer.iss"
           
@@ -154,7 +154,7 @@ jobs:
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cleanuparr-windows-installer
+          name: Cleanuparr-windows-installer
           path: installer/${{ env.installerName }}
           retention-days: 30
 
