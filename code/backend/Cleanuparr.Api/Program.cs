@@ -10,6 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile(Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.json"), optional: true, reloadOnChange: true);
 
+string? port = builder.Configuration.GetValue<string>("HTTP_PORTS");
+
+if (string.IsNullOrEmpty(port) && !builder.Environment.IsDevelopment())
+{
+    // If no port is configured, default to 11011
+    Environment.SetEnvironmentVariable("HTTP_PORTS", "11011");
+}
+
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
