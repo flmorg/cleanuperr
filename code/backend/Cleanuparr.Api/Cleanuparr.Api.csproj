@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <AssemblyName>cleanuparr</AssemblyName>
+        <AssemblyName>Cleanuparr</AssemblyName>
         <Version Condition="'$(Version)' == ''">0.0.1</Version>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>

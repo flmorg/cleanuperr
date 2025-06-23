@@ -123,17 +123,17 @@ jobs:
             
             ### Windows
             - **Windows Installer**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-Setup.exe` (Recommended)
-            - **Portable**: `cleanuperr-win-amd64.zip`
+            - **Portable**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-win-amd64.zip`
             
             ### macOS
             - **Intel Installer**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-macos-intel.pkg`
             - **Apple Silicon Installer**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-macos-arm64.pkg`
-            - **Intel Portable**: `cleanuperr-osx-amd64.zip`
-            - **Apple Silicon Portable**: `cleanuperr-osx-arm64.zip`
+            - **Intel Portable**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-osx-amd64.zip`
+            - **Apple Silicon Portable**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-osx-arm64.zip`
             
             ### Linux
-            - **AMD64**: `cleanuperr-linux-amd64.zip`
-            - **ARM64**: `cleanuperr-linux-arm64.zip`
+            - **AMD64**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-linux-amd64.zip`
+            - **ARM64**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-linux-arm64.zip`
             
             ## 🚀 Installation
             
@@ -152,8 +152,8 @@ jobs:
             
             ### Linux
             1. Download and extract the appropriate zip file
-            2. Make the executable runnable: `chmod +x cleanuparr`
-            3. Run: `./cleanuparr`
+            2. Make the executable runnable: `chmod +x Cleanuparr`
+            3. Run: `./Cleanuparr`
             4. Access the web interface at http://localhost:11011
             
             ## 📋 Requirements
@@ -169,7 +169,7 @@ jobs:
             
             ---
             
-            For support and documentation, visit: https://github.com/flmorg/cleanuperr
+            For support and documentation, visit: https://github.com/Cleanuparr/Cleanuparr
 
   # Summary job
   summary:

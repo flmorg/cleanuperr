@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to improve cleanuperr!
+        Thanks for taking the time to improve Cleanuparr!
   - type: textarea
     id: description
     attributes:

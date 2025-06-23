@@ -1,8 +1,8 @@
 #define MyAppName "Cleanuparr"
 #define MyAppVersion GetEnv("APP_VERSION")
 #define MyAppPublisher "Cleanuparr Team"
-#define MyAppURL "https://github.com/flmorg/cleanuperr"
-#define MyAppExeName "cleanuparr.exe"
+#define MyAppURL "https://github.com/Cleanuparr/Cleanuparr"
+#define MyAppExeName "Cleanuparr.exe"
 #define MyServiceName "Cleanuparr"
 
 [Setup]
