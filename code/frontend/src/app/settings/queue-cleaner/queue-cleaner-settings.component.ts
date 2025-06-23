@@ -119,7 +119,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
     // Initialize the queue cleaner form with proper disabled states
     this.queueCleanerForm = this.formBuilder.group({
       enabled: [false],
-      useAdvancedScheduling: [false],
+      useAdvancedScheduling: [{ value: false, disabled: true }],
       cronExpression: [{ value: '', disabled: true }, [Validators.required]],
       jobSchedule: this.formBuilder.group({
         every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
@@ -389,6 +389,10 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
         typeControl?.enable();
       }
       
+      // Enable the useAdvancedScheduling control
+      const useAdvancedSchedulingControl = this.queueCleanerForm.get('useAdvancedScheduling');
+      useAdvancedSchedulingControl?.enable();
+      
       // Update individual config sections only if they are enabled
       const failedImportMaxStrikes = this.queueCleanerForm.get("failedImport.maxStrikes")?.value;
       const stalledMaxStrikes = this.queueCleanerForm.get("stalled.maxStrikes")?.value;
@@ -402,6 +406,10 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
       cronExpressionControl?.disable();
       everyControl?.disable();
       typeControl?.disable();
+      
+      // Disable the useAdvancedScheduling control
+      const useAdvancedSchedulingControl = this.queueCleanerForm.get('useAdvancedScheduling');
+      useAdvancedSchedulingControl?.disable();
       
       // Save current active accordion state before clearing it
       // This will be empty when we collapse all accordions
