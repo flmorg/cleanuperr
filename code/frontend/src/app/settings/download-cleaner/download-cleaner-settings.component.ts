@@ -1,5 +1,5 @@
 import { Component, EventEmitter, OnDestroy, Output, inject, effect } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { CommonModule, NgIf } from "@angular/common";
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from "@angular/forms";
 import { Subject, takeUntil } from "rxjs";
 import { DownloadCleanerConfigStore } from "./download-cleaner-config.store";
@@ -52,6 +52,7 @@ import { ConfirmationService } from "primeng/api";
     TableModule,
     LoadingErrorStateComponent,
     ConfirmDialogModule,
+    NgIf
   ],
   providers: [DownloadCleanerConfigStore, ConfirmationService],
   templateUrl: "./download-cleaner-settings.component.html",
@@ -242,8 +243,8 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       });
     }
 
-    // Determine if we should use advanced scheduling and parse the cron expression
-    let useAdvanced = config.useAdvancedScheduling || false;
+    // Use the backend configuration directly without auto-switching to advanced mode
+    const useAdvanced = config.useAdvancedScheduling || false;
     let jobSchedule = config.jobSchedule || { every: 1, type: ScheduleUnit.Hours };
     
     // If not using advanced scheduling, try to parse the cron expression to basic schedule
@@ -254,10 +255,8 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
           every: parsedSchedule.every,
           type: parsedSchedule.type as ScheduleUnit
         };
-      } else {
-        // If we can't parse the cron expression, switch to advanced mode
-        useAdvanced = true;
       }
+      // Note: If parsing fails, we keep basic mode as requested by backend
     }
 
     // Update form values
@@ -330,16 +329,22 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       advancedControl.valueChanges
         .pipe(takeUntil(this.destroy$))
         .subscribe(useAdvanced => {
-          const cronControl = this.downloadCleanerForm.get('cronExpression');
-          const jobScheduleControl = this.downloadCleanerForm.get('jobSchedule');
-          const options = { onlySelf: true };
-
-          if (useAdvanced) {
-            jobScheduleControl?.disable(options);
-            cronControl?.enable(options);
-          } else {
-            cronControl?.disable(options);
-            jobScheduleControl?.enable(options);
+          const enabled = this.downloadCleanerForm.get('enabled')?.value || false;
+          if (enabled) {
+            const cronExpressionControl = this.downloadCleanerForm.get('cronExpression');
+            const jobScheduleGroup = this.downloadCleanerForm.get('jobSchedule') as FormGroup;
+            const everyControl = jobScheduleGroup?.get('every');
+            const typeControl = jobScheduleGroup?.get('type');
+            
+            if (useAdvanced) {
+              if (cronExpressionControl) cronExpressionControl.enable();
+              if (everyControl) everyControl.disable();
+              if (typeControl) typeControl.disable();
+            } else {
+              if (cronExpressionControl) cronExpressionControl.disable();
+              if (everyControl) everyControl.enable();
+              if (typeControl) typeControl.enable();
+            }
           }
         });
     }
@@ -443,48 +448,64 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   }
   
   /**
-   * Update the state of main controls based on whether the feature is enabled
+   * Update the state of main controls based on the 'enabled' control value
    */
   private updateMainControlsState(enabled: boolean): void {
-    const useAdvancedControl = this.downloadCleanerForm.get('useAdvancedScheduling');
-    const cronControl = this.downloadCleanerForm.get('cronExpression');
-    const jobScheduleControl = this.downloadCleanerForm.get('jobSchedule');
-    const categoriesControl = this.categoriesFormArray;
-    const deletePrivateControl = this.downloadCleanerForm.get('deletePrivate');
-    const unlinkedEnabledControl = this.downloadCleanerForm.get('unlinkedEnabled');
-
-    // Disable emitting events during bulk changes
-    const options = { emitEvent: false };
+    const useAdvancedScheduling = this.downloadCleanerForm.get('useAdvancedScheduling')?.value || false;
+    const cronExpressionControl = this.downloadCleanerForm.get('cronExpression');
+    const jobScheduleGroup = this.downloadCleanerForm.get('jobSchedule') as FormGroup;
+    const everyControl = jobScheduleGroup?.get('every');
+    const typeControl = jobScheduleGroup?.get('type');
 
     if (enabled) {
-      // Enable main controls
-      useAdvancedControl?.enable(options);
-      deletePrivateControl?.enable(options);
-      categoriesControl?.enable(options);
-      unlinkedEnabledControl?.enable(options);
-
-      // Enable the appropriate scheduling controls based on advanced mode
-      const useAdvanced = useAdvancedControl?.value;
-      if (useAdvanced) {
-        cronControl?.enable(options);
+      // Enable scheduling controls based on mode
+      if (useAdvancedScheduling) {
+        cronExpressionControl?.enable();
+        everyControl?.disable();
+        typeControl?.disable();
       } else {
-        jobScheduleControl?.enable(options);
+        cronExpressionControl?.disable();
+        everyControl?.enable();
+        typeControl?.enable();
       }
+      
+      // Update individual config sections only if they are enabled
+      const categoriesControl = this.categoriesFormArray;
+      const deletePrivateControl = this.downloadCleanerForm.get('deletePrivate');
+      const unlinkedEnabledControl = this.downloadCleanerForm.get('unlinkedEnabled');
+      const useAdvancedSchedulingControl = this.downloadCleanerForm.get('useAdvancedScheduling');
+      
+      categoriesControl?.enable();
+      deletePrivateControl?.enable();
+      unlinkedEnabledControl?.enable();
+      useAdvancedSchedulingControl?.enable();
       
       // Update unlinked controls based on unlinkedEnabled value
       const unlinkedEnabled = unlinkedEnabledControl?.value;
       this.updateUnlinkedControlsState(unlinkedEnabled);
     } else {
-      // Disable all controls when the feature is disabled
-      useAdvancedControl?.disable(options);
-      cronControl?.disable(options);
-      jobScheduleControl?.disable(options);
-      categoriesControl?.disable(options);
-      deletePrivateControl?.disable(options);
-      unlinkedEnabledControl?.disable(options);
+      // Disable all scheduling controls
+      cronExpressionControl?.disable();
+      everyControl?.disable();
+      typeControl?.disable();
+      
+      // Disable all other controls when the feature is disabled
+      const categoriesControl = this.categoriesFormArray;
+      const deletePrivateControl = this.downloadCleanerForm.get('deletePrivate');
+      const unlinkedEnabledControl = this.downloadCleanerForm.get('unlinkedEnabled');
+      const useAdvancedSchedulingControl = this.downloadCleanerForm.get('useAdvancedScheduling');
+      
+      categoriesControl?.disable();
+      deletePrivateControl?.disable();
+      unlinkedEnabledControl?.disable();
+      useAdvancedSchedulingControl?.disable();
       
       // Always disable unlinked controls when main feature is disabled
       this.updateUnlinkedControlsState(false);
+      
+      // Save current active accordion state before clearing it
+      // This will be empty when we collapse all accordions
+      this.activeAccordionIndices = [];
     }
   }
 
