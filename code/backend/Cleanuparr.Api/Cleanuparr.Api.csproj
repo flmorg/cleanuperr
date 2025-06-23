@@ -23,6 +23,7 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.6" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.6" />
         <PackageReference Include="Quartz" Version="3.14.0" />

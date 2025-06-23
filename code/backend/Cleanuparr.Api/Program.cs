@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using Cleanuparr.Api;
 using Cleanuparr.Api.DependencyInjection;
@@ -55,6 +56,18 @@ builder.Services
 
 // Add logging with proper service provider
 builder.Logging.AddLogging();
+
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    builder.Host.UseWindowsService(options =>
+    {
+        options.ServiceName = "Cleanuparr";
+    });
+    builder.Logging.AddEventLog(settings =>
+    {
+        settings.SourceName = "Cleanuparr";
+    });
+}
 
 var app = builder.Build();
 

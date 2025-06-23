@@ -4,13 +4,8 @@ on:
   push:
     tags:
       - "v*.*.*"
-
-jobs:
-  release:
-    uses: flmorg/universal-workflows/.github/workflows/dotnet.release.yml@main
-    with:
-      githubContext: ${{ toJSON(github) }}
-    secrets: inherit
+  workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
@@ -18,22 +13,31 @@ jobs:
     steps:
 
       - name: Gate
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ !startsWith(github.ref, 'refs/tags/') && github.event_name != 'workflow_dispatch' }}
         run: |
-          echo "This is not a tag event. Pipeline finished."
-          exit
+          echo "This workflow only runs on tag events or manual dispatch. Pipeline finished."
+          exit 0
 
       - name: Set variables
         run: |
-          repoFullName=${{ fromJSON(inputs.githubContext).repository }}
-          ref=${{ fromJSON(inputs.githubContext).ref }}
-          releaseVersion=${ref##refs/tags/}
-          appVersion=${releaseVersion#v}
+          repoFullName=${{ github.repository }}
+          ref=${{ github.ref }}
+          
+          # Handle both tag events and manual dispatch
+          if [[ "$ref" =~ ^refs/tags/ ]]; then
+            releaseVersion=${ref##refs/tags/}
+            appVersion=${releaseVersion#v}
+          else
+            # For manual dispatch, use a default version
+            releaseVersion="dev-$(date +%Y%m%d-%H%M%S)"
+            appVersion="0.0.1-dev"
+          fi
 
-          echo 'githubRepository=${{ github.repository }}' >> $GITHUB_ENV
+          echo "githubRepository=${{ github.repository }}" >> $GITHUB_ENV
           echo "githubRepositoryName=${repoFullName#*/}" >> $GITHUB_ENV
           echo "releaseVersion=$releaseVersion" >> $GITHUB_ENV
           echo "appVersion=$appVersion" >> $GITHUB_ENV
+          echo "executableName=Cleanuparr.Api" >> $GITHUB_ENV
 
       - name: Get vault secrets
         uses: hashicorp/vault-action@v2
@@ -51,60 +55,109 @@ jobs:
         timeout-minutes: 1
         with:
           repository: ${{ env.githubRepository }}
-          ref: main
+          ref: ${{ github.ref_name }}
           token: ${{ env.REPO_READONLY_PAT }}
+
+      - name: Setup Node.js for frontend build
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: code/frontend/package-lock.json
+
+      - name: Build frontend
+        run: |
+          cd code/frontend
+          npm ci
+          npm run build
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
       
-      - name: Install dependencies
+      - name: Install dependencies and restore
         run: |
-          dotnet nuget add source --username Flaminel --password ${{ secrets.PACKAGES_PAT }} --store-password-in-clear-text --name flmorg https://nuget.pkg.github.com/flmorg/index.json
-          dotnet restore code/${{ inputs.executableName }}/${{ inputs.executableName }}.csproj
+          dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.PACKAGES_PAT }} --store-password-in-clear-text --name flmorg https://nuget.pkg.github.com/flmorg/index.json
+          dotnet restore code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj
+
+      - name: Copy frontend to backend wwwroot
+        run: |
+          mkdir -p code/backend/${{ env.executableName }}/wwwroot
+          cp -r code/frontend/dist/ui/browser/* code/backend/${{ env.executableName }}/wwwroot/
 
       - name: Build win-x64
-        run: dotnet publish code/${{ inputs.executableName }}/${{ inputs.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-win-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-win-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
 
       - name: Build linux-x64
-        run: dotnet publish code/${{ inputs.executableName }}/${{ inputs.executableName }}.csproj -c Release --runtime linux-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
 
       - name: Build linux-arm64
-        run: dotnet publish code/${{ inputs.executableName }}/${{ inputs.executableName }}.csproj -c Release --runtime linux-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
         
       - name: Build osx-x64
-        run: dotnet publish code/${{ inputs.executableName }}/${{ inputs.executableName }}.csproj -c Release --runtime osx-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
 
       - name: Build osx-arm64
-        run: dotnet publish code/${{ inputs.executableName }}/${{ inputs.executableName }}.csproj -c Release --runtime osx-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+
+      - name: Create sample configuration files
+        run: |
+          # Create a sample appsettings.json for each platform
+          cat > sample-config.json << 'EOF'
+          {
+            "Logging": {
+              "LogLevel": {
+                "Default": "Information",
+                "Microsoft.AspNetCore": "Warning"
+              }
+            },
+            "AllowedHosts": "*"
+          }
+          EOF
+          
+          # Copy to each build directory
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-win-amd64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-linux-amd64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-linux-arm64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-osx-amd64/appsettings.json
+          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-osx-arm64/appsettings.json
 
       - name: Zip win-x64
         run: |
           cd ./artifacts
-          zip ./${{ env.githubRepositoryName }}-win-amd64.zip ./${{ env.githubRepositoryName }}-win-amd64/${{ env.githubRepositoryName }}.exe ./${{ env.githubRepositoryName }}-win-amd64/appsettings.json
+          zip -r ./${{ env.githubRepositoryName }}-win-amd64.zip ./${{ env.githubRepositoryName }}-win-amd64/
 
       - name: Zip linux-x64
         run: |
           cd ./artifacts
-          zip ./${{ env.githubRepositoryName }}-linux-amd64.zip ./${{ env.githubRepositoryName }}-linux-amd64/${{ env.githubRepositoryName }} ./${{ env.githubRepositoryName }}-linux-amd64/appsettings.json
+          zip -r ./${{ env.githubRepositoryName }}-linux-amd64.zip ./${{ env.githubRepositoryName }}-linux-amd64/
 
       - name: Zip linux-arm64
         run: |
           cd ./artifacts
-          zip ./${{ env.githubRepositoryName }}-linux-arm64.zip ./${{ env.githubRepositoryName }}-linux-arm64/${{ env.githubRepositoryName }} ./${{ env.githubRepositoryName }}-linux-arm64/appsettings.json
+          zip -r ./${{ env.githubRepositoryName }}-linux-arm64.zip ./${{ env.githubRepositoryName }}-linux-arm64/
 
       - name: Zip osx-x64
         run: |
           cd ./artifacts
-          zip ./${{ env.githubRepositoryName }}-osx-amd64.zip ./${{ env.githubRepositoryName }}-osx-amd64/${{ env.githubRepositoryName }} ./${{ env.githubRepositoryName }}-osx-amd64/appsettings.json
+          zip -r ./${{ env.githubRepositoryName }}-osx-amd64.zip ./${{ env.githubRepositoryName }}-osx-amd64/
 
       - name: Zip osx-arm64
         run: |
           cd ./artifacts
-          zip ./${{ env.githubRepositoryName }}-osx-arm64.zip ./${{ env.githubRepositoryName }}-osx-arm64/${{ env.githubRepositoryName }} ./${{ env.githubRepositoryName }}-osx-arm64/appsettings.json
+          zip -r ./${{ env.githubRepositoryName }}-osx-arm64.zip ./${{ env.githubRepositoryName }}-osx-arm64/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanuparr-executables
+          path: |
+            ./artifacts/*.zip
+          retention-days: 30
 
       - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
         id: release
         uses: softprops/action-gh-release@v2
         with:

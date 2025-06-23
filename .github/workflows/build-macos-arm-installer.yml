@@ -1,0 +1,216 @@
+name: Build macOS ARM Installer
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build-macos-arm-installer:
+    name: Build macOS ARM Installer
+    runs-on: macos-14  # ARM runner for Apple Silicon
+    
+    steps:
+      - name: Set variables
+        run: |
+          repoFullName=${{ github.repository }}
+          ref=${{ github.ref }}
+          
+          # Handle both tag events and manual dispatch
+          if [[ "$ref" =~ ^refs/tags/ ]]; then
+            releaseVersion=${ref##refs/tags/}
+            appVersion=${releaseVersion#v}
+          else
+            # For manual dispatch, use a default version
+            releaseVersion="dev-$(date +%Y%m%d-%H%M%S)"
+            appVersion="0.0.1-dev"
+          fi
+          
+          repositoryName=${repoFullName#*/}
+          
+          echo "githubRepository=${{ github.repository }}" >> $GITHUB_ENV
+          echo "githubRepositoryName=$repositoryName" >> $GITHUB_ENV
+          echo "releaseVersion=$releaseVersion" >> $GITHUB_ENV
+          echo "appVersion=$appVersion" >> $GITHUB_ENV
+          echo "executableName=Cleanuparr.Api" >> $GITHUB_ENV
+
+      - name: Get vault secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_HOST }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets:
+            secrets/data/github repo_readonly_pat | REPO_READONLY_PAT;
+            secrets/data/github packages_pat | PACKAGES_PAT
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.githubRepository }}
+          ref: ${{ github.ref_name }}
+          token: ${{ env.REPO_READONLY_PAT }}
+          fetch-depth: 0
+
+      - name: Setup Node.js for frontend build
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: code/frontend/package-lock.json
+
+      - name: Build frontend
+        run: |
+          cd code/frontend
+          npm ci
+          npm run build
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore .NET dependencies
+        run: |
+          dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ env.PACKAGES_PAT }} --store-password-in-clear-text --name flmorg https://nuget.pkg.github.com/flmorg/index.json
+          dotnet restore code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj
+
+      - name: Copy frontend to backend wwwroot
+        run: |
+          mkdir -p code/backend/${{ env.executableName }}/wwwroot
+          cp -r code/frontend/dist/ui/browser/* code/backend/${{ env.executableName }}/wwwroot/
+
+      - name: Build macOS ARM executable
+        run: |
+          dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj \
+            -c Release \
+            --runtime osx-arm64 \
+            --self-contained \
+            -o dist/Cleanuparr.app/Contents/MacOS \
+            /p:PublishSingleFile=true \
+            /p:Version=${{ env.appVersion }}
+
+      - name: Verify architecture
+        run: |
+          echo "Checking architecture of built binary:"
+          file dist/Cleanuparr.app/Contents/MacOS/cleanuparr
+          if command -v lipo >/dev/null 2>&1; then
+            lipo -info dist/Cleanuparr.app/Contents/MacOS/cleanuparr
+          fi
+
+      - name: Create macOS app bundle structure
+        run: |
+          # Create proper app bundle structure
+          mkdir -p dist/Cleanuparr.app/Contents/{MacOS,Resources}
+          
+          # Create Info.plist
+          cat > dist/Cleanuparr.app/Contents/Info.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>cleanuparr</string>
+              <key>CFBundleIdentifier</key>
+              <string>org.cleanuparr.app</string>
+              <key>CFBundleName</key>
+              <string>Cleanuparr</string>
+              <key>CFBundleVersion</key>
+              <string>${{ env.appVersion }}</string>
+              <key>CFBundleShortVersionString</key>
+              <string>${{ env.appVersion }}</string>
+              <key>CFBundleInfoDictionaryVersion</key>
+              <string>6.0</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleSignature</key>
+              <string>????</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+              <key>NSRequiresAquaSystemAppearance</key>
+              <false/>
+              <key>LSMinimumSystemVersion</key>
+              <string>11.0</string>
+          </dict>
+          </plist>
+          EOF
+          
+          # Create sample configuration
+          mkdir -p dist/Cleanuparr.app/Contents/Resources
+          cat > dist/Cleanuparr.app/Contents/Resources/appsettings.json << EOF
+          {
+            "Logging": {
+              "LogLevel": {
+                "Default": "Information",
+                "Microsoft.AspNetCore": "Warning"
+              }
+            },
+            "AllowedHosts": "*",
+            "HTTP_PORTS": "11011"
+          }
+          EOF
+
+      - name: Create PKG installer
+        run: |
+          # Create postinstall script
+          mkdir -p scripts
+          cat > scripts/postinstall << 'EOF'
+          #!/bin/bash
+          
+          # Create config directory in user's Application Support
+          mkdir -p "$HOME/Library/Application Support/Cleanuparr"
+          
+          # Create sample configuration if it doesn't exist
+          if [ ! -f "$HOME/Library/Application Support/Cleanuparr/appsettings.json" ]; then
+              cp "/Applications/Cleanuparr.app/Contents/Resources/appsettings.json" "$HOME/Library/Application Support/Cleanuparr/"
+          fi
+          
+          # Set permissions
+          chmod -R 755 "$HOME/Library/Application Support/Cleanuparr"
+          
+          exit 0
+          EOF
+          
+          chmod +x scripts/postinstall
+          
+          # Determine package name
+          if [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
+            pkg_name="Cleanuparr-${{ env.appVersion }}-macos-arm64.pkg"
+          else
+            pkg_name="Cleanuparr-${{ env.appVersion }}-macos-arm64-dev.pkg"
+          fi
+          
+          # Create PKG installer
+          pkgbuild --root dist/ \
+                  --scripts scripts/ \
+                  --identifier org.cleanuparr.app \
+                  --version ${{ env.appVersion }} \
+                  --install-location /Applications \
+                  ${pkg_name}
+          
+          echo "pkgName=${pkg_name}" >> $GITHUB_ENV
+
+      - name: Upload installer as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanuparr-macos-arm64-installer
+          path: '${{ env.pkgName }}'
+          retention-days: 30
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.releaseVersion }}
+          tag_name: ${{ env.releaseVersion }}
+          repository: ${{ env.githubRepository }}
+          token: ${{ env.REPO_READONLY_PAT }}
+          make_latest: true
+          files: |
+            ${{ env.pkgName }} 
