@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "UI": {
+    "Cleanuparr": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {

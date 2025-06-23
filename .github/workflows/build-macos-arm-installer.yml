@@ -88,23 +88,45 @@ jobs:
 
       - name: Build macOS ARM executable
         run: |
+          # Clean any existing output directory
+          rm -rf dist
+          mkdir -p dist/Cleanuparr.app/Contents/MacOS
+          
+          # Set environment variables to disable code signing
+          export CODESIGN_ALLOCATE=/usr/bin/true
+          export DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp/dotnet_bundle_extract
+          
+          # Build without single file first, then we'll handle it manually if needed
           dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj \
             -c Release \
             --runtime osx-arm64 \
             --self-contained \
             -o dist/Cleanuparr.app/Contents/MacOS \
-            /p:PublishSingleFile=true \
+            /p:PublishSingleFile=false \
             /p:Version=${{ env.appVersion }} \
             /p:DebugType=None \
-            /p:DebugSymbols=false
+            /p:DebugSymbols=false \
+            /p:UseAppHost=true \
+            /p:EnableMacOSCodeSign=false \
+            /p:CodeSignOnCopy=false \
+            /p:_CodeSignDuringBuild=false
 
-      - name: Verify architecture
+      - name: Post-build setup
         run: |
+          # Make sure the executable is actually executable
+          chmod +x dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
+          
+          # Remove any .pdb files that might have been created
+          find dist/Cleanuparr.app/Contents/MacOS -name "*.pdb" -delete
+          
           echo "Checking architecture of built binary:"
           file dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
           if command -v lipo >/dev/null 2>&1; then
             lipo -info dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
           fi
+          
+          echo "Files in MacOS directory:"
+          ls -la dist/Cleanuparr.app/Contents/MacOS/
 
       - name: Create macOS app bundle structure
         run: |
@@ -169,15 +191,6 @@ jobs:
           </plist>
           EOF
           
-          # Create sample configuration with simplified settings
-          mkdir -p dist/Cleanuparr.app/Contents/Resources
-          cat > dist/Cleanuparr.app/Contents/Resources/config/cleanuparr.json << EOF
-          {
-            "HTTP_PORTS": 11011,
-            "BASE_PATH": "/"
-          }
-          EOF
-
       - name: Create PKG installer
         run: |
           # Create postinstall script
@@ -187,11 +200,6 @@ jobs:
           
           # Create config directory in user's Application Support
           mkdir -p "$HOME/Library/Application Support/Cleanuparr"
-          
-          # Create sample configuration if it doesn't exist
-          if [ ! -f "$HOME/Library/Application Support/Cleanuparr/cleanuparr.json" ]; then
-              cp "/Applications/Cleanuparr.app/Contents/Resources/cleanuparr.json" "$HOME/Library/Application Support/Cleanuparr/"
-          fi
           
           # Set permissions
           chmod -R 755 "$HOME/Library/Application Support/Cleanuparr"
