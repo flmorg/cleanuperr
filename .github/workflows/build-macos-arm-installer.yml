@@ -156,7 +156,7 @@ jobs:
               <key>CFBundlePackageType</key>
               <string>APPL</string>
               <key>CFBundleSignature</key>
-              <string>????</string>
+              <string>CLNR</string>
               <key>CFBundleIconFile</key>
               <string>Cleanuparr</string>
               <key>NSHighResolutionCapable</key>
