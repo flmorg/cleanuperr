@@ -94,7 +94,9 @@ jobs:
             --self-contained \
             -o dist/Cleanuparr.app/Contents/MacOS \
             /p:PublishSingleFile=true \
-            /p:Version=${{ env.appVersion }}
+            /p:Version=${{ env.appVersion }} \
+            /p:DebugType=None \
+            /p:DebugSymbols=false
 
       - name: Verify architecture
         run: |

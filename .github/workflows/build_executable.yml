@@ -87,19 +87,19 @@ jobs:
           cp -r code/frontend/dist/ui/browser/* code/backend/${{ env.executableName }}/wwwroot/
 
       - name: Build win-x64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-win-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-win-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Build linux-x64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Build linux-arm64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime linux-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-linux-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
         
       - name: Build osx-x64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-x64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-amd64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Build osx-arm64
-        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+        run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-osx-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
       - name: Create sample configuration files
         run: |

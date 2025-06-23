@@ -86,7 +86,7 @@ jobs:
 
       - name: Build Windows executable
         run: |
-          dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o dist /p:PublishSingleFile=true /p:Version=${{ env.appVersion }}
+          dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime win-x64 --self-contained -o dist /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugType=None /p:DebugSymbols=false
 
       - name: Create sample configuration
         shell: pwsh

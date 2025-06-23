@@ -37,7 +37,8 @@ RUN dotnet publish ./backend/Cleanuparr.Api/Cleanuparr.Api.csproj \
     -c Release \
     -o /app/publish \
     /p:Version=${VERSION} \
-    /p:PublishSingleFile=true
+    /p:PublishSingleFile=true \
+    /p:DebugSymbols=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim
