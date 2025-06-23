@@ -108,10 +108,10 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
   }
 
   constructor() {
-    // Initialize the content blocker form
+    // Initialize the content blocker form with proper disabled states
     this.contentBlockerForm = this.formBuilder.group({
       enabled: [false],
-      useAdvancedScheduling: [false],
+      useAdvancedScheduling: [{ value: false, disabled: true }],
       cronExpression: [{ value: '', disabled: true }, [Validators.required]],
       jobSchedule: this.formBuilder.group({
         every: [{ value: 5, disabled: true }, [Validators.required, Validators.min(1)]],
@@ -366,6 +366,10 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
         typeControl?.enable();
       }
       
+      // Enable the useAdvancedScheduling control
+      const useAdvancedSchedulingControl = this.contentBlockerForm.get('useAdvancedScheduling');
+      useAdvancedSchedulingControl?.enable();
+      
       // Enable content blocker specific controls
       this.contentBlockerForm.get("ignorePrivate")?.enable({ onlySelf: true });
       this.contentBlockerForm.get("deletePrivate")?.enable({ onlySelf: true });
@@ -388,6 +392,10 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       cronExpressionControl?.disable();
       everyControl?.disable();
       typeControl?.disable();
+      
+      // Disable the useAdvancedScheduling control
+      const useAdvancedSchedulingControl = this.contentBlockerForm.get('useAdvancedScheduling');
+      useAdvancedSchedulingControl?.disable();
       
       // Disable content blocker specific controls
       this.contentBlockerForm.get("ignorePrivate")?.disable({ onlySelf: true });
