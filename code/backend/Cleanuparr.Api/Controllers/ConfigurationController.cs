@@ -2,6 +2,7 @@ using Cleanuparr.Api.Models;
 using Cleanuparr.Application.Features.Arr.Dtos;
 using Cleanuparr.Application.Features.DownloadClient.Dtos;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Infrastructure.Helpers;
 using Cleanuparr.Infrastructure.Http.DynamicHttpClientSystem;
 using Cleanuparr.Infrastructure.Logging;
 using Cleanuparr.Infrastructure.Models;
@@ -18,6 +19,7 @@ using Infrastructure.Services.Interfaces;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Cleanuparr.Api.Controllers;
 
@@ -29,18 +31,21 @@ public class ConfigurationController : ControllerBase
     private readonly DataContext _dataContext;
     private readonly LoggingConfigManager _loggingConfigManager;
     private readonly IJobManagementService _jobManagementService;
+    private readonly MemoryCache _cache;
 
     public ConfigurationController(
         ILogger<ConfigurationController> logger,
         DataContext dataContext,
         LoggingConfigManager loggingConfigManager,
-        IJobManagementService jobManagementService
+        IJobManagementService jobManagementService,
+        MemoryCache cache
     )
     {
         _logger = logger;
         _dataContext = dataContext;
         _loggingConfigManager = loggingConfigManager;
         _jobManagementService = jobManagementService;
+        _cache = cache;
     }
 
     [HttpGet("queue_cleaner")]
@@ -628,6 +633,23 @@ public class ConfigurationController : ControllerBase
             var config = new TypeAdapterConfig();
             config.NewConfig<GeneralConfig, GeneralConfig>()
                 .Ignore(dest => dest.Id);
+
+            if (oldConfig.DryRun && !newConfig.DryRun)
+            {
+                foreach (string strikeType in Enum.GetNames(typeof(StrikeType)))
+                {
+                    var keys = _cache.Keys
+                        .Where(key => key.ToString()?.StartsWith(strikeType, StringComparison.InvariantCultureIgnoreCase) is true)
+                        .ToList();
+
+                    foreach (object key in keys)
+                    {
+                        _cache.Remove(key);
+                    }
+                    
+                    _logger.LogTrace("Removed all cache entries for strike type: {StrikeType}", strikeType);
+                }
+            }
             
             newConfig.Adapt(oldConfig, config);
 

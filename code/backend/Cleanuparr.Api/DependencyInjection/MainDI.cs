@@ -7,6 +7,7 @@ using Cleanuparr.Infrastructure.Http.DynamicHttpClientSystem;
 using Data.Models.Arr;
 using Infrastructure.Verticals.Notifications.Models;
 using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Cleanuparr.Api.DependencyInjection;
 
@@ -16,9 +17,8 @@ public static class MainDI
         services
             .AddLogging(builder => builder.ClearProviders().AddConsole())
             .AddHttpClients(configuration)
-            .AddMemoryCache(options => {
-                options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
-            })
+            .AddSingleton<MemoryCache>()
+            .AddSingleton<IMemoryCache>(serviceProvider => serviceProvider.GetRequiredService<MemoryCache>())
             .AddServices()
             .AddHealthServices()
             .AddQuartzServices(configuration)

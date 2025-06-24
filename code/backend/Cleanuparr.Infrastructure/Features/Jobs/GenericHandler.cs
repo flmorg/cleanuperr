@@ -283,7 +283,7 @@ public abstract class GenericHandler : IHandler
         
         if (downloadServices.Count == 0)
         {
-            _logger.LogWarning("No valid download clients found");
+            _logger.LogDebug("No valid download clients found");
         }
         else
         {

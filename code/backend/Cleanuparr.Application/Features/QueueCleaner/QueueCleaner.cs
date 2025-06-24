@@ -39,12 +39,6 @@ public sealed class QueueCleaner : GenericHandler
     
     protected override async Task ExecuteInternalAsync()
     {
-        if (ContextProvider.Get<List<DownloadClientConfig>>(nameof(DownloadClientConfig)).Count is 0)
-        {
-            _logger.LogWarning("No download clients configured");
-            return;
-        }
-        
         var sonarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Sonarr));
         var radarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr));
         var lidarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr));
