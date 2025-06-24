@@ -137,9 +137,6 @@ jobs:
           
           echo "Files in MacOS directory:"
           ls -la dist/Cleanuparr.app/Contents/MacOS/
-          
-          echo "Checking if executable can run basic help:"
-          dist/Cleanuparr.app/Contents/MacOS/Cleanuparr --help || echo "Help command failed, but this might be expected"
 
       - name: Create macOS app bundle structure
         run: |
