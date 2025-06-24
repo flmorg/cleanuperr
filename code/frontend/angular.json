@@ -65,10 +65,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "UI:build:production"
+              "buildTarget": "Cleanuparr:build:production"
             },
             "development": {
-              "buildTarget": "UI:build:development"
+              "buildTarget": "Cleanuparr:build:development"
             }
           },
           "defaultConfiguration": "development"
