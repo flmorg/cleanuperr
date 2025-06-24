@@ -5,5 +5,4 @@ public enum DownloadClientTypeName
     QBittorrent,
     Deluge,
     Transmission,
-    Usenet,
 }

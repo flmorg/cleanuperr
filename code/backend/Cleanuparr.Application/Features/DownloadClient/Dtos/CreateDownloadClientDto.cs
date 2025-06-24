@@ -58,9 +58,9 @@ public sealed record CreateDownloadClientDto
             throw new ValidationException("Client name cannot be empty");
         }
         
-        if (Host is null && TypeName is not DownloadClientTypeName.Usenet)
+        if (Host is null)
         {
-            throw new ValidationException("Host cannot be empty for non-Usenet clients");
+            throw new ValidationException("Host cannot be empty");
         }
     }
 }

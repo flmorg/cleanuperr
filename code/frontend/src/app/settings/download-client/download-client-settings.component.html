@@ -152,8 +152,7 @@
       <small *ngIf="hasError(clientForm, 'type', 'required')" class="p-error">Client type is required</small>
     </div>
 
-    <!-- Connection fields - only shown when client type is not Usenet -->
-    <ng-container *ngIf="!isUsenetClient(clientForm.get('type')?.value)">
+    <ng-container>
       <div class="field">
         <label for="client-host">Host *</label>
         <input 
@@ -205,11 +204,6 @@
         />
       </div>
     </ng-container>
-    
-    <!-- Message shown when Usenet is selected -->
-    <div *ngIf="isUsenetClient(clientForm.get('type')?.value)" class="p-3 mt-2 surface-overlay border-1 border-round-sm">
-      <small class="text-secondary">Usenet client type is for categorization only. No connection details needed.</small>
-    </div>
   </form>
 
   <ng-template pTemplate="footer">

@@ -59,7 +59,6 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     { label: "qBittorrent", value: DownloadClientType.QBittorrent },
     { label: "Deluge", value: DownloadClientType.Deluge },
     { label: "Transmission", value: DownloadClientType.Transmission },
-    { label: "Usenet", value: DownloadClientType.Usenet }
   ];
 
   // Clean up subscriptions
@@ -334,8 +333,6 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
         return { typeName: 'Deluge', type: 'Torrent' };
       case DownloadClientType.Transmission:
         return { typeName: 'Transmission', type: 'Torrent' };
-      case DownloadClientType.Usenet:
-        return { typeName: 'Usenet', type: 'Usenet' };
       default:
         return { typeName: 'QBittorrent', type: 'Torrent' };
     }
@@ -352,18 +349,9 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
         return DownloadClientType.Deluge;
       case 'Transmission':
         return DownloadClientType.Transmission;
-      case 'Usenet':
-        return DownloadClientType.Usenet;
       default:
         return DownloadClientType.QBittorrent;
     }
-  }
-
-  /**
-   * Checks if a client type is Usenet
-   */
-  public isUsenetClient(clientType: DownloadClientType | null | undefined): boolean {
-    return clientType === DownloadClientType.Usenet;
   }
 
   /**
@@ -375,16 +363,10 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     
     if (!hostControl) return;
     
-    if (this.isUsenetClient(clientType)) {
-      // For Usenet, remove all validators
-      hostControl.clearValidators();
-    } else {
-      // For other client types, add required and URI validators
-      hostControl.setValidators([
-        Validators.required, 
-        this.uriValidator.bind(this)
-      ]);
-    }
+    hostControl.setValidators([
+      Validators.required, 
+      this.uriValidator.bind(this)
+    ]);
     
     // Update validation state
     hostControl.updateValueAndValidity();

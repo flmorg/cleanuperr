@@ -74,12 +74,12 @@ public sealed record DownloadClientConfig
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            throw new ValidationException($"Client name cannot be empty for client ID: {Id}");
+            throw new ValidationException($"Client name cannot be empty");
         }
         
-        if (Host is null && TypeName is not DownloadClientTypeName.Usenet)
+        if (Host is null)
         {
-            throw new ValidationException($"Host cannot be empty for client ID: {Id}");
+            throw new ValidationException($"Host cannot be empty");
         }
     }
 }

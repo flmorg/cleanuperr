@@ -263,11 +263,6 @@ public abstract class GenericHandler : IHandler
 
         foreach (var config in downloadClientConfigs)
         {
-            if (config.TypeName is DownloadClientTypeName.Usenet)
-            {
-                continue;
-            }
-
             try
             {
                 var downloadService = _downloadServiceFactory.GetDownloadService(config);

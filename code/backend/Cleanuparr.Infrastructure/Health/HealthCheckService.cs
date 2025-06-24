@@ -112,7 +112,6 @@ public class HealthCheckService : IHealthCheckService
             // Get all enabled client configurations
             var enabledClients = await dataContext.DownloadClients
                 .Where(x => x.Enabled)
-                .Where(x => x.TypeName != DownloadClientTypeName.Usenet)
                 .ToListAsync();
             var results = new Dictionary<Guid, HealthStatus>();
             
