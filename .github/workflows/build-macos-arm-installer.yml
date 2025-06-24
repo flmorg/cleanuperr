@@ -90,26 +90,36 @@ jobs:
         run: |
           # Clean any existing output directory
           rm -rf dist
-          mkdir -p dist/Cleanuparr.app/Contents/MacOS
+          mkdir -p dist/temp
           
-          # Set environment variables to disable code signing
-          export CODESIGN_ALLOCATE=/usr/bin/true
-          export DOTNET_BUNDLE_EXTRACT_BASE_DIR=/tmp/dotnet_bundle_extract
-          
-          # Build without single file first, then we'll handle it manually if needed
+          # First build to a temporary location to inspect the output
           dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj \
             -c Release \
             --runtime osx-arm64 \
-            --self-contained \
-            -o dist/Cleanuparr.app/Contents/MacOS \
-            /p:PublishSingleFile=false \
+            --self-contained true \
+            -o dist/temp \
+            /p:PublishSingleFile=true \
             /p:Version=${{ env.appVersion }} \
             /p:DebugType=None \
             /p:DebugSymbols=false \
             /p:UseAppHost=true \
             /p:EnableMacOSCodeSign=false \
             /p:CodeSignOnCopy=false \
-            /p:_CodeSignDuringBuild=false
+            /p:_CodeSignDuringBuild=false \
+            /p:PublishTrimmed=false \
+            /p:TrimMode=link
+          
+          # Create proper app bundle structure
+          mkdir -p dist/Cleanuparr.app/Contents/MacOS
+          
+          # Copy the built executable (note: AssemblyName is "Cleanuparr" not "Cleanuparr.Api")
+          cp dist/temp/Cleanuparr dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
+          
+          # Copy any additional runtime files if they exist
+          if [ -d "dist/temp" ]; then
+            find dist/temp -name "*.dylib" -exec cp {} dist/Cleanuparr.app/Contents/MacOS/ \; 2>/dev/null || true
+            find dist/temp -name "createdump" -exec cp {} dist/Cleanuparr.app/Contents/MacOS/ \; 2>/dev/null || true
+          fi
 
       - name: Post-build setup
         run: |
@@ -117,7 +127,7 @@ jobs:
           chmod +x dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
           
           # Remove any .pdb files that might have been created
-          find dist/Cleanuparr.app/Contents/MacOS -name "*.pdb" -delete
+          find dist/Cleanuparr.app/Contents/MacOS -name "*.pdb" -delete 2>/dev/null || true
           
           echo "Checking architecture of built binary:"
           file dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
@@ -127,11 +137,14 @@ jobs:
           
           echo "Files in MacOS directory:"
           ls -la dist/Cleanuparr.app/Contents/MacOS/
+          
+          echo "Checking if executable can run basic help:"
+          dist/Cleanuparr.app/Contents/MacOS/Cleanuparr --help || echo "Help command failed, but this might be expected"
 
       - name: Create macOS app bundle structure
         run: |
           # Create proper app bundle structure
-          mkdir -p dist/Cleanuparr.app/Contents/{MacOS,Resources}
+          mkdir -p dist/Cleanuparr.app/Contents/{MacOS,Resources,Frameworks}
           
           # Convert ICO to ICNS for macOS app bundle
           if command -v iconutil >/dev/null 2>&1; then
@@ -157,7 +170,7 @@ jobs:
             rm -rf Cleanuparr.iconset
           fi
           
-          # Create Info.plist with icon reference
+          # Create Info.plist with proper configuration
           cat > dist/Cleanuparr.app/Contents/Info.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -166,8 +179,10 @@ jobs:
               <key>CFBundleExecutable</key>
               <string>Cleanuparr</string>
               <key>CFBundleIdentifier</key>
-              <string>Cleanuparr</string>
+              <string>com.Cleanuparr</string>
               <key>CFBundleName</key>
+              <string>Cleanuparr</string>
+              <key>CFBundleDisplayName</key>
               <string>Cleanuparr</string>
               <key>CFBundleVersion</key>
               <string>${{ env.appVersion }}</string>
@@ -187,10 +202,26 @@ jobs:
               <false/>
               <key>LSMinimumSystemVersion</key>
               <string>11.0</string>
+              <key>LSApplicationCategoryType</key>
+              <string>public.app-category.productivity</string>
+              <key>NSSupportsAutomaticTermination</key>
+              <false/>
+              <key>NSSupportsSuddenTermination</key>
+              <false/>
+              <key>LSBackgroundOnly</key>
+              <false/>
+              <key>NSAppTransportSecurity</key>
+              <dict>
+                  <key>NSAllowsArbitraryLoads</key>
+                  <true/>
+              </dict>
           </dict>
           </plist>
           EOF
           
+          # Clean up temp directory
+          rm -rf dist/temp
+
       - name: Create PKG installer
         run: |
           # Create postinstall script
@@ -198,16 +229,47 @@ jobs:
           cat > scripts/postinstall << 'EOF'
           #!/bin/bash
           
-          # Create config directory in user's Application Support
-          mkdir -p "$HOME/Library/Application Support/Cleanuparr"
+          # Set proper permissions for the app bundle
+          chmod -R 755 /Applications/Cleanuparr.app
+          chmod +x /Applications/Cleanuparr.app/Contents/MacOS/Cleanuparr
           
-          # Set permissions
-          chmod -R 755 "$HOME/Library/Application Support/Cleanuparr"
+          # Create config directory in user's Application Support
+          # Note: This runs as root during installation, so we need to handle user directories properly
+          for user_home in /Users/*; do
+            if [[ -d "$user_home" && ! "$user_home" =~ /(Shared|.localized)$ ]]; then
+              user_name=$(basename "$user_home")
+              if [[ "$user_name" != "root" ]]; then
+                sudo -u "$user_name" mkdir -p "$user_home/Library/Application Support/Cleanuparr"
+                sudo -u "$user_name" chmod 755 "$user_home/Library/Application Support/Cleanuparr"
+              fi
+            fi
+          done
+          
+          # Add to system PATH if not already there (optional)
+          # ln -sf /Applications/Cleanuparr.app/Contents/MacOS/Cleanuparr /usr/local/bin/cleanuparr 2>/dev/null || true
           
           exit 0
           EOF
           
           chmod +x scripts/postinstall
+          
+          # Create preinstall script to handle existing installations
+          cat > scripts/preinstall << 'EOF'
+          #!/bin/bash
+          
+          # Stop any running instances of Cleanuparr
+          pkill -f "Cleanuparr" || true
+          sleep 2
+          
+          # Remove old installation if it exists
+          if [[ -d "/Applications/Cleanuparr.app" ]]; then
+            rm -rf "/Applications/Cleanuparr.app"
+          fi
+          
+          exit 0
+          EOF
+          
+          chmod +x scripts/preinstall
           
           # Determine package name
           if [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
@@ -216,12 +278,13 @@ jobs:
             pkg_name="Cleanuparr-${{ env.appVersion }}-macos-arm64-dev.pkg"
           fi
           
-          # Create PKG installer
+          # Create PKG installer with better metadata
           pkgbuild --root dist/ \
                   --scripts scripts/ \
-                  --identifier Cleanuparr.app \
+                  --identifier com.Cleanuparr \
                   --version ${{ env.appVersion }} \
                   --install-location /Applications \
+                  --ownership preserve \
                   ${pkg_name}
           
           echo "pkgName=${pkg_name}" >> $GITHUB_ENV
