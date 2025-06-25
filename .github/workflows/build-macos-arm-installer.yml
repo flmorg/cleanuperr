@@ -81,18 +81,13 @@ jobs:
           dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ env.PACKAGES_PAT }} --store-password-in-clear-text --name flmorg https://nuget.pkg.github.com/flmorg/index.json
           dotnet restore code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj
 
-      - name: Copy frontend to backend wwwroot
-        run: |
-          mkdir -p code/backend/${{ env.executableName }}/wwwroot
-          cp -r code/frontend/dist/ui/browser/* code/backend/${{ env.executableName }}/wwwroot/
-
       - name: Build macOS ARM executable
         run: |
           # Clean any existing output directory
           rm -rf dist
           mkdir -p dist/temp
           
-          # First build to a temporary location to inspect the output
+          # Build to a temporary location
           dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj \
             -c Release \
             --runtime osx-arm64 \
@@ -114,6 +109,10 @@ jobs:
           
           # Copy the built executable (note: AssemblyName is "Cleanuparr" not "Cleanuparr.Api")
           cp dist/temp/Cleanuparr dist/Cleanuparr.app/Contents/MacOS/Cleanuparr
+          
+          # Copy frontend directly to where it belongs in the app bundle
+          mkdir -p dist/Cleanuparr.app/Contents/MacOS/wwwroot
+          cp -r code/frontend/dist/ui/browser/* dist/Cleanuparr.app/Contents/MacOS/wwwroot/
           
           # Copy any additional runtime files if they exist
           if [ -d "dist/temp" ]; then
@@ -302,34 +301,8 @@ jobs:
           # Wait a moment for service to start
           sleep 3
           
-          # Create completion message
-          cat > /tmp/cleanuparr_install_complete.txt << 'MSGEOF'
-          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-             Cleanuparr Installation Complete!
-          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          
-          Cleanuparr is now running as a system service!
-          
-          🌐 Web Interface: http://localhost:11011
-          📁 Configuration: /Applications/Cleanuparr.app/Contents/MacOS/config/
-          📋 Logs: /var/log/cleanuparr.log
-          
-          The service will automatically start when your Mac boots.
-          
-          🆘 Need Help? Visit: https://github.com/Cleanuparr/Cleanuparr
-          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          MSGEOF
-          
-          # Show completion message in Terminal (if available)
-          if command -v osascript >/dev/null 2>&1; then
-            osascript -e 'tell application "Terminal" to do script "cat /tmp/cleanuparr_install_complete.txt && echo && echo \"Press any key to close...\" && read -n 1 && exit"' 2>/dev/null || true
-          fi
-          
-          # Also display as system notification
+          # Display as system notification
           osascript -e 'display notification "Cleanuparr service started! Visit http://localhost:11011 in your browser." with title "Installation Complete"' 2>/dev/null || true
-          
-          # Clean up
-          rm -f /tmp/cleanuparr_install_complete.txt
           
           exit 0
           EOF
