@@ -333,6 +333,8 @@
 *.ufs.uzip
 *.uha
 *.url
+*.uue
+*.uvm
 *.uzed
 *.uzip
 *.vbs
