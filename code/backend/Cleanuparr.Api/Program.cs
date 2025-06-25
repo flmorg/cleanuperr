@@ -8,6 +8,19 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Fix paths for single-file deployment on macOS
+if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+{
+    var appDir = AppContext.BaseDirectory;
+    builder.Environment.ContentRootPath = appDir;
+    
+    var wwwrootPath = Path.Combine(appDir, "wwwroot");
+    if (Directory.Exists(wwwrootPath))
+    {
+        builder.Environment.WebRootPath = wwwrootPath;
+    }
+}
+
 builder.Configuration
     .AddJsonFile(Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.json"), optional: true, reloadOnChange: true);
 

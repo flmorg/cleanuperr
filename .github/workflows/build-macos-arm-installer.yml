@@ -167,6 +167,37 @@ jobs:
             rm -rf Cleanuparr.iconset
           fi
           
+          # Create Launch Daemon plist
+          cat > dist/Cleanuparr.app/Contents/Resources/com.cleanuparr.daemon.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>Label</key>
+              <string>com.cleanuparr.daemon</string>
+              <key>ProgramArguments</key>
+              <array>
+                  <string>/Applications/Cleanuparr.app/Contents/MacOS/Cleanuparr</string>
+              </array>
+              <key>RunAtLoad</key>
+              <true/>
+              <key>KeepAlive</key>
+              <true/>
+              <key>StandardOutPath</key>
+              <string>/var/log/cleanuparr.log</string>
+              <key>StandardErrorPath</key>
+              <string>/var/log/cleanuparr.error.log</string>
+              <key>WorkingDirectory</key>
+              <string>/Applications/Cleanuparr.app/Contents/MacOS</string>
+              <key>EnvironmentVariables</key>
+              <dict>
+                  <key>HTTP_PORTS</key>
+                  <string>11011</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+          
           # Create Info.plist with proper configuration
           cat > dist/Cleanuparr.app/Contents/Info.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -221,38 +252,16 @@ jobs:
 
       - name: Create PKG installer
         run: |
-          # Create postinstall script
-          mkdir -p scripts
-          cat > scripts/postinstall << 'EOF'
-          #!/bin/bash
-          
-          # Set proper permissions for the app bundle
-          chmod -R 755 /Applications/Cleanuparr.app
-          chmod +x /Applications/Cleanuparr.app/Contents/MacOS/Cleanuparr
-          
-          # Create config directory in user's Application Support
-          # Note: This runs as root during installation, so we need to handle user directories properly
-          for user_home in /Users/*; do
-            if [[ -d "$user_home" && ! "$user_home" =~ /(Shared|.localized)$ ]]; then
-              user_name=$(basename "$user_home")
-              if [[ "$user_name" != "root" ]]; then
-                sudo -u "$user_name" mkdir -p "$user_home/Library/Application Support/Cleanuparr"
-                sudo -u "$user_name" chmod 755 "$user_home/Library/Application Support/Cleanuparr"
-              fi
-            fi
-          done
-          
-          # Add to system PATH if not already there (optional)
-          # ln -sf /Applications/Cleanuparr.app/Contents/MacOS/Cleanuparr /usr/local/bin/cleanuparr 2>/dev/null || true
-          
-          exit 0
-          EOF
-          
-          chmod +x scripts/postinstall
-          
           # Create preinstall script to handle existing installations
+          mkdir -p scripts
           cat > scripts/preinstall << 'EOF'
           #!/bin/bash
+          
+          # Stop and unload existing launch daemon if it exists
+          if launchctl list | grep -q "com.cleanuparr.daemon"; then
+            launchctl stop com.cleanuparr.daemon 2>/dev/null || true
+            launchctl unload /Library/LaunchDaemons/com.cleanuparr.daemon.plist 2>/dev/null || true
+          fi
           
           # Stop any running instances of Cleanuparr
           pkill -f "Cleanuparr" || true
@@ -263,10 +272,98 @@ jobs:
             rm -rf "/Applications/Cleanuparr.app"
           fi
           
+          # Remove old launch daemon plist if it exists
+          if [[ -f "/Library/LaunchDaemons/com.cleanuparr.daemon.plist" ]]; then
+            rm -f "/Library/LaunchDaemons/com.cleanuparr.daemon.plist"
+          fi
+          
           exit 0
           EOF
           
           chmod +x scripts/preinstall
+          
+          # Create postinstall script
+          cat > scripts/postinstall << 'EOF'
+          #!/bin/bash
+          
+          # Set proper permissions for the app bundle
+          chmod -R 755 /Applications/Cleanuparr.app
+          chmod +x /Applications/Cleanuparr.app/Contents/MacOS/Cleanuparr
+          
+          # Install the launch daemon
+          cp /Applications/Cleanuparr.app/Contents/Resources/com.cleanuparr.daemon.plist /Library/LaunchDaemons/
+          chown root:wheel /Library/LaunchDaemons/com.cleanuparr.daemon.plist
+          chmod 644 /Library/LaunchDaemons/com.cleanuparr.daemon.plist
+          
+          # Load and start the service
+          launchctl load /Library/LaunchDaemons/com.cleanuparr.daemon.plist
+          launchctl start com.cleanuparr.daemon
+          
+          # Wait a moment for service to start
+          sleep 3
+          
+          # Create completion message
+          cat > /tmp/cleanuparr_install_complete.txt << 'MSGEOF'
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+             Cleanuparr Installation Complete!
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          
+          Cleanuparr is now running as a system service!
+          
+          🌐 Web Interface: http://localhost:11011
+          📁 Configuration: /Applications/Cleanuparr.app/Contents/MacOS/config/
+          📋 Logs: /var/log/cleanuparr.log
+          
+          The service will automatically start when your Mac boots.
+          
+          🆘 Need Help? Visit: https://github.com/Cleanuparr/Cleanuparr
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          MSGEOF
+          
+          # Show completion message in Terminal (if available)
+          if command -v osascript >/dev/null 2>&1; then
+            osascript -e 'tell application "Terminal" to do script "cat /tmp/cleanuparr_install_complete.txt && echo && echo \"Press any key to close...\" && read -n 1 && exit"' 2>/dev/null || true
+          fi
+          
+          # Also display as system notification
+          osascript -e 'display notification "Cleanuparr service started! Visit http://localhost:11011 in your browser." with title "Installation Complete"' 2>/dev/null || true
+          
+          # Clean up
+          rm -f /tmp/cleanuparr_install_complete.txt
+          
+          exit 0
+          EOF
+          
+          chmod +x scripts/postinstall
+          
+          # Create uninstall script (optional, for user reference)
+          cat > scripts/uninstall_cleanuparr.sh << 'EOF'
+          #!/bin/bash
+          # Cleanuparr Uninstall Script
+          # Run this script with sudo to completely remove Cleanuparr
+          
+          echo "Stopping Cleanuparr service..."
+          launchctl stop com.cleanuparr.daemon 2>/dev/null || true
+          launchctl unload /Library/LaunchDaemons/com.cleanuparr.daemon.plist 2>/dev/null || true
+          
+          echo "Removing service files..."
+          rm -f /Library/LaunchDaemons/com.cleanuparr.daemon.plist
+          
+          echo "Removing application..."
+          rm -rf /Applications/Cleanuparr.app
+          
+          echo "Removing logs..."
+          rm -f /var/log/cleanuparr.log
+          rm -f /var/log/cleanuparr.error.log
+          
+          echo "Cleanuparr has been completely removed."
+          echo "Note: Configuration files in /Applications/Cleanuparr.app/Contents/MacOS/config/ have been removed with the app."
+          EOF
+          
+          chmod +x scripts/uninstall_cleanuparr.sh
+          
+          # Copy uninstall script to app bundle for user access
+          cp scripts/uninstall_cleanuparr.sh dist/Cleanuparr.app/Contents/Resources/
           
           # Determine package name
           if [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
