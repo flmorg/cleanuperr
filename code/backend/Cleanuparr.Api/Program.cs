@@ -11,12 +11,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
     .AddJsonFile(Path.Combine(ConfigurationPathProvider.GetConfigPath(), "cleanuparr.json"), optional: true, reloadOnChange: true);
 
-string? port = builder.Configuration.GetValue<string>("HTTP_PORTS");
+int.TryParse(builder.Configuration.GetValue<string>("PORT"), out int port);
+port = port is 0 ? 11011 : port;
 
-if (string.IsNullOrEmpty(port) && !builder.Environment.IsDevelopment())
+if (!builder.Environment.IsDevelopment())
 {
     // If no port is configured, default to 11011
-    Environment.SetEnvironmentVariable("HTTP_PORTS", "11011");
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.ListenAnyIP(port);
+    });
 }
 
 builder.Services.AddResponseCompression(options =>
@@ -108,7 +112,7 @@ if (basePath is not null)
     }
 }
 
-logger.LogInformation("Server configuration: PORT={port}, BASE_PATH={basePath}", app.Configuration.GetValue<string>("HTTP_PORTS"), basePath ?? "/");
+logger.LogInformation("Server configuration: PORT={port}, BASE_PATH={basePath}", port, basePath ?? "/");
 
 // Initialize the host
 await app.Init();
