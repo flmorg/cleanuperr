@@ -24,7 +24,7 @@ public sealed class BlocklistProvider
     private readonly IMemoryCache _cache;
     private readonly Dictionary<InstanceType, string> _configHashes = new();
     private static DateTime _lastLoadTime = DateTime.MinValue;
-    private const int LoadIntervalHours = 6;
+    private const int LoadIntervalHours = 4;
 
     public BlocklistProvider(
         ILogger<BlocklistProvider> logger,
