@@ -107,11 +107,10 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
 
   /**
    * Open field-specific documentation in a new tab
-   * @param section The configuration section (e.g., 'general')
    * @param fieldName The form field name (e.g., 'dryRun', 'httpMaxRetries')
    */
-  openFieldDocs(section: string, fieldName: string): void {
-    this.documentationService.openFieldDocumentation(section, fieldName);
+  openFieldDocs(fieldName: string): void {
+    this.documentationService.openFieldDocumentation('general', fieldName);
   }
 
   constructor() {

@@ -30,7 +30,7 @@
         <label class="field-label">
           Enable Queue Cleaner
           <i class="pi pi-info-circle field-info-icon" 
-             (click)="openFieldDocs('queueCleaner', 'enabled')"
+             (click)="openFieldDocs('enabled')"
              title="View documentation for this setting">
           </i>
         </label>
@@ -45,7 +45,7 @@
         <label class="field-label">
           Scheduling Mode
           <i class="pi pi-info-circle field-info-icon" 
-             (click)="openFieldDocs('queueCleaner', 'useAdvancedScheduling')"
+             (click)="openFieldDocs('useAdvancedScheduling')"
              title="View documentation for scheduling modes">
           </i>
         </label>
@@ -65,7 +65,9 @@
 
       <!-- Basic Schedule Controls - shown when useAdvancedScheduling is false -->
       <div class="field-row" formGroupName="jobSchedule" *ngIf="!queueCleanerForm.get('useAdvancedScheduling')?.value">
-        <label class="field-label">Run Schedule</label>
+        <label class="field-label">
+          Run Schedule
+        </label>
         <div>
           <div class="field-input schedule-input flex flex-wrap">
             <span class="schedule-label">Every</span>
@@ -97,7 +99,7 @@
         <label class="field-label">
           Cron Expression
           <i class="pi pi-info-circle field-info-icon" 
-             (click)="openFieldDocs('queueCleaner', 'cronExpression')"
+             (click)="openFieldDocs('cronExpression')"
              title="View cron expression documentation and examples">
           </i>
         </label>
@@ -120,7 +122,7 @@
               <label class="field-label">
                 Max Strikes
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queueCleaner', 'failedImport.maxStrikes')"
+                   (click)="openFieldDocs('failedImport.maxStrikes')"
                    title="View documentation for failed import strike system">
                 </i>
               </label>
@@ -143,7 +145,7 @@
               <label class="field-label">
                 Ignore Private
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'failedImport.ignorePrivate')"
+                   (click)="openFieldDocs('failedImport.ignorePrivate')"
                    title="View documentation for private torrent handling">
                 </i>
               </label>
@@ -157,7 +159,7 @@
               <label class="field-label">
                 Delete Private
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'failedImport.deletePrivate')"
+                   (click)="openFieldDocs('failedImport.deletePrivate')"
                    title="View documentation for private torrent deletion">
                 </i>
               </label>
@@ -171,7 +173,7 @@
               <label class="field-label">
                 Ignored Patterns
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queueCleaner', 'failedImport.ignoredPatterns')"
+                   (click)="openFieldDocs('failedImport.ignoredPatterns')"
                    title="View documentation for pattern matching and examples">
                 </i>
               </label>
@@ -200,7 +202,7 @@
               <label class="field-label">
                 Max Strikes
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'stalled.maxStrikes')"
+                   (click)="openFieldDocs('stalled.maxStrikes')"
                    title="View documentation for stalled download strike system">
                 </i>
               </label>
@@ -226,7 +228,7 @@
               <label class="field-label">
                 Reset Strikes On Progress
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'stalled.resetStrikesOnProgress')"
+                   (click)="openFieldDocs('stalled.resetStrikesOnProgress')"
                    title="View documentation for strike reset behavior">
                 </i>
               </label>
@@ -240,7 +242,7 @@
               <label class="field-label">
                 Ignore Private
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'stalled.ignorePrivate')"
+                   (click)="openFieldDocs('stalled.ignorePrivate')"
                    title="View documentation for private torrent handling">
                 </i>
               </label>
@@ -254,7 +256,7 @@
               <label class="field-label">
                 Delete Private
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'stalled.deletePrivate')"
+                   (click)="openFieldDocs('stalled.deletePrivate')"
                    title="View documentation for private torrent deletion">
                 </i>
               </label>
@@ -274,7 +276,7 @@
               <label class="field-label">
                 Max Strikes for Downloading Metadata
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'stalled.downloadingMetadataMaxStrikes')"
+                   (click)="openFieldDocs('stalled.downloadingMetadataMaxStrikes')"
                    title="View documentation for metadata download handling">
                 </i>
               </label>
@@ -306,7 +308,7 @@
               <label class="field-label">
                 Max Strikes
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'slow.maxStrikes')"
+                   (click)="openFieldDocs('slow.maxStrikes')"
                    title="View documentation for slow download strike system">
                 </i>
               </label>
@@ -332,7 +334,7 @@
               <label class="field-label">
                 Reset Strikes On Progress
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'slow.resetStrikesOnProgress')"
+                   (click)="openFieldDocs('slow.resetStrikesOnProgress')"
                    title="View documentation for strike reset behavior">
                 </i>
               </label>
@@ -346,7 +348,7 @@
               <label class="field-label">
                 Ignore Private
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'slow.ignorePrivate')"
+                   (click)="openFieldDocs('slow.ignorePrivate')"
                    title="View documentation for private torrent handling">
                 </i>
               </label>
@@ -360,7 +362,7 @@
               <label class="field-label">
                 Delete Private
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'slow.deletePrivate')"
+                   (click)="openFieldDocs('slow.deletePrivate')"
                    title="View documentation for private torrent deletion">
                 </i>
               </label>
@@ -374,7 +376,7 @@
               <label class="field-label">
                 Minimum Speed
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queueCleaner', 'slow.minSpeed')"
+                   (click)="openFieldDocs('slow.minSpeed')"
                    title="View speed threshold guidelines and recommendations">
                 </i>
               </label>
@@ -393,7 +395,7 @@
               <label class="field-label">
                 Maximum Time (hours)
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queue-cleaner', 'slow.maxTime')"
+                   (click)="openFieldDocs('slow.maxTime')"
                    title="View documentation for maximum slow download time">
                 </i>
               </label>
@@ -415,7 +417,7 @@
               <label class="field-label">
                 Ignore Above Size
                 <i class="pi pi-info-circle field-info-icon" 
-                   (click)="openFieldDocs('queueCleaner', 'slow.ignoreAboveSize')"
+                   (click)="openFieldDocs('slow.ignoreAboveSize')"
                    title="View size exemption strategy and recommended thresholds">
                 </i>
               </label>

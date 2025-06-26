@@ -131,7 +131,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
    * Opens field-specific documentation
    * @param fieldName Field name to open documentation for
    */
-  openFieldDocumentation(fieldName: string): void {
+  openFieldDocs(fieldName: string): void {
     this.documentationService.openFieldDocumentation('download-cleaner', fieldName);
   }
 

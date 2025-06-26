@@ -115,7 +115,7 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
    * Opens field-specific documentation
    * @param fieldName Field name to open documentation for
    */
-  openFieldDocumentation(fieldName: string): void {
+  openFieldDocs(fieldName: string): void {
     this.documentationService.openFieldDocumentation('content-blocker', fieldName);
   }
 

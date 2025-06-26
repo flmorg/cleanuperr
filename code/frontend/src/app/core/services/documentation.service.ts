@@ -89,6 +89,13 @@ export class DocumentationService {
       'urlBase': 'url-base-path',
       'username': 'authentication-username',
       'password': 'authentication-password'
+    },
+    'notifications': {
+      'notifiarr.apiKey': 'notifiarr-api-key',
+      'notifiarr.channelId': 'notifiarr-channel-id',
+      'apprise.url': 'apprise-url',
+      'apprise.key': 'apprise-key',
+      'eventTriggers': 'event-triggers'
     }
     // Additional sections will be added here as we implement them
   };

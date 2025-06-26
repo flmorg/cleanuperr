@@ -29,8 +29,8 @@
       <div class="field-row">
         <label class="field-label">
           Enable Content Blocker
-          <i class="pi pi-info-circle info-icon" 
-             (click)="openFieldDocumentation('enabled')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('enabled')" 
              title="Click for documentation"></i>
         </label>
         <div class="field-input">
@@ -43,8 +43,8 @@
       <div class="field-row">
         <label class="field-label">
           Scheduling Mode
-          <i class="pi pi-info-circle info-icon" 
-             (click)="openFieldDocumentation('useAdvancedScheduling')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('useAdvancedScheduling')" 
              title="Click for documentation"></i>
         </label>
         <div class="field-input">
@@ -65,9 +65,6 @@
       <div class="field-row" formGroupName="jobSchedule" *ngIf="!contentBlockerForm.get('useAdvancedScheduling')?.value">
         <label class="field-label">
           Run Schedule
-          <i class="pi pi-info-circle info-icon" 
-             (click)="openFieldDocumentation('jobSchedule.every')" 
-             title="Click for documentation"></i>
         </label>
         <div>
           <div class="field-input schedule-input flex flex-wrap">
@@ -99,8 +96,8 @@
       <div class="field-row" *ngIf="contentBlockerForm.get('useAdvancedScheduling')?.value">
         <label class="field-label">
           Cron Expression
-          <i class="pi pi-info-circle info-icon" 
-             (click)="openFieldDocumentation('cronExpression')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('cronExpression')" 
              title="Click for documentation"></i>
         </label>
         <div>
@@ -116,8 +113,8 @@
       <div class="field-row">
         <label class="field-label">
           Ignore Private
-          <i class="pi pi-info-circle info-icon" 
-             (click)="openFieldDocumentation('ignorePrivate')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('ignorePrivate')" 
              title="Click for documentation"></i>
         </label>
         <div class="field-input">
@@ -129,8 +126,8 @@
       <div class="field-row">
         <label class="field-label">
           Delete Private
-          <i class="pi pi-info-circle info-icon" 
-             (click)="openFieldDocumentation('deletePrivate')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('deletePrivate')" 
              title="Click for documentation"></i>
         </label>
         <div class="field-input">
@@ -149,8 +146,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Enable Sonarr Blocklist
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('sonarr.enabled')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('sonarr.enabled')" 
                      title="Click for documentation"></i>
                 </label>
                 <div class="field-input">
@@ -162,8 +159,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Blocklist Path
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('sonarr.blocklistPath')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('sonarr.blocklistPath')" 
                      title="Click for documentation"></i>
                 </label>
                 <p-fluid>
@@ -178,8 +175,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Blocklist Type
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('sonarr.blocklistType')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('sonarr.blocklistType')" 
                      title="Click for documentation"></i>
                 </label>
                 <div class="field-input">
@@ -210,8 +207,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Enable Radarr Blocklist
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('radarr.enabled')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('radarr.enabled')" 
                      title="Click for documentation"></i>
                 </label>
                 <div class="field-input">
@@ -223,8 +220,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Blocklist Path
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('radarr.blocklistPath')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('radarr.blocklistPath')" 
                      title="Click for documentation"></i>
                 </label>
                 <p-fluid>
@@ -239,8 +236,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Blocklist Type
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('radarr.blocklistType')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('radarr.blocklistType')" 
                      title="Click for documentation"></i>
                 </label>
                 <div class="field-input">
@@ -271,8 +268,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Enable Lidarr Blocklist
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('lidarr.enabled')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('lidarr.enabled')" 
                      title="Click for documentation"></i>
                 </label>
                 <div class="field-input">
@@ -284,8 +281,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Blocklist Path
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('lidarr.blocklistPath')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('lidarr.blocklistPath')" 
                      title="Click for documentation"></i>
                 </label>
                 <p-fluid>
@@ -300,8 +297,8 @@
               <div class="field-row">
                 <label class="field-label">
                   Blocklist Type
-                  <i class="pi pi-info-circle info-icon" 
-                     (click)="openFieldDocumentation('lidarr.blocklistType')" 
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('lidarr.blocklistType')" 
                      title="Click for documentation"></i>
                 </label>
                 <div class="field-input">

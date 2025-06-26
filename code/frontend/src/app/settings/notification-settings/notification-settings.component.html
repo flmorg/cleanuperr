@@ -35,7 +35,13 @@
           <div formGroupName="notifiarr">
                         <!-- API Key -->
             <div class="field-row">
-              <label class="field-label">API Key</label>
+              <label class="field-label">
+                API Key
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('notifiarr.apiKey')"
+                   title="View documentation for Notifiarr API key setup">
+                </i>
+              </label>
               <div class="field-input">
                 <input type="text" pInputText formControlName="apiKey" inputId="notifiarrApiKey" placeholder="Enter Notifiarr API key" />
                 <small class="form-helper-text">Your Notifiarr API key for authentication</small>
@@ -44,7 +50,13 @@
 
             <!-- Channel ID -->
             <div class="field-row">
-              <label class="field-label">Channel ID</label>
+              <label class="field-label">
+                Channel ID
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('notifiarr.channelId')"
+                   title="View documentation for Discord channel ID setup">
+                </i>
+              </label>
               <div class="field-input">
                 <input type="text" pInputText formControlName="channelId" inputId="notifiarrChannelId" placeholder="Enter channel ID" />
                 <small class="form-helper-text">The channel ID where notifications will be sent</small>
@@ -53,7 +65,13 @@
   
             <!-- Event Triggers -->
             <div class="field-row">
-              <label class="field-label">Event Triggers</label>
+              <label class="field-label">
+                Event Triggers
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('eventTriggers')"
+                   title="View documentation for notification event types">
+                </i>
+              </label>
               <div class="field-input">
                 <div class="flex flex-column gap-2">
                   <div class="flex align-items-center">
@@ -93,7 +111,13 @@
           <div formGroupName="apprise">
                         <!-- URL -->
             <div class="field-row">
-              <label class="field-label">URL</label>
+              <label class="field-label">
+                URL
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('apprise.url')"
+                   title="View documentation for Apprise server URL setup">
+                </i>
+              </label>
               <div class="field-input">
                 <input type="text" pInputText formControlName="url" inputId="appriseUrl" placeholder="Enter Apprise URL" />
                 <small class="form-helper-text">The Apprise server URL</small>
@@ -102,7 +126,13 @@
 
             <!-- Key -->
             <div class="field-row">
-              <label class="field-label">Key</label>
+              <label class="field-label">
+                Key
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('apprise.key')"
+                   title="View documentation for Apprise configuration key">
+                </i>
+              </label>
               <div class="field-input">
                 <input type="text" pInputText formControlName="key" inputId="appriseKey" placeholder="Enter key" />
                 <small class="form-helper-text">The key of your Apprise config</small>
@@ -111,7 +141,13 @@
   
             <!-- Event Triggers -->
             <div class="field-row">
-              <label class="field-label">Event Triggers</label>
+              <label class="field-label">
+                Event Triggers
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('eventTriggers')"
+                   title="View documentation for notification event types">
+                </i>
+              </label>
               <div class="field-input">
                 <div class="flex flex-column gap-2">
                   <div class="flex align-items-center">

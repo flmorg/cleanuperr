@@ -121,11 +121,10 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
 
   /**
    * Open field-specific documentation in a new tab
-   * @param section The configuration section (e.g., 'queue-cleaner')
    * @param fieldName The form field name (e.g., 'enabled', 'failedImport.maxStrikes')
    */
-  openFieldDocs(section: string, fieldName: string): void {
-    this.documentationService.openFieldDocumentation(section, fieldName);
+  openFieldDocs(fieldName: string): void {
+    this.documentationService.openFieldDocumentation('queue-cleaner', fieldName);
   }
 
   constructor() {

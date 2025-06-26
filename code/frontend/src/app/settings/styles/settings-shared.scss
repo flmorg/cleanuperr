@@ -1,4 +1,31 @@
-/* Queue Cleaner Settings Styles */
+// Documentation info icon styles
+.field-info-icon {
+  margin-left: 8px;
+  color: var(--primary-color, #3b82f6);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  font-size: 0.9em;
+  
+  &:hover {
+    opacity: 1;
+    color: var(--primary-color-hover, #2563eb);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Enhanced field label to accommodate info icons
+.field-label {
+  display: flex;
+  align-items: center;
+  
+  .field-info-icon {
+    flex-shrink: 0;
+  }
+}
 
 /* Card styles matching dashboard */
 ::ng-deep .settings-card {

@@ -1,0 +1,83 @@
+---
+sidebar_position: 6
+---
+
+# Notifications
+
+Configure notification services to receive alerts about Cleanuparr operations.
+
+<br />
+
+## Notifiarr
+
+Notifiarr is a notification service that can send alerts to Discord.
+
+### Notifiarr API Key {#notifiarr-api-key}
+
+Your Notifiarr API key for authentication. This key is obtained from your Notifiarr dashboard.
+
+:::important
+Requires Notifiarr's [Passthrough](https://notifiarr.wiki/pages/integrations/passthrough/) integration to work.
+:::
+
+<hr />
+
+### Notifiarr Channel ID {#notifiarr-channel-id}
+
+The Discord channel ID where notifications will be sent. This determines the destination for your alerts.
+
+<hr />
+<br />
+
+## Apprise Configuration
+
+Apprise is a universal notification library that supports over 80 different notification services.
+
+### Apprise URL {#apprise-url}
+
+The Apprise server URL where notification requests will be sent.
+
+<hr />
+
+### Apprise Key {#apprise-key}
+
+The key that identifies your Apprise configuration. This corresponds to a configuration defined in your Apprise server.
+
+<hr />
+<br />
+
+## Event Triggers
+
+### Failed Import Strike {#event-failed-import-strike}
+
+**Triggered When**: A download receives a strike for failed import.
+
+<hr />
+
+### Stalled Strike {#event-stalled-strike}
+
+**Triggered When**: A download receives a strike for being stalled.
+
+<hr />
+
+### Slow Strike {#event-slow-strike}
+
+**Triggered When**: A download receives a strike for slow speed.
+
+<hr />
+
+### Queue Item Deleted {#event-queue-item-deleted}
+
+**Triggered When**: A download is removed from the queue.
+
+<hr />
+
+### Download Cleaned {#event-download-cleaned}
+
+**Triggered When**: Download Cleaner removes completed downloads.
+
+<hr />
+
+### Category Changed {#event-category-changed}
+
+**Triggered When**: Download Cleaner changes a download's category.

@@ -13,6 +13,7 @@ import { CheckboxModule } from "primeng/checkbox";
 import { ButtonModule } from "primeng/button";
 import { ToastModule } from "primeng/toast";
 import { NotificationService } from '../../core/services/notification.service';
+import { DocumentationService } from '../../core/services/documentation.service';
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 
 @Component({
@@ -48,6 +49,7 @@ export class NotificationSettingsComponent implements OnDestroy, CanComponentDea
   // Inject the necessary services
   private formBuilder = inject(FormBuilder);
   private notificationService = inject(NotificationService);
+  private documentationService = inject(DocumentationService);
   private notificationConfigStore = inject(NotificationConfigStore);
 
   // Signals from the store
@@ -318,5 +320,12 @@ export class NotificationSettingsComponent implements OnDestroy, CanComponentDea
   hasNestedError(groupName: string, controlName: string, errorName: string): boolean {
     const control = this.notificationForm.get(`${groupName}.${controlName}`);
     return control ? control.touched && control.hasError(errorName) : false;
+  }
+
+  /**
+   * Opens documentation for a specific field
+   */
+  openFieldDocs(fieldName: string): void {
+    this.documentationService.openFieldDocumentation('notifications', fieldName);
   }
 } 

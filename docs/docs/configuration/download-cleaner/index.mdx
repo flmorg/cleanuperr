@@ -1,0 +1,138 @@
+---
+sidebar_position: 4
+---
+
+# Download Cleaner
+
+The Download Cleaner automatically removes downloads from your download client after they have finished seeding according to configurable rules. This helps manage disk space and maintain optimal seeding ratios.
+
+:::important
+These settings need a download client to be configured.
+:::
+
+### Enable Download Cleaner {#enable-download-cleaner}
+
+When enabled, the Download Cleaner will run according to the configured schedule to automatically clean completed downloads from your download client.
+
+<hr />
+
+### Scheduling Mode {#scheduling-mode}
+
+Choose how to configure the Download Cleaner schedule:
+- **Basic**: Simple interval-based scheduling (every X minutes/hours/seconds)
+- **Advanced**: Full cron expression control for complex schedules
+
+<hr />
+
+### Cron Expression {#cron-expression}
+
+Enter a valid Quartz.NET cron expression to control when the Download Cleaner runs. The example above runs every hour.
+
+**Common Cron Examples:**
+- `0 0/5 * ? * * *` - Every 5 minutes
+- `0 0 * ? * * *` - Every hour
+- `0 0 */6 ? * * *` - Every 6 hours
+
+<hr />
+
+## Seeding Settings
+
+Settings that control how downloads are cleaned after they finish downloading.
+
+### Delete Private Torrents {#delete-private-torrents}
+
+When enabled, private torrents will be deleted from the download client when they meet the cleanup criteria. Use with caution as this permanently removes the download.
+
+:::warning
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+:::
+
+<hr />
+
+### Seeding Rules
+
+Categories define the cleanup rules for different types of downloads. Each category specifies when downloads should be removed based on ratio and time limits.
+
+:::note
+A download is cleaned when both `Max Ratio` and `Min Seed Time` are reached, OR when `Max Seed Time` is reached regardless of ratio.
+:::
+
+:::important
+Both Max Ratio and Max Seed Time cannot be disabled (-1) at the same time. At least one cleanup condition must be configured.
+:::
+
+#### Category Name {#category-name}
+
+The name of the download client category to apply these rules to. Must match the category name exactly as configured in your download client.
+
+**Examples:**
+- `tv-sonarr`
+- `radarr`
+- `lidarr`
+
+<hr />
+
+#### Max Ratio {#max-ratio}
+
+Maximum ratio to seed before considering the download for removal. Set to `-1` to disable ratio-based cleanup.
+
+<hr />
+
+#### Min Seed Time (hours) {#min-seed-time}
+
+Minimum time in hours to seed before removing a download that has reached the max ratio. Set to `0` to disable minimum time requirements.
+
+<hr />
+
+#### Max Seed Time (hours) {#max-seed-time}
+
+Maximum time in hours to seed before removing a download regardless of ratio. Set to `-1` to disable time-based cleanup.
+
+<hr />
+
+## Unlinked Download Settings
+
+Settings for managing downloads that no longer have hardlinks to media files (indicating they may no longer be needed by the *arr applications).
+
+### Enable Unlinked Download Handling {#enable-unlinked-download-handling}
+
+Enable management of downloads that have no hardlinks remaining. This helps identify downloads that are no longer needed by your *arr applications.
+
+:::important
+If you are using Docker, make sure to mount the downloads directory the same way it is mounted for the download client. If your download client's download directory is `/downloads`, it should be the same for Cleanuparr.
+:::
+
+<hr />
+
+### Target Category {#target-category}
+
+Category to move unlinked downloads to.
+
+<hr />
+
+### Use Tag {#use-tag}
+
+When enabled, uses a tag instead of category for marking unlinked downloads (qBittorrent only).
+
+<hr />
+
+### Ignored Root Directory {#ignored-root-directory}
+
+Root directory to ignore when checking for unlinked downloads. Useful for cross-seed setups where you want to ignore hardlinks (even though a movie is not in Radarr anymore, it can have hardlinks from cross-seed).
+
+```
+/data
+├── downloads
+│   ├── torrents
+│   └── cross-seed
+├── movies
+└── shows
+```
+
+For the example above, the ignored root directory should be set to `/data/downloads`.
+
+<hr />
+
+### Unlinked Categories {#unlinked-categories}
+
+Categories to check for unlinked downloads. Only downloads in these categories will be checked for missing hardlinks.

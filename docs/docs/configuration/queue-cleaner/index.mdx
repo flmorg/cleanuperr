@@ -1,0 +1,168 @@
+---
+sidebar_position: 3
+---
+
+# Queue Cleaner Configuration
+
+The Queue Cleaner monitors your download client's queue and automatically removes downloads based on configurable criteria. This helps keep your queue clean and prevents problematic downloads from consuming resources.
+
+### Enable Queue Cleaner {#enable-queue-cleaner}
+
+When enabled, the Queue Cleaner will run according to the configured schedule to automatically clean downloads from your download client queue.
+
+<hr />
+
+### Scheduling Mode {#scheduling-mode}
+
+Choose how to configure the Queue Cleaner schedule:
+- **Basic**: Simple interval-based scheduling (every X minutes/hours/seconds)
+- **Advanced**: Full cron expression control for complex schedules
+
+<hr />
+
+### Cron Expression {#cron-expression}
+
+Enter a valid Quartz cron expression to control when the Queue Cleaner runs. The example above runs every 5 minutes.
+
+**Common Cron Examples:**
+- `0 0/5 * ? * * *` - Every 5 minutes
+- `0 0 * ? * * *` - Every hour
+- `0 0 */6 ? * * *` - Every 6 hours
+
+<hr />
+
+## Failed Import Settings
+
+### Failed Import Max Strikes {#failed-import-max-strikes}
+
+Number of strikes before a failed import download is removed from the queue. Set to 0 to disable failed import cleaning, minimum 3 to enable.
+
+<hr />
+
+### Failed Import Ignore Private {#failed-import-ignore-private}
+
+When enabled, private torrents will be skipped during failed import cleaning. This is useful if you want to preserve private tracker content even when imports fail.
+
+:::important
+This setting needs a download client to be configured.
+:::
+
+<hr />
+
+### Failed Import Delete Private {#failed-import-delete-private}
+
+When enabled, private torrents that reach the maximum strikes will be deleted from the download client. Use with caution as this will permanently remove the download.
+
+:::warning
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+:::
+
+:::important
+This setting needs a download client to be configured.
+:::
+
+<hr />
+
+### Failed Import Ignored Patterns {#failed-import-ignored-patterns}
+
+**Examples:**
+- `title mismatch`
+- `manual import required`
+
+Failed imports containing these patterns in their name will be skipped during cleaning. Useful for avoiding removal of legitimate downloads that may have temporary import issues.
+
+<hr />
+
+## Stalled Download Settings
+
+Stalled downloads are those that have stopped downloading and show no progress.
+
+:::important
+These settings need a download client to be configured.
+:::
+
+### Stalled Max Strikes {#stalled-max-strikes}
+
+Number of strikes before a stalled download is removed from the queue. Set to 0 to disable stalled download cleaning, minimum 3 to enable.
+
+<hr />
+
+### Stalled Reset Strikes On Progress {#stalled-reset-strikes-on-progress}
+
+When enabled, strikes will be reset to zero if the download shows progress again. This prevents removal of downloads that temporarily stall but resume downloading.
+
+<hr />
+
+### Stalled Ignore Private {#stalled-ignore-private}
+
+When enabled, private torrents will be skipped during stalled download cleaning.
+
+<hr />
+
+### Stalled Delete Private {#stalled-delete-private}
+
+When enabled, private torrents that reach the maximum strikes will be deleted from the download client.
+
+:::warning
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+:::
+
+<hr />
+
+### Downloading Metadata Max Strikes {#downloading-metadata-max-strikes}
+
+Number of strikes before a download stuck in "Downloading Metadata" state is removed (qBittorrent only).
+
+<hr />
+
+## Slow Download Settings
+
+Slow downloads are those downloading below a specified speed threshold.
+
+:::important
+These settings need a download client to be configured.
+:::
+
+### Slow Max Strikes {#slow-max-strikes}
+
+Number of strikes before a slow download is removed from the queue. Set to 0 to disable slow download cleaning, minimum 3 to enable.
+
+<hr />
+
+### Slow Reset Strikes On Progress {#slow-reset-strikes-on-progress}
+
+When enabled, strikes will be reset if the download speed improves above the minimum threshold.
+
+<hr />
+
+### Slow Ignore Private {#slow-ignore-private}
+
+When enabled, private torrents will be skipped during slow download cleaning.
+
+<hr />
+
+### Slow Delete Private {#slow-delete-private}
+
+When enabled, private torrents that reach the maximum strikes will be deleted from the download client.
+
+:::warning
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+:::
+
+<hr />
+
+### Slow Min Speed {#slow-min-speed}
+
+Minimum download speed threshold. Downloads consistently below this speed will accumulate strikes.
+
+<hr />
+
+### Slow Max Time {#slow-max-time}
+
+Maximum time (in hours) that a download can take. Set to 0 to disable time-based removal. This works alongside the speed threshold.
+
+<hr />
+
+### Slow Ignore Above Size {#slow-ignore-above-size}
+
+Downloads larger than this size will be ignored by slow download cleaning. Large files often download slower and may need more time to complete.
