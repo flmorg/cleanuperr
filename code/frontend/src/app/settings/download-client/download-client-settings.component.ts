@@ -362,16 +362,32 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   onClientTypeChange(): void {
     const clientType = this.clientForm.get('type')?.value;
     const hostControl = this.clientForm.get('host');
+    const usernameControl = this.clientForm.get('username');
     
-    if (!hostControl) return;
+    if (!hostControl || !usernameControl) return;
     
     hostControl.setValidators([
       Validators.required, 
       this.uriValidator.bind(this)
     ]);
     
+    // Clear username value and remove validation for Deluge
+    if (clientType === DownloadClientType.Deluge) {
+      usernameControl.setValue('');
+      usernameControl.clearValidators();
+    }
+    
     // Update validation state
     hostControl.updateValueAndValidity();
+    usernameControl.updateValueAndValidity();
+  }
+
+  /**
+   * Check if username field should be shown (hidden for Deluge)
+   */
+  shouldShowUsernameField(): boolean {
+    const clientType = this.clientForm.get('type')?.value;
+    return clientType !== DownloadClientType.Deluge;
   }
 
   /**
@@ -389,7 +405,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   /**
    * Open field-specific documentation
    */
-  openFieldDocumentation(fieldName: string): void {
+  openFieldDocs(fieldName: string): void {
     this.documentationService.openFieldDocumentation('download-client', fieldName);
   }
 }

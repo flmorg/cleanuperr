@@ -118,8 +118,8 @@
   <form [formGroup]="clientForm" class="p-fluid instance-form">
     <div class="field flex flex-row">
       <label class="field-label">
-        <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
-           (click)="openFieldDocumentation('enabled')" 
+        <i class="pi pi-info-circle field-info-icon" 
+           (click)="openFieldDocs('enabled')" 
            pTooltip="Click for documentation"></i>
         Enabled
       </label>
@@ -131,8 +131,8 @@
 
     <div class="field">
       <label for="client-name">
-        <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
-           (click)="openFieldDocumentation('name')" 
+        <i class="pi pi-info-circle field-info-icon" 
+           (click)="openFieldDocs('name')" 
            pTooltip="Click for documentation"></i>
         Name *
       </label>
@@ -149,8 +149,8 @@
 
     <div class="field">
       <label for="client-type">
-        <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
-           (click)="openFieldDocumentation('type')" 
+        <i class="pi pi-info-circle field-info-icon" 
+           (click)="openFieldDocs('type')" 
            pTooltip="Click for documentation"></i>
         Client Type *
       </label>
@@ -170,8 +170,8 @@
     <ng-container>
       <div class="field">
         <label for="client-host">
-          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
-             (click)="openFieldDocumentation('host')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('host')" 
              pTooltip="Click for documentation"></i>
           Host *
         </label>
@@ -190,8 +190,8 @@
       
       <div class="field">
         <label for="client-urlbase">
-          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
-             (click)="openFieldDocumentation('urlBase')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('urlBase')" 
              pTooltip="Click for documentation"></i>
           URL Base
         </label>
@@ -205,27 +205,27 @@
         />
       </div>
       
-      <div class="field">
-        <label for="client-username">
-          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
-             (click)="openFieldDocumentation('username')" 
-             pTooltip="Click for documentation"></i>
-          Username
-        </label>
-        <input 
-          id="client-username"
-          type="text" 
-          pInputText 
-          formControlName="username" 
-          placeholder="Username"
-          class="w-full"
-        />
-      </div>
+              <div class="field" *ngIf="shouldShowUsernameField()">
+          <label for="client-username">
+            <i class="pi pi-info-circle field-info-icon" 
+               (click)="openFieldDocs('username')" 
+               pTooltip="Click for documentation"></i>
+            Username
+          </label>
+          <input 
+            id="client-username"
+            type="text" 
+            pInputText 
+            formControlName="username" 
+            placeholder="Username"
+            class="w-full"
+          />
+        </div>
       
       <div class="field">
         <label for="client-password">
-          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
-             (click)="openFieldDocumentation('password')" 
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('password')" 
              pTooltip="Click for documentation"></i>
           Password
         </label>
