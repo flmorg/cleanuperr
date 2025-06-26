@@ -5,23 +5,26 @@ import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { EMPTY, Observable, catchError, switchMap, tap } from 'rxjs';
 import { DownloadCleanerConfig } from "../../shared/models/download-cleaner-config.model";
 import { BasePathService } from "../../core/services/base-path.service";
+import { ErrorHandlerUtil } from "../../core/utils/error-handler.util";
 
 export interface DownloadCleanerConfigState {
   config: DownloadCleanerConfig | null;
   loading: boolean;
   saving: boolean;
-  error: string | null;
+  loadError: string | null;  // Only for load failures that should show "Not connected"
+  saveError: string | null;  // Only for save failures that should show toast
 }
 
 const initialState: DownloadCleanerConfigState = {
   config: null,
   loading: false,
   saving: false,
-  error: null
+  loadError: null,
+  saveError: null
 };
 
-@Injectable()
-export class DownloadCleanerConfigStore extends signalStore(
+export const DownloadCleanerConfigStore = signalStore(
+  { providedIn: 'root' },
   withState(initialState),
   withMethods((store, http = inject(HttpClient), basePathService = inject(BasePathService)) => ({
     
@@ -30,18 +33,26 @@ export class DownloadCleanerConfigStore extends signalStore(
      */
     loadDownloadCleanerConfig: rxMethod<void>(
       pipe => pipe.pipe(
-        tap(() => patchState(store, { loading: true, error: null })),
+        tap(() => patchState(store, { loading: true, loadError: null, saveError: null })),
         switchMap(() => http.get<DownloadCleanerConfig>(basePathService.buildApiUrl('/configuration/download_cleaner')).pipe(
           tap({
-            next: (config) => patchState(store, { config, loading: false }),
-            error: (error: HttpErrorResponse) => {
+            next: (config) => patchState(store, { config, loading: false, loadError: null }),
+            error: (error) => {
+              const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
               patchState(store, { 
                 loading: false, 
-                error: `Failed to load download cleaner configuration: ${error.message}` 
+                loadError: errorMessage  // Only load errors should trigger "Not connected" state
               });
             }
           }),
-          catchError(() => EMPTY)
+          catchError((error) => {
+            const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
+            patchState(store, { 
+              loading: false, 
+              loadError: errorMessage  // Only load errors should trigger "Not connected" state
+            });
+            return EMPTY;
+          })
         ))
       )
     ),
@@ -104,25 +115,33 @@ export class DownloadCleanerConfigStore extends signalStore(
      */
     saveDownloadCleanerConfig: rxMethod<DownloadCleanerConfig>(
       (config$: Observable<DownloadCleanerConfig>) => config$.pipe(
-        tap(() => patchState(store, { saving: true, error: null })),
+        tap(() => patchState(store, { saving: true, saveError: null })),
         switchMap(config => http.put<any>(basePathService.buildApiUrl('/configuration/download_cleaner'), config).pipe(
           tap({
             next: () => {
               // Successfully saved - just update saving state
               // Don't update config to avoid triggering form effects
               patchState(store, { 
-                saving: false 
+                saving: false,
+                saveError: null  // Clear any previous save errors
               });
             },
-            error: (error: HttpErrorResponse) => {
-              const errorMessage = error.error?.message || error.message || 'Unknown error';
+            error: (error) => {
+              const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
               patchState(store, { 
                 saving: false, 
-                error: `Failed to save download cleaner configuration: ${errorMessage}` 
+                saveError: errorMessage  // Save errors should NOT trigger "Not connected" state
               });
             }
           }),
-          catchError(() => EMPTY)
+          catchError((error) => {
+            const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
+            patchState(store, { 
+              saving: false, 
+              saveError: errorMessage  // Save errors should NOT trigger "Not connected" state
+            });
+            return EMPTY;
+          })
         ))
       )
     ),
@@ -131,7 +150,14 @@ export class DownloadCleanerConfigStore extends signalStore(
      * Reset any errors
      */
     resetError() {
-      patchState(store, { error: null });
+      patchState(store, { loadError: null, saveError: null });
+    },
+    
+    /**
+     * Reset only save errors (for when user fixes validation issues)
+     */
+    resetSaveError() {
+      patchState(store, { saveError: null });
     }
   })),
   withHooks({
@@ -139,4 +165,6 @@ export class DownloadCleanerConfigStore extends signalStore(
       loadDownloadCleanerConfig();
     }
   })
-) {}
+);
+
+export type DownloadCleanerConfigStore = InstanceType<typeof DownloadCleanerConfigStore>;

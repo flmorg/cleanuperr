@@ -2,6 +2,7 @@ using Cleanuparr.Api.Models;
 using Cleanuparr.Application.Features.Arr.Dtos;
 using Cleanuparr.Application.Features.DownloadClient.Dtos;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Helpers;
 using Cleanuparr.Infrastructure.Http.DynamicHttpClientSystem;
 using Cleanuparr.Infrastructure.Logging;
@@ -151,7 +152,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create download client");
-            return StatusCode(500, "Failed to create download client configuration");
+            throw;
         }
         finally
         {
@@ -188,7 +189,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update download client with ID {Id}", id);
-            return StatusCode(500, "Failed to update download client configuration");
+            throw;
         }
         finally
         {
@@ -229,7 +230,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete download client with ID {Id}", id);
-            return StatusCode(500, "Failed to delete download client configuration");
+            throw;
         }
         finally
         {
@@ -394,7 +395,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save Notifications configuration");
-            return StatusCode(500, "Failed to save Notifications configuration");
+            throw;
         }
         finally
         {
@@ -439,7 +440,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save QueueCleaner configuration");
-            return StatusCode(500, "Failed to save QueueCleaner configuration");
+            throw;
         }
         finally
         {
@@ -484,7 +485,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save ContentBlocker configuration");
-            return StatusCode(500, "Failed to save ContentBlocker configuration");
+            throw;
         }
         finally
         {
@@ -510,25 +511,25 @@ public class ConfigurationController : ControllerBase
                 // Check for duplicate category names
                 if (newConfigDto.Categories.GroupBy(x => x.Name).Any(x => x.Count() > 1))
                 {
-                    return BadRequest("Duplicate clean categories found");
+                    throw new ValidationException("Duplicate category names found");
                 }
                 
                 // Validate each category
                 foreach (var categoryDto in newConfigDto.Categories)
                 {
-                    if (string.IsNullOrEmpty(categoryDto.Name?.Trim()))
+                    if (string.IsNullOrEmpty(categoryDto.Name.Trim()))
                     {
-                        return BadRequest("Category name cannot be empty");
+                        throw new ValidationException("Category name cannot be empty");
                     }
                     
-                    if (categoryDto.MaxRatio < 0 && categoryDto.MaxSeedTime < 0)
+                    if (categoryDto is { MaxRatio: < 0, MaxSeedTime: < 0 })
                     {
-                        return BadRequest("Both max ratio and max seed time cannot be disabled");
+                        throw new ValidationException("Either max ratio or max seed time must be enabled");
                     }
                     
                     if (categoryDto.MinSeedTime < 0)
                     {
-                        return BadRequest("Min seed time cannot be negative");
+                        throw new ValidationException("Min seed time cannot be negative");
                     }
                 }
             }
@@ -538,27 +539,27 @@ public class ConfigurationController : ControllerBase
             {
                 if (string.IsNullOrEmpty(newConfigDto.UnlinkedTargetCategory))
                 {
-                    return BadRequest("Unlinked target category is required");
+                    throw new ValidationException("Unlinked target category cannot be empty");
                 }
 
                 if (newConfigDto.UnlinkedCategories?.Count is null or 0)
                 {
-                    return BadRequest("No unlinked categories configured");
+                    throw new ValidationException("Unlinked categories cannot be empty");
                 }
 
                 if (newConfigDto.UnlinkedCategories.Contains(newConfigDto.UnlinkedTargetCategory))
                 {
-                    return BadRequest("The unlinked target category should not be present in unlinked categories");
+                    throw new ValidationException("The unlinked target category should not be present in unlinked categories");
                 }
 
                 if (newConfigDto.UnlinkedCategories.Any(string.IsNullOrEmpty))
                 {
-                    return BadRequest("Empty unlinked category filter found");
+                    throw new ValidationException("Empty unlinked category filter found");
                 }
 
                 if (!string.IsNullOrEmpty(newConfigDto.UnlinkedIgnoredRootDir) && !Directory.Exists(newConfigDto.UnlinkedIgnoredRootDir))
                 {
-                    return BadRequest($"{newConfigDto.UnlinkedIgnoredRootDir} root directory does not exist");
+                    throw new ValidationException($"{newConfigDto.UnlinkedIgnoredRootDir} root directory does not exist");
                 }
             }
 
@@ -608,7 +609,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save DownloadCleaner configuration");
-            return StatusCode(500, "Failed to save DownloadCleaner configuration");
+            throw;
         }
         finally
         {
@@ -672,7 +673,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save General configuration");
-            return StatusCode(500, "Failed to save General configuration");
+            throw;
         }
         finally
         {
@@ -703,7 +704,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save Sonarr configuration");
-            return StatusCode(500, "Failed to save Sonarr configuration");
+            throw;
         }
         finally
         {
@@ -734,7 +735,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save Radarr configuration");
-            return StatusCode(500, "Failed to save Radarr configuration");
+            throw;
         }
         finally
         {
@@ -765,7 +766,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save Lidarr configuration");
-            return StatusCode(500, "Failed to save Lidarr configuration");
+            throw;
         }
         finally
         {
@@ -836,7 +837,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create Sonarr instance");
-            return StatusCode(500, "Failed to create Sonarr instance");
+            throw;
         }
         finally
         {
@@ -874,7 +875,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update Sonarr instance with ID {Id}", id);
-            return StatusCode(500, "Failed to update Sonarr instance");
+            throw;
         }
         finally
         {
@@ -908,7 +909,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete Sonarr instance with ID {Id}", id);
-            return StatusCode(500, "Failed to delete Sonarr instance");
+            throw;
         }
         finally
         {
@@ -946,7 +947,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create Radarr instance");
-            return StatusCode(500, "Failed to create Radarr instance");
+            throw;
         }
         finally
         {
@@ -984,7 +985,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update Radarr instance with ID {Id}", id);
-            return StatusCode(500, "Failed to update Radarr instance");
+            throw;
         }
         finally
         {
@@ -1018,7 +1019,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete Radarr instance with ID {Id}", id);
-            return StatusCode(500, "Failed to delete Radarr instance");
+            throw;
         }
         finally
         {
@@ -1057,7 +1058,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create Lidarr instance");
-            return StatusCode(500, "Failed to create Lidarr instance");
+            throw;
         }
         finally
         {
@@ -1095,7 +1096,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update Lidarr instance with ID {Id}", id);
-            return StatusCode(500, "Failed to update Lidarr instance");
+            throw;
         }
         finally
         {
@@ -1129,7 +1130,7 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete Lidarr instance with ID {Id}", id);
-            return StatusCode(500, "Failed to delete Lidarr instance");
+            throw;
         }
         finally
         {

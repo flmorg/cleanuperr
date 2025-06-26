@@ -10,6 +10,7 @@ import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../
 import { ArrInstance, CreateArrInstanceDto } from "../../shared/models/arr-config.model";
 import { GeneralConfig } from "../../shared/models/general-config.model";
 import { BasePathService } from "./base-path.service";
+import { ErrorHandlerUtil } from "../utils/error-handler.util";
 
 @Injectable({
   providedIn: "root",
@@ -66,7 +67,8 @@ export class ConfigurationService {
     return this.http.put<QueueCleanerConfig>(this.basePathService.buildApiUrl('/configuration/queue_cleaner'), config).pipe(
       catchError((error) => {
         console.error("Error updating queue cleaner config:", error);
-        return throwError(() => new Error(error.error?.error || "Failed to update queue cleaner configuration"));
+        const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }
@@ -98,7 +100,8 @@ export class ConfigurationService {
     return this.http.put<void>(this.basePathService.buildApiUrl('/configuration/content_blocker'), config).pipe(
       catchError((error) => {
         console.error("Error updating content blocker config:", error);
-        return throwError(() => new Error(error.error?.error || "Failed to update content blocker configuration"));
+        const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
+        return throwError(() => new Error(errorMessage));
       })
     );
   }

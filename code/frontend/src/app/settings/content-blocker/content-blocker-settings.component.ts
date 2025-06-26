@@ -26,6 +26,7 @@ import { NotificationService } from "../../core/services/notification.service";
 import { SelectModule } from "primeng/select";
 import { DropdownModule } from "primeng/dropdown";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
+import { ErrorHandlerUtil } from "../../core/utils/error-handler.util";
 
 @Component({
   selector: "app-content-blocker-settings",
@@ -92,7 +93,8 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
   readonly contentBlockerConfig = this.contentBlockerStore.config;
   readonly contentBlockerLoading = this.contentBlockerStore.loading;
   readonly contentBlockerSaving = this.contentBlockerStore.saving;
-  readonly contentBlockerError = this.contentBlockerStore.error;
+  readonly contentBlockerLoadError = this.contentBlockerStore.loadError;  // Only for "Not connected" state
+  readonly contentBlockerSaveError = this.contentBlockerStore.saveError;  // Only for toast notifications
 
   // Track active accordion tabs
   activeAccordionIndices: number[] = [];
@@ -170,13 +172,30 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       }
     });
     
-    // Effect to handle errors - only emit to parent but don't show toast
-    // (will be displayed by the LoadingErrorStateComponent)
+    // Effect to handle load errors - emit to LoadingErrorStateComponent for "Not connected" display
     effect(() => {
-      const errorMessage = this.contentBlockerError();
-      if (errorMessage) {
-        // Only emit the error for parent components
-        this.error.emit(errorMessage);
+      const loadErrorMessage = this.contentBlockerLoadError();
+      if (loadErrorMessage) {
+        // Load errors should be shown as "Not connected to server" in LoadingErrorStateComponent
+        this.error.emit(loadErrorMessage);
+      }
+    });
+    
+    // Effect to handle save errors - show as toast notifications for user to fix
+    effect(() => {
+      const saveErrorMessage = this.contentBlockerSaveError();
+      if (saveErrorMessage) {
+        // Check if this looks like a validation error from the backend
+        // These are typically user-fixable errors that should be shown as toasts
+        const isUserFixableError = ErrorHandlerUtil.isUserFixableError(saveErrorMessage);
+        
+        if (isUserFixableError) {
+          // Show validation errors as toast notifications so user can fix them
+          this.notificationService.showError(saveErrorMessage);
+        } else {
+          // For non-user-fixable save errors, also emit to parent
+          this.error.emit(saveErrorMessage);
+        }
       }
     });
     
@@ -462,9 +481,9 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       // Setup a one-time check to mark form as pristine after successful save
       const checkSaveCompletion = () => {
         const saving = this.contentBlockerSaving();
-        const error = this.contentBlockerError();
+        const saveError = this.contentBlockerSaveError();
         
-        if (!saving && !error) {
+        if (!saving && !saveError) {
           // Mark form as pristine after successful save
           this.contentBlockerForm.markAsPristine();
           // Update original values reference
@@ -473,9 +492,9 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
           this.saved.emit();
           // Display success message
           this.notificationService.showSuccess('Content blocker configuration saved successfully.');
-        } else if (!saving && error) {
-          // If there's an error, we can stop checking
-          // No need to show error toast here, it's handled by the LoadingErrorStateComponent
+        } else if (!saving && saveError) {
+          // If there's a save error, we can stop checking
+          // Toast notification is already handled by the effect above
         } else {
           // If still saving, check again in a moment
           setTimeout(checkSaveCompletion, 100);
@@ -582,4 +601,6 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
     const control = parentControl.get(controlName);
     return control ? control.touched && control.hasError(errorName) : false;
   }
+  
+
 } 

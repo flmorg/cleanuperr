@@ -30,6 +30,7 @@ import { TableModule } from "primeng/table";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { ConfirmationService } from "primeng/api";
+import { ErrorHandlerUtil } from "../../core/utils/error-handler.util";
 
 @Component({
   selector: "app-download-cleaner-settings",
@@ -54,7 +55,7 @@ import { ConfirmationService } from "primeng/api";
     ConfirmDialogModule,
     NgIf
   ],
-  providers: [DownloadCleanerConfigStore, ConfirmationService],
+  providers: [ConfirmationService],
   templateUrl: "./download-cleaner-settings.component.html",
   styleUrls: ["./download-cleaner-settings.component.scss"],
 })
@@ -65,14 +66,15 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   // Services
   private formBuilder = inject(FormBuilder);
   private notificationService = inject(NotificationService);
-  private downloadCleanerStore = inject(DownloadCleanerConfigStore);
+  readonly downloadCleanerStore = inject(DownloadCleanerConfigStore);
   private confirmationService = inject(ConfirmationService);
   
   // Configuration signals
   readonly downloadCleanerConfig = this.downloadCleanerStore.config;
   readonly downloadCleanerLoading = this.downloadCleanerStore.loading;
   readonly downloadCleanerSaving = this.downloadCleanerStore.saving;
-  readonly downloadCleanerError = this.downloadCleanerStore.error;
+  readonly downloadCleanerLoadError = this.downloadCleanerStore.loadError;  // Only for "Not connected" state
+  readonly downloadCleanerSaveError = this.downloadCleanerStore.saveError;  // Only for toast notifications
   
   // Form and state
   downloadCleanerForm!: FormGroup;
@@ -150,12 +152,30 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       }
     });
     
-    // Effect to handle errors
+    // Effect to handle load errors - emit to LoadingErrorStateComponent for "Not connected" display
     effect(() => {
-      const errorMessage = this.downloadCleanerError();
-      if (errorMessage) {
-        // Only emit the error for parent components
-        this.error.emit(errorMessage);
+      const loadErrorMessage = this.downloadCleanerLoadError();
+      if (loadErrorMessage) {
+        // Load errors should be shown as "Not connected to server" in LoadingErrorStateComponent
+        this.error.emit(loadErrorMessage);
+      }
+    });
+    
+    // Effect to handle save errors - show as toast notifications for user to fix
+    effect(() => {
+      const saveErrorMessage = this.downloadCleanerSaveError();
+      if (saveErrorMessage) {
+        // Check if this looks like a validation error from the backend
+        // These are typically user-fixable errors that should be shown as toasts
+        const isUserFixableError = ErrorHandlerUtil.isUserFixableError(saveErrorMessage);
+        
+        if (isUserFixableError) {
+          // Show validation errors as toast notifications so user can fix them
+          this.notificationService.showError(saveErrorMessage);
+        } else {
+          // For non-user-fixable save errors, also emit to parent
+          this.error.emit(saveErrorMessage);
+        }
       }
     });
     
@@ -544,9 +564,9 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       // Setup a one-time check to mark form as pristine after successful save
       const checkSaveCompletion = () => {
         const saving = this.downloadCleanerSaving();
-        const error = this.downloadCleanerError();
+        const saveError = this.downloadCleanerSaveError();
         
-        if (!saving && !error) {
+        if (!saving && !saveError) {
           // Mark form as pristine after successful save
           this.downloadCleanerForm.markAsPristine();
           // Update original values reference
@@ -555,9 +575,9 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
           this.saved.emit();
           // Display success message
           this.notificationService.showSuccess('Download cleaner configuration saved successfully');
-        } else if (!saving && error) {
-          // If there's an error, we can stop checking
-          // No need to show error toast here, it's handled by the LoadingErrorStateComponent
+        } else if (!saving && saveError) {
+          // If there's a save error, we can stop checking
+          // Toast notification is already handled by the effect above
         } else {
           // If still saving, check again in a moment
           setTimeout(checkSaveCompletion, 100);
@@ -779,6 +799,8 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
       }
     });
   }
+  
+
 
   // Add any other necessary methods here
 }

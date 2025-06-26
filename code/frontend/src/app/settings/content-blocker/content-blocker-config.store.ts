@@ -3,20 +3,23 @@ import { patchState, signalStore, withHooks, withMethods, withState } from '@ngr
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { ContentBlockerConfig, JobSchedule, ScheduleUnit } from '../../shared/models/content-blocker-config.model';
 import { ConfigurationService } from '../../core/services/configuration.service';
-import { EMPTY, Observable, catchError, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, switchMap, tap, throwError } from 'rxjs';
+import { ErrorHandlerUtil } from '../../core/utils/error-handler.util';
 
 export interface ContentBlockerConfigState {
   config: ContentBlockerConfig | null;
   loading: boolean;
   saving: boolean;
-  error: string | null;
+  loadError: string | null;  // Only for load failures that should show "Not connected"
+  saveError: string | null;  // Only for save failures that should show toast
 }
 
 const initialState: ContentBlockerConfigState = {
   config: null,
   loading: false,
   saving: false,
-  error: null
+  loadError: null,
+  saveError: null
 };
 
 @Injectable()
@@ -29,18 +32,26 @@ export class ContentBlockerConfigStore extends signalStore(
      */
     loadConfig: rxMethod<void>(
       pipe => pipe.pipe(
-        tap(() => patchState(store, { loading: true, error: null })),
+        tap(() => patchState(store, { loading: true, loadError: null, saveError: null })),
         switchMap(() => configService.getContentBlockerConfig().pipe(
           tap({
-            next: (config) => patchState(store, { config, loading: false }),
+            next: (config) => patchState(store, { config, loading: false, loadError: null }),
             error: (error) => {
+              const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
               patchState(store, { 
                 loading: false, 
-                error: error.message || 'Failed to load configuration' 
+                loadError: errorMessage  // Only load errors should trigger "Not connected" state
               });
             }
           }),
-          catchError(() => EMPTY)
+          catchError((error) => {
+            const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
+            patchState(store, { 
+              loading: false, 
+              loadError: errorMessage  // Only load errors should trigger "Not connected" state
+            });
+            return EMPTY;
+          })
         ))
       )
     ),
@@ -50,23 +61,32 @@ export class ContentBlockerConfigStore extends signalStore(
      */
     saveConfig: rxMethod<ContentBlockerConfig>(
       (config$: Observable<ContentBlockerConfig>) => config$.pipe(
-        tap(() => patchState(store, { saving: true, error: null })),
+        tap(() => patchState(store, { saving: true, saveError: null })),
         switchMap(config => configService.updateContentBlockerConfig(config).pipe(
           tap({
             next: () => {
               // Don't set config - let the form stay as-is with string enum values
               patchState(store, { 
-                saving: false 
+                saving: false,
+                saveError: null  // Clear any previous save errors
               });
             },
             error: (error) => {
+              const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
               patchState(store, { 
                 saving: false, 
-                error: error.message || 'Failed to save configuration' 
+                saveError: errorMessage  // Save errors should NOT trigger "Not connected" state
               });
             }
           }),
-          catchError(() => EMPTY)
+          catchError((error) => {
+            const errorMessage = ErrorHandlerUtil.extractErrorMessage(error);
+            patchState(store, { 
+              saving: false, 
+              saveError: errorMessage  // Save errors should NOT trigger "Not connected" state
+            });
+            return EMPTY;
+          })
         ))
       )
     ),
@@ -87,7 +107,14 @@ export class ContentBlockerConfigStore extends signalStore(
      * Reset any errors
      */
     resetError() {
-      patchState(store, { error: null });
+      patchState(store, { loadError: null, saveError: null });
+    },
+    
+    /**
+     * Reset only save errors (for when user fixes validation issues)
+     */
+    resetSaveError() {
+      patchState(store, { saveError: null });
     },
 
     /**
