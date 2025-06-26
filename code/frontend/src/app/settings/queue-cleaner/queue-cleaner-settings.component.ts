@@ -27,6 +27,7 @@ import { ChipsModule } from "primeng/chips";
 import { ToastModule } from "primeng/toast";
 // Using centralized NotificationService instead of MessageService
 import { NotificationService } from "../../core/services/notification.service";
+import { DocumentationService } from "../../core/services/documentation.service";
 import { SelectModule } from "primeng/select";
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { DropdownModule } from "primeng/dropdown";
@@ -95,6 +96,7 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
   private formBuilder = inject(FormBuilder);
   // Using the notification service for all toast messages
   private notificationService = inject(NotificationService);
+  private documentationService = inject(DocumentationService);
   private queueCleanerStore = inject(QueueCleanerConfigStore);
 
   // Signals from the store
@@ -119,30 +121,11 @@ export class QueueCleanerSettingsComponent implements OnDestroy, CanComponentDea
 
   /**
    * Open field-specific documentation in a new tab
-   * @param section The configuration section (e.g., 'queueCleaner')
+   * @param section The configuration section (e.g., 'queue-cleaner')
    * @param fieldName The form field name (e.g., 'enabled', 'failedImport.maxStrikes')
    */
   openFieldDocs(section: string, fieldName: string): void {
-    if (typeof window !== 'undefined' && (window as any).resolveFieldLink) {
-      (window as any).resolveFieldLink(section, fieldName).then((url: string | null) => {
-        if (url) {
-          window.open(url, '_blank', 'noopener,noreferrer');
-        } else {
-                     console.warn(`Documentation link not found for ${section}.${fieldName}`);
-           this.notificationService.showError(
-             `Documentation link not found for the "${fieldName}" setting.`
-           );
-        }
-      }).catch((error: any) => {
-                 console.error(`Error resolving documentation link for ${section}.${fieldName}:`, error);
-         this.notificationService.showError(
-           'Unable to open documentation. Please check your connection.'
-         );
-      });
-    } else {
-      // Fallback - open general queue cleaner docs
-      window.open('/docs/configuration/queue-cleaner', '_blank', 'noopener,noreferrer');
-    }
+    this.documentationService.openFieldDocumentation(section, fieldName);
   }
 
   constructor() {

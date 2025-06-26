@@ -31,6 +31,7 @@ import { LoadingErrorStateComponent } from "../../shared/components/loading-erro
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { ConfirmationService } from "primeng/api";
 import { ErrorHandlerUtil } from "../../core/utils/error-handler.util";
+import { DocumentationService } from "../../core/services/documentation.service";
 
 @Component({
   selector: "app-download-cleaner-settings",
@@ -68,6 +69,7 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   private notificationService = inject(NotificationService);
   readonly downloadCleanerStore = inject(DownloadCleanerConfigStore);
   private confirmationService = inject(ConfirmationService);
+  private documentationService = inject(DocumentationService);
   
   // Configuration signals
   readonly downloadCleanerConfig = this.downloadCleanerStore.config;
@@ -123,6 +125,14 @@ export class DownloadCleanerSettingsComponent implements OnDestroy, CanComponent
   canDeactivate(): boolean {
     // Allow navigation if form is not dirty or has been saved
     return !this.downloadCleanerForm?.dirty || !this.formValuesChanged();
+  }
+
+  /**
+   * Opens field-specific documentation
+   * @param fieldName Field name to open documentation for
+   */
+  openFieldDocumentation(fieldName: string): void {
+    this.documentationService.openFieldDocumentation('download-cleaner', fieldName);
   }
 
   constructor() {

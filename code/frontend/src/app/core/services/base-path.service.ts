@@ -3,7 +3,7 @@ import { Injectable, isDevMode } from '@angular/core';
 @Injectable({
   providedIn: 'root'
 })
-export class BasePathService {
+export class ApplicationPathService {
   
   /**
    * Gets the current base path from the dynamically updated environment
@@ -16,6 +16,17 @@ export class BasePathService {
 
     // Use the server-injected base path or fallback to root
     return (window as any)['_server_base_path'] || '/';
+  }
+
+  /**
+   * Gets the documentation base URL
+   */
+  getDocumentationBaseUrl(): string {
+    if (isDevMode()) {
+      return 'http://localhost:3000';
+    }
+    
+    return 'https://cleanuparr.github.io/cleanuparr';
   }
 
   /**
@@ -41,5 +52,19 @@ export class BasePathService {
     }
     
     return basePath === '/' ? '/api' + cleanApiPath : basePath + '/api' + cleanApiPath;
+  }
+
+  /**
+   * Builds a documentation URL for a specific field
+   */
+  buildDocumentationUrl(section: string, fieldAnchor?: string): string {
+    const baseUrl = this.getDocumentationBaseUrl();
+    let url = `${baseUrl}/cleanuparr/docs/configuration/${section}`;
+    
+    if (fieldAnchor) {
+      url += `#${fieldAnchor}`;
+    }
+    
+    return url;
   }
 } 

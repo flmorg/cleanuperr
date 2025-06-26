@@ -8,7 +8,7 @@ const settings: EnvVarProps[] = [
             "The category to set on downloads that do not have hardlinks."
         ],
         type: "text",
-        defaultValue: "cleanuperr-unlinked",
+        defaultValue: "cleanuparr-unlinked",
         required: false,
     },
     {

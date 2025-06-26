@@ -6,6 +6,7 @@ import { DownloadClientConfigStore } from "./download-client-config.store";
 import { CanComponentDeactivate } from "../../core/guards";
 import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../../shared/models/download-client-config.model";
 import { DownloadClientType } from "../../shared/models/enums";
+import { DocumentationService } from "../../core/services/documentation.service";
 
 // PrimeNG Components
 import { CardModule } from "primeng/card";
@@ -69,6 +70,7 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
   private notificationService = inject(NotificationService);
   private confirmationService = inject(ConfirmationService);
   private downloadClientStore = inject(DownloadClientConfigStore);
+  private documentationService = inject(DocumentationService);
 
   // Signals from store
   downloadClientConfig = this.downloadClientStore.config;
@@ -382,5 +384,12 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     
     const option = this.clientTypeOptions.find(opt => opt.value === frontendType);
     return option?.label || 'Unknown';
+  }
+
+  /**
+   * Open field-specific documentation
+   */
+  openFieldDocumentation(fieldName: string): void {
+    this.documentationService.openFieldDocumentation('download-client', fieldName);
   }
 }

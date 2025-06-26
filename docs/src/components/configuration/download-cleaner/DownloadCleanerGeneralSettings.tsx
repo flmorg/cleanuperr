@@ -58,7 +58,7 @@ mytracker.com
     required: false,
     examples: ["/ignored.txt", "/config/ignored.txt"],
     warnings: [
-      "Some people have experienced problems using Docker where the mounted file would not update inside the container if it was modified on the host. This is a Docker configuration problem and can not be solved by cleanuperr."
+      "Some people have experienced problems using Docker where the mounted file would not update inside the container if it was modified on the host. This is a Docker configuration problem and can not be solved by Cleanuparr."
     ]
   },
   {

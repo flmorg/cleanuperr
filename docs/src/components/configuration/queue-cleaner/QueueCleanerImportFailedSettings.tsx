@@ -19,7 +19,7 @@ const settings: EnvVarProps[] = [
   {
     name: "QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE",
     description: [
-      "Controls whether to ignore failed imports from private trackers from being processed by Cleanuperr."
+      "Controls whether to ignore failed imports from private trackers from being processed by Cleanuparr."
     ],
     type: "boolean",
     defaultValue: "false",

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { BaseSignalRService } from './base-signalr.service';
-import { BasePathService } from './base-path.service';
+import { ApplicationPathService } from './base-path.service';
 import { SignalRHubConfig } from '../models/signalr.models';
 import * as signalR from '@microsoft/signalr';
 

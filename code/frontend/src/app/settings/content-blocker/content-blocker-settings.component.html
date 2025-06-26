@@ -27,7 +27,12 @@
     <form *ngIf="!contentBlockerLoading() && !contentBlockerLoadError()" [formGroup]="contentBlockerForm" class="p-fluid">
       <!-- Main Settings -->
       <div class="field-row">
-        <label class="field-label">Enable Content Blocker</label>
+        <label class="field-label">
+          Enable Content Blocker
+          <i class="pi pi-info-circle info-icon" 
+             (click)="openFieldDocumentation('enabled')" 
+             title="Click for documentation"></i>
+        </label>
         <div class="field-input">
           <p-checkbox formControlName="enabled" [binary]="true" inputId="cbEnabled"></p-checkbox>
           <small class="form-helper-text">When enabled, the content blocker will run according to the schedule</small>
@@ -36,7 +41,12 @@
 
       <!-- Scheduling Mode Toggle -->
       <div class="field-row">
-        <label class="field-label">Scheduling Mode</label>
+        <label class="field-label">
+          Scheduling Mode
+          <i class="pi pi-info-circle info-icon" 
+             (click)="openFieldDocumentation('useAdvancedScheduling')" 
+             title="Click for documentation"></i>
+        </label>
         <div class="field-input">
           <p-selectButton
             formControlName="useAdvancedScheduling"
@@ -53,7 +63,12 @@
 
       <!-- Basic Schedule Controls - shown when useAdvancedScheduling is false -->
       <div class="field-row" formGroupName="jobSchedule" *ngIf="!contentBlockerForm.get('useAdvancedScheduling')?.value">
-        <label class="field-label">Run Schedule</label>
+        <label class="field-label">
+          Run Schedule
+          <i class="pi pi-info-circle info-icon" 
+             (click)="openFieldDocumentation('jobSchedule.every')" 
+             title="Click for documentation"></i>
+        </label>
         <div>
           <div class="field-input schedule-input flex flex-wrap">
             <span class="schedule-label">Every</span>
@@ -82,7 +97,12 @@
 
       <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
       <div class="field-row" *ngIf="contentBlockerForm.get('useAdvancedScheduling')?.value">
-        <label class="field-label">Cron Expression</label>
+        <label class="field-label">
+          Cron Expression
+          <i class="pi pi-info-circle info-icon" 
+             (click)="openFieldDocumentation('cronExpression')" 
+             title="Click for documentation"></i>
+        </label>
         <div>
           <div class="field-input">
             <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
@@ -94,7 +114,12 @@
 
       <!-- Content Blocker Specific Settings -->
       <div class="field-row">
-        <label class="field-label">Ignore Private</label>
+        <label class="field-label">
+          Ignore Private
+          <i class="pi pi-info-circle info-icon" 
+             (click)="openFieldDocumentation('ignorePrivate')" 
+             title="Click for documentation"></i>
+        </label>
         <div class="field-input">
           <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
           <small class="form-helper-text">When enabled, private torrents will be skipped</small>
@@ -102,7 +127,12 @@
       </div>
 
       <div class="field-row">
-        <label class="field-label">Delete Private</label>
+        <label class="field-label">
+          Delete Private
+          <i class="pi pi-info-circle info-icon" 
+             (click)="openFieldDocumentation('deletePrivate')" 
+             title="Click for documentation"></i>
+        </label>
         <div class="field-input">
           <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
           <small class="form-helper-text">When enabled, private torrents will be deleted</small>
@@ -117,7 +147,12 @@
           <p-accordion-content>
             <div formGroupName="sonarr">
               <div class="field-row">
-                <label class="field-label">Enable Sonarr Blocklist</label>
+                <label class="field-label">
+                  Enable Sonarr Blocklist
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('sonarr.enabled')" 
+                     title="Click for documentation"></i>
+                </label>
                 <div class="field-input">
                   <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
                   <small class="form-helper-text">When enabled, the Sonarr blocklist will be used for content filtering</small>
@@ -125,7 +160,12 @@
               </div>
 
               <div class="field-row">
-                <label class="field-label">Blocklist Path</label>
+                <label class="field-label">
+                  Blocklist Path
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('sonarr.blocklistPath')" 
+                     title="Click for documentation"></i>
+                </label>
                 <p-fluid>
                   <div class="field-input">
                     <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
@@ -136,7 +176,12 @@
               </div>
 
               <div class="field-row">
-                <label class="field-label">Blocklist Type</label>
+                <label class="field-label">
+                  Blocklist Type
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('sonarr.blocklistType')" 
+                     title="Click for documentation"></i>
+                </label>
                 <div class="field-input">
                   <p-select
                     formControlName="blocklistType"
@@ -163,7 +208,12 @@
           <p-accordion-content>
             <div formGroupName="radarr">
               <div class="field-row">
-                <label class="field-label">Enable Radarr Blocklist</label>
+                <label class="field-label">
+                  Enable Radarr Blocklist
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('radarr.enabled')" 
+                     title="Click for documentation"></i>
+                </label>
                 <div class="field-input">
                   <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
                   <small class="form-helper-text">When enabled, the Radarr blocklist will be used for content filtering</small>
@@ -171,7 +221,12 @@
               </div>
 
               <div class="field-row">
-                <label class="field-label">Blocklist Path</label>
+                <label class="field-label">
+                  Blocklist Path
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('radarr.blocklistPath')" 
+                     title="Click for documentation"></i>
+                </label>
                 <p-fluid>
                   <div class="field-input">
                     <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
@@ -182,7 +237,12 @@
               </div>
 
               <div class="field-row">
-                <label class="field-label">Blocklist Type</label>
+                <label class="field-label">
+                  Blocklist Type
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('radarr.blocklistType')" 
+                     title="Click for documentation"></i>
+                </label>
                 <div class="field-input">
                   <p-select
                     formControlName="blocklistType"
@@ -209,7 +269,12 @@
           <p-accordion-content>
             <div formGroupName="lidarr">
               <div class="field-row">
-                <label class="field-label">Enable Lidarr Blocklist</label>
+                <label class="field-label">
+                  Enable Lidarr Blocklist
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('lidarr.enabled')" 
+                     title="Click for documentation"></i>
+                </label>
                 <div class="field-input">
                   <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
                   <small class="form-helper-text">When enabled, the Lidarr blocklist will be used for content filtering</small>
@@ -217,7 +282,12 @@
               </div>
 
               <div class="field-row">
-                <label class="field-label">Blocklist Path</label>
+                <label class="field-label">
+                  Blocklist Path
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('lidarr.blocklistPath')" 
+                     title="Click for documentation"></i>
+                </label>
                 <p-fluid>
                   <div class="field-input">
                     <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
@@ -228,7 +298,12 @@
               </div>
 
               <div class="field-row">
-                <label class="field-label">Blocklist Type</label>
+                <label class="field-label">
+                  Blocklist Type
+                  <i class="pi pi-info-circle info-icon" 
+                     (click)="openFieldDocumentation('lidarr.blocklistType')" 
+                     title="Click for documentation"></i>
+                </label>
                 <div class="field-input">
                   <p-select
                     formControlName="blocklistType"

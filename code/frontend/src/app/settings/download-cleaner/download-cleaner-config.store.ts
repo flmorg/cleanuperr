@@ -4,7 +4,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { EMPTY, Observable, catchError, switchMap, tap } from 'rxjs';
 import { DownloadCleanerConfig } from "../../shared/models/download-cleaner-config.model";
-import { BasePathService } from "../../core/services/base-path.service";
+import { ApplicationPathService } from "../../core/services/base-path.service";
 import { ErrorHandlerUtil } from "../../core/utils/error-handler.util";
 
 export interface DownloadCleanerConfigState {
@@ -26,7 +26,7 @@ const initialState: DownloadCleanerConfigState = {
 export const DownloadCleanerConfigStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withMethods((store, http = inject(HttpClient), basePathService = inject(BasePathService)) => ({
+  withMethods((store, http = inject(HttpClient), applicationPathService = inject(ApplicationPathService)) => ({
     
     /**
      * Load download cleaner configuration from the API
@@ -34,7 +34,7 @@ export const DownloadCleanerConfigStore = signalStore(
     loadDownloadCleanerConfig: rxMethod<void>(
       pipe => pipe.pipe(
         tap(() => patchState(store, { loading: true, loadError: null, saveError: null })),
-        switchMap(() => http.get<DownloadCleanerConfig>(basePathService.buildApiUrl('/configuration/download_cleaner')).pipe(
+        switchMap(() => http.get<DownloadCleanerConfig>(applicationPathService.buildApiUrl('/configuration/download_cleaner')).pipe(
           tap({
             next: (config) => patchState(store, { config, loading: false, loadError: null }),
             error: (error) => {
@@ -116,7 +116,7 @@ export const DownloadCleanerConfigStore = signalStore(
     saveDownloadCleanerConfig: rxMethod<DownloadCleanerConfig>(
       (config$: Observable<DownloadCleanerConfig>) => config$.pipe(
         tap(() => patchState(store, { saving: true, saveError: null })),
-        switchMap(config => http.put<any>(basePathService.buildApiUrl('/configuration/download_cleaner'), config).pipe(
+        switchMap(config => http.put<any>(applicationPathService.buildApiUrl('/configuration/download_cleaner'), config).pipe(
           tap({
             next: () => {
               // Successfully saved - just update saving state

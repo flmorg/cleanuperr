@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, finalize, of, tap } from 'rxjs';
 import { NotificationsConfig } from '../../shared/models/notifications-config.model';
-import { BasePathService } from '../../core/services/base-path.service';
+import { ApplicationPathService } from '../../core/services/base-path.service';
 
 @Injectable()
 export class NotificationConfigStore {
@@ -20,7 +20,7 @@ export class NotificationConfigStore {
 
   // Inject dependencies
   private readonly http = inject(HttpClient);
-  private readonly basePathService = inject(BasePathService);
+  private readonly ApplicationPathService = inject(ApplicationPathService);
 
   constructor() {
     // Load the configuration when the store is created
@@ -36,7 +36,7 @@ export class NotificationConfigStore {
     this._loading.set(true);
     this._error.set(null);
 
-    this.http.get<NotificationsConfig>(this.basePathService.buildApiUrl('/configuration/notifications'))
+    this.http.get<NotificationsConfig>(this.ApplicationPathService.buildApiUrl('/configuration/notifications'))
       .pipe(
         tap((config) => {
           this._config.set(config);
@@ -63,7 +63,7 @@ export class NotificationConfigStore {
     this._saving.set(true);
     this._error.set(null);
 
-    this.http.put<any>(this.basePathService.buildApiUrl('/configuration/notifications'), config)
+    this.http.put<any>(this.ApplicationPathService.buildApiUrl('/configuration/notifications'), config)
       .pipe(
         tap(() => {
           this._config.set(config);

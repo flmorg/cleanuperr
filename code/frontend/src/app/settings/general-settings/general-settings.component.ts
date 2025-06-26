@@ -16,6 +16,7 @@ import { ButtonModule } from "primeng/button";
 import { InputNumberModule } from "primeng/inputnumber";
 import { ToastModule } from "primeng/toast";
 import { NotificationService } from '../../core/services/notification.service';
+import { DocumentationService } from '../../core/services/documentation.service';
 import { SelectModule } from "primeng/select";
 import { ChipsModule } from "primeng/chips";
 import { AutoCompleteModule } from "primeng/autocomplete";
@@ -78,6 +79,7 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
   // Inject the necessary services
   private formBuilder = inject(FormBuilder);
   private notificationService = inject(NotificationService);
+  private documentationService = inject(DocumentationService);
   private generalConfigStore = inject(GeneralConfigStore);
   private confirmationService = inject(ConfirmationService);
 
@@ -101,6 +103,15 @@ export class GeneralSettingsComponent implements OnDestroy, CanComponentDeactiva
    */
   canDeactivate(): boolean {
     return !this.generalForm.dirty;
+  }
+
+  /**
+   * Open field-specific documentation in a new tab
+   * @param section The configuration section (e.g., 'general')
+   * @param fieldName The form field name (e.g., 'dryRun', 'httpMaxRetries')
+   */
+  openFieldDocs(section: string, fieldName: string): void {
+    this.documentationService.openFieldDocumentation(section, fieldName);
   }
 
   constructor() {

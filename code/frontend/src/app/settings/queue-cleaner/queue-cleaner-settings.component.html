@@ -27,7 +27,13 @@
     <form *ngIf="!queueCleanerLoading() && !queueCleanerLoadError()" [formGroup]="queueCleanerForm" class="p-fluid">
       <!-- Main Settings -->
       <div class="field-row">
-        <label class="field-label">Enable Queue Cleaner</label>
+        <label class="field-label">
+          Enable Queue Cleaner
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('queueCleaner', 'enabled')"
+             title="View documentation for this setting">
+          </i>
+        </label>
         <div class="field-input">
           <p-checkbox formControlName="enabled" [binary]="true" inputId="qcEnabled"></p-checkbox>
           <small class="form-helper-text">When enabled, the queue cleaner will run according to the schedule</small>
@@ -36,7 +42,13 @@
 
       <!-- Scheduling Mode Toggle -->
       <div class="field-row">
-        <label class="field-label">Scheduling Mode</label>
+        <label class="field-label">
+          Scheduling Mode
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('queueCleaner', 'useAdvancedScheduling')"
+             title="View documentation for scheduling modes">
+          </i>
+        </label>
         <div class="field-input">
           <p-selectButton
             formControlName="useAdvancedScheduling"
@@ -82,7 +94,13 @@
 
       <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
       <div class="field-row" *ngIf="queueCleanerForm.get('useAdvancedScheduling')?.value">
-        <label class="field-label">Cron Expression</label>
+        <label class="field-label">
+          Cron Expression
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('queueCleaner', 'cronExpression')"
+             title="View cron expression documentation and examples">
+          </i>
+        </label>
         <div>
           <div class="field-input">
             <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
@@ -99,7 +117,13 @@
           <p-accordion-header>Failed Import Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="failedImport">
-              <label class="field-label">Max Strikes</label>
+              <label class="field-label">
+                Max Strikes
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queueCleaner', 'failedImport.maxStrikes')"
+                   title="View documentation for failed import strike system">
+                </i>
+              </label>
               <div class="field-input">
                 <p-inputNumber
                   formControlName="maxStrikes"
@@ -116,7 +140,13 @@
             </div>
 
             <div class="field-row" formGroupName="failedImport">
-              <label class="field-label">Ignore Private</label>
+              <label class="field-label">
+                Ignore Private
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'failedImport.ignorePrivate')"
+                   title="View documentation for private torrent handling">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, private torrents will be skipped</small>
@@ -124,7 +154,13 @@
             </div>
 
             <div class="field-row" formGroupName="failedImport">
-              <label class="field-label">Delete Private</label>
+              <label class="field-label">
+                Delete Private
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'failedImport.deletePrivate')"
+                   title="View documentation for private torrent deletion">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, private torrents will be deleted</small>
@@ -132,7 +168,13 @@
             </div>
 
             <div class="field-row" formGroupName="failedImport">
-              <label class="field-label">Ignored Patterns</label>
+              <label class="field-label">
+                Ignored Patterns
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queueCleaner', 'failedImport.ignoredPatterns')"
+                   title="View documentation for pattern matching and examples">
+                </i>
+              </label>
               <div class="field-input">
                 <p-autocomplete
                   formControlName="ignoredPatterns"
@@ -155,7 +197,13 @@
           <p-accordion-header>Stalled Download Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
-              <label class="field-label">Max Strikes</label>
+              <label class="field-label">
+                Max Strikes
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'stalled.maxStrikes')"
+                   title="View documentation for stalled download strike system">
+                </i>
+              </label>
               <div>
                 <div class="field-input">
                   <p-inputNumber
@@ -175,7 +223,13 @@
             </div>
 
             <div class="field-row" formGroupName="stalled">
-              <label class="field-label">Reset Strikes On Progress</label>
+              <label class="field-label">
+                Reset Strikes On Progress
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'stalled.resetStrikesOnProgress')"
+                   title="View documentation for strike reset behavior">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
@@ -183,7 +237,13 @@
             </div>
 
             <div class="field-row" formGroupName="stalled">
-              <label class="field-label">Ignore Private</label>
+              <label class="field-label">
+                Ignore Private
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'stalled.ignorePrivate')"
+                   title="View documentation for private torrent handling">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, private torrents will be skipped</small>
@@ -191,7 +251,13 @@
             </div>
 
             <div class="field-row" formGroupName="stalled">
-              <label class="field-label">Delete Private</label>
+              <label class="field-label">
+                Delete Private
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'stalled.deletePrivate')"
+                   title="View documentation for private torrent deletion">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, private torrents will be deleted</small>
@@ -205,7 +271,13 @@
           <p-accordion-header>Downloading Metadata Settings (qBittorrent only)</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
-              <label class="field-label">Max Strikes for Downloading Metadata</label>
+              <label class="field-label">
+                Max Strikes for Downloading Metadata
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'stalled.downloadingMetadataMaxStrikes')"
+                   title="View documentation for metadata download handling">
+                </i>
+              </label>
               <div>
                 <div class="field-input">
                   <p-inputNumber
@@ -231,7 +303,13 @@
           <p-accordion-header>Slow Download Settings</p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="slow">
-              <label class="field-label">Max Strikes</label>
+              <label class="field-label">
+                Max Strikes
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'slow.maxStrikes')"
+                   title="View documentation for slow download strike system">
+                </i>
+              </label>
               <div>
                 <div class="field-input">
                   <p-inputNumber
@@ -251,7 +329,13 @@
             </div>
 
             <div class="field-row" formGroupName="slow">
-              <label class="field-label">Reset Strikes On Progress</label>
+              <label class="field-label">
+                Reset Strikes On Progress
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'slow.resetStrikesOnProgress')"
+                   title="View documentation for strike reset behavior">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
@@ -259,7 +343,13 @@
             </div>
 
             <div class="field-row" formGroupName="slow">
-              <label class="field-label">Ignore Private</label>
+              <label class="field-label">
+                Ignore Private
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'slow.ignorePrivate')"
+                   title="View documentation for private torrent handling">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, private torrents will be skipped</small>
@@ -267,7 +357,13 @@
             </div>
 
             <div class="field-row" formGroupName="slow">
-              <label class="field-label">Delete Private</label>
+              <label class="field-label">
+                Delete Private
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'slow.deletePrivate')"
+                   title="View documentation for private torrent deletion">
+                </i>
+              </label>
               <div class="field-input">
                 <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
                 <small class="form-helper-text">When enabled, private torrents will be deleted</small>
@@ -275,7 +371,13 @@
             </div>
 
             <div class="field-row" formGroupName="slow">
-              <label class="field-label">Minimum Speed</label>
+              <label class="field-label">
+                Minimum Speed
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queueCleaner', 'slow.minSpeed')"
+                   title="View speed threshold guidelines and recommendations">
+                </i>
+              </label>
               <div class="field-input">
                 <app-byte-size-input
                   formControlName="minSpeed"
@@ -288,7 +390,13 @@
             </div>
 
             <div class="field-row" formGroupName="slow">
-              <label class="field-label">Maximum Time (hours)</label>
+              <label class="field-label">
+                Maximum Time (hours)
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queue-cleaner', 'slow.maxTime')"
+                   title="View documentation for maximum slow download time">
+                </i>
+              </label>
               <div class="field-input">
                 <p-inputNumber
                   formControlName="maxTime"
@@ -304,7 +412,13 @@
             </div>
 
             <div class="field-row" formGroupName="slow">
-              <label class="field-label">Ignore Above Size</label>
+              <label class="field-label">
+                Ignore Above Size
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('queueCleaner', 'slow.ignoreAboveSize')"
+                   title="View size exemption strategy and recommended thresholds">
+                </i>
+              </label>
               <div class="field-input">
                 <app-byte-size-input
                   formControlName="ignoreAboveSize"

@@ -27,6 +27,7 @@ import { SelectModule } from "primeng/select";
 import { DropdownModule } from "primeng/dropdown";
 import { LoadingErrorStateComponent } from "../../shared/components/loading-error-state/loading-error-state.component";
 import { ErrorHandlerUtil } from "../../core/utils/error-handler.util";
+import { DocumentationService } from "../../core/services/documentation.service";
 
 @Component({
   selector: "app-content-blocker-settings",
@@ -88,6 +89,7 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
   // Using the notification service for all toast messages
   private notificationService = inject(NotificationService);
   private contentBlockerStore = inject(ContentBlockerConfigStore);
+  private documentationService = inject(DocumentationService);
 
   // Signals from the store
   readonly contentBlockerConfig = this.contentBlockerStore.config;
@@ -107,6 +109,14 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
    */
   canDeactivate(): boolean {
     return !this.contentBlockerForm.dirty;
+  }
+
+  /**
+   * Opens field-specific documentation
+   * @param fieldName Field name to open documentation for
+   */
+  openFieldDocumentation(fieldName: string): void {
+    this.documentationService.openFieldDocumentation('content-blocker', fieldName);
   }
 
   constructor() {

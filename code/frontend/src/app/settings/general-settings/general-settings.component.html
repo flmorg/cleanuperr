@@ -23,20 +23,32 @@
       errorMessage="Could not connect to server"
     ></app-loading-error-state>
 
-    <!-- Settings Form -->
-    <form *ngIf="!generalLoading() && !generalError()" [formGroup]="generalForm" class="p-fluid">
-      <!-- Display Support Banner -->
-      <div class="field-row">
-        <label class="field-label">Display Support Banner</label>
-        <div class="field-input">
-          <p-checkbox formControlName="displaySupportBanner" [binary]="true" inputId="displaySupportBanner"></p-checkbox>
-          <small class="form-helper-text">Show the support section on the dashboard with links to GitHub and sponsors</small>
+          <!-- Settings Form -->
+      <form *ngIf="!generalLoading() && !generalError()" [formGroup]="generalForm" class="p-fluid">
+        <!-- Display Support Banner -->
+        <div class="field-row">
+          <label class="field-label">
+            Display Support Banner
+            <i class="pi pi-info-circle field-info-icon" 
+               (click)="openFieldDocs('general', 'displaySupportBanner')"
+               title="View documentation for support banner display">
+            </i>
+          </label>
+          <div class="field-input">
+            <p-checkbox formControlName="displaySupportBanner" [binary]="true" inputId="displaySupportBanner"></p-checkbox>
+            <small class="form-helper-text">Show the support section on the dashboard with links to GitHub and sponsors</small>
+          </div>
         </div>
-      </div>
 
-      <!-- Dry Run -->
+        <!-- Dry Run -->
       <div class="field-row">
-        <label class="field-label">Dry Run</label>
+        <label class="field-label">
+          Dry Run
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'dryRun')"
+             title="View documentation for dry run mode">
+          </i>
+        </label>
         <div class="field-input">
           <p-checkbox formControlName="dryRun" [binary]="true" inputId="dryRun"></p-checkbox>
           <small class="form-helper-text">When enabled, no changes will be made to the system</small>
@@ -45,7 +57,13 @@
 
       <!-- HTTP Settings -->
       <div class="field-row">
-        <label class="field-label">Maximum HTTP Retries</label>
+        <label class="field-label">
+          Maximum HTTP Retries
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'httpMaxRetries')"
+             title="View documentation for HTTP retry configuration">
+          </i>
+        </label>
         <div>
           <div class="field-input">
             <p-inputNumber
@@ -63,7 +81,13 @@
       </div>
 
       <div class="field-row">
-        <label class="field-label">HTTP Timeout (seconds)</label>
+        <label class="field-label">
+          HTTP Timeout (seconds)
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'httpTimeout')"
+             title="View documentation for HTTP timeout configuration">
+          </i>
+        </label>
         <div>
           <div class="field-input">
             <p-inputNumber
@@ -81,7 +105,13 @@
       </div>
 
       <div class="field-row">
-        <label class="field-label">Certificate Validation</label>
+        <label class="field-label">
+          Certificate Validation
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'httpCertificateValidation')"
+             title="View documentation for certificate validation options">
+          </i>
+        </label>
         <div class="field-input">
           <p-select
             formControlName="httpCertificateValidation"
@@ -96,7 +126,13 @@
 
       <!-- Search Settings -->
       <div class="field-row">
-        <label class="field-label">Enable Search</label>
+        <label class="field-label">
+          Enable Search
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'searchEnabled')"
+             title="View documentation for automatic search functionality">
+          </i>
+        </label>
         <div class="field-input">
           <p-checkbox formControlName="searchEnabled" [binary]="true" inputId="searchEnabled"></p-checkbox>
           <small class="form-helper-text">When enabled, the application will trigger a search after removing a download</small>
@@ -104,7 +140,13 @@
       </div>
 
       <div class="field-row">
-        <label class="field-label">Search Delay (seconds)</label>
+        <label class="field-label">
+          Search Delay (seconds)
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'searchDelay')"
+             title="View documentation for search delay configuration">
+          </i>
+        </label>
         <div>
           <div class="field-input">
             <p-inputNumber
@@ -123,7 +165,13 @@
 
       <!-- Log Level -->
       <div class="field-row">
-        <label class="field-label">Log Level</label>
+        <label class="field-label">
+          Log Level
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'logLevel')"
+             title="View documentation for log level configuration">
+          </i>
+        </label>
         <div class="field-input">
           <p-select 
             formControlName="logLevel" 
@@ -138,7 +186,13 @@
 
       <!-- Ignored Downloads -->
       <div class="field-row">
-        <label class="field-label">Ignored Downloads</label>
+        <label class="field-label">
+          Ignored Downloads
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('general', 'ignoredDownloads')"
+             title="View documentation for download ignore patterns">
+          </i>
+        </label>
         <div class="field-input">
           <p-autocomplete
             formControlName="ignoredDownloads"

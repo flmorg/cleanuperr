@@ -29,7 +29,7 @@ const settings: EnvVarProps[] = [
   {
     name: "QUEUECLEANER__STALLED_IGNORE_PRIVATE",
     description: [
-      "Controls whether to ignore stalled downloads from private trackers from being processed by Cleanuperr."
+      "Controls whether to ignore stalled downloads from private trackers from being processed by Cleanuparr."
     ],
     type: "boolean",
     defaultValue: "false",

@@ -31,7 +31,7 @@ const settings: EnvVarProps[] = [
   {
     name: "CONTENTBLOCKER__IGNORED_DOWNLOADS_PATH",
     description: [
-      "Local path to the file containing downloads to be ignored from being processed by Cleanuperr.",
+      "Local path to the file containing downloads to be ignored from being processed by Cleanuparr.",
       "If the contents of the file are changed, they will be reloaded on the next job run.",
       "This file is not automatically created, so you need to create it manually.",
       {
@@ -61,13 +61,13 @@ mytracker.com
     required: false,
     examples: ["/ignored.txt", "/config/ignored.txt"],
     warnings: [
-      "Some people have experienced problems using Docker where the mounted file would not update inside the container if it was modified on the host. This is a Docker configuration problem and can not be solved by cleanuperr.",
+      "Some people have experienced problems using Docker where the mounted file would not update inside the container if it was modified on the host. This is a Docker configuration problem and can not be solved by Cleanuparr.",
     ],
   },
   {
     name: "CONTENTBLOCKER__IGNORE_PRIVATE",
     description: [
-      "Controls whether to ignore downloads from private trackers from being processed by Cleanuperr."
+      "Controls whether to ignore downloads from private trackers from being processed by Cleanuparr."
     ],
     type: "boolean",
     defaultValue: "false",

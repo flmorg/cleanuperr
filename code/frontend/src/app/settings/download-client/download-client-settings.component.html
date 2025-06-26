@@ -117,7 +117,12 @@
 >
   <form [formGroup]="clientForm" class="p-fluid instance-form">
     <div class="field flex flex-row">
-      <label class="field-label">Enabled</label>
+      <label class="field-label">
+        Enabled
+        <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
+           (click)="openFieldDocumentation('enabled')" 
+           pTooltip="Click for documentation"></i>
+      </label>
       <div class="field-input">
         <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
         <small class="form-helper-text">Enable this download client</small>
@@ -125,7 +130,12 @@
     </div>
 
     <div class="field">
-      <label for="client-name">Name *</label>
+      <label for="client-name">
+        Name *
+        <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
+           (click)="openFieldDocumentation('name')" 
+           pTooltip="Click for documentation"></i>
+      </label>
       <input 
         id="client-name"
         type="text" 
@@ -138,7 +148,12 @@
     </div>
 
     <div class="field">
-      <label for="client-type">Client Type *</label>
+      <label for="client-type">
+        Client Type *
+        <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
+           (click)="openFieldDocumentation('type')" 
+           pTooltip="Click for documentation"></i>
+      </label>
       <p-select
         id="client-type"
         formControlName="type"
@@ -154,7 +169,12 @@
 
     <ng-container>
       <div class="field">
-        <label for="client-host">Host *</label>
+        <label for="client-host">
+          Host *
+          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
+             (click)="openFieldDocumentation('host')" 
+             pTooltip="Click for documentation"></i>
+        </label>
         <input 
           id="client-host"
           type="text" 
@@ -169,7 +189,12 @@
       </div>
       
       <div class="field">
-        <label for="client-urlbase">URL Base</label>
+        <label for="client-urlbase">
+          URL Base
+          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
+             (click)="openFieldDocumentation('urlBase')" 
+             pTooltip="Click for documentation"></i>
+        </label>
         <input 
           id="client-urlbase"
           type="text" 
@@ -181,7 +206,12 @@
       </div>
       
       <div class="field">
-        <label for="client-username">Username</label>
+        <label for="client-username">
+          Username
+          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
+             (click)="openFieldDocumentation('username')" 
+             pTooltip="Click for documentation"></i>
+        </label>
         <input 
           id="client-username"
           type="text" 
@@ -193,7 +223,12 @@
       </div>
       
       <div class="field">
-        <label for="client-password">Password</label>
+        <label for="client-password">
+          Password
+          <i class="pi pi-info-circle ml-1 cursor-pointer text-blue-500" 
+             (click)="openFieldDocumentation('password')" 
+             pTooltip="Click for documentation"></i>
+        </label>
         <input 
           id="client-password"
           type="password" 

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { BasePathService } from './base-path.service';
+import { ApplicationPathService } from './base-path.service';
 import { AppEvent } from '../models/event.models';
 
 export interface PaginatedResult<T> {
@@ -28,7 +28,7 @@ export interface EventsFilter {
 })
 export class EventsService {
   private readonly http = inject(HttpClient);
-  private readonly basePathService = inject(BasePathService);
+  private readonly ApplicationPathService = inject(ApplicationPathService);
   
   // State management
   private events = new BehaviorSubject<PaginatedResult<AppEvent> | null>(null);
@@ -52,7 +52,7 @@ export class EventsService {
     // Add optional filters if they exist
     const paramsWithFilters = this.addFiltersToParams(params, filter);
     
-    return this.http.get<PaginatedResult<AppEvent>>(this.basePathService.buildApiUrl('/events'), { params: paramsWithFilters })
+    return this.http.get<PaginatedResult<AppEvent>>(this.ApplicationPathService.buildApiUrl('/events'), { params: paramsWithFilters })
       .pipe(
         tap(result => {
           this.events.next(result);
@@ -101,13 +101,13 @@ export class EventsService {
    * Get event types
    */
   getEventTypes(): Observable<string[]> {
-    return this.http.get<string[]>(this.basePathService.buildApiUrl('/events/types'));
+    return this.http.get<string[]>(this.ApplicationPathService.buildApiUrl('/events/types'));
   }
 
   /**
    * Get severities
    */
   getSeverities(): Observable<string[]> {
-    return this.http.get<string[]>(this.basePathService.buildApiUrl('/events/severities'));
+    return this.http.get<string[]>(this.ApplicationPathService.buildApiUrl('/events/severities'));
   }
 }
