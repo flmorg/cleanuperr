@@ -28,10 +28,10 @@
       <!-- Main Settings -->
       <div class="field-row">
         <label class="field-label">
-          Enable Download Cleaner
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('enabled')" 
              title="Click for documentation"></i>
+          Enable Download Cleaner
         </label>
         <div class="field-input">
           <p-checkbox formControlName="enabled" [binary]="true" inputId="dcEnabled"></p-checkbox>
@@ -42,10 +42,10 @@
       <!-- Scheduling Mode Toggle -->
       <div class="field-row">
         <label class="field-label">
-          Scheduling Mode
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('useAdvancedScheduling')" 
              title="Click for documentation"></i>
+          Scheduling Mode
         </label>
         <div class="field-input">
           <p-selectButton
@@ -95,10 +95,10 @@
       <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
       <div class="field-row" *ngIf="downloadCleanerForm.get('useAdvancedScheduling')?.value">
         <label class="field-label">
-          Cron Expression
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('cronExpression')" 
              title="Click for documentation"></i>
+          Cron Expression
         </label>
         <div>
           <div class="field-input">
@@ -118,10 +118,10 @@
             <!-- Delete Private Option -->
             <div class="field-row">
               <label class="field-label">
-                Delete Private Torrents
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('deletePrivate')" 
                    title="Click for documentation"></i>
+                Delete Private Torrents
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="deletePrivate" [binary]="true" inputId="deletePrivate"></p-checkbox>
@@ -161,10 +161,10 @@
                   <div class="category-content">
                     <div class="category-field">
                       <label>
-                        Max Ratio
                         <i class="pi pi-info-circle field-info-icon" 
                            (click)="openFieldDocs('maxRatio')" 
                            title="Click for documentation"></i>
+                        Max Ratio
                       </label>
                       <div class="field-input">
                         <p-inputNumber formControlName="maxRatio" [min]="-1" [showButtons]="true" buttonLayout="horizontal"
@@ -179,10 +179,10 @@
                     
                     <div class="category-field">
                       <label>
-                        Min Seed Time (hours)
                         <i class="pi pi-info-circle field-info-icon" 
                            (click)="openFieldDocs('minSeedTime')" 
                            title="Click for documentation"></i>
+                        Min Seed Time (hours)
                       </label>
                       <div class="field-input">
                         <p-inputNumber formControlName="minSeedTime" [min]="0" [showButtons]="true" buttonLayout="horizontal"
@@ -196,10 +196,10 @@
                     
                     <div class="category-field">
                       <label>
-                        Max Seed Time (hours)
                         <i class="pi pi-info-circle field-info-icon" 
                            (click)="openFieldDocs('maxSeedTime')" 
                            title="Click for documentation"></i>
+                        Max Seed Time (hours)
                       </label>
                       <div>
                         <div class="field-input">
@@ -234,10 +234,10 @@
           <p-accordion-content>
             <div class="field-row">
               <label class="field-label">
-                Enable Unlinked Download Handling
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('unlinkedEnabled')" 
                    title="Click for documentation"></i>
+                Enable Unlinked Download Handling
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="unlinkedEnabled" [binary]="true" inputId="unlinkedEnabled"></p-checkbox>
@@ -248,10 +248,10 @@
             <!-- Unlinked Target Category -->
             <div class="field-row">
               <label class="field-label">
-                Target Category
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('unlinkedTargetCategory')" 
                    title="Click for documentation"></i>
+                Target Category
               </label>
               <div>
                 <div class="field-input">
@@ -265,10 +265,10 @@
             <!-- Use Tag Option -->
             <div class="field-row">
               <label class="field-label">
-                Use Tag
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('unlinkedUseTag')" 
                    title="Click for documentation"></i>
+                Use Tag
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="unlinkedUseTag" [binary]="true" inputId="unlinkedUseTag"></p-checkbox>
@@ -279,10 +279,10 @@
             <!-- Ignored Root Directory -->
             <div class="field-row">
               <label class="field-label">
-                Ignored Root Directory
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('unlinkedIgnoredRootDir')" 
                    title="Click for documentation"></i>
+                Ignored Root Directory
               </label>
               <div>
                 <div class="field-input">
@@ -295,10 +295,10 @@
             <!-- Unlinked Categories -->
             <div class="field-row">
               <label class="field-label">
-                Unlinked Categories
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('unlinkedCategories')" 
                    title="Click for documentation"></i>
+                Unlinked Categories
               </label>
               <div>
                 <div class="field-input">

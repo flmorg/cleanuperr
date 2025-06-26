@@ -28,11 +28,11 @@
       <!-- Main Settings -->
       <div class="field-row">
         <label class="field-label">
-          Enable Queue Cleaner
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('enabled')"
              title="View documentation for this setting">
           </i>
+          Enable Queue Cleaner
         </label>
         <div class="field-input">
           <p-checkbox formControlName="enabled" [binary]="true" inputId="qcEnabled"></p-checkbox>
@@ -43,11 +43,11 @@
       <!-- Scheduling Mode Toggle -->
       <div class="field-row">
         <label class="field-label">
-          Scheduling Mode
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('useAdvancedScheduling')"
              title="View documentation for scheduling modes">
           </i>
+          Scheduling Mode
         </label>
         <div class="field-input">
           <p-selectButton
@@ -97,11 +97,11 @@
       <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
       <div class="field-row" *ngIf="queueCleanerForm.get('useAdvancedScheduling')?.value">
         <label class="field-label">
-          Cron Expression
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('cronExpression')"
              title="View cron expression documentation and examples">
           </i>
+          Cron Expression
         </label>
         <div>
           <div class="field-input">
@@ -120,11 +120,11 @@
           <p-accordion-content>
             <div class="field-row" formGroupName="failedImport">
               <label class="field-label">
-                Max Strikes
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('failedImport.maxStrikes')"
                    title="View documentation for failed import strike system">
                 </i>
+                Max Strikes
               </label>
               <div class="field-input">
                 <p-inputNumber
@@ -143,11 +143,11 @@
 
             <div class="field-row" formGroupName="failedImport">
               <label class="field-label">
-                Ignore Private
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('failedImport.ignorePrivate')"
                    title="View documentation for private torrent handling">
                 </i>
+                Ignore Private
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
@@ -157,11 +157,11 @@
 
             <div class="field-row" formGroupName="failedImport">
               <label class="field-label">
-                Delete Private
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('failedImport.deletePrivate')"
                    title="View documentation for private torrent deletion">
                 </i>
+                Delete Private
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
@@ -171,11 +171,11 @@
 
             <div class="field-row" formGroupName="failedImport">
               <label class="field-label">
-                Ignored Patterns
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('failedImport.ignoredPatterns')"
                    title="View documentation for pattern matching and examples">
                 </i>
+                Ignored Patterns
               </label>
               <div class="field-input">
                 <p-autocomplete
@@ -200,11 +200,11 @@
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">
-                Max Strikes
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('stalled.maxStrikes')"
                    title="View documentation for stalled download strike system">
                 </i>
+                Max Strikes
               </label>
               <div>
                 <div class="field-input">
@@ -226,11 +226,11 @@
 
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">
-                Reset Strikes On Progress
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('stalled.resetStrikesOnProgress')"
                    title="View documentation for strike reset behavior">
                 </i>
+                Reset Strikes On Progress
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
@@ -240,11 +240,11 @@
 
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">
-                Ignore Private
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('stalled.ignorePrivate')"
                    title="View documentation for private torrent handling">
                 </i>
+                Ignore Private
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
@@ -254,11 +254,11 @@
 
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">
-                Delete Private
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('stalled.deletePrivate')"
                    title="View documentation for private torrent deletion">
                 </i>
+                Delete Private
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
@@ -274,11 +274,11 @@
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">
-                Max Strikes for Downloading Metadata
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('stalled.downloadingMetadataMaxStrikes')"
                    title="View documentation for metadata download handling">
                 </i>
+                Max Strikes for Downloading Metadata
               </label>
               <div>
                 <div class="field-input">
@@ -306,11 +306,11 @@
           <p-accordion-content>
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
-                Max Strikes
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('slow.maxStrikes')"
                    title="View documentation for slow download strike system">
                 </i>
+                Max Strikes
               </label>
               <div>
                 <div class="field-input">
@@ -332,11 +332,11 @@
 
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
-                Reset Strikes On Progress
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('slow.resetStrikesOnProgress')"
                    title="View documentation for strike reset behavior">
                 </i>
+                Reset Strikes On Progress
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
@@ -346,11 +346,11 @@
 
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
-                Ignore Private
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('slow.ignorePrivate')"
                    title="View documentation for private torrent handling">
                 </i>
+                Ignore Private
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
@@ -360,11 +360,11 @@
 
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
-                Delete Private
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('slow.deletePrivate')"
                    title="View documentation for private torrent deletion">
                 </i>
+                Delete Private
               </label>
               <div class="field-input">
                 <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
@@ -374,11 +374,11 @@
 
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
-                Minimum Speed
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('slow.minSpeed')"
                    title="View speed threshold guidelines and recommendations">
                 </i>
+                Minimum Speed
               </label>
               <div class="field-input">
                 <app-byte-size-input
@@ -393,11 +393,11 @@
 
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
-                Maximum Time (hours)
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('slow.maxTime')"
                    title="View documentation for maximum slow download time">
                 </i>
+                Maximum Time (hours)
               </label>
               <div class="field-input">
                 <p-inputNumber
@@ -415,11 +415,11 @@
 
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
-                Ignore Above Size
                 <i class="pi pi-info-circle field-info-icon" 
                    (click)="openFieldDocs('slow.ignoreAboveSize')"
                    title="View size exemption strategy and recommended thresholds">
                 </i>
+                Ignore Above Size
               </label>
               <div class="field-input">
                 <app-byte-size-input

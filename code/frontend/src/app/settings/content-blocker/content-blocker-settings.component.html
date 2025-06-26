@@ -28,10 +28,10 @@
       <!-- Main Settings -->
       <div class="field-row">
         <label class="field-label">
-          Enable Content Blocker
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('enabled')" 
              title="Click for documentation"></i>
+          Enable Content Blocker
         </label>
         <div class="field-input">
           <p-checkbox formControlName="enabled" [binary]="true" inputId="cbEnabled"></p-checkbox>
@@ -42,10 +42,10 @@
       <!-- Scheduling Mode Toggle -->
       <div class="field-row">
         <label class="field-label">
-          Scheduling Mode
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('useAdvancedScheduling')" 
              title="Click for documentation"></i>
+          Scheduling Mode
         </label>
         <div class="field-input">
           <p-selectButton
@@ -95,10 +95,10 @@
       <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
       <div class="field-row" *ngIf="contentBlockerForm.get('useAdvancedScheduling')?.value">
         <label class="field-label">
-          Cron Expression
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('cronExpression')" 
              title="Click for documentation"></i>
+          Cron Expression
         </label>
         <div>
           <div class="field-input">
@@ -112,10 +112,10 @@
       <!-- Content Blocker Specific Settings -->
       <div class="field-row">
         <label class="field-label">
-          Ignore Private
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('ignorePrivate')" 
              title="Click for documentation"></i>
+          Ignore Private
         </label>
         <div class="field-input">
           <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
@@ -125,10 +125,10 @@
 
       <div class="field-row">
         <label class="field-label">
-          Delete Private
           <i class="pi pi-info-circle field-info-icon" 
              (click)="openFieldDocs('deletePrivate')" 
              title="Click for documentation"></i>
+          Delete Private
         </label>
         <div class="field-input">
           <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
@@ -145,10 +145,10 @@
             <div formGroupName="sonarr">
               <div class="field-row">
                 <label class="field-label">
-                  Enable Sonarr Blocklist
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('sonarr.enabled')" 
                      title="Click for documentation"></i>
+                  Enable Sonarr Blocklist
                 </label>
                 <div class="field-input">
                   <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
@@ -158,10 +158,10 @@
 
               <div class="field-row">
                 <label class="field-label">
-                  Blocklist Path
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('sonarr.blocklistPath')" 
                      title="Click for documentation"></i>
+                  Blocklist Path
                 </label>
                 <p-fluid>
                   <div class="field-input">
@@ -174,10 +174,10 @@
 
               <div class="field-row">
                 <label class="field-label">
-                  Blocklist Type
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('sonarr.blocklistType')" 
                      title="Click for documentation"></i>
+                  Blocklist Type
                 </label>
                 <div class="field-input">
                   <p-select
@@ -206,10 +206,10 @@
             <div formGroupName="radarr">
               <div class="field-row">
                 <label class="field-label">
-                  Enable Radarr Blocklist
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('radarr.enabled')" 
                      title="Click for documentation"></i>
+                  Enable Radarr Blocklist
                 </label>
                 <div class="field-input">
                   <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
@@ -219,10 +219,10 @@
 
               <div class="field-row">
                 <label class="field-label">
-                  Blocklist Path
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('radarr.blocklistPath')" 
                      title="Click for documentation"></i>
+                  Blocklist Path
                 </label>
                 <p-fluid>
                   <div class="field-input">
@@ -235,10 +235,10 @@
 
               <div class="field-row">
                 <label class="field-label">
-                  Blocklist Type
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('radarr.blocklistType')" 
                      title="Click for documentation"></i>
+                  Blocklist Type
                 </label>
                 <div class="field-input">
                   <p-select
@@ -267,10 +267,10 @@
             <div formGroupName="lidarr">
               <div class="field-row">
                 <label class="field-label">
-                  Enable Lidarr Blocklist
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('lidarr.enabled')" 
                      title="Click for documentation"></i>
+                  Enable Lidarr Blocklist
                 </label>
                 <div class="field-input">
                   <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
@@ -280,10 +280,10 @@
 
               <div class="field-row">
                 <label class="field-label">
-                  Blocklist Path
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('lidarr.blocklistPath')" 
                      title="Click for documentation"></i>
+                  Blocklist Path
                 </label>
                 <p-fluid>
                   <div class="field-input">
@@ -296,10 +296,10 @@
 
               <div class="field-row">
                 <label class="field-label">
-                  Blocklist Type
                   <i class="pi pi-info-circle field-info-icon" 
                      (click)="openFieldDocs('lidarr.blocklistType')" 
                      title="Click for documentation"></i>
+                  Blocklist Type
                 </label>
                 <div class="field-input">
                   <p-select
