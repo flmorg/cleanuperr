@@ -2,13 +2,15 @@
 sidebar_position: 4
 ---
 
+import { Note, Important, Warning } from '@site/src/components/Admonition';
+
 # Download Cleaner
 
 The Download Cleaner automatically removes downloads from your download client after they have finished seeding according to configurable rules. This helps manage disk space and maintain optimal seeding ratios.
 
-:::important
-These settings need a download client to be configured.
-:::
+<Important>
+    These settings need a download client to be configured.
+</Important>
 
 ### Enable Download Cleaner {#enable-download-cleaner}
 
@@ -43,9 +45,9 @@ Settings that control how downloads are cleaned after they finish downloading.
 
 When enabled, private torrents will be deleted from the download client when they meet the cleanup criteria. Use with caution as this permanently removes the download.
 
-:::warning
-Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-:::
+<Warning>
+    Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</Warning>
 
 <hr />
 
@@ -53,13 +55,13 @@ Setting this to true means private torrents will be permanently deleted, potenti
 
 Categories define the cleanup rules for different types of downloads. Each category specifies when downloads should be removed based on ratio and time limits.
 
-:::note
-A download is cleaned when both `Max Ratio` and `Min Seed Time` are reached, OR when `Max Seed Time` is reached regardless of ratio.
-:::
+<Note>
+    A download is cleaned when both `Max Ratio` and `Min Seed Time` are reached, OR when `Max Seed Time` is reached regardless of ratio.
+</Note>
 
-:::important
-Both Max Ratio and Max Seed Time cannot be disabled (-1) at the same time. At least one cleanup condition must be configured.
-:::
+<Important>
+    Both Max Ratio and Max Seed Time cannot be disabled (-1) at the same time. At least one cleanup condition must be configured.
+</Important>
 
 #### Category Name {#category-name}
 
@@ -98,9 +100,9 @@ Settings for managing downloads that no longer have hardlinks to media files (in
 
 Enable management of downloads that have no hardlinks remaining. This helps identify downloads that are no longer needed by your *arr applications.
 
-:::important
-If you are using Docker, make sure to mount the downloads directory the same way it is mounted for the download client. If your download client's download directory is `/downloads`, it should be the same for Cleanuparr.
-:::
+<Important>
+    If you are using Docker, make sure to mount the downloads directory the same way it is mounted for the download client. If your download client's download directory is `/downloads`, it should be the same for Cleanuparr.
+</Important>
 
 <hr />
 

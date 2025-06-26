@@ -87,8 +87,8 @@ export class DocumentationService {
       'type': 'client-type',
       'host': 'client-host',
       'urlBase': 'url-base-path',
-      'username': 'authentication-username',
-      'password': 'authentication-password'
+      'username': 'username',
+      'password': 'password'
     },
     'notifications': {
       'notifiarr.apiKey': 'notifiarr-api-key',

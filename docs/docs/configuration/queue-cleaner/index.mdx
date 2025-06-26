@@ -2,7 +2,9 @@
 sidebar_position: 3
 ---
 
-# Queue Cleaner Configuration
+import { Important, Warning } from '@site/src/components/Admonition';
+
+# Queue Cleaner
 
 The Queue Cleaner monitors your download client's queue and automatically removes downloads based on configurable criteria. This helps keep your queue clean and prevents problematic downloads from consuming resources.
 
@@ -43,9 +45,9 @@ Number of strikes before a failed import download is removed from the queue. Set
 
 When enabled, private torrents will be skipped during failed import cleaning. This is useful if you want to preserve private tracker content even when imports fail.
 
-:::important
-This setting needs a download client to be configured.
-:::
+<Important>
+    This setting needs a download client to be configured.
+</Important>
 
 <hr />
 
@@ -53,13 +55,13 @@ This setting needs a download client to be configured.
 
 When enabled, private torrents that reach the maximum strikes will be deleted from the download client. Use with caution as this will permanently remove the download.
 
-:::warning
-Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-:::
+<Warning>
+    Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</Warning>
 
-:::important
-This setting needs a download client to be configured.
-:::
+<Important>
+    This setting needs a download client to be configured.
+</Important>
 
 <hr />
 
@@ -77,9 +79,9 @@ Failed imports containing these patterns in their name will be skipped during cl
 
 Stalled downloads are those that have stopped downloading and show no progress.
 
-:::important
-These settings need a download client to be configured.
-:::
+<Important>
+    These settings need a download client to be configured.
+</Important>
 
 ### Stalled Max Strikes {#stalled-max-strikes}
 
@@ -103,9 +105,9 @@ When enabled, private torrents will be skipped during stalled download cleaning.
 
 When enabled, private torrents that reach the maximum strikes will be deleted from the download client.
 
-:::warning
-Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-:::
+<Warning>
+    Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</Warning>
 
 <hr />
 
@@ -119,9 +121,9 @@ Number of strikes before a download stuck in "Downloading Metadata" state is rem
 
 Slow downloads are those downloading below a specified speed threshold.
 
-:::important
-These settings need a download client to be configured.
-:::
+<Important>
+    These settings need a download client to be configured.
+</Important>
 
 ### Slow Max Strikes {#slow-max-strikes}
 
@@ -145,9 +147,9 @@ When enabled, private torrents will be skipped during slow download cleaning.
 
 When enabled, private torrents that reach the maximum strikes will be deleted from the download client.
 
-:::warning
-Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-:::
+<Warning>
+    Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</Warning>
 
 <hr />
 

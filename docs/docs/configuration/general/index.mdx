@@ -2,7 +2,9 @@
 sidebar_position: 1
 ---
 
-# General Configuration
+import { Note, Warning } from '@site/src/components/Admonition';
+
+# General
 
 General configuration settings that apply to the entire Cleanuparr application.
 
@@ -51,9 +53,9 @@ Controls whether to validate SSL certificates for HTTPS connections. Set to "Dis
 
 Enables searching for replacements after a download has been removed from an *arr application.
 
-:::note
-If you are using [Huntarr](https://github.com/plexguide/Huntarr.io), you may want to set disable this setting to let Huntarr handle the searching.
-:::
+<Note>
+    If you are using [Huntarr](https://github.com/plexguide/Huntarr.io), you may want to set disable this setting to let Huntarr handle the searching.
+</Note>
 
 <hr />
 
@@ -61,9 +63,9 @@ If you are using [Huntarr](https://github.com/plexguide/Huntarr.io), you may wan
 
 If searching for replacements is enabled, this setting will delay the searches by the specified number of seconds. This is useful to avoid overwhelming the indexer with too many requests at once.
 
-:::warning
-A lower value or `0` will result in faster searches, but may cause issues such as being rate limited or banned by the indexer.
-:::
+<Warning>
+    A lower value or `0` will result in faster searches, but may cause issues such as being rate limited or banned by the indexer.
+</Warning>
 
 <hr />
 

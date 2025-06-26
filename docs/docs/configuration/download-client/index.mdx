@@ -1,92 +1,38 @@
-# Download Client Configuration
+---
+sidebar_position: 6
+---
+
+# Download Client
 
 Configure download client connections for torrents and usenet. Cleanuparr supports qBittorrent, Deluge, and Transmission download clients.
 
-## Client Management
-
-Download clients are managed as individual instances. You can add multiple clients of the same or different types to handle various download workflows.
-
-### Supported Client Types
-
-- **qBittorrent**: Most popular, feature-rich torrent client
-- **Deluge**: Lightweight, daemon-based torrent client  
-- **Transmission**: Simple, cross-platform torrent client
-
-## Client Configuration
-
 ### Enable Download Client {#enable-download-client}
-
-**Field**: `enabled`  
-**Type**: Boolean  
-**Default**: `true`
 
 Controls whether this download client instance is active and will be used by Cleanuparr for operations.
 
 **When Enabled**:
-- Client will be available for queue operations
-- Health checks will monitor this client
-- All configured features will apply to this client
+- Client will be available for slow, stalled and private tracker operations.
+- Health checks will monitor this client.
 
 **When Disabled**:
-- Client will be ignored by all Cleanuparr operations
-- No health checks will be performed
-- Useful for temporarily disabling without deleting configuration
+- Client will be ignored by all Cleanuparr operations.
+- No health checks will be performed.
 
-**Best Practice**: Disable clients during maintenance rather than deleting their configuration.
+<hr />
 
 ### Client Name {#client-name}
 
-**Field**: `name`  
-**Type**: String  
-**Required**: Yes
-
 A descriptive name to identify this download client instance in the Cleanuparr interface.
 
-**Examples**:
-- `qBittorrent Main`
-- `Seedbox qBittorrent`
-- `Local Deluge`
-- `4K Movies Transmission`
-
-**Best Practices**:
-- Use descriptive names that indicate purpose or location
-- Include client type if managing multiple types
-- Keep names short but meaningful for easy identification
+<hr />
 
 ### Client Type {#client-type}
 
-**Field**: `type`  
-**Type**: Dropdown Selection  
-**Required**: Yes  
-**Options**: qBittorrent, Deluge, Transmission
-
 Specifies which download client software this configuration connects to.
 
-**qBittorrent**:
-- Most feature-rich option
-- Web UI on port 8080 by default
-- Supports categories, tags, and ratios
-- Best compatibility with Cleanuparr features
-
-**Deluge**:
-- Lightweight daemon-based client
-- Web UI on port 8112 by default  
-- Good for resource-constrained systems
-- Supports plugins and advanced configurations
-
-**Transmission**:
-- Simple, cross-platform client
-- Web UI on port 9091 by default
-- Minimal resource usage
-- Basic but reliable functionality
-
-**Important**: Client type cannot be changed after creation. Delete and recreate if needed.
+<hr />
 
 ### Client Host {#client-host}
-
-**Field**: `host`  
-**Type**: URL  
-**Required**: Yes
 
 The complete URL to access your download client's web interface.
 
@@ -98,143 +44,26 @@ The complete URL to access your download client's web interface.
 - `http://192.168.1.100:8112` (local network Deluge)
 - `http://transmission.lan:9091` (local Transmission)
 
-**Protocol Requirements**:
-- Must use `http://` or `https://`
-- HTTPS recommended for remote connections
-- HTTP acceptable for local/trusted networks
-
-**Port Guidelines**:
-- qBittorrent: Usually 8080
-- Deluge: Usually 8112  
-- Transmission: Usually 9091
-- Check your client's web UI settings for the actual port
-
-**Common Issues**:
-- Ensure firewall allows the port
-- Check that web UI is enabled in client settings
-- Verify URL is accessible from Cleanuparr's location
+<hr />
 
 ### URL Base Path {#url-base-path}
-
-**Field**: `urlBase`  
-**Type**: String (Optional)
 
 URL path prefix if your download client runs behind a reverse proxy with a subpath.
 
 **When to Use**:
-- Client accessed via reverse proxy (Nginx, Apache, Traefik)
-- Client uses non-root URL path
-- Multiple services share same domain/port
+- Client accessed via reverse proxy (Nginx, Apache, Traefik).
+- Client uses non-root URL path.
+- Multiple services share same domain/port.
 
 **Examples**:
-- `/qbittorrent` → Full URL: `http://domain.com/qbittorrent`
-- `/downloads/deluge` → Full URL: `http://domain.com/downloads/deluge`
-- `/transmission` → Full URL: `http://domain.com/transmission`
+- `qbittorrent` → Full URL: `http://domain.com/qbittorrent`
+- `downloads/deluge` → Full URL: `http://domain.com/downloads/deluge`
+- `transmission` → Full URL: `http://domain.com/transmission`
 
-**Format Rules**:
-- Start with forward slash (`/`)
-- No trailing slash
-- Use lowercase, hyphens for readability
-- Match your reverse proxy configuration exactly
-
-**Configuration Notes**:
-- Leave empty if accessing client directly (no proxy)
-- Must match reverse proxy path configuration
-- Test URL manually before saving
-
-## Authentication
-
-### Authentication Username {#authentication-username}
-
-**Field**: `username`  
-**Type**: String (Optional)
+### Username {#username}
 
 Username for download client authentication if required.
 
-**When Required**:
-- Client has authentication enabled
-- Accessing client over network/internet
-- Multiple users share same client
-
-**When Not Needed**:
-- Client runs locally without authentication
-- Client configured for no-auth local access
-- Using alternative authentication methods
-
-**Security Considerations**:
-- Use dedicated user account for Cleanuparr
-- Limit permissions to necessary operations only
-- Regular client may not need admin privileges
-
-### Authentication Password {#authentication-password}
-
-**Field**: `password`  
-**Type**: Password (Optional)
+### Password {#password}
 
 Password for download client authentication.
-
-**Security Best Practices**:
-- Use strong, unique passwords
-- Consider client-specific credentials
-- Store securely and rotate regularly
-- Use HTTPS when sending over network
-
-**Client-Specific Notes**:
-- **qBittorrent**: Web UI username/password
-- **Deluge**: Web UI password (username often not required)
-- **Transmission**: HTTP authentication if enabled
-
-## Connection Testing
-
-After configuring a download client, Cleanuparr will:
-
-1. **Test Connection**: Verify URL accessibility
-2. **Authenticate**: Log in using provided credentials  
-3. **API Check**: Confirm client API compatibility
-4. **Health Monitor**: Ongoing connection monitoring
-
-**Troubleshooting Connection Issues**:
-
-- **Connection Failed**: Check host URL, port, firewall
-- **Authentication Failed**: Verify username/password
-- **API Error**: Ensure client version compatibility
-- **Timeout**: Check network latency, increase timeout settings
-
-## Multiple Client Setup
-
-You can configure multiple download clients for different purposes:
-
-**Use Cases**:
-- **Primary/Backup**: Main client with fallback option
-- **Content Separation**: Movies vs TV shows vs music
-- **Performance Tiers**: Fast SSD vs slower storage
-- **Geographic Distribution**: Multiple seedbox locations
-
-**Configuration Strategy**:
-- Use descriptive names for each client
-- Test each client independently
-- Monitor performance across all clients
-- Configure appropriate settings per client purpose
-
-## Best Practices
-
-### Performance Optimization
-
-- **Local Clients**: Use HTTP for speed
-- **Remote Clients**: Use HTTPS for security
-- **Network Clients**: Consider connection pooling
-- **Multiple Clients**: Balance load appropriately
-
-### Security Considerations
-
-- **Credentials**: Use least-privilege accounts
-- **Network**: Secure client web interfaces
-- **Access**: Limit administrative functions
-- **Monitoring**: Enable logging for security events
-
-### Maintenance Tips
-
-- **Regular Testing**: Verify connections periodically
-- **Update Coordination**: Keep client versions compatible
-- **Backup Configuration**: Export settings before changes
-- **Documentation**: Maintain client setup notes 

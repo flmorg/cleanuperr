@@ -2,13 +2,15 @@
 sidebar_position: 2
 ---
 
+import { Important, Warning } from '@site/src/components/Admonition';
+
 # Content Blocker
 
 The Content Blocker automatically blocks or removes downloads from your download client based on configurable blocklists. This helps prevent unwanted content from being downloaded and manages content filtering across your *arr applications.
 
-:::important
-These settings need a download client to be configured.
-:::
+<Important>
+    These settings need a download client to be configured.
+</Important>
 
 ### Enable Content Blocker {#enable-content-blocker}
 
@@ -45,9 +47,9 @@ When enabled, private torrents will be skipped from being processed during conte
 
 When enabled, private torrents that match blocklist criteria will be deleted from the download client. Use with extreme caution as this permanently removes the download.
 
-:::warning
+<Warning>
 Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-:::
+</Warning>
 
 <hr />
 
