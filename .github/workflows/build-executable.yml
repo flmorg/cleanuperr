@@ -101,28 +101,6 @@ jobs:
       - name: Build osx-arm64
         run: dotnet publish code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj -c Release --runtime osx-arm64 --self-contained -o artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-arm64 /p:PublishSingleFile=true /p:Version=${{ env.appVersion }} /p:DebugSymbols=false
 
-      - name: Create sample configuration files
-        run: |
-          # Create a sample appsettings.json for each platform
-          cat > sample-config.json << 'EOF'
-          {
-            "Logging": {
-              "LogLevel": {
-                "Default": "Information",
-                "Microsoft.AspNetCore": "Warning"
-              }
-            },
-            "AllowedHosts": "*"
-          }
-          EOF
-          
-          # Copy to each build directory
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-win-amd64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-amd64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-linux-arm64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-amd64/appsettings.json
-          cp sample-config.json artifacts/${{ env.githubRepositoryName }}-${{ env.appVersion }}-osx-arm64/appsettings.json
-
       - name: Zip win-x64
         run: |
           cd ./artifacts
