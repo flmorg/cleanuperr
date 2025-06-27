@@ -29,7 +29,7 @@ Cleanuparr supports both qBittorrent's built-in exclusion features and its own b
 > [!NOTE]
 >
 > 1. **Docker (Recommended)**  
-> Pull the Docker image from `ghcr.io/Cleanuparr/Cleanuparr:latest`.
+> Pull the Docker image from `ghcr.io/cleanuparr/cleanuparr:latest`.
 >
 > 2. **Unraid (for Unraid users)**  
 > Use the Unraid Community App.

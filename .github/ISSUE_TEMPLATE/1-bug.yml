@@ -14,7 +14,7 @@ body:
       options:
         - label: Reviewed the documentation.
           required: true
-        - label: Ensured I am using ghcr.io/Cleanuparr/Cleanuparr docker repository.
+        - label: Ensured I am using ghcr.io/cleanuparr/cleanuparr docker repository.
           required: true
         - label: Ensured I am using the latest version.
           required: true
