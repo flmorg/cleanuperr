@@ -55,7 +55,7 @@ jobs:
   # Build portable executables
   build-executables:
     needs: validate
-    uses: ./.github/workflows/build_executable.yml
+    uses: ./.github/workflows/build-executable.yml
     secrets: inherit
 
   # Build Windows installer
