@@ -17,7 +17,7 @@ const settings: EnvVarProps[] = [
   },
   {
     name: "APPRISE__KEY",
-    description: ["[Apprise configuration key](https://github.com/caronc/apprise-api?tab=readme-ov-file#screenshots) containing all 3rd party notification providers which Cleanuperr would notify."],
+    description: ["[Apprise configuration key](https://github.com/caronc/apprise-api?tab=readme-ov-file#screenshots) containing all 3rd party notification providers which Cleanuparr would notify."],
     type: "text",
     defaultValue: "Empty",
     required: false,

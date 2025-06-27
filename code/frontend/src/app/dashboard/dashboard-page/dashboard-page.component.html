@@ -1,0 +1,145 @@
+<div class="dashboard-container">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h1>Dashboard</h1>
+  </div>
+  
+  <!-- Support Section -->
+  <div class="mb-4" *ngIf="showSupportSection()">
+    <app-support-section></app-support-section>
+  </div>
+  
+  <!-- Real-time Cards -->
+  <div class="grid">
+    <!-- Recent Logs Card -->
+    <div class="col-12 lg:col-6">
+      <p-card styleClass="dashboard-card h-full">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div class="header-title-container">
+              <h2 class="card-title m-0">Recent Logs</h2>
+              <p-tag
+                [severity]="connected() ? 'success' : 'danger'"
+                [value]="connected() ? 'Connected' : 'Disconnected'"
+                [pTooltip]="connected() ? 'Connected to app hub' : 'Attempting to reconnect...'"
+                tooltipPosition="right"
+                styleClass="status-tag"
+              ></p-tag>
+              <span class="card-subtitle">Live log stream</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-list text-xl"></i>
+            </div>
+          </div>
+        </ng-template>
+        
+        <div class="card-content">
+          <div class="timeline-container" *ngIf="displayLogs().length > 0; else noLogsTemplate">
+            <div class="timeline-item" *ngFor="let log of displayLogs(); let i = index">
+              <div class="timeline-marker">
+                <span class="timeline-icon" [ngClass]="getLogIconClass(log.level)">
+                  <i [class]="getLogIcon(log.level)"></i>
+                </span>
+              </div>
+              <div class="timeline-content">
+                <div class="flex align-items-start justify-content-between mb-1">
+                  <div class="flex align-items-center gap-2">
+                    <p-tag [severity]="getLogSeverity(log.level)" [value]="log.level"></p-tag>
+                    <span class="text-xs text-color-secondary" *ngIf="log.category">{{log.category}}</span>
+                  </div>
+                  <span class="text-xs text-color-secondary">{{log.timestamp | date:'HH:mm:ss'}}</span>
+                </div>
+                <div class="timeline-message" 
+                     [pTooltip]="log.message" 
+                     tooltipPosition="top"
+                     [showDelay]="500">
+                  {{truncateMessage(log.message)}}
+                </div>
+                <div class="text-xs text-color-secondary mt-1" *ngIf="log.jobName">
+                  Job: {{log.jobName}}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noLogsTemplate>
+            <div class="empty-state text-center py-4">
+              <i class="pi pi-list text-4xl text-color-secondary mb-3"></i>
+              <p class="text-color-secondary">No recent logs available</p>
+              <p-progressSpinner *ngIf="!connected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
+            </div>
+          </ng-template>
+          
+          <div class="card-footer mt-3">
+            <button pButton label="View All Logs" icon="pi pi-arrow-right" routerLink="/logs" iconPos="right" class="p-button-outlined"></button>
+          </div>
+        </div>
+      </p-card>
+    </div>
+    
+    <!-- Recent Events Card -->
+    <div class="col-12 lg:col-6">
+      <p-card styleClass="dashboard-card h-full">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+            <div class="header-title-container">
+              <h2 class="card-title m-0">Recent Events</h2>
+              <p-tag
+                [severity]="connected() ? 'success' : 'danger'"
+                [value]="connected() ? 'Connected' : 'Disconnected'"
+                [pTooltip]="connected() ? 'Connected to app hub' : 'Attempting to reconnect...'"
+                tooltipPosition="right"
+                styleClass="status-tag"
+              ></p-tag>
+              <span class="card-subtitle">Live event stream</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-calendar text-xl"></i>
+            </div>
+          </div>
+        </ng-template>
+        
+        <div class="card-content">
+          <div class="timeline-container" *ngIf="displayEvents().length > 0; else noEventsTemplate">
+            <div class="timeline-item" *ngFor="let event of displayEvents(); let i = index">
+              <div class="timeline-marker">
+                <span class="timeline-icon" [ngClass]="getEventIconClass(event.eventType, event.severity)">
+                  <i [class]="getEventIcon(event.eventType)"></i>
+                </span>
+              </div>
+              <div class="timeline-content">
+                <div class="flex align-items-start justify-content-between mb-1">
+                  <div class="flex align-items-center gap-2">
+                    <p-tag [severity]="getEventSeverity(event.severity)" [value]="event.severity"></p-tag>
+                    <span class="text-xs text-color-secondary">{{formatEventType(event.eventType)}}</span>
+                  </div>
+                  <span class="text-xs text-color-secondary">{{event.timestamp | date:'HH:mm:ss'}}</span>
+                </div>
+                <div class="timeline-message" 
+                     [pTooltip]="event.message" 
+                     tooltipPosition="top"
+                     [showDelay]="500">
+                  {{truncateMessage(event.message)}}
+                </div>
+                <div class="text-xs text-color-secondary mt-1" *ngIf="event.trackingId">
+                  Tracking: {{event.trackingId}}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noEventsTemplate>
+            <div class="empty-state text-center py-4">
+              <i class="pi pi-calendar text-4xl text-color-secondary mb-3"></i>
+              <p class="text-color-secondary">No recent events available</p>
+              <p-progressSpinner *ngIf="!connected()" styleClass="w-2rem h-2rem"></p-progressSpinner>
+            </div>
+          </ng-template>
+          
+          <div class="card-footer mt-3">
+            <button pButton label="View All Events" icon="pi pi-arrow-right" routerLink="/events" iconPos="right" class="p-button-outlined"></button>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>

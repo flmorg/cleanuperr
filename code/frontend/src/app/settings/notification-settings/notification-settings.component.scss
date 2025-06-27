@@ -1,0 +1,12 @@
+@use '../styles/settings-shared.scss';
+@use '../styles/arr-shared.scss';
+@use '../settings-page/settings-page.component.scss';
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  border-bottom: 1px solid var(--surface-border);
+  padding-bottom: 0.5rem;
+} 

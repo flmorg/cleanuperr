@@ -1,0 +1,167 @@
+---
+sidebar_position: 7
+---
+
+import { Important } from '@site/src/components/Admonition';
+import { 
+  ConfigSection, 
+  EnhancedImportant,
+  styles 
+} from '@site/src/components/documentation';
+
+# Notifications
+
+Configure notification services to receive alerts about Cleanuparr operations.
+
+<div className={styles.documentationPage}>
+
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>🚀</span>
+  Notifiarr
+</h2>
+
+<p className={styles.sectionDescription}>
+  Notifiarr is a notification service that can send alerts to Discord.
+</p>
+
+<ConfigSection
+  id="notifiarr-api-key"
+  title="Notifiarr API Key"
+  description="Your Notifiarr API key for authentication. This key is obtained from your Notifiarr dashboard."
+  icon="🔑"
+>
+
+Your Notifiarr API key for authentication. This key is obtained from your Notifiarr dashboard.
+
+<EnhancedImportant>
+Requires Notifiarr's [Passthrough](https://notifiarr.wiki/pages/integrations/passthrough/) integration to work.
+</EnhancedImportant>
+
+</ConfigSection>
+
+<ConfigSection
+  id="notifiarr-channel-id"
+  title="Notifiarr Channel ID"
+  description="The Discord channel ID where notifications will be sent. This determines the destination for your alerts."
+  icon="💬"
+>
+
+The Discord channel ID where notifications will be sent. This determines the destination for your alerts.
+
+</ConfigSection>
+
+</div>
+
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>📡</span>
+  Apprise Configuration
+</h2>
+
+<p className={styles.sectionDescription}>
+  Apprise is a universal notification library that supports over 80 different notification services.
+</p>
+
+<ConfigSection
+  id="apprise-url"
+  title="Apprise URL"
+  description="The Apprise server URL where notification requests will be sent."
+  icon="🌐"
+>
+
+The Apprise server URL where notification requests will be sent.
+
+</ConfigSection>
+
+<ConfigSection
+  id="apprise-key"
+  title="Apprise Key"
+  description="The key that identifies your Apprise configuration. This corresponds to a configuration defined in your Apprise server."
+  icon="🔐"
+>
+
+The key that identifies your Apprise configuration. This corresponds to a configuration defined in your Apprise server.
+
+</ConfigSection>
+
+</div>
+
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>⚡</span>
+  Event Triggers
+</h2>
+
+<ConfigSection
+  id="event-failed-import-strike"
+  title="Failed Import Strike"
+  description="Triggered When: A download receives a strike for failed import."
+  icon="❌"
+>
+
+**Triggered When**: A download receives a strike for failed import.
+
+</ConfigSection>
+
+<ConfigSection
+  id="event-stalled-strike"
+  title="Stalled Strike"
+  description="Triggered When: A download receives a strike for being stalled."
+  icon="⏸️"
+>
+
+**Triggered When**: A download receives a strike for being stalled.
+
+</ConfigSection>
+
+<ConfigSection
+  id="event-slow-strike"
+  title="Slow Strike"
+  description="Triggered When: A download receives a strike for slow speed."
+  icon="🐌"
+>
+
+**Triggered When**: A download receives a strike for slow speed.
+
+</ConfigSection>
+
+<ConfigSection
+  id="event-queue-item-deleted"
+  title="Queue Item Deleted"
+  description="Triggered When: A download is removed from the queue."
+  icon="🗑️"
+>
+
+**Triggered When**: A download is removed from the queue.
+
+</ConfigSection>
+
+<ConfigSection
+  id="event-download-cleaned"
+  title="Download Cleaned"
+  description="Triggered When: Download Cleaner removes completed downloads."
+  icon="🧽"
+>
+
+**Triggered When**: Download Cleaner removes completed downloads.
+
+</ConfigSection>
+
+<ConfigSection
+  id="event-category-changed"
+  title="Category Changed"
+  description="Triggered When: Download Cleaner changes a download's category."
+  icon="🏷️"
+>
+
+**Triggered When**: Download Cleaner changes a download's category.
+
+</ConfigSection>
+
+</div>
+
+</div>

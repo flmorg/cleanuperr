@@ -1,0 +1,268 @@
+<div class="settings-container">
+  <div class="flex align-items-center justify-content-between mb-4">
+    <h1>Download Clients</h1>
+  </div>
+
+  <!-- Loading/Error State Component -->
+  <div class="mb-4">
+    <app-loading-error-state
+      *ngIf="downloadClientLoading() || downloadClientError()"
+      [loading]="downloadClientLoading()"
+      [error]="downloadClientError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+  </div>
+
+  <!-- Content - only shown when not loading and no error -->
+  <div *ngIf="!downloadClientLoading() && !downloadClientError()">
+    
+    <!-- Client Management Card -->
+    <p-card styleClass="settings-card mb-4">
+      <ng-template pTemplate="header">
+        <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+          <div class="header-title-container">
+            <h2 class="card-title m-0">Download Clients</h2>
+            <span class="card-subtitle">Manage download client instances</span>
+          </div>
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-download text-xl"></i>
+          </div>
+        </div>
+      </ng-template>
+
+      <!-- Empty state when no clients -->
+      <div *ngIf="clients.length === 0" class="empty-instances-message p-3 text-center">
+        <i class="pi pi-inbox empty-icon"></i>
+        <p>No download clients defined. Add a client to start.</p>
+      </div>
+
+      <!-- Clients List -->
+      <div *ngIf="clients.length > 0" class="instances-list">
+        <div *ngFor="let client of clients" class="instance-item">
+          <div class="instance-header">
+            <div class="instance-title">
+              <i class="pi pi-download instance-icon"></i>
+              <span class="instance-name">{{ client.name }}</span>
+            </div>
+            <div class="instance-actions">
+              <button 
+                pButton 
+                type="button" 
+                icon="pi pi-pencil" 
+                class="p-button-text p-button-sm"
+                [disabled]="downloadClientSaving()"
+                (click)="openEditClientModal(client)"
+                pTooltip="Edit client"
+              ></button>
+              <button 
+                pButton 
+                type="button" 
+                icon="pi pi-trash" 
+                class="p-button-text p-button-sm p-button-danger"
+                [disabled]="downloadClientSaving()"
+                (click)="deleteClient(client)"
+                pTooltip="Delete client"
+              ></button>
+            </div>
+          </div>
+          
+          <div class="instance-content">
+            <div class="instance-field">
+              <label>Type: {{ getClientTypeLabel(client) }}</label>
+            </div>
+            <div class="instance-field" *ngIf="client.host">
+              <label>Host: {{ client.host }}</label>
+            </div>
+            <div class="instance-field" *ngIf="client.urlBase">
+              <label>URL Base: {{ client.urlBase }}</label>
+            </div>
+            <div class="instance-field">
+              <label>Status: 
+                <span [class]="client.enabled ? 'text-green-500' : 'text-red-500'">
+                  {{ client.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button 
+          pButton 
+          type="button" 
+          icon="pi pi-plus" 
+          label="Add Client"
+          class="p-button-outlined"
+          [disabled]="downloadClientSaving()"
+          (click)="openAddClientModal()"
+        ></button>
+      </div>
+    </p-card>
+  </div>
+</div>
+
+<!-- Client Modal -->
+<p-dialog 
+  [(visible)]="showClientModal" 
+  [modal]="true" 
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="instance-modal"
+  [header]="modalTitle"
+  (onHide)="closeClientModal()"
+>
+  <form [formGroup]="clientForm" class="p-fluid instance-form">
+    <div class="field flex flex-row">
+      <label class="field-label">
+        <i class="pi pi-info-circle field-info-icon" 
+           (click)="openFieldDocs('enabled')" 
+           pTooltip="Click for documentation"></i>
+        Enabled
+      </label>
+      <div class="field-input">
+        <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+        <small class="form-helper-text">Enable this download client</small>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="client-name">
+        <i class="pi pi-info-circle field-info-icon" 
+           (click)="openFieldDocs('name')" 
+           pTooltip="Click for documentation"></i>
+        Name *
+      </label>
+      <input 
+        id="client-name"
+        type="text" 
+        pInputText 
+        formControlName="name" 
+        placeholder="My Download Client"
+        class="w-full"
+      />
+      <small *ngIf="hasError(clientForm, 'name', 'required')" class="p-error">Name is required</small>
+    </div>
+
+    <div class="field">
+      <label for="client-type">
+        <i class="pi pi-info-circle field-info-icon" 
+           (click)="openFieldDocs('type')" 
+           pTooltip="Click for documentation"></i>
+        Client Type *
+      </label>
+      <p-select
+        id="client-type"
+        formControlName="type"
+        [options]="clientTypeOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select client type"
+        appendTo="body"
+        class="w-full"
+      ></p-select>
+      <small *ngIf="hasError(clientForm, 'type', 'required')" class="p-error">Client type is required</small>
+    </div>
+
+    <ng-container>
+      <div class="field">
+        <label for="client-host">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('host')" 
+             pTooltip="Click for documentation"></i>
+          Host *
+        </label>
+        <input 
+          id="client-host"
+          type="text" 
+          pInputText 
+          formControlName="host" 
+          placeholder="http://localhost:8080"
+          class="w-full"
+        />
+        <small *ngIf="hasError(clientForm, 'host', 'required')" class="p-error">Host is required</small>
+        <small *ngIf="hasError(clientForm, 'host', 'invalidUri')" class="p-error">Host must be a valid URL</small>
+        <small *ngIf="hasError(clientForm, 'host', 'invalidProtocol')" class="p-error">Host must use http or https protocol</small>
+      </div>
+      
+      <div class="field">
+        <label for="client-urlbase">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('urlBase')" 
+             pTooltip="Click for documentation"></i>
+          URL Base
+        </label>
+        <input 
+          id="client-urlbase"
+          type="text" 
+          pInputText 
+          formControlName="urlBase" 
+          placeholder="(Optional) Path prefix"
+          class="w-full"
+        />
+      </div>
+      
+              <div class="field" *ngIf="shouldShowUsernameField()">
+          <label for="client-username">
+            <i class="pi pi-info-circle field-info-icon" 
+               (click)="openFieldDocs('username')" 
+               pTooltip="Click for documentation"></i>
+            Username
+          </label>
+          <input 
+            id="client-username"
+            type="text" 
+            pInputText 
+            formControlName="username" 
+            placeholder="Username"
+            class="w-full"
+          />
+        </div>
+      
+      <div class="field">
+        <label for="client-password">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('password')" 
+             pTooltip="Click for documentation"></i>
+          Password
+        </label>
+        <input 
+          id="client-password"
+          type="password" 
+          pInputText 
+          formControlName="password" 
+          placeholder="Password"
+          class="w-full"
+        />
+      </div>
+    </ng-container>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="modal-footer">
+      <button 
+        pButton 
+        type="button" 
+        label="Cancel" 
+        class="p-button-text"
+        (click)="closeClientModal()"
+      ></button>
+      <button 
+        pButton 
+        type="button" 
+        label="Save" 
+        icon="pi pi-save"
+        class="p-button-primary ml-2"
+        [disabled]="clientForm.invalid || downloadClientSaving()"
+        [loading]="downloadClientSaving()"
+        (click)="saveClient()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog></p-confirmDialog>

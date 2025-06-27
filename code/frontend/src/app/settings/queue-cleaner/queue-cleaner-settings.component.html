@@ -1,0 +1,463 @@
+<!-- Toast notifications handled by central toast container -->
+
+<p-card styleClass="settings-card h-full">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+      <div class="header-title-container">
+        <h2 class="card-title m-0">Queue Cleaner Configuration</h2>
+        <span class="card-subtitle">Configure automatic arr queue cleanup</span>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-cog text-xl"></i>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="card-content">
+    <!-- Loading/Error State Component -->
+    <app-loading-error-state
+      *ngIf="queueCleanerLoading() || queueCleanerLoadError()"
+      [loading]="queueCleanerLoading()"
+      [error]="queueCleanerLoadError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+
+    <!-- Form Content - only shown when not loading and no error -->
+    <form *ngIf="!queueCleanerLoading() && !queueCleanerLoadError()" [formGroup]="queueCleanerForm" class="p-fluid">
+      <!-- Main Settings -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('enabled')"
+             title="View documentation for this setting">
+          </i>
+          Enable Queue Cleaner
+        </label>
+        <div class="field-input">
+          <p-checkbox formControlName="enabled" [binary]="true" inputId="qcEnabled"></p-checkbox>
+          <small class="form-helper-text">When enabled, the queue cleaner will run according to the schedule</small>
+        </div>
+      </div>
+
+      <!-- Scheduling Mode Toggle -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('useAdvancedScheduling')"
+             title="View documentation for scheduling modes">
+          </i>
+          Scheduling Mode
+        </label>
+        <div class="field-input">
+          <p-selectButton
+            formControlName="useAdvancedScheduling"
+            [options]="scheduleModeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [allowEmpty]="false"
+            [multiple]="false"
+          >
+          </p-selectButton>
+          <small class="form-helper-text">Choose between basic scheduling or advanced cron expression</small>
+        </div>
+      </div>
+
+      <!-- Basic Schedule Controls - shown when useAdvancedScheduling is false -->
+      <div class="field-row" formGroupName="jobSchedule" *ngIf="!queueCleanerForm.get('useAdvancedScheduling')?.value">
+        <label class="field-label">
+          Run Schedule
+        </label>
+        <div>
+          <div class="field-input schedule-input flex flex-wrap">
+            <span class="schedule-label">Every</span>
+            <p-select 
+              formControlName="every"
+              [options]="getScheduleValueOptions()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select interval"
+            ></p-select>
+
+            <p-selectButton
+              formControlName="type"
+              [options]="scheduleUnitOptions"
+              optionLabel="label"
+              optionValue="value"
+              [allowEmpty]="false"
+              [multiple]="false"
+            >
+            </p-selectButton>
+          </div>
+          <small *ngIf="hasNestedError('jobSchedule', 'every', 'required')" class="p-error">This field is required</small>
+          <small class="form-helper-text">How often the queue cleaner should run</small>
+        </div>
+      </div>
+
+      <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
+      <div class="field-row" *ngIf="queueCleanerForm.get('useAdvancedScheduling')?.value">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('cronExpression')"
+             title="View cron expression documentation and examples">
+          </i>
+          Cron Expression
+        </label>
+        <div>
+          <div class="field-input">
+            <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
+          </div>
+          <small *ngIf="queueCleanerForm.get('cronExpression')?.hasError('required') && queueCleanerForm.get('cronExpression')?.touched" class="p-error">Cron expression is required</small>
+          <small class="form-helper-text">Enter a valid Quartz cron expression (e.g., "0 0/5 * ? * * *" runs every 5 minutes)</small>
+        </div>
+      </div>
+
+      <!-- Detailed Settings in Accordion -->
+      <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
+        <!-- Failed Import Settings -->
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="0">
+          <p-accordion-header>Failed Import Settings</p-accordion-header>
+          <p-accordion-content>
+            <div class="field-row" formGroupName="failedImport">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('failedImport.maxStrikes')"
+                   title="View documentation for failed import strike system">
+                </i>
+                Max Strikes
+              </label>
+              <div class="field-input">
+                <p-inputNumber
+                  formControlName="maxStrikes"
+                  [showButtons]="true"
+                  [min]="0"
+                  [max]="10"
+                  buttonLayout="horizontal"
+                >
+                </p-inputNumber>
+                <small class="form-helper-text"
+                  >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
+                >
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="failedImport">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('failedImport.ignorePrivate')"
+                   title="View documentation for private torrent handling">
+                </i>
+                Ignore Private
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be skipped</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="failedImport">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('failedImport.deletePrivate')"
+                   title="View documentation for private torrent deletion">
+                </i>
+                Delete Private
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="failedImport">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('failedImport.ignoredPatterns')"
+                   title="View documentation for pattern matching and examples">
+                </i>
+                Ignored Patterns
+              </label>
+              <div class="field-input">
+                <p-autocomplete
+                  formControlName="ignoredPatterns"
+                  multiple
+                  fluid
+                  [typeahead]="false"
+                  placeholder="Add pattern and press Enter"
+                >
+                </p-autocomplete>
+                <small class="form-helper-text"
+                  >Failed imports containing these patterns will be skipped (e.g. <code>sample</code>)</small
+                >
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- Stalled Settings -->
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="1">
+          <p-accordion-header>Stalled Download Settings</p-accordion-header>
+          <p-accordion-content>
+            <div class="field-row" formGroupName="stalled">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('stalled.maxStrikes')"
+                   title="View documentation for stalled download strike system">
+                </i>
+                Max Strikes
+              </label>
+              <div>
+                <div class="field-input">
+                  <p-inputNumber
+                    formControlName="maxStrikes"
+                    [showButtons]="true"
+                    [min]="0"
+                    buttonLayout="horizontal"
+                  >
+                  </p-inputNumber>
+                </div>
+                <small *ngIf="hasNestedError('stalled', 'maxStrikes', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('stalled', 'maxStrikes', 'max')" class="p-error">Value cannot exceed 100</small>
+                <small class="form-helper-text"
+                  >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
+                >
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="stalled">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('stalled.resetStrikesOnProgress')"
+                   title="View documentation for strike reset behavior">
+                </i>
+                Reset Strikes On Progress
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="stalled">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('stalled.ignorePrivate')"
+                   title="View documentation for private torrent handling">
+                </i>
+                Ignore Private
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be skipped</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="stalled">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('stalled.deletePrivate')"
+                   title="View documentation for private torrent deletion">
+                </i>
+                Delete Private
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- Downloading Metadata Settings -->
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="2">
+          <p-accordion-header>Downloading Metadata Settings (qBittorrent only)</p-accordion-header>
+          <p-accordion-content>
+            <div class="field-row" formGroupName="stalled">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('stalled.downloadingMetadataMaxStrikes')"
+                   title="View documentation for metadata download handling">
+                </i>
+                Max Strikes for Downloading Metadata
+              </label>
+              <div>
+                <div class="field-input">
+                  <p-inputNumber
+                    formControlName="downloadingMetadataMaxStrikes"
+                    [showButtons]="true"
+                    [min]="0"
+                    buttonLayout="horizontal"
+                  >
+                  </p-inputNumber>
+                </div>
+                <small *ngIf="hasNestedError('stalled', 'downloadingMetadataMaxStrikes', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('stalled', 'downloadingMetadataMaxStrikes', 'max')" class="p-error">Value cannot exceed 100</small>
+                <small class="form-helper-text"
+                  >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
+                >
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- Slow Download Settings -->
+        <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="3">
+          <p-accordion-header>Slow Download Settings</p-accordion-header>
+          <p-accordion-content>
+            <div class="field-row" formGroupName="slow">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('slow.maxStrikes')"
+                   title="View documentation for slow download strike system">
+                </i>
+                Max Strikes
+              </label>
+              <div>
+                <div class="field-input">
+                  <p-inputNumber
+                    formControlName="maxStrikes"
+                    [showButtons]="true"
+                    [min]="0"
+                    buttonLayout="horizontal"
+                  >
+                  </p-inputNumber>
+                </div>
+                <small *ngIf="hasNestedError('slow', 'maxStrikes', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('slow', 'maxStrikes', 'max')" class="p-error">Value cannot exceed 100</small>
+                <small class="form-helper-text"
+                  >Number of strikes before action is taken (0 to disable, min 3 to enable)</small
+                >
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="slow">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('slow.resetStrikesOnProgress')"
+                   title="View documentation for strike reset behavior">
+                </i>
+                Reset Strikes On Progress
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="resetStrikesOnProgress" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, strikes will be reset if download progress is made</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="slow">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('slow.ignorePrivate')"
+                   title="View documentation for private torrent handling">
+                </i>
+                Ignore Private
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be skipped</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="slow">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('slow.deletePrivate')"
+                   title="View documentation for private torrent deletion">
+                </i>
+                Delete Private
+              </label>
+              <div class="field-input">
+                <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
+                <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="slow">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('slow.minSpeed')"
+                   title="View speed threshold guidelines and recommendations">
+                </i>
+                Minimum Speed
+              </label>
+              <div class="field-input">
+                <app-byte-size-input
+                  formControlName="minSpeed"
+                  [min]="0"
+                  placeholder="Enter minimum speed"
+                  helpText="Minimum speed threshold for slow downloads (e.g., 100KB/s)"
+                >
+                </app-byte-size-input>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="slow">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('slow.maxTime')"
+                   title="View documentation for maximum slow download time">
+                </i>
+                Maximum Time (hours)
+              </label>
+              <div class="field-input">
+                <p-inputNumber
+                  formControlName="maxTime"
+                  [showButtons]="true"
+                  [min]="0"
+                  buttonLayout="horizontal"
+                >
+                </p-inputNumber>
+                <small *ngIf="hasNestedError('slow', 'maxTime', 'required')" class="p-error">This field is required</small>
+                <small *ngIf="hasNestedError('slow', 'maxTime', 'max')" class="p-error">Value cannot exceed 168</small>
+                <small class="form-helper-text">Maximum time allowed for slow downloads (0 means disabled)</small>
+              </div>
+            </div>
+
+            <div class="field-row" formGroupName="slow">
+              <label class="field-label">
+                <i class="pi pi-info-circle field-info-icon" 
+                   (click)="openFieldDocs('slow.ignoreAboveSize')"
+                   title="View size exemption strategy and recommended thresholds">
+                </i>
+                Ignore Above Size
+              </label>
+              <div class="field-input">
+                <app-byte-size-input
+                  formControlName="ignoreAboveSize"
+                  [min]="0"
+                  placeholder="Enter size threshold"
+                  helpText="Downloads will be ignored if size exceeds, e.g., 25 GB"
+                >
+                </app-byte-size-input>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+
+      </p-accordion>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button
+          pButton
+          type="button"
+          label="Save"
+          icon="pi pi-save"
+          class="p-button-primary"
+          [disabled]="(!queueCleanerForm.dirty || !hasActualChanges) || queueCleanerForm.invalid || queueCleanerSaving()"
+          [loading]="queueCleanerSaving()"
+          (click)="saveQueueCleanerConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Reset"
+          icon="pi pi-refresh"
+          class="p-button-secondary p-button-outlined ml-2"
+          (click)="resetQueueCleanerConfig()"
+        ></button>
+      </div>
+    </form>
+  </div>
+</p-card>

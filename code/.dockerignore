@@ -1,0 +1,41 @@
+# Documentation
+*.md
+docs/
+
+# Version control
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node.js
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# .NET
+backend/bin/
+backend/obj/
+backend/*/bin/
+backend/*/obj/
+backend/.vs/
+
+# Build artifacts
+artifacts/
+dist/
+
+# Test files
+backend/**/*Tests/
+backend/**/Tests/
+
+# Development files
+docker-compose*.yml
+test/ 

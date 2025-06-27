@@ -1,16 +1,37 @@
-import { Important } from '@site/src/components/Admonition';
+import { Note } from '@site/src/components/Admonition';
+import { 
+  StepGuide, 
+  Step, 
+  EnhancedNote,
+  styles 
+} from '@site/src/components/documentation';
 
-# Using Cleanuperr just for failed imports (torrent and usenet)
+# Managing Failed Imports
 
-1. Set `QUEUECLEANER__ENABLED` to `true`.
-2. Set `QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES` to a desired value.
-3. Optionally set failed import message patterns to ignore using `QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__<NUMBER>`.
-4. Set `DOWNLOAD_CLIENT` to `none`(works only for usenet) or `disabled` (works for both usenet and torrent).
+Automatically handle downloads that fail to import properly into your *arr applications using the Queue Cleaner's strike system.
 
-<Important>
-    When `DOWNLOAD_CLIENT=disabled`, no other action involving a download client would work (e.g. content blocking, removing stalled downloads, excluding private trackers).
+<div className={styles.documentationPage}>
 
-    When the download client is set to `disabled`, the queue cleaner will be able to remove items that are failed to be imported even if there is no download client configured. This means that all downloads, including private ones, will be completely removed.
+<div className={styles.section}>
 
-    Setting `DOWNLOAD_CLIENT=disabled` means you don't care about seeding, ratio, H&R and potentially losing your private tracker account.
-</Important>
+<StepGuide>
+  <Step title="Enable Queue Cleaner">
+    Use **Cleanuparr** with `Queue Cleaner` enabled.
+  </Step>
+
+  <Step title="Configure Strike System">
+    Configure `Failed Import Max Strikes` to set how many failed attempts before removal.
+  </Step>
+
+  <Step title="Automated Processing">
+    The **Queue Cleaner** will monitor import failures and apply strikes as described in the [How it works](/docs/how_it_works) section.
+  </Step>
+</StepGuide>
+
+<EnhancedNote>
+This scenario focuses on handling import failures. Other features can be combined by configuring additional Queue Cleaner settings.
+</EnhancedNote>
+
+</div>
+
+</div>

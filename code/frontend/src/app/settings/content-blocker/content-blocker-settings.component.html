@@ -1,0 +1,348 @@
+<!-- Toast notifications handled by central toast container -->
+
+<p-card styleClass="settings-card h-full">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+      <div class="header-title-container">
+        <h2 class="card-title m-0">Content Blocker Configuration</h2>
+        <span class="card-subtitle">Configure automatic content filtering and blocking</span>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-ban text-xl"></i>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="card-content">
+    <!-- Loading/Error State Component -->
+    <app-loading-error-state
+      *ngIf="contentBlockerLoading() || contentBlockerLoadError()"
+      [loading]="contentBlockerLoading()"
+      [error]="contentBlockerLoadError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+
+    <!-- Form Content - only shown when not loading and no error -->
+    <form *ngIf="!contentBlockerLoading() && !contentBlockerLoadError()" [formGroup]="contentBlockerForm" class="p-fluid">
+      <!-- Main Settings -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('enabled')" 
+             title="Click for documentation"></i>
+          Enable Content Blocker
+        </label>
+        <div class="field-input">
+          <p-checkbox formControlName="enabled" [binary]="true" inputId="cbEnabled"></p-checkbox>
+          <small class="form-helper-text">When enabled, the content blocker will run according to the schedule</small>
+        </div>
+      </div>
+
+      <!-- Scheduling Mode Toggle -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('useAdvancedScheduling')" 
+             title="Click for documentation"></i>
+          Scheduling Mode
+        </label>
+        <div class="field-input">
+          <p-selectButton
+            formControlName="useAdvancedScheduling"
+            [options]="scheduleModeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [allowEmpty]="false"
+            [multiple]="false"
+          >
+          </p-selectButton>
+          <small class="form-helper-text">Choose between basic scheduling or advanced cron expression</small>
+        </div>
+      </div>
+
+      <!-- Basic Schedule Controls - shown when useAdvancedScheduling is false -->
+      <div class="field-row" formGroupName="jobSchedule" *ngIf="!contentBlockerForm.get('useAdvancedScheduling')?.value">
+        <label class="field-label">
+          Run Schedule
+        </label>
+        <div>
+          <div class="field-input schedule-input flex flex-wrap">
+            <span class="schedule-label">Every</span>
+            <p-select 
+              formControlName="every"
+              [options]="getScheduleValueOptions()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select interval"
+            ></p-select>
+
+            <p-selectButton
+              formControlName="type"
+              [options]="scheduleUnitOptions"
+              optionLabel="label"
+              optionValue="value"
+              [allowEmpty]="false"
+              [multiple]="false"
+            >
+            </p-selectButton>
+          </div>
+          <small *ngIf="hasNestedError('jobSchedule', 'every', 'required')" class="p-error">This field is required</small>
+          <small class="form-helper-text">How often the content blocker should run</small>
+        </div>
+      </div>
+
+      <!-- Advanced Schedule Controls - shown when useAdvancedScheduling is true -->
+      <div class="field-row" *ngIf="contentBlockerForm.get('useAdvancedScheduling')?.value">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('cronExpression')" 
+             title="Click for documentation"></i>
+          Cron Expression
+        </label>
+        <div>
+          <div class="field-input">
+            <input type="text" pInputText formControlName="cronExpression" placeholder="0 0/5 * ? * * *" />
+          </div>
+          <small *ngIf="contentBlockerForm.get('cronExpression')?.hasError('required') && contentBlockerForm.get('cronExpression')?.touched" class="p-error">Cron expression is required</small>
+          <small class="form-helper-text">Enter a valid Quartz cron expression (e.g., "0 0/5 * ? * * *" runs every 5 minutes)</small>
+        </div>
+      </div>
+
+      <!-- Content Blocker Specific Settings -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('ignorePrivate')" 
+             title="Click for documentation"></i>
+          Ignore Private
+        </label>
+        <div class="field-input">
+          <p-checkbox formControlName="ignorePrivate" [binary]="true"></p-checkbox>
+          <small class="form-helper-text">When enabled, private torrents will be skipped</small>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('deletePrivate')" 
+             title="Click for documentation"></i>
+          Delete Private
+        </label>
+        <div class="field-input">
+          <p-checkbox formControlName="deletePrivate" [binary]="true"></p-checkbox>
+          <small class="form-helper-text">When enabled, private torrents will be deleted</small>
+        </div>
+      </div>
+
+      <!-- Arr Service Settings in Accordion -->
+      <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
+        <!-- Sonarr Settings -->
+        <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="0">
+          <p-accordion-header>Sonarr Settings</p-accordion-header>
+          <p-accordion-content>
+            <div formGroupName="sonarr">
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('sonarr.enabled')" 
+                     title="Click for documentation"></i>
+                  Enable Sonarr Blocklist
+                </label>
+                <div class="field-input">
+                  <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+                  <small class="form-helper-text">When enabled, the Sonarr blocklist will be used for content filtering</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('sonarr.blocklistPath')" 
+                     title="Click for documentation"></i>
+                  Blocklist Path
+                </label>
+                <p-fluid>
+                  <div class="field-input">
+                    <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+                  </div>
+                  <small *ngIf="hasNestedError('sonarr', 'blocklistPath', 'required')" class="p-error">Path is required when Sonarr blocklist is enabled</small>
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </p-fluid>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('sonarr.blocklistType')" 
+                     title="Click for documentation"></i>
+                  Blocklist Type
+                </label>
+                <div class="field-input">
+                  <p-select
+                    formControlName="blocklistType"
+                    [options]="[
+                      { label: 'Blacklist', value: 'Blacklist' },
+                      { label: 'Whitelist', value: 'Whitelist' }
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                  ></p-select>
+                  <small class="form-helper-text"
+                    >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+                  >
+                </div>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- Radarr Settings -->
+        <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="1">
+          <p-accordion-header>Radarr Settings</p-accordion-header>
+          <p-accordion-content>
+            <div formGroupName="radarr">
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('radarr.enabled')" 
+                     title="Click for documentation"></i>
+                  Enable Radarr Blocklist
+                </label>
+                <div class="field-input">
+                  <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+                  <small class="form-helper-text">When enabled, the Radarr blocklist will be used for content filtering</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('radarr.blocklistPath')" 
+                     title="Click for documentation"></i>
+                  Blocklist Path
+                </label>
+                <p-fluid>
+                  <div class="field-input">
+                    <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+                  </div>
+                  <small *ngIf="hasNestedError('radarr', 'blocklistPath', 'required')" class="p-error">Path is required when Radarr blocklist is enabled</small>
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </p-fluid>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('radarr.blocklistType')" 
+                     title="Click for documentation"></i>
+                  Blocklist Type
+                </label>
+                <div class="field-input">
+                  <p-select
+                    formControlName="blocklistType"
+                    [options]="[
+                      { label: 'Blacklist', value: 'Blacklist' },
+                      { label: 'Whitelist', value: 'Whitelist' }
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                  ></p-select>
+                  <small class="form-helper-text"
+                    >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+                  >
+                </div>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+
+        <!-- Lidarr Settings -->
+        <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="2">
+          <p-accordion-header>Lidarr Settings</p-accordion-header>
+          <p-accordion-content>
+            <div formGroupName="lidarr">
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('lidarr.enabled')" 
+                     title="Click for documentation"></i>
+                  Enable Lidarr Blocklist
+                </label>
+                <div class="field-input">
+                  <p-checkbox formControlName="enabled" [binary]="true"></p-checkbox>
+                  <small class="form-helper-text">When enabled, the Lidarr blocklist will be used for content filtering</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('lidarr.blocklistPath')" 
+                     title="Click for documentation"></i>
+                  Blocklist Path
+                </label>
+                <p-fluid>
+                  <div class="field-input">
+                    <input pInputText formControlName="blocklistPath" placeholder="Path to blocklist file or URL" />
+                  </div>
+                  <small *ngIf="hasNestedError('lidarr', 'blocklistPath', 'required')" class="p-error">Path is required when Lidarr blocklist is enabled</small>
+                  <small class="form-helper-text">Path to the blocklist file or URL</small>
+                </p-fluid>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label">
+                  <i class="pi pi-info-circle field-info-icon" 
+                     (click)="openFieldDocs('lidarr.blocklistType')" 
+                     title="Click for documentation"></i>
+                  Blocklist Type
+                </label>
+                <div class="field-input">
+                  <p-select
+                    formControlName="blocklistType"
+                    [options]="[
+                      { label: 'Blacklist', value: 'Blacklist' },
+                      { label: 'Whitelist', value: 'Whitelist' }
+                    ]"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                  ></p-select>
+                  <small class="form-helper-text"
+                    >Type of blocklist: Blacklist (block matches) or Whitelist (only allow matches)</small
+                  >
+                </div>
+              </div>
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+      </p-accordion>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button
+          pButton
+          type="button"
+          label="Save"
+          icon="pi pi-save"
+          class="p-button-primary"
+          [disabled]="(!contentBlockerForm.dirty || !hasActualChanges) || contentBlockerForm.invalid || contentBlockerSaving()"
+          [loading]="contentBlockerSaving()"
+          (click)="saveContentBlockerConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Reset"
+          icon="pi pi-refresh"
+          class="p-button-secondary p-button-outlined ml-2"
+          (click)="resetContentBlockerConfig()"
+        ></button>
+      </div>
+    </form>
+  </div>
+</p-card> 

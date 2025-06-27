@@ -1,0 +1,275 @@
+---
+sidebar_position: 2
+---
+
+import { Note, Important } from '@site/src/components/Admonition';
+
+# Installation Guide
+
+This guide will walk you through the installation process for Cleanuparr. Cleanuparr can be installed in several ways depending on your preference and system configuration.
+
+<Note>
+For most users, we recommend the Docker installation method as it provides the most consistent experience across all platforms.
+</Note> 
+
+## Table of Contents
+
+- [Docker Installation (Recommended)](#docker-installation-recommended)
+  - [Docker Run Method](#docker-run-method)
+  - [Docker Compose Method](#docker-compose-method)
+- [Windows Installation](#windows-installation)
+  - [Windows Installer](#windows-installer)
+  - [Windows Portable](#windows-portable)
+- [macOS Installation](#macos-installation)
+  - [macOS Installer](#macos-installer)
+  - [macOS Portable](#macos-portable)
+- [Linux Installation](#linux-installation)
+- [Post Installation](#post-installation)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Docker Installation (Recommended)
+
+Docker is the preferred installation method as it ensures all dependencies are correctly installed and provides consistent behavior across all platforms.
+
+### Prerequisites
+- Docker (version 20.10 or newer)
+- Docker Compose (optional, for compose method)
+
+### Docker Run Method
+
+The simplest way to run Cleanuparr is with a single Docker command:
+
+#### Option 1: GitHub Container Registry (Recommended)
+```bash
+docker run -d --name cleanuparr \
+  --restart unless-stopped \
+  -p 11011:11011 \
+  -v /path/to/config:/config \
+  -e PORT=11011 \
+  -e BASE_PATH= \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e UMASK=022 \
+  -e TZ=Etc/UTC \
+  ghcr.io/cleanuparr:latest
+```
+
+#### Option 2: DockerHub
+```bash
+docker run -d --name cleanuparr \
+  --restart unless-stopped \
+  -p 11011:11011 \
+  -v /path/to/config:/config \
+  -e PORT=11011 \
+  -e BASE_PATH= \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e UMASK=022 \
+  -e TZ=Etc/UTC \
+  cleanuparr/cleanuparr:latest
+```
+
+### Docker Compose Method
+
+For easier management, create a `docker-compose.yml` file:
+
+#### Option 1: GitHub Container Registry
+```yaml
+services:
+  cleanuparr:
+    image: ghcr.io/cleanuparr/cleanuparr:latest
+    container_name: cleanuparr
+    restart: unless-stopped
+    ports:
+      - "11011:11011"
+    volumes:
+      - /path/to/config:/config
+    environment:
+      - PORT=11011
+      - BASE_PATH=
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Etc/UTC
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | 11011 | Port for the web interface |
+| `BASE_PATH` | *(empty)* | Base path for reverse proxy setups |
+| `PUID` | 1000 | User ID for file permissions |
+| `PGID` | 1000 | Group ID for file permissions |
+| `UMASK` | 022 | File creation mask |
+| `TZ` | Etc/UTC | Timezone setting |
+
+### Volume Mounts
+
+| Container Path | Description |
+|----------------|-------------|
+| `/config` | Configuration files and database |
+
+<Note>
+Replace `/path/to/config` with your desired configuration directory path on the host system.
+</Note>
+
+---
+
+## Windows Installation
+
+### Windows Installer
+
+The easiest way to install Cleanuparr on Windows is using the provided installer.
+
+#### Installation Steps
+1. Download the Windows installer (`.exe`) from the [GitHub Releases](https://github.com/Cleanuparr/Cleanuparr/releases) page
+2. Double-click the downloaded `.exe` file to start installation
+3. **Important**: When Windows Defender SmartScreen appears, click "More info" and then "Run anyway"
+4. Follow the on-screen instructions to complete installation
+5. Cleanuparr will be installed as a Windows service and start automatically
+
+#### Default Configuration
+- **Web Interface**: `http://localhost:11011`
+- **Service Name**: Cleanuparr
+- **Installation Directory**: `C:\Program Files\Cleanuparr\`
+- **Configuration**: `C:\ProgramFiles\Cleanuparr\config\`
+
+### Windows Portable
+
+For users who prefer a portable installation:
+
+1. Download the `Cleanuparr-{version}-win-amd64.zip` from [GitHub Releases](https://github.com/Cleanuparr/Cleanuparr/releases)
+2. Extract the zip file to your desired directory (e.g., `C:\Tools\Cleanuparr\`)
+3. Run `Cleanuparr.exe` to start the application
+4. Access the web interface at `http://localhost:11011`
+
+<Note>
+The portable version requires manual startup and doesn't install as a Windows service.
+</Note>
+
+---
+
+## macOS Installation
+
+### macOS Installer
+
+Cleanuparr provides native macOS installers for both Intel and Apple Silicon Macs.
+
+#### Installation Steps
+1. Download the appropriate `.pkg` installer from [GitHub Releases](https://github.com/Cleanuparr/Cleanuparr/releases):
+   - `Cleanuparr-{version}-macos-intel.pkg` for Intel Macs
+   - `Cleanuparr-{version}-macos-arm64.pkg` for Apple Silicon Macs
+2. Double-click the downloaded `.pkg` file
+3. When macOS shows a security warning, go to **System Settings → Privacy & Security**
+4. Scroll down and click **"Open Anyway"** to proceed with installation
+5. Follow the installation prompts
+6. Cleanuparr will be installed as a system service and start automatically
+
+#### Default Configuration
+- **Web Interface**: `http://localhost:11011`
+- **Application**: `/Applications/Cleanuparr.app`
+- **Configuration**: `/Applications/Cleanuparr.app/Contents/MacOS/config/`
+- **Service**: Managed by `launchd`
+
+<Important>
+macOS will show security warnings for unsigned applications. This is normal - click "Open Anyway" in System Settings to proceed.
+</Important>
+
+### macOS Portable
+
+For users who prefer a portable installation:
+
+1. Download the appropriate zip file from [GitHub Releases](https://github.com/Cleanuparr/Cleanuparr/releases):
+   - `Cleanuparr-{version}-osx-amd64.zip` for Intel Macs  
+   - `Cleanuparr-{version}-osx-arm64.zip` for Apple Silicon Macs
+2. Extract the zip file to your desired directory
+3. Open Terminal and navigate to the extracted directory
+4. Make the binary executable: `chmod +x Cleanuparr`
+5. Run: `./Cleanuparr`
+6. Access the web interface at `http://localhost:11011`
+
+---
+
+## Linux Installation
+
+Linux users can use the portable executables, as we don't provide distribution-specific packages.
+
+### Portable Installation
+
+1. Download the appropriate zip file from [GitHub Releases](https://github.com/Cleanuparr/Cleanuparr/releases):
+   - `Cleanuparr-{version}-linux-amd64.zip` for x86_64 systems
+   - `Cleanuparr-{version}-linux-arm64.zip` for ARM64 systems  
+2. Extract the zip file:
+   ```bash
+   unzip Cleanuparr-{version}-linux-amd64.zip
+   cd Cleanuparr-{version}-linux-amd64/
+   ```
+3. Make the binary executable:
+   ```bash
+   chmod +x Cleanuparr
+   ```
+4. Run Cleanuparr:
+   ```bash
+   ./Cleanuparr
+   ```
+5. Access the web interface at `http://localhost:11011`
+
+### Running as a Service (Systemd)
+
+To run Cleanuparr as a systemd service:
+
+1. Create a service file:
+   ```bash
+   sudo nano /etc/systemd/system/cleanuparr.service
+   ```
+
+2. Add the following content:
+   ```ini
+   [Unit]
+   Description=Cleanuparr
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=cleanuparr
+   Group=cleanuparr
+   ExecStart=/opt/cleanuparr/Cleanuparr
+   WorkingDirectory=/opt/cleanuparr
+   Restart=always
+   RestartSec=5
+   Environment=PORT=11011
+   Environment=BASE_PATH=
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. Create a dedicated user:
+   ```bash
+   sudo useradd -r -s /bin/false cleanuparr
+   ```
+
+4. Move Cleanuparr to `/opt/cleanuparr` and set ownership:
+   ```bash
+   sudo mkdir -p /opt/cleanuparr
+   sudo cp Cleanuparr /opt/cleanuparr/
+   sudo chown -R cleanuparr:cleanuparr /opt/cleanuparr
+   ```
+
+5. Enable and start the service:
+   ```bash
+   sudo systemctl enable cleanuparr
+   sudo systemctl start cleanuparr
+   ```
+
+---
+
+## Post Installation
+
+#### Default Configuration
+- **Web Interface**: `http://localhost:11011`
+- **Base Path**: *(empty)* (for reverse proxy setups, change `BASE_PATH` environment variable)
+- **Configuration Location**: Varies by platform and installation method

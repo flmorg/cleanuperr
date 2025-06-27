@@ -1,0 +1,89 @@
+<div class="layout-wrapper">
+  <!-- Global toast container -->
+  <app-toast-container></app-toast-container>
+  
+  <!-- Global confirmation dialog -->
+  <p-confirmDialog></p-confirmDialog>
+  <!-- Main layout with sidebar and content -->
+  <div class="layout-main">
+    <!-- Desktop Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-top-line"></div>
+      
+      <!-- Shared Sidebar Content -->
+      <app-sidebar-content 
+        [menuItems]="menuItems" 
+        [isMobile]="false">
+      </app-sidebar-content>
+    </div>
+    
+    <!-- Content Area -->
+    <div class="layout-content">
+      <!-- Content Header / Top Bar -->
+      <div class="top-bar">
+        <div class="top-color-line"></div>
+        <div class="topbar-section left">
+          <button pButton class="p-button-text sidebar-toggle-mobile" 
+                  icon="pi pi-bars" 
+                  (click)="mobileSidebarVisible.set(true)"></button>
+        </div>
+        <!-- <div class="topbar-section center">
+          <div class="version-bar">
+            <div class="version-item">
+              <i class="pi pi-code-branch version-icon"></i>
+              <span>Version <a href="https://github.com/username/cleanuparr/releases" target="_blank"><span id="version-value">1.0.0</span></a></span>
+            </div>
+            <div class="version-divider"></div>
+            <div class="version-item">
+              <i class="pi pi-cloud-download version-icon"></i>
+              <span>Latest: <a href="https://github.com/username/cleanuparr/releases" target="_blank"><span id="latest-version-value">1.0.0</span></a></span>
+            </div>
+            <div class="version-divider"></div>
+            <div class="version-item">
+              <i class="pi pi-star-fill version-icon star-icon"></i>
+              <span><a href="https://github.com/username/cleanuparr" target="_blank"><span id="github-stars-value">123</span></a></span>
+            </div>
+            <div class="version-divider"></div>
+            <div class="version-item">
+              <i class="pi pi-code version-icon"></i>
+              <span class="developer-credit">Developer: <a href="https://github.com/username" target="_blank">Username</a></span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-section right">
+          <div class="user-info" id="userInfoContainer">
+            <span id="username">User</span>
+            <a href="#" id="logoutLink" class="logout-btn"><i class="pi pi-sign-out"></i></a>
+          </div>
+        </div> -->
+      </div>
+      
+      <!-- Main Content -->
+      <div class="layout-content-inner">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Mobile Sidebar using PrimeNG sidebar component -->
+  <p-drawer 
+    styleClass="mobile-sidebar" 
+    [visible]="mobileSidebarVisible()" 
+    (visibleChange)="mobileSidebarVisible.set($event)" 
+    [dismissible]="true" 
+    [showCloseIcon]="false"
+    position="left">
+    <ng-template #headless>
+      <div class="mobile-sidebar-content">
+        <div class="sidebar-top-line"></div>
+        
+        <!-- Shared Sidebar Content for Mobile -->
+        <app-sidebar-content 
+          [menuItems]="menuItems" 
+          [isMobile]="true"
+          (navItemClicked)="mobileSidebarVisible.set(false)">
+        </app-sidebar-content>
+      </div>
+    </ng-template>
+  </p-drawer>
+</div>

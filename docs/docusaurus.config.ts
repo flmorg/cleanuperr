@@ -3,15 +3,15 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Cleanuperr',
-  tagline: 'Cleaning arrs since \'24.',
-  favicon: 'img/16.png',
+  title: 'Cleanuparr',
+  tagline: 'Cleaning *arrs since \'24.',
+  favicon: 'img/favicon.ico',
 
-  url: 'https://flmorg.github.io',
-  baseUrl: '/cleanuperr/',
+  url: 'https://cleanuparr.github.io',
+  baseUrl: '/cleanuparr/',
 
-  organizationName: 'flmorg',
-  projectName: 'cleanuperr',
+  organizationName: 'Cleanuparr',
+  projectName: 'Cleanuparr',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -42,10 +42,10 @@ const config: Config = {
       respectPrefersColorScheme: false,
     },
     navbar: {
-      title: 'Cleanuperr',
+      title: 'Cleanuparr',
       logo: {
-        alt: 'Cleanuperr Logo',
-        src: 'img/cleanuperr.svg',
+        alt: 'Cleanuparr Logo',
+        src: 'img/cleanuparr.svg',
       },
       items: [
         {
@@ -56,7 +56,12 @@ const config: Config = {
           activeBasePath: '/docs',
         },
         {
-          href: 'https://github.com/flmorg/cleanuperr',
+          to: '/support',
+          label: 'Support',
+          position: 'left',
+        },
+        {
+          href: 'https://github.com/Cleanuparr/Cleanuparr',
           label: 'GitHub',
           position: 'right',
         },
@@ -70,12 +75,13 @@ const config: Config = {
     footer: {
       style: 'dark',
       links: [],
-      copyright: `Copyright © ${new Date().getFullYear()} Cleanuperr. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Cleanuparr. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
     },
+    /*
     algolia: {
       // The application ID provided by Algolia
       appId: 'Y4APRVTFUQ',
@@ -98,6 +104,7 @@ const config: Config = {
 
       //... other Algolia params
     },
+    */
   } satisfies Preset.ThemeConfig,
 };
 

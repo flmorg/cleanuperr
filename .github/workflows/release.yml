@@ -1,11 +1,164 @@
+name: Release Build
+
 on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: false
+        default: ''
 
 jobs:
-  release:
-    uses: flmorg/universal-workflows/.github/workflows/dotnet.release.yml@main
-    with:
-      githubContext: ${{ toJSON(github) }}
+  # Validate release
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      app_version: ${{ steps.version.outputs.app_version }}
+      release_version: ${{ steps.version.outputs.release_version }}
+      is_tag: ${{ steps.version.outputs.is_tag }}
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version info
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" =~ ^refs/tags/ ]]; then
+            # Tag event
+            release_version=${GITHUB_REF##refs/tags/}
+            app_version=${release_version#v}
+            is_tag=true
+          elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+            # Manual workflow with version
+            app_version="${{ github.event.inputs.version }}"
+            release_version="v$app_version"
+            is_tag=false
+          else
+            # Manual workflow without version
+            app_version="0.0.1-dev-$(date +%Y%m%d-%H%M%S)"
+            release_version="v$app_version"
+            is_tag=false
+          fi
+          
+          echo "app_version=$app_version" >> $GITHUB_OUTPUT
+          echo "release_version=$release_version" >> $GITHUB_OUTPUT
+          echo "is_tag=$is_tag" >> $GITHUB_OUTPUT
+          
+          echo "🏷️ Release Version: $release_version"
+          echo "📱 App Version: $app_version"
+          echo "🔖 Is Tag: $is_tag"
+
+  # Build portable executables
+  build-executables:
+    needs: validate
+    uses: ./.github/workflows/build_executable.yml
     secrets: inherit
+
+  # Build Windows installer
+  build-windows-installer:
+    needs: validate
+    uses: ./.github/workflows/build-windows-installer.yml
+    secrets: inherit
+
+  # Build macOS Intel installer
+  build-macos-intel:
+    needs: validate
+    uses: ./.github/workflows/build-macos-intel-installer.yml
+    secrets: inherit
+
+  # Build macOS ARM installer
+  build-macos-arm:
+    needs: validate
+    uses: ./.github/workflows/build-macos-arm-installer.yml
+    secrets: inherit
+
+  # Create GitHub release
+  create-release:
+    needs: [validate, build-executables, build-windows-installer, build-macos-intel, build-macos-arm]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Get vault secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_HOST }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets:
+            secrets/data/github repo_readonly_pat | REPO_READONLY_PAT
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "📦 Downloaded artifacts:"
+          find ./artifacts -type f -name "*.zip" -o -name "*.pkg" -o -name "*.exe" | sort
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Cleanuparr ${{ needs.validate.outputs.release_version }}
+          tag_name: ${{ needs.validate.outputs.release_version }}
+          token: ${{ env.REPO_READONLY_PAT }}
+          make_latest: true
+          generate_release_notes: true
+          prerelease: ${{ contains(needs.validate.outputs.app_version, '-') }}
+          files: |
+            ./artifacts/**/*.zip
+            ./artifacts/**/*.pkg
+            ./artifacts/**/*.exe
+
+  # Summary job
+  summary:
+    needs: [validate, build-executables, build-windows-installer, build-macos-intel, build-macos-arm]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Build Summary
+        run: |
+          echo "## 🏗️ Cleanuparr Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ needs.validate.outputs.release_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**App Version**: ${{ needs.validate.outputs.app_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Is Tag**: ${{ needs.validate.outputs.is_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check job results
+          if [[ "${{ needs.build-executables.result }}" == "success" ]]; then
+            echo "✅ **Portable Executables**: Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Portable Executables**: ${{ needs.build-executables.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.build-windows-installer.result }}" == "success" ]]; then
+            echo "✅ **Windows Installer**: Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Windows Installer**: ${{ needs.build-windows-installer.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.build-macos-intel.result }}" == "success" ]]; then
+            echo "✅ **macOS Intel Installer**: Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **macOS Intel Installer**: ${{ needs.build-macos-intel.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.build-macos-arm.result }}" == "success" ]]; then
+            echo "✅ **macOS ARM Installer**: Success" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **macOS ARM Installer**: ${{ needs.build-macos-arm.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Build completed!**" >> $GITHUB_STEP_SUMMARY 

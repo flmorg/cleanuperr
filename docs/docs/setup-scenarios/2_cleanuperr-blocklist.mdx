@@ -1,13 +1,40 @@
 import { Note } from '@site/src/components/Admonition';
+import { 
+  StepGuide, 
+  Step, 
+  EnhancedNote,
+  styles 
+} from '@site/src/components/documentation';
 
-# Using Cleanuperr's blocklist feature (torrent)
+# Using Cleanuparr's Content Blocker
 
-1. Set both `QUEUECLEANER__ENABLED` and `CONTENTBLOCKER__ENABLED` to `true` in your environment variables.
-2. Configure and enable either a **blacklist** or a **whitelist** as described in the [Arr settings](/docs/category/arrs-settings) section.
-3. Once configured, cleanuperr will perform the following tasks:
-   - Execute the **Content Blocker** job, as explained in the [How it works](/docs/how_it_works) section.
-   - Execute the **Queue Cleaner** job, as explained in the [How it works](/docs/how_it_works) section.
+Configure Cleanuparr's Content Blocker feature to automatically filter downloads based on custom blocklists.
 
-<Note>
-    This scenario is an example for blocking malicious files. Other features can be included here by configuring the environment variables.
-</Note>
+<div className={styles.documentationPage}>
+
+<div className={styles.section}>
+
+<StepGuide>
+  <Step title="Enable Content Blocker">
+    Use **Cleanuparr** with `Content Blocker` enabled.
+  </Step>
+
+  <Step title="Configure Blocklist">
+    Configure the `Blocklist Path` to use a blacklist:
+    - [blacklist](https://raw.githubusercontent.com/Cleanuparr/Cleanuparr/refs/heads/main/blacklist), or
+    - [permissive blacklist](https://raw.githubusercontent.com/Cleanuparr/Cleanuparr/refs/heads/main/blacklist_permissive), or
+    - create your own
+  </Step>
+
+  <Step title="Automated Processing">
+    The **Content Blocker** will perform a cleanup process as described in the [How it works](/docs/how_it_works) section.
+  </Step>
+</StepGuide>
+
+<EnhancedNote>
+This scenario is an example for blocking malicious files. Other features can be included here by configuring the environment variables.
+</EnhancedNote>
+
+</div>
+
+</div>

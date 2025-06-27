@@ -1,0 +1,238 @@
+<!-- Toast notifications handled by central toast container -->
+
+<p-card styleClass="settings-card h-full">
+  <ng-template pTemplate="header">
+    <div class="flex align-items-center justify-content-between p-3 border-bottom-1 surface-border">
+      <div class="header-title-container">
+        <h2 class="card-title m-0">General Configuration</h2>
+        <span class="card-subtitle">Configure general application settings</span>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-cog text-xl"></i>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="card-content">
+    <!-- Loading/Error Component -->
+    <app-loading-error-state
+      *ngIf="generalLoading() || generalError()"
+      [loading]="generalLoading()"
+      [error]="generalError()"
+      loadingMessage="Loading settings..."
+      errorMessage="Could not connect to server"
+    ></app-loading-error-state>
+
+          <!-- Settings Form -->
+      <form *ngIf="!generalLoading() && !generalError()" [formGroup]="generalForm" class="p-fluid">
+        <!-- Display Support Banner -->
+        <div class="field-row">
+          <label class="field-label">
+            <i class="pi pi-info-circle field-info-icon" 
+               (click)="openFieldDocs('displaySupportBanner')"
+               title="View documentation for support banner display">
+            </i>
+            Display Support Banner
+          </label>
+          <div class="field-input">
+            <p-checkbox formControlName="displaySupportBanner" [binary]="true" inputId="displaySupportBanner"></p-checkbox>
+            <small class="form-helper-text">Show the support section on the dashboard with links to GitHub and sponsors</small>
+          </div>
+        </div>
+
+        <!-- Dry Run -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('dryRun')"
+             title="View documentation for dry run mode">
+          </i>
+          Dry Run
+        </label>
+        <div class="field-input">
+          <p-checkbox formControlName="dryRun" [binary]="true" inputId="dryRun"></p-checkbox>
+          <small class="form-helper-text">When enabled, no changes will be made to the system</small>
+        </div>
+      </div>
+
+      <!-- HTTP Settings -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('httpMaxRetries')"
+             title="View documentation for HTTP retry configuration">
+          </i>
+          Maximum HTTP Retries
+        </label>
+        <div>
+          <div class="field-input">
+            <p-inputNumber
+              formControlName="httpMaxRetries"
+              inputId="httpMaxRetries"
+              [showButtons]="true"
+              [min]="0"
+              buttonLayout="horizontal"
+            ></p-inputNumber>
+          </div>
+          <small *ngIf="hasError('httpMaxRetries', 'required')" class="p-error">This field is required</small>
+          <small *ngIf="hasError('httpMaxRetries', 'max')" class="p-error">Maximum value is 5</small>
+          <small class="form-helper-text">Number of retry attempts for failed HTTPS requests</small>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('httpTimeout')"
+             title="View documentation for HTTP timeout configuration">
+          </i>
+          HTTP Timeout (seconds)
+        </label>
+        <div>
+          <div class="field-input">
+            <p-inputNumber
+              formControlName="httpTimeout"
+              inputId="httpTimeout"
+              [showButtons]="true"
+              [min]="1"
+              buttonLayout="horizontal"
+            ></p-inputNumber>
+          </div>
+          <small *ngIf="hasError('httpTimeout', 'required')" class="p-error">This field is required</small>
+          <small *ngIf="hasError('httpTimeout', 'max')" class="p-error">Maximum value is 100</small>
+          <small class="form-helper-text">Timeout duration for HTTP requests in seconds</small>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('httpCertificateValidation')"
+             title="View documentation for certificate validation options">
+          </i>
+          Certificate Validation
+        </label>
+        <div class="field-input">
+          <p-select
+            formControlName="httpCertificateValidation"
+            inputId="httpCertificateValidation"
+            [options]="certificateValidationOptions"
+            optionLabel="label"
+            optionValue="value"
+          ></p-select>
+          <small class="form-helper-text">Enable or disable certificate validation for HTTPS requests</small>
+        </div>
+      </div>
+
+      <!-- Search Settings -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('searchEnabled')"
+             title="View documentation for automatic search functionality">
+          </i>
+          Enable Search
+        </label>
+        <div class="field-input">
+          <p-checkbox formControlName="searchEnabled" [binary]="true" inputId="searchEnabled"></p-checkbox>
+          <small class="form-helper-text">When enabled, the application will trigger a search after removing a download</small>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('searchDelay')"
+             title="View documentation for search delay configuration">
+          </i>
+          Search Delay (seconds)
+        </label>
+        <div>
+          <div class="field-input">
+            <p-inputNumber
+              formControlName="searchDelay"
+              inputId="searchDelay"
+              [showButtons]="true"
+              [min]="1"
+              buttonLayout="horizontal"
+            ></p-inputNumber>
+          </div>
+          <small *ngIf="hasError('searchDelay', 'required')" class="p-error">This field is required</small>
+          <small *ngIf="hasError('searchDelay', 'max')" class="p-error">Maximum value is 300</small>
+          <small class="form-helper-text">Delay between search operations in seconds</small>
+        </div>
+      </div>
+
+      <!-- Log Level -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('logLevel')"
+             title="View documentation for log level configuration">
+          </i>
+          Log Level
+        </label>
+        <div class="field-input">
+          <p-select 
+            formControlName="logLevel" 
+            inputId="logLevel" 
+            [options]="logLevelOptions"
+            optionLabel="label"
+            optionValue="value"
+          ></p-select>
+          <small class="form-helper-text">Select the minimum log level to display</small>
+        </div>
+      </div>
+
+      <!-- Ignored Downloads -->
+      <div class="field-row">
+        <label class="field-label">
+          <i class="pi pi-info-circle field-info-icon" 
+             (click)="openFieldDocs('ignoredDownloads')"
+             title="View documentation for download ignore patterns">
+          </i>
+          Ignored Downloads
+        </label>
+        <div class="field-input">
+          <p-autocomplete
+            formControlName="ignoredDownloads"
+            inputId="ignoredDownloads"
+            multiple
+            fluid
+            [typeahead]="false"
+            placeholder="Add download pattern and press enter"
+          ></p-autocomplete>
+          <small class="form-helper-text">Downloads matching these patterns will be ignored (e.g. hash, tag, category, label, tracker)</small>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="card-footer mt-3">
+        <button
+          pButton
+          type="button"
+          label="Save"
+          icon="pi pi-save"
+          class="p-button-primary"
+          [disabled]="(!generalForm.dirty || !hasActualChanges) || generalForm.invalid || generalSaving()"
+          [loading]="generalSaving()"
+          (click)="saveGeneralConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Reset"
+          icon="pi pi-refresh"
+          class="p-button-secondary p-button-outlined ml-2"
+          (click)="resetGeneralConfig()"
+        ></button>
+      </div>
+    </form>
+  </div>
+</p-card>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog 
+  [style]="{ width: '500px', maxWidth: '90vw' }"
+  [baseZIndex]="10000">
+</p-confirmDialog>

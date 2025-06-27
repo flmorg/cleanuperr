@@ -1,0 +1,160 @@
+---
+sidebar_position: 3
+---
+
+import { Note } from '@site/src/components/Admonition';
+import { 
+  StepGuide, 
+  Step, 
+  EnhancedNote,
+  styles 
+} from '@site/src/components/documentation';
+
+# FreeBSD
+
+Build Cleanuparr from source on FreeBSD systems with full dependency management and native compilation.
+
+<EnhancedNote>
+The preferred method of installation method is using Docker.
+</EnhancedNote>
+
+<div className={styles.documentationPage}>
+
+<div className={styles.section}>
+
+<StepGuide>
+  <Step title="Install Dependencies">
+Install the required packages and set up the development environment:
+
+```bash
+# Install basic dependencies
+pkg install -y git icu libinotify libunwind wget node npm
+```
+  </Step>
+
+  <Step title="Set up .NET SDK">
+Download and configure the .NET SDK for FreeBSD:
+
+```bash
+# Navigate to home directory
+cd ~
+
+# Set up variables for cleaner commands
+DOTNET_VERSION="v9.0.104-amd64-freebsd-14"
+DOTNET_BASE_URL="https://github.com/Thefrank/dotnet-freebsd-crossbuild/releases/download"
+
+# Download .NET SDK
+wget -q "${DOTNET_BASE_URL}/${DOTNET_VERSION}/dotnet-sdk-9.0.104-freebsd-x64.tar.gz"
+
+# Set up .NET environment
+export DOTNET_ROOT=$(pwd)/.dotnet
+mkdir -p "$DOTNET_ROOT"
+tar zxf dotnet-sdk-9.0.104-freebsd-x64.tar.gz -C "$DOTNET_ROOT"
+export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+```
+  </Step>
+
+  <Step title="Install Angular CLI">
+Install Angular CLI globally for frontend build:
+
+```bash
+npm install -g @angular/cli
+```
+  </Step>
+
+  <Step title="Download NuGet Dependencies">
+Download required NuGet packages for FreeBSD:
+
+```bash
+# Create NuGet directory
+mkdir -p /tmp/nuget
+
+# Set up variables for package URLs
+NUGET_BASE_URL="${DOTNET_BASE_URL}/${DOTNET_VERSION}"
+RUNTIME_VERSION="9.0.3"
+
+# Download required packages
+wget -q -P /tmp/nuget/ \
+  "${NUGET_BASE_URL}/Microsoft.AspNetCore.App.Runtime.freebsd-x64.${RUNTIME_VERSION}.nupkg"
+
+wget -q -P /tmp/nuget/ \
+  "${NUGET_BASE_URL}/Microsoft.NETCore.App.Host.freebsd-x64.${RUNTIME_VERSION}.nupkg"
+
+wget -q -P /tmp/nuget/ \
+  "${NUGET_BASE_URL}/Microsoft.NETCore.App.Runtime.freebsd-x64.${RUNTIME_VERSION}.nupkg"
+```
+  </Step>
+
+  <Step title="Configure NuGet Sources">
+Add NuGet package sources:
+
+```bash
+# Add local NuGet source
+dotnet nuget add source /tmp/nuget --name tmp
+
+# Add GitHub NuGet source
+# Note: Generate a PAT at https://github.com/settings/tokens
+dotnet nuget add source \
+  --username <YOUR_USERNAME> \
+  --password <YOUR_PERSONAL_ACCESS_TOKEN> \
+  --store-password-in-clear-text \
+  --name Cleanuparr \
+  https://nuget.pkg.github.com/Cleanuparr/index.json
+```
+
+**Important:** Replace `<YOUR_USERNAME>` and `<YOUR_PERSONAL_ACCESS_TOKEN>` with your actual GitHub credentials.
+  </Step>
+
+  <Step title="Clone and Build Frontend">
+Clone the repository and build the frontend:
+
+```bash
+# Clone the project
+git clone https://github.com/Cleanuparr/Cleanuparr.git
+cd Cleanuparr
+
+# Build the frontend
+cd code/frontend
+npm ci
+npm run build
+cd ../..
+```
+  </Step>
+
+  <Step title="Build Backend Application">
+Copy frontend assets and build the backend:
+
+```bash
+# Copy frontend build to backend
+mkdir -p code/backend/Cleanuparr.Api/wwwroot
+cp -r code/frontend/dist/ui/browser/* \
+  code/backend/Cleanuparr.Api/wwwroot/
+
+# Build and publish the backend
+dotnet publish code/backend/Cleanuparr.Api/Cleanuparr.Api.csproj \
+  -c Release \
+  --self-contained \
+  -o artifacts \
+  /p:PublishSingleFile=true
+
+# Move to final destination
+mv artifacts/Cleanuparr /example/directory/
+```
+  </Step>
+
+  <Step title="Run the Application">
+Make the binary executable and start Cleanuparr:
+
+```bash
+cd /example/directory
+chmod +x Cleanuparr
+./Cleanuparr
+```
+
+The application will start and be available at `http://localhost:11011` by default.
+  </Step>
+</StepGuide>
+
+</div>
+
+</div>
