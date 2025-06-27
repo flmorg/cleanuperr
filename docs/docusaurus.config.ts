@@ -8,7 +8,7 @@ const config: Config = {
   favicon: 'img/favicon.ico',
 
   url: 'https://cleanuparr.github.io',
-  baseUrl: '/cleanuparr/',
+  baseUrl: '/Cleanuparr/',
 
   organizationName: 'Cleanuparr',
   projectName: 'Cleanuparr',

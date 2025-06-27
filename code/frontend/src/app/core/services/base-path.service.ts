@@ -26,7 +26,7 @@ export class ApplicationPathService {
       return 'http://localhost:3000';
     }
     
-    return 'https://cleanuparr.github.io/cleanuparr';
+    return 'https://cleanuparr.github.io/Cleanuparr';
   }
 
   /**
