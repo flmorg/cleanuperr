@@ -113,7 +113,7 @@ jobs:
             version=${{ env.versionDockerTag }}
           build-args: |
             VERSION=${{ env.version }}
-            PACKAGES_USERNAME=${{ env.PACKAGES_USERNAME }}
+            PACKAGES_USERNAME=${{ secrets.PACKAGES_USERNAME }}
             PACKAGES_PAT=${{ env.PACKAGES_PAT }}
           outputs: |
             type=image
