@@ -4,6 +4,7 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import Heading from "@theme/Heading";
+import SupportBanner from "../components/support/SupportBanner";
 
 import styles from "./index.module.css";
 
@@ -36,6 +37,11 @@ export default function Home(): ReactNode {
       title={`${siteConfig.title}`}
     >
       <HomepageHeader />
+      <main>
+        <div className="container" style={{ padding: '2rem 0' }}>
+          <SupportBanner />
+        </div>
+      </main>
     </Layout>
   );
 }

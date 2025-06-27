@@ -56,6 +56,11 @@ const config: Config = {
           activeBasePath: '/docs',
         },
         {
+          to: '/support',
+          label: 'Support',
+          position: 'left',
+        },
+        {
           href: 'https://github.com/Cleanuparr/Cleanuparr',
           label: 'GitHub',
           position: 'right',
