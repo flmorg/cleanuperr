@@ -110,8 +110,8 @@ jobs:
           tag_name: ${{ needs.validate.outputs.release_version }}
           token: ${{ env.REPO_READONLY_PAT }}
           make_latest: true
+          target_commitish: main
           generate_release_notes: true
-          prerelease: ${{ contains(needs.validate.outputs.app_version, '-') }}
           files: |
             ./artifacts/**/*.zip
             ./artifacts/**/*.pkg
