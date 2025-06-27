@@ -363,8 +363,9 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     const clientType = this.clientForm.get('type')?.value;
     const hostControl = this.clientForm.get('host');
     const usernameControl = this.clientForm.get('username');
+    const urlBaseControl = this.clientForm.get('urlBase');
     
-    if (!hostControl || !usernameControl) return;
+    if (!hostControl || !usernameControl || !urlBaseControl) return;
     
     hostControl.setValidators([
       Validators.required, 
@@ -375,6 +376,11 @@ export class DownloadClientSettingsComponent implements OnDestroy, CanComponentD
     if (clientType === DownloadClientType.Deluge) {
       usernameControl.setValue('');
       usernameControl.clearValidators();
+    }
+    
+    // Set default URL base for Transmission
+    if (clientType === DownloadClientType.Transmission) {
+      urlBaseControl.setValue('transmission');
     }
     
     // Update validation state

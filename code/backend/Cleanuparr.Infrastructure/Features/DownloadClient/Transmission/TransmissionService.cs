@@ -53,9 +53,7 @@ public partial class TransmissionService : DownloadService, ITransmissionService
     )
     {
         UriBuilder uriBuilder = new(_downloadClientConfig.Url);
-        uriBuilder.Path = string.IsNullOrEmpty(_downloadClientConfig.UrlBase)
-            ? $"{uriBuilder.Path.TrimEnd('/')}/rpc"
-            : $"{uriBuilder.Path.TrimEnd('/')}/{_downloadClientConfig.UrlBase.TrimStart('/').TrimEnd('/')}/rpc";
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/rpc";
         _client = new Client(
             _httpClient,
             uriBuilder.Uri.ToString(),
