@@ -12,34 +12,67 @@ Cleanuparr was created primarily to address malicious files, such as `*.lnk` or 
 > **Features:**
 > - Strike system to mark bad downloads.
 > - Remove and block downloads that reached a maximum number of strikes.
-> - Remove and block downloads that are **failing to be imported** by the arrs. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner#failed-import-max-strikes)
-> - Remove and block downloads that are **stalled** or in **metadata downloading** state. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner#stalled-max-strikes)
-> - Remove and block downloads that have a **low download speed** or **high estimated completion time**. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner#slow-max-strikes)
-> - Remove and block downloads blocked by qBittorrent or by Cleanuparr's **Content Blocker**. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/content-blocker)
+> - Remove and block downloads that are **failing to be imported** by the arrs.
+> - Remove and block downloads that are **stalled** or in **metadata downloading** state.
+> - Remove and block downloads that have a **low download speed** or **high estimated completion time**.
+> - Remove and block downloads blocked by qBittorrent or by Cleanuparr's **Content Blocker**.
 > - Automatically trigger a search for downloads removed from the arrs.
-> - Clean up downloads that have been **seeding** for a certain amount of time. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/download-cleaner#seeding-settings)
-> - Remove downloads that are **orphaned**/have no **hardlinks**/are not referenced by the arrs anymore (with [cross-seed](https://www.cross-seed.org/) support). [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/download-cleaner#enable-unlinked-downloads-management)
-> - Notify on strike or download removal. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/notifications)
+> - Clean up downloads that have been **seeding** for a certain amount of time.
+> - Remove downloads that are **orphaned**/have no **hardlinks**/are not referenced by the arrs anymore (with [cross-seed](https://www.cross-seed.org/) support).
+> - Notify on strike or download removal.
 > - Ignore certain torrent hashes, categories, tags or trackers from being processed by Cleanuparr.
 
-Cleanuparr supports both qBittorrent's built-in exclusion features and its own blocklist-based system. Binaries for all platforms are provided, along with Docker images for easy deployment.
+## 🎯 Supported Applications
 
-## Quick Start
+### *Arr Applications
+- **Sonarr** (TV Shows)
+- **Radarr** (Movies)  
+- **Lidarr** (Music)
 
-> [!NOTE]
->
-> 1. **Docker (Recommended)**  
-> Pull the Docker image from `ghcr.io/cleanuparr/cleanuparr:latest`.
->
-> 2. **Unraid (for Unraid users)**  
-> Use the Unraid Community App.
->
-> 3. **Manual Installation (if you're not using Docker)**  
-> Go to [Windows](#windows), [Linux](#linux) or [MacOS](#macos).
+### Download Clients
+- **qBittorrent**
+- **Transmission**
+- **Deluge**
 
-# Docs
+### Platforms
+- **Docker** (Linux, Windows, macOS)
+- **Windows** (Native installer)
+- **macOS** (Intel & Apple Silicon)
+- **Linux** (Portable executable)
+- **Unraid** (Community Apps)
 
-Docs can be found [here](https://cleanuparr.github.io/Cleanuparr/).
+## 🚀 Quick Start
+
+```bash
+docker run -d --name cleanuparr \
+  --restart unless-stopped \
+  -p 11011:11011 \
+  -v /path/to/config:/config \
+  -e PORT=11011 \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e TZ=Etc/UTC \
+  ghcr.io/cleanuparr/cleanuparr:latest
+```
+
+All installation methods are available [here](https://cleanuparr.github.io/Cleanuparr/docs/installation/detailed).
+
+### 🌐 Access the Web Interface
+
+After installation, open your browser and navigate to:
+```
+http://localhost:11011
+```
+
+**Next Steps:** Check out the [📖 Complete Documentation](https://cleanuparr.github.io/Cleanuparr/) for detailed configuration guides and setup instructions.
+
+## 📖 Documentation & Support
+
+- **📚 [Complete Documentation](https://cleanuparr.github.io/Cleanuparr/)** - Installation guides, configuration, and troubleshooting
+- **⚙️ [Configuration Guide](https://cleanuparr.github.io/Cleanuparr/docs/category/configuration)** - Set up download clients, *arr apps, and features
+- **🔧 [Setup Scenarios](https://cleanuparr.github.io/Cleanuparr/docs/category/setup-scenarios)** - Common use cases and examples
+- **💬 [Discord Community](https://discord.gg/SCtMCgtsc4)** - Get help and discuss with other users
+- **🔗 [GitHub Releases](https://github.com/Cleanuparr/Cleanuparr/releases)** - Download binaries and view changelog
 
 # <img style="vertical-align: middle;" width="24px" src="./Logo/256.png" alt="Cleanuparr"> <span style="vertical-align: middle;">Cleanuparr</span> <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/solid/x.svg" height="24px" width="30px" style="vertical-align: middle;"> <span style="vertical-align: middle;">Huntarr</span> <img style="vertical-align: middle;" width="24px" src="https://github.com/plexguide/Huntarr.io/blob/main/frontend/static/logo/512.png?raw=true" alt Huntarr></img>
 
