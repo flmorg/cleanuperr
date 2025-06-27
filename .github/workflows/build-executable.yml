@@ -78,7 +78,7 @@ jobs:
       
       - name: Install dependencies and restore
         run: |
-          dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.PACKAGES_PAT }} --store-password-in-clear-text --name flmorg https://nuget.pkg.github.com/flmorg/index.json
+          dotnet nuget add source --username ${{ github.repository_owner }} --password ${{ secrets.PACKAGES_PAT }} --store-password-in-clear-text --name Cleanuparr https://nuget.pkg.github.com/Cleanuparr/index.json
           dotnet restore code/backend/${{ env.executableName }}/${{ env.executableName }}.csproj
 
       - name: Copy frontend to backend wwwroot

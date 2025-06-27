@@ -81,6 +81,7 @@ const config: Config = {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
     },
+    /*
     algolia: {
       // The application ID provided by Algolia
       appId: 'Y4APRVTFUQ',
@@ -103,6 +104,7 @@ const config: Config = {
 
       //... other Algolia params
     },
+    */
   } satisfies Preset.ThemeConfig,
 };
 
