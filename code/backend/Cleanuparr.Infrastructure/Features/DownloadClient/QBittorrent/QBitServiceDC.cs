@@ -238,6 +238,8 @@ public partial class QBitService
             }
 
             await _dryRunInterceptor.InterceptAsync(ChangeCategory, download.Hash, downloadCleanerConfig.UnlinkedTargetCategory);
+            
+            await _eventPublisher.PublishCategoryChanged(download.Category, downloadCleanerConfig.UnlinkedTargetCategory, downloadCleanerConfig.UnlinkedUseTag);
 
             if (downloadCleanerConfig.UnlinkedUseTag)
             {
@@ -248,8 +250,6 @@ public partial class QBitService
                 _logger.LogInformation("category changed for {name}", download.Name);
                 download.Category = downloadCleanerConfig.UnlinkedTargetCategory;
             }
-
-            await _eventPublisher.PublishCategoryChanged(download.Category, downloadCleanerConfig.UnlinkedTargetCategory, downloadCleanerConfig.UnlinkedUseTag);
         }
     }
 
