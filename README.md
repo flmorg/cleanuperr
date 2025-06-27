@@ -12,14 +12,14 @@ Cleanuparr was created primarily to address malicious files, such as `*.lnk` or 
 > **Features:**
 > - Strike system to mark bad downloads.
 > - Remove and block downloads that reached a maximum number of strikes.
-> - Remove and block downloads that are **failing to be imported** by the arrs. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner/import-failed)
-> - Remove and block downloads that are **stalled** or in **metadata downloading** state. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner/stalled)
-> - Remove and block downloads that have a **low download speed** or **high estimated completion time**. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner/slow)
-> - Remove and block downloads blocked by qBittorrent or by Cleanuparr's **Content Blocker**. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/content-blocker/general)
+> - Remove and block downloads that are **failing to be imported** by the arrs. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner#failed-import-max-strikes)
+> - Remove and block downloads that are **stalled** or in **metadata downloading** state. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner#stalled-max-strikes)
+> - Remove and block downloads that have a **low download speed** or **high estimated completion time**. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/queue-cleaner#slow-max-strikes)
+> - Remove and block downloads blocked by qBittorrent or by Cleanuparr's **Content Blocker**. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/content-blocker)
 > - Automatically trigger a search for downloads removed from the arrs.
-> - Clean up downloads that have been **seeding** for a certain amount of time. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/download-cleaner/seeding)
-> - Remove downloads that are **orphaned**/have no **hardlinks**/are not referenced by the arrs anymore (with [cross-seed](https://www.cross-seed.org/) support). [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/download-cleaner/hardlinks)
-> - Notify on strike or download removal. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/category/notifications)
+> - Clean up downloads that have been **seeding** for a certain amount of time. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/download-cleaner#seeding-settings)
+> - Remove downloads that are **orphaned**/have no **hardlinks**/are not referenced by the arrs anymore (with [cross-seed](https://www.cross-seed.org/) support). [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/download-cleaner#enable-unlinked-downloads-management)
+> - Notify on strike or download removal. [configuration](https://cleanuparr.github.io/Cleanuparr/docs/configuration/notifications)
 > - Ignore certain torrent hashes, categories, tags or trackers from being processed by Cleanuparr.
 
 Cleanuparr supports both qBittorrent's built-in exclusion features and its own blocklist-based system. Binaries for all platforms are provided, along with Docker images for easy deployment.
@@ -39,7 +39,7 @@ Cleanuparr supports both qBittorrent's built-in exclusion features and its own b
 
 # Docs
 
-Docs can be found [here](https://Cleanuparr.github.io/Cleanuparr/).
+Docs can be found [here](https://cleanuparr.github.io/Cleanuparr/).
 
 # <img style="vertical-align: middle;" width="24px" src="./Logo/256.png" alt="Cleanuparr"> <span style="vertical-align: middle;">Cleanuparr</span> <img src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/svgs/solid/x.svg" height="24px" width="30px" style="vertical-align: middle;"> <span style="vertical-align: middle;">Huntarr</span> <img style="vertical-align: middle;" width="24px" src="https://github.com/plexguide/Huntarr.io/blob/main/frontend/static/logo/512.png?raw=true" alt Huntarr></img>
 
