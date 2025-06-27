@@ -1,11 +1,37 @@
-import { Important } from '@site/src/components/Admonition';
+import { Note } from '@site/src/components/Admonition';
+import { 
+  StepGuide, 
+  Step, 
+  EnhancedNote,
+  styles 
+} from '@site/src/components/documentation';
 
-# Using Cleanuparr just for failed imports (torrent and usenet)
+# Managing Failed Imports
 
-1. Enable the `Queue Cleaner`.
-2. Set the `Failed Imports Max Strikes` to a desired value.
-3. Optionally set failed import message patterns to ignore potentially valid items from being processed.
+Automatically handle downloads that fail to import properly into your *arr applications using the Queue Cleaner's strike system.
 
-<Important>
-    When no download client is configured, no other action involving a download client would work (e.g. content blocking, removing stalled downloads or excluding private trackers).
-</Important>
+<div className={styles.documentationPage}>
+
+<div className={styles.section}>
+
+<StepGuide>
+  <Step title="Enable Queue Cleaner">
+    Use **Cleanuparr** with `Queue Cleaner` enabled.
+  </Step>
+
+  <Step title="Configure Strike System">
+    Configure `Failed Import Max Strikes` to set how many failed attempts before removal.
+  </Step>
+
+  <Step title="Automated Processing">
+    The **Queue Cleaner** will monitor import failures and apply strikes as described in the [How it works](/docs/how_it_works) section.
+  </Step>
+</StepGuide>
+
+<EnhancedNote>
+This scenario focuses on handling import failures. Other features can be combined by configuring additional Queue Cleaner settings.
+</EnhancedNote>
+
+</div>
+
+</div>

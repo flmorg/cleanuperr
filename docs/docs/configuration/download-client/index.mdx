@@ -2,11 +2,25 @@
 sidebar_position: 6
 ---
 
+import { 
+  ConfigSection, 
+  styles 
+} from '@site/src/components/documentation';
+
 # Download Client
 
 Configure download client connections for torrents and usenet. Cleanuparr supports qBittorrent, Deluge, and Transmission download clients.
 
-### Enable Download Client {#enable-download-client}
+<div className={styles.documentationPage}>
+
+<div className={styles.section}>
+
+<ConfigSection
+  id="enable-download-client"
+  title="Enable Download Client"
+  description="Controls whether this download client instance is active and will be used by Cleanuparr for operations."
+  icon="🔄"
+>
 
 Controls whether this download client instance is active and will be used by Cleanuparr for operations.
 
@@ -18,21 +32,45 @@ Controls whether this download client instance is active and will be used by Cle
 - Client will be ignored by all Cleanuparr operations.
 - No health checks will be performed.
 
-<hr />
+</ConfigSection>
 
-### Client Name {#client-name}
+<ConfigSection
+  id="client-name"
+  title="Client Name"
+  description="A descriptive name to identify this download client instance in the Cleanuparr interface."
+  icon="🏷️"
+>
 
 A descriptive name to identify this download client instance in the Cleanuparr interface.
 
-<hr />
+</ConfigSection>
 
-### Client Type {#client-type}
+<ConfigSection
+  id="client-type"
+  title="Client Type"
+  description="Specifies which download client software this configuration connects to."
+  icon="📱"
+>
 
 Specifies which download client software this configuration connects to.
 
-<hr />
+</ConfigSection>
 
-### Client Host {#client-host}
+</div>
+
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>🌐</span>
+  Connection Settings
+</h2>
+
+<ConfigSection
+  id="client-host"
+  title="Client Host"
+  description="The complete URL to access your download client's web interface."
+  icon="🖥️"
+>
 
 The complete URL to access your download client's web interface.
 
@@ -44,9 +82,14 @@ The complete URL to access your download client's web interface.
 - `http://192.168.1.100:8112` (local network Deluge)
 - `http://transmission.lan:9091` (local Transmission)
 
-<hr />
+</ConfigSection>
 
-### URL Base Path {#url-base-path}
+<ConfigSection
+  id="url-base-path"
+  title="URL Base Path"
+  description="URL path prefix if your download client runs behind a reverse proxy with a subpath."
+  icon="📂"
+>
 
 URL path prefix if your download client runs behind a reverse proxy with a subpath.
 
@@ -60,10 +103,39 @@ URL path prefix if your download client runs behind a reverse proxy with a subpa
 - `downloads/deluge` → Full URL: `http://domain.com/downloads/deluge`
 - `transmission` → Full URL: `http://domain.com/transmission`
 
-### Username {#username}
+</ConfigSection>
+
+</div>
+
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>🔐</span>
+  Authentication
+</h2>
+
+<ConfigSection
+  id="username"
+  title="Username"
+  description="Username for download client authentication if required."
+  icon="👤"
+>
 
 Username for download client authentication if required.
 
-### Password {#password}
+</ConfigSection>
+
+<ConfigSection
+  id="password"
+  title="Password"
+  description="Password for download client authentication."
+  icon="🔑"
+>
 
 Password for download client authentication.
+
+</ConfigSection>
+
+</div>
+
+</div>

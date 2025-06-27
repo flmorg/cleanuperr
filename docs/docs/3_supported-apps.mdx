@@ -1,13 +1,28 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 ---
 
-# Supported apps
+import { 
+  styles 
+} from '@site/src/components/documentation';
 
-Only the **latest versions** of the following apps are supported, or earlier versions that have the same API as the latest version:
-- qBittorrent
-- Deluge
-- Transmission
-- Sonarr
-- Radarr
-- Lidarr
+# Supported Apps
+
+Cleanuparr integrates with popular *arr applications and download clients for comprehensive media management.
+
+<div className={styles.documentationPage}>
+
+<div className={styles.section}>
+
+<div className={styles.configTable}>
+
+| **Category** | **Application** | **Integration** |
+|--------------|-----------------|-----------------|
+| **Media Management** | Sonarr, Radarr, Lidarr, Readarr, Whisparr | Full API integration for queue monitoring and search triggers |
+| **Download Clients** | qBittorrent, Deluge, Transmission | Complete download management and monitoring |
+
+</div>
+
+</div>
+
+</div>

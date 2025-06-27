@@ -3,40 +3,80 @@ sidebar_position: 1
 ---
 
 import { Note, Warning } from '@site/src/components/Admonition';
+import { 
+  ConfigSection, 
+  EnhancedNote, 
+  EnhancedWarning,
+  styles 
+} from '@site/src/components/documentation';
 
 # General
 
 General configuration settings that apply to the entire Cleanuparr application.
 
-## System Settings
+<div className={styles.documentationPage}>
 
-### Display Support Banner {#display-support-banner}
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>⚙️</span>
+  System Settings
+</h2>
+
+<ConfigSection
+  id="display-support-banner"
+  title="Display Support Banner"
+  icon="🎗️"
+>
 
 Show the support section on the dashboard with links to GitHub and sponsors.
 
-<hr />
+</ConfigSection>
 
-### Dry Run {#dry-run}
+<ConfigSection
+  id="dry-run"
+  title="Dry Run"
+  icon="🧪"
+>
 
 When enabled, logs irreversible operations (like deletions and notifications) without making actual changes. This is useful for testing configurations without affecting your actual downloads.
 
-<hr />
+</ConfigSection>
 
-## HTTP Configuration
+</div>
 
-### HTTP Max Retries {#http-max-retries}
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>🌐</span>
+  HTTP Configuration
+</h2>
+
+<ConfigSection
+  id="http-max-retries"
+  title="HTTP Max Retries"
+  icon="🔄"
+>
 
 The number of times to retry a failed HTTP call. Applies when communicating with *arrs, download clients and other services through HTTP calls.
 
-<hr />
+</ConfigSection>
 
-### HTTP Timeout {#http-timeout}
+<ConfigSection
+  id="http-timeout"
+  title="HTTP Timeout"
+  icon="⏱️"
+>
 
 The number of seconds to wait before failing an HTTP call. Applies to calls to *arrs, download clients, and other services.
 
-<hr />
+</ConfigSection>
 
-### HTTP Certificate Validation {#http-certificate-validation}
+<ConfigSection
+  id="http-certificate-validation"
+  title="HTTP Certificate Validation"
+  icon="🔒"
+>
 
 Controls whether to validate SSL certificates for HTTPS connections. Set to "Disabled" to ignore SSL certificate errors, but this reduces security.
 
@@ -45,41 +85,78 @@ Controls whether to validate SSL certificates for HTTPS connections. Set to "Dis
 - **Disabled for Local Addresses:** Skip validation for local/private IP addresses
 - **Disabled:** Skip all SSL certificate validation
 
-<hr />
+</ConfigSection>
 
-## Search Settings
+</div>
 
-### Search Enabled {#search-enabled}
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>🔍</span>
+  Search Settings
+</h2>
+
+<ConfigSection
+  id="search-enabled"
+  title="Search Enabled"
+  icon="✅"
+>
 
 Enables searching for replacements after a download has been removed from an *arr application.
 
-<Note>
-    If you are using [Huntarr](https://github.com/plexguide/Huntarr.io), you may want to set disable this setting to let Huntarr handle the searching.
-</Note>
+<EnhancedNote>
+If you are using [Huntarr](https://github.com/plexguide/Huntarr.io), you may want to set disable this setting to let Huntarr handle the searching.
+</EnhancedNote>
 
-<hr />
+</ConfigSection>
 
-### Search Delay {#search-delay}
+<ConfigSection
+  id="search-delay"
+  title="Search Delay"
+  icon="⏳"
+>
 
 If searching for replacements is enabled, this setting will delay the searches by the specified number of seconds. This is useful to avoid overwhelming the indexer with too many requests at once.
 
-<Warning>
-    A lower value or `0` will result in faster searches, but may cause issues such as being rate limited or banned by the indexer.
-</Warning>
+<EnhancedWarning>
+A lower value or `0` will result in faster searches, but may cause issues such as being rate limited or banned by the indexer.
+</EnhancedWarning>
 
-<hr />
+</ConfigSection>
 
-## Logging Settings
+</div>
 
-### Log Level {#log-level}
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>📝</span>
+  Logging Settings
+</h2>
+
+<ConfigSection
+  id="log-level"
+  title="Log Level"
+  icon="📊"
+>
 
 Controls the detail level of application logs. Lower levels include all higher level messages.
 
-<hr />
+</ConfigSection>
 
-## Download Management
+</div>
 
-### Ignored Downloads {#ignored-downloads}
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>📦</span>
+  Download Management
+</h2>
+
+<ConfigSection
+  id="ignored-downloads"
+  title="Ignored Downloads"
+  icon="🚯"
+>
 
 Downloads matching these patterns will be ignored during all cleaning operations. Patterns can match any of these:
 - torrent hash
@@ -88,10 +165,16 @@ Downloads matching these patterns will be ignored during all cleaning operations
 - Transmission category (last directory from the save location)
 - torrent tracker domain
 
-Examples:
+**Examples:**
 ```
 fa800a7d7c443a2c3561d1f8f393c089036dade1
 tv-sonarr
 qbit-tag
 mytracker.com
 ```
+
+</ConfigSection>
+
+</div>
+
+</div>

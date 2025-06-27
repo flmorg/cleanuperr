@@ -3,69 +3,114 @@ sidebar_position: 3
 ---
 
 import { Important, Warning } from '@site/src/components/Admonition';
+import { 
+  ConfigSection, 
+  EnhancedImportant, 
+  EnhancedWarning,
+  styles 
+} from '@site/src/components/documentation';
 
 # Queue Cleaner
 
-The Queue Cleaner monitors your download client's queue and automatically removes downloads based on configurable criteria. This helps keep your queue clean and prevents problematic downloads from consuming resources.
+The Queue Cleaner monitors your *arr's queues and automatically removes downloads based on configurable criteria. This helps keep your queue clean and prevents problematic downloads from being stuck.
 
-### Enable Queue Cleaner {#enable-queue-cleaner}
+<div className={styles.documentationPage}>
+
+<div className={styles.section}>
+
+<ConfigSection
+  id="enable-queue-cleaner"
+  title="Enable Queue Cleaner"
+  icon="🔄"
+>
 
 When enabled, the Queue Cleaner will run according to the configured schedule to automatically clean downloads from your download client queue.
 
-<hr />
+</ConfigSection>
 
-### Scheduling Mode {#scheduling-mode}
+<ConfigSection
+  id="scheduling-mode"
+  title="Scheduling Mode"
+  icon="📅"
+>
 
 Choose how to configure the Queue Cleaner schedule:
 - **Basic**: Simple interval-based scheduling (every X minutes/hours/seconds)
 - **Advanced**: Full cron expression control for complex schedules
 
-<hr />
+</ConfigSection>
 
-### Cron Expression {#cron-expression}
+<ConfigSection
+  id="cron-expression"
+  title="Cron Expression"
+  icon="⏲️"
+>
 
-Enter a valid Quartz cron expression to control when the Queue Cleaner runs. The example above runs every 5 minutes.
+Enter a valid Quartz cron expression to control when the Queue Cleaner runs.
 
 **Common Cron Examples:**
 - `0 0/5 * ? * * *` - Every 5 minutes
 - `0 0 * ? * * *` - Every hour
 - `0 0 */6 ? * * *` - Every 6 hours
 
-<hr />
+</ConfigSection>
 
-## Failed Import Settings
+</div>
 
-### Failed Import Max Strikes {#failed-import-max-strikes}
+<div className={styles.section}>
+
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>❌</span>
+  Failed Import Settings
+</h2>
+
+<ConfigSection
+  id="failed-import-max-strikes"
+  title="Failed Import Max Strikes"
+  icon="⚡"
+>
 
 Number of strikes before a failed import download is removed from the queue. Set to 0 to disable failed import cleaning, minimum 3 to enable.
 
-<hr />
+</ConfigSection>
 
-### Failed Import Ignore Private {#failed-import-ignore-private}
+<ConfigSection
+  id="failed-import-ignore-private"
+  title="Failed Import Ignore Private"
+  icon="🔒"
+>
 
 When enabled, private torrents will be skipped during failed import cleaning. This is useful if you want to preserve private tracker content even when imports fail.
 
-<Important>
-    This setting needs a download client to be configured.
-</Important>
+<EnhancedImportant>
+This setting needs a download client to be configured.
+</EnhancedImportant>
 
-<hr />
+</ConfigSection>
 
-### Failed Import Delete Private {#failed-import-delete-private}
+<ConfigSection
+  id="failed-import-delete-private"
+  title="Failed Import Delete Private"
+  icon="🗑️"
+>
 
 When enabled, private torrents that reach the maximum strikes will be deleted from the download client. Use with caution as this will permanently remove the download.
 
-<Warning>
-    Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-</Warning>
+<EnhancedWarning>
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</EnhancedWarning>
 
-<Important>
-    This setting needs a download client to be configured.
-</Important>
+<EnhancedImportant>
+This setting needs a download client to be configured.
+</EnhancedImportant>
 
-<hr />
+</ConfigSection>
 
-### Failed Import Ignored Patterns {#failed-import-ignored-patterns}
+<ConfigSection
+  id="failed-import-ignored-patterns"
+  title="Failed Import Ignored Patterns"
+  icon="📝"
+>
 
 **Examples:**
 - `title mismatch`
@@ -74,98 +119,170 @@ When enabled, private torrents that reach the maximum strikes will be deleted fr
 
 Failed imports containing these patterns in their name will be skipped during cleaning. Useful for avoiding removal of legitimate downloads that may have temporary import issues.
 
-<hr />
+</ConfigSection>
 
-## Stalled Download Settings
+</div>
 
-Stalled downloads are those that have stopped downloading and show no progress.
+<div className={styles.section}>
 
-<Important>
-    These settings need a download client to be configured.
-</Important>
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>⏸️</span>
+  Stalled Download Settings
+</h2>
 
-### Stalled Max Strikes {#stalled-max-strikes}
+<p className={styles.sectionDescription}>
+  Stalled downloads are those that have stopped downloading and show no progress.
+</p>
+
+<EnhancedImportant>
+These settings need a download client to be configured.
+</EnhancedImportant>
+
+<ConfigSection
+  id="stalled-max-strikes"
+  title="Stalled Max Strikes"
+  icon="⚡"
+>
 
 Number of strikes before a stalled download is removed from the queue. Set to 0 to disable stalled download cleaning, minimum 3 to enable.
 
-<hr />
+</ConfigSection>
 
-### Stalled Reset Strikes On Progress {#stalled-reset-strikes-on-progress}
+<ConfigSection
+  id="stalled-reset-strikes-on-progress"
+  title="Stalled Reset Strikes On Progress"
+  icon="🔄"
+>
 
 When enabled, strikes will be reset to zero if the download shows progress again. This prevents removal of downloads that temporarily stall but resume downloading.
 
-<hr />
+</ConfigSection>
 
-### Stalled Ignore Private {#stalled-ignore-private}
+<ConfigSection
+  id="stalled-ignore-private"
+  title="Stalled Ignore Private"
+  icon="🔒"
+>
 
 When enabled, private torrents will be skipped during stalled download cleaning.
 
-<hr />
+</ConfigSection>
 
-### Stalled Delete Private {#stalled-delete-private}
+<ConfigSection
+  id="stalled-delete-private"
+  title="Stalled Delete Private"
+  icon="🗑️"
+>
 
 When enabled, private torrents that reach the maximum strikes will be deleted from the download client.
 
-<Warning>
-    Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-</Warning>
+<EnhancedWarning>
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</EnhancedWarning>
 
-<hr />
+</ConfigSection>
 
-### Downloading Metadata Max Strikes {#downloading-metadata-max-strikes}
+<ConfigSection
+  id="downloading-metadata-max-strikes"
+  title="Downloading Metadata Max Strikes"
+  icon="📊"
+>
 
 Number of strikes before a download stuck in "Downloading Metadata" state is removed (qBittorrent only).
 
-<hr />
+</ConfigSection>
 
-## Slow Download Settings
+</div>
 
-Slow downloads are those downloading below a specified speed threshold.
+<div className={styles.section}>
 
-<Important>
-    These settings need a download client to be configured.
-</Important>
+<h2 className={styles.sectionTitle}>
+  <span className={styles.sectionIcon}>🐌</span>
+  Slow Download Settings
+</h2>
 
-### Slow Max Strikes {#slow-max-strikes}
+<p className={styles.sectionDescription}>
+  Slow downloads are those downloading below a specified speed threshold.
+</p>
+
+<EnhancedImportant>
+These settings need a download client to be configured.
+</EnhancedImportant>
+
+<ConfigSection
+  id="slow-max-strikes"
+  title="Slow Max Strikes"
+  icon="⚡"
+>
 
 Number of strikes before a slow download is removed from the queue. Set to 0 to disable slow download cleaning, minimum 3 to enable.
 
-<hr />
+</ConfigSection>
 
-### Slow Reset Strikes On Progress {#slow-reset-strikes-on-progress}
+<ConfigSection
+  id="slow-reset-strikes-on-progress"
+  title="Slow Reset Strikes On Progress"
+  icon="🔄"
+>
 
 When enabled, strikes will be reset if the download speed improves above the minimum threshold.
 
-<hr />
+</ConfigSection>
 
-### Slow Ignore Private {#slow-ignore-private}
+<ConfigSection
+  id="slow-ignore-private"
+  title="Slow Ignore Private"
+  icon="🔒"
+>
 
 When enabled, private torrents will be skipped during slow download cleaning.
 
-<hr />
+</ConfigSection>
 
-### Slow Delete Private {#slow-delete-private}
+<ConfigSection
+  id="slow-delete-private"
+  title="Slow Delete Private"
+  icon="🗑️"
+>
 
 When enabled, private torrents that reach the maximum strikes will be deleted from the download client.
 
-<Warning>
-    Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
-</Warning>
+<EnhancedWarning>
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</EnhancedWarning>
 
-<hr />
+</ConfigSection>
 
-### Slow Min Speed {#slow-min-speed}
+<ConfigSection
+  id="slow-min-speed"
+  title="Slow Min Speed"
+  icon="📊"
+>
 
 Minimum download speed threshold. Downloads consistently below this speed will accumulate strikes.
 
-<hr />
+</ConfigSection>
 
-### Slow Max Time {#slow-max-time}
+<ConfigSection
+  id="slow-max-time"
+  title="Slow Max Time"
+  icon="⏰"
+>
 
 Maximum time (in hours) that a download can take. Set to 0 to disable time-based removal. This works alongside the speed threshold.
 
-<hr />
+</ConfigSection>
 
-### Slow Ignore Above Size {#slow-ignore-above-size}
+<ConfigSection
+  id="slow-ignore-above-size"
+  title="Slow Ignore Above Size"
+  icon="📦"
+>
 
 Downloads larger than this size will be ignored by slow download cleaning. Large files often download slower and may need more time to complete.
+
+</ConfigSection>
+
+</div>
+
+</div>
