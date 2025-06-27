@@ -5,7 +5,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Cleanuparr',
   tagline: 'Cleaning *arrs since \'24.',
-  favicon: 'img/16.png',
+  favicon: 'img/favicon.ico',
 
   url: 'https://cleanuparr.github.io',
   baseUrl: '/cleanuparr/',
