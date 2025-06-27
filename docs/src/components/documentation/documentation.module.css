@@ -410,6 +410,45 @@
   line-height: 1.6;
 }
 
+/* Code blocks within steps */
+.stepContent pre,
+.stepContent code {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.stepContent pre {
+  background: var(--ifm-code-background);
+  border: 1px solid var(--doc-border-color);
+  border-radius: var(--doc-radius-sm);
+  padding: var(--doc-spacing-md);
+  margin: var(--doc-spacing-md) 0;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stepContent pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* Ensure step content doesn't overflow its container */
+.stepContent {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
 /* Quick Access Navigation */
 .quickNav {
   background: var(--doc-bg-secondary);
