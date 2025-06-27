@@ -17,10 +17,4 @@ import { TagModule } from 'primeng/tag';
   styleUrl: './support-section.component.scss'
 })
 export class SupportSectionComponent {
-
-  onDonateClick(event: Event): void {
-    event.preventDefault();
-    // TODO: Navigate to donation page when implemented
-    console.log('Donation functionality coming soon!');
-  }
 } 
