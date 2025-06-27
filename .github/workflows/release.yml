@@ -116,60 +116,6 @@ jobs:
             ./artifacts/**/*.zip
             ./artifacts/**/*.pkg
             ./artifacts/**/*.exe
-          body: |
-            # Cleanuparr ${{ needs.validate.outputs.release_version }}
-            
-            ## 📦 Downloads
-            
-            ### Windows
-            - **Windows Installer**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-Setup.exe` (Recommended)
-            - **Portable**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-win-amd64.zip`
-            
-            ### macOS
-            - **Intel Installer**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-macos-intel.pkg`
-            - **Apple Silicon Installer**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-macos-arm64.pkg`
-            - **Intel Portable**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-osx-amd64.zip`
-            - **Apple Silicon Portable**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-osx-arm64.zip`
-            
-            ### Linux
-            - **AMD64**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-linux-amd64.zip`
-            - **ARM64**: `Cleanuparr-${{ needs.validate.outputs.app_version }}-linux-arm64.zip`
-            
-            ## 🚀 Installation
-            
-            ### Windows
-            1. Download and run `Cleanuparr-${{ needs.validate.outputs.app_version }}-Setup.exe`
-            2. Follow the installation wizard
-            3. Choose whether to install as a Windows Service
-            4. Access the web interface at http://localhost:11011
-            
-            ### macOS
-            1. Download the appropriate `.pkg` file for your Mac
-            2. Double-click to install
-            3. The app will be installed to `/Applications/Cleanuparr.app`
-            4. Run from Applications or use the Desktop shortcut
-            5. Access the web interface at http://localhost:11011
-            
-            ### Linux
-            1. Download and extract the appropriate zip file
-            2. Make the executable runnable: `chmod +x Cleanuparr`
-            3. Run: `./Cleanuparr`
-            4. Access the web interface at http://localhost:11011
-            
-            ## 📋 Requirements
-            - **Windows**: Windows 10/11 or Windows Server 2019+
-            - **macOS**: macOS 10.15+ (Intel) or macOS 11.0+ (Apple Silicon)
-            - **Linux**: Any modern Linux distribution with glibc 2.17+
-            
-            ## 🔧 Configuration
-            Edit `appsettings.json` to configure:
-            - Port number (HTTP_PORTS)
-            - Logging settings
-            - Application-specific settings
-            
-            ---
-            
-            For support and documentation, visit: https://github.com/Cleanuparr/Cleanuparr
 
   # Summary job
   summary:
