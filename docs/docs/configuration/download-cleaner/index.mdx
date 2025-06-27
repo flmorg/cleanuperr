@@ -26,7 +26,6 @@ These settings need a download client to be configured.
 <ConfigSection
   id="enable-download-cleaner"
   title="Enable Download Cleaner"
-  description="When enabled, the Download Cleaner will run according to the configured schedule to automatically clean completed downloads from your download client."
   icon="🔄"
 >
 
@@ -37,7 +36,6 @@ When enabled, the Download Cleaner will run according to the configured schedule
 <ConfigSection
   id="scheduling-mode"
   title="Scheduling Mode"
-  description="Choose how to configure the Download Cleaner schedule"
   icon="📅"
 >
 
@@ -50,7 +48,6 @@ Choose how to configure the Download Cleaner schedule:
 <ConfigSection
   id="cron-expression"
   title="Cron Expression"
-  description="Enter a valid Quartz.NET cron expression to control when the Download Cleaner runs"
   icon="⏲️"
 >
 
@@ -79,7 +76,6 @@ Enter a valid Quartz.NET cron expression to control when the Download Cleaner ru
 <ConfigSection
   id="delete-private-torrents"
   title="Delete Private Torrents"
-  description="When enabled, private torrents will be deleted from the download client when they meet the cleanup criteria"
   icon="🗑️"
 >
 
@@ -115,7 +111,6 @@ Both Max Ratio and Max Seed Time cannot be disabled (-1) at the same time. At le
 <ConfigSection
   id="category-name"
   title="Category Name"
-  description="The name of the download client category to apply these rules to"
   icon="🏷️"
 >
 
@@ -131,7 +126,6 @@ The name of the download client category to apply these rules to. Must match the
 <ConfigSection
   id="max-ratio"
   title="Max Ratio"
-  description="Maximum ratio to seed before considering the download for removal"
   icon="📊"
 >
 
@@ -142,7 +136,6 @@ Maximum ratio to seed before considering the download for removal. Set to `-1` t
 <ConfigSection
   id="min-seed-time"
   title="Min Seed Time (hours)"
-  description="Minimum time in hours to seed before removing a download that has reached the max ratio"
   icon="⏰"
 >
 
@@ -153,7 +146,6 @@ Minimum time in hours to seed before removing a download that has reached the ma
 <ConfigSection
   id="max-seed-time"
   title="Max Seed Time (hours)"
-  description="Maximum time in hours to seed before removing a download regardless of ratio"
   icon="⏳"
 >
 
@@ -177,7 +169,6 @@ Maximum time in hours to seed before removing a download regardless of ratio. Se
 <ConfigSection
   id="enable-unlinked-download-handling"
   title="Enable Unlinked Download Handling"
-  description="Enable management of downloads that have no hardlinks remaining"
   icon="🔍"
 >
 
@@ -192,7 +183,6 @@ If you are using Docker, make sure to mount the downloads directory the same way
 <ConfigSection
   id="target-category"
   title="Target Category"
-  description="Category to move unlinked downloads to"
   icon="🎯"
 >
 
@@ -203,7 +193,6 @@ Category to move unlinked downloads to.
 <ConfigSection
   id="use-tag"
   title="Use Tag"
-  description="When enabled, uses a tag instead of category for marking unlinked downloads (qBittorrent only)"
   icon="🏷️"
 >
 
@@ -214,7 +203,6 @@ When enabled, uses a tag instead of category for marking unlinked downloads (qBi
 <ConfigSection
   id="ignored-root-directory"
   title="Ignored Root Directory"
-  description="Root directory to ignore when checking for unlinked downloads"
   icon="📁"
 >
 
@@ -236,7 +224,6 @@ For the example above, the ignored root directory should be set to `/data/downlo
 <ConfigSection
   id="unlinked-categories"
   title="Unlinked Categories"
-  description="Categories to check for unlinked downloads"
   icon="📋"
 >
 
