@@ -23,7 +23,7 @@ export class ApplicationPathService {
    */
   getDocumentationBaseUrl(): string {
     if (isDevMode()) {
-      return 'http://localhost:3000';
+      return 'http://localhost:3000/Cleanuparr';
     }
     
     return 'https://cleanuparr.github.io/Cleanuparr';
@@ -59,7 +59,7 @@ export class ApplicationPathService {
    */
   buildDocumentationUrl(section: string, fieldAnchor?: string): string {
     const baseUrl = this.getDocumentationBaseUrl();
-    let url = `${baseUrl}/cleanuparr/docs/configuration/${section}`;
+    let url = `${baseUrl}/docs/configuration/${section}`;
     
     if (fieldAnchor) {
       url += `#${fieldAnchor}`;
