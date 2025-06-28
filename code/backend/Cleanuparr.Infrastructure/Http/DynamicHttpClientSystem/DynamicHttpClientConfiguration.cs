@@ -1,6 +1,5 @@
 using System.Net;
 using Cleanuparr.Infrastructure.Services;
-using Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;

@@ -175,7 +175,7 @@ public class BackgroundJobManager : IHostedService
             IOperableTrigger triggerObj = (IOperableTrigger)TriggerBuilder.Create()
                 .WithIdentity("ValidationTrigger")
                 .StartNow()
-                .WithCronSchedule(cronExpression)
+                .WithCronSchedule(cronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
                 .Build();
 
             IReadOnlyList<DateTimeOffset> nextFireTimes = TriggerUtils.ComputeFireTimes(triggerObj, null, 2);
@@ -197,26 +197,26 @@ public class BackgroundJobManager : IHostedService
             }
         }
         
-        // Create cron trigger
+        // Create main cron trigger with consistent naming (matches JobManagementService)
         var trigger = TriggerBuilder.Create()
             .WithIdentity($"{typeName}-trigger")
             .ForJob(jobKey)
             .WithCronSchedule(cronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
-            .StartNow()
             .Build();
         
-        // Create startup trigger to run immediately
+        // Schedule the main trigger
+        await _scheduler.ScheduleJob(trigger, cancellationToken);
+        
+        // Trigger immediate execution for startup using a one-time trigger
         var startupTrigger = TriggerBuilder.Create()
-            .WithIdentity($"{typeName}-startup-trigger")
+            .WithIdentity($"{typeName}-startup-{DateTimeOffset.UtcNow.Ticks}")
             .ForJob(jobKey)
             .StartNow()
             .Build();
         
-        // Schedule job with both triggers
-        await _scheduler.ScheduleJob(trigger, cancellationToken);
         await _scheduler.ScheduleJob(startupTrigger, cancellationToken);
         
-        _logger.LogInformation("Added triggers for job {name} with cron expression {CronExpression}", 
+        _logger.LogInformation("Added trigger for job {name} with cron expression {CronExpression} and immediate startup execution", 
             typeName, cronExpression);
     }
     
