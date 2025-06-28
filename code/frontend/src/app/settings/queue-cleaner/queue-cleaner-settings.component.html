@@ -116,7 +116,16 @@
       <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
         <!-- Failed Import Settings -->
         <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="0">
-          <p-accordion-header>Failed Import Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Failed Import Settings
+          </p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="failedImport">
               <label class="field-label">
@@ -196,7 +205,16 @@
 
         <!-- Stalled Settings -->
         <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="1">
-          <p-accordion-header>Stalled Download Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Stalled Download Settings
+          </p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">
@@ -270,7 +288,16 @@
 
         <!-- Downloading Metadata Settings -->
         <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="2">
-          <p-accordion-header>Downloading Metadata Settings (qBittorrent only)</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Downloading Metadata Settings (qBittorrent only)
+          </p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="stalled">
               <label class="field-label">
@@ -302,7 +329,16 @@
 
         <!-- Slow Download Settings -->
         <p-accordion-panel [disabled]="!queueCleanerForm.get('enabled')?.value" [value]="3">
-          <p-accordion-header>Slow Download Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Slow Download Settings
+          </p-accordion-header>
           <p-accordion-content>
             <div class="field-row" formGroupName="slow">
               <label class="field-label">
