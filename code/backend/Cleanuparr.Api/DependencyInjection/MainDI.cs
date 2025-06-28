@@ -83,9 +83,17 @@ public static class MainDI
     /// </summary>
     private static IServiceCollection AddHealthServices(this IServiceCollection services) =>
         services
-            // Register the health check service
+            // Register the existing health check service for download clients
             .AddSingleton<IHealthCheckService, HealthCheckService>()
             
             // Register the background service for periodic health checks
-            .AddHostedService<HealthCheckBackgroundService>();
+            .AddHostedService<HealthCheckBackgroundService>()
+            
+            // Add ASP.NET Core health checks
+            .AddHealthChecks()
+                .AddCheck<ApplicationHealthCheck>("application", tags: ["liveness"])
+                .AddCheck<DatabaseHealthCheck>("database", tags: ["readiness"])
+                .AddCheck<FileSystemHealthCheck>("filesystem", tags: ["readiness"])
+                .AddCheck<DownloadClientsHealthCheck>("download_clients", tags: ["readiness"])
+            .Services;
 }

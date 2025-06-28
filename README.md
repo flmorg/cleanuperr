@@ -55,7 +55,7 @@ docker run -d --name cleanuparr \
   ghcr.io/cleanuparr/cleanuparr:latest
 ```
 
-All installation methods are available [here](https://cleanuparr.github.io/Cleanuparr/docs/installation/detailed).
+For Docker Compose, health checks, and other installation methods, see our [Complete Installation Guide](https://cleanuparr.github.io/Cleanuparr/docs/installation/detailed).
 
 ### 🌐 Access the Web Interface
 

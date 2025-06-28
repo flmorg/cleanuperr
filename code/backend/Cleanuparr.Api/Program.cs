@@ -4,6 +4,8 @@ using Cleanuparr.Api;
 using Cleanuparr.Api.DependencyInjection;
 using Cleanuparr.Infrastructure.Logging;
 using Cleanuparr.Shared.Helpers;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -146,6 +148,19 @@ logConfig.MinimumLevel.ControlledBy(levelSwitch);
 logConfig.WriteTo.Sink(signalRSink);
 
 Log.Logger = logConfig.CreateLogger();
+
+// Configure health check endpoints before the API configuration
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("liveness"),
+    ResponseWriter = HealthCheckResponseWriter.WriteMinimalPlaintext
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("readiness"),
+    ResponseWriter = HealthCheckResponseWriter.WriteMinimalPlaintext
+});
 
 app.ConfigureApi();
 
