@@ -37,11 +37,10 @@ Docker is the preferred installation method as it ensures all dependencies are c
 - Docker (version 20.10 or newer)
 - Docker Compose (optional, for compose method)
 
-### Docker Run Method
+### Docker Run
 
 The simplest way to run Cleanuparr is with a single Docker command:
 
-#### Option 1: GitHub Container Registry (Recommended)
 ```bash
 docker run -d --name cleanuparr \
   --restart unless-stopped \
@@ -56,22 +55,7 @@ docker run -d --name cleanuparr \
   ghcr.io/cleanuparr:latest
 ```
 
-#### Option 2: DockerHub
-```bash
-docker run -d --name cleanuparr \
-  --restart unless-stopped \
-  -p 11011:11011 \
-  -v /path/to/config:/config \
-  -e PORT=11011 \
-  -e BASE_PATH= \
-  -e PUID=1000 \
-  -e PGID=1000 \
-  -e UMASK=022 \
-  -e TZ=Etc/UTC \
-  cleanuparr/cleanuparr:latest
-```
-
-### Docker Compose Method
+### Docker Compose
 
 For easier management, create a `docker-compose.yml` file:
 
