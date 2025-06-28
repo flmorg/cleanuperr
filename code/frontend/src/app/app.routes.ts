@@ -14,6 +14,7 @@ export const routes: Routes = [
   { path: 'sonarr', loadComponent: () => import('./settings/sonarr/sonarr-settings.component').then(m => m.SonarrSettingsComponent) },
   { path: 'radarr', loadComponent: () => import('./settings/radarr/radarr-settings.component').then(m => m.RadarrSettingsComponent) },
   { path: 'lidarr', loadComponent: () => import('./settings/lidarr/lidarr-settings.component').then(m => m.LidarrSettingsComponent) },
+  { path: 'readarr', loadComponent: () => import('./settings/readarr/readarr-settings.component').then(m => m.ReadarrSettingsComponent) },
   { path: 'download-clients', loadComponent: () => import('./settings/download-client/download-client-settings.component').then(m => m.DownloadClientSettingsComponent) },
   { path: 'notifications', loadComponent: () => import('./settings/notification-settings/notification-settings.component').then(m => m.NotificationSettingsComponent) },
 ];

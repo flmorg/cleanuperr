@@ -40,9 +40,6 @@ public static class ApiDI
         // Add health status broadcaster
         services.AddHostedService<HealthStatusBroadcaster>();
         
-        // Add logging initializer service
-        services.AddHostedService<LoggingInitializer>();
-        
         services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new OpenApiInfo

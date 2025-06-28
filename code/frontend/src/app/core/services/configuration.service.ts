@@ -6,6 +6,7 @@ import { ContentBlockerConfig, JobSchedule as ContentBlockerJobSchedule, Schedul
 import { SonarrConfig } from "../../shared/models/sonarr-config.model";
 import { RadarrConfig } from "../../shared/models/radarr-config.model";
 import { LidarrConfig } from "../../shared/models/lidarr-config.model";
+import { ReadarrConfig } from "../../shared/models/readarr-config.model";
 import { ClientConfig, DownloadClientConfig, CreateDownloadClientDto } from "../../shared/models/download-client-config.model";
 import { ArrInstance, CreateArrInstanceDto } from "../../shared/models/arr-config.model";
 import { GeneralConfig } from "../../shared/models/general-config.model";
@@ -328,6 +329,29 @@ export class ConfigurationService {
   }
 
   /**
+   * Get Readarr configuration
+   */
+  getReadarrConfig(): Observable<ReadarrConfig> {
+    return this.http.get<ReadarrConfig>(this.ApplicationPathService.buildApiUrl('/configuration/readarr')).pipe(
+      catchError((error) => {
+        console.error("Error fetching Readarr config:", error);
+        return throwError(() => new Error("Failed to load Readarr configuration"));
+      })
+    );
+  }
+  /**
+   * Update Readarr configuration
+   */
+  updateReadarrConfig(config: {failedImportMaxStrikes: number}): Observable<any> {
+    return this.http.put<any>(this.ApplicationPathService.buildApiUrl('/configuration/readarr'), config).pipe(
+      catchError((error) => {
+        console.error("Error updating Readarr config:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to update Readarr configuration"));
+      })
+    );
+  }
+
+  /**
    * Get Download Client configuration
    */
   getDownloadClientConfig(): Observable<DownloadClientConfig> {
@@ -497,6 +521,44 @@ export class ConfigurationService {
       catchError((error) => {
         console.error(`Error deleting Lidarr instance with ID ${id}:`, error);
         return throwError(() => new Error(error.error?.error || `Failed to delete Lidarr instance with ID ${id}`));
+      })
+    );
+  }
+
+  // ===== READARR INSTANCE MANAGEMENT =====
+
+  /**
+   * Create a new Readarr instance
+   */
+  createReadarrInstance(instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.post<ArrInstance>(this.ApplicationPathService.buildApiUrl('/configuration/readarr/instances'), instance).pipe(
+      catchError((error) => {
+        console.error("Error creating Readarr instance:", error);
+        return throwError(() => new Error(error.error?.error || "Failed to create Readarr instance"));
+      })
+    );
+  }
+
+  /**
+   * Update a Readarr instance by ID
+   */
+  updateReadarrInstance(id: string, instance: CreateArrInstanceDto): Observable<ArrInstance> {
+    return this.http.put<ArrInstance>(this.ApplicationPathService.buildApiUrl(`/configuration/readarr/instances/${id}`), instance).pipe(
+      catchError((error) => {
+        console.error(`Error updating Readarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to update Readarr instance with ID ${id}`));
+      })
+    );
+  }
+
+  /**
+   * Delete a Readarr instance by ID
+   */
+  deleteReadarrInstance(id: string): Observable<void> {
+    return this.http.delete<void>(this.ApplicationPathService.buildApiUrl(`/configuration/readarr/instances/${id}`)).pipe(
+      catchError((error) => {
+        console.error(`Error deleting Readarr instance with ID ${id}:`, error);
+        return throwError(() => new Error(error.error?.error || `Failed to delete Readarr instance with ID ${id}`));
       })
     );
   }

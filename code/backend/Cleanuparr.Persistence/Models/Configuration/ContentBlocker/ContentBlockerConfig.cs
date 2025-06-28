@@ -26,11 +26,14 @@ public sealed record ContentBlockerConfig : IJobConfig
     
     public BlocklistSettings Lidarr { get; set; } = new();
     
+    public BlocklistSettings Readarr { get; set; } = new();
+    
     public void Validate()
     {
         ValidateBlocklistSettings(Sonarr, "Sonarr");
         ValidateBlocklistSettings(Radarr, "Radarr");
         ValidateBlocklistSettings(Lidarr, "Lidarr");
+        ValidateBlocklistSettings(Readarr, "Readarr");
     }
     
     private static void ValidateBlocklistSettings(BlocklistSettings settings, string context)

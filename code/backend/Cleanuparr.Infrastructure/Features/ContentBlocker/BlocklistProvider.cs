@@ -95,6 +95,17 @@ public sealed class BlocklistProvider
                 changedCount++;
             }
             
+            // Check and update Lidarr blocklist if needed
+            string readarrHash = GenerateSettingsHash(contentBlockerConfig.Readarr);
+            if (shouldReload || !_configHashes.TryGetValue(InstanceType.Readarr, out string? oldReadarrHash) || readarrHash != oldReadarrHash)
+            {
+                _logger.LogDebug("Loading Readarr blocklist");
+                
+                await LoadPatternsAndRegexesAsync(contentBlockerConfig.Readarr, InstanceType.Readarr);
+                _configHashes[InstanceType.Readarr] = readarrHash;
+                changedCount++;
+            }
+            
             if (changedCount > 0)
             {
                 _logger.LogInformation("Successfully loaded {count} blocklists", changedCount);

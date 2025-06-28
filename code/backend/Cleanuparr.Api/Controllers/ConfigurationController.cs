@@ -309,6 +309,24 @@ public class ConfigurationController : ControllerBase
         }
     }
 
+    [HttpGet("readarr")]
+    public async Task<IActionResult> GetReadarrConfig()
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            var config = await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync(x => x.Type == InstanceType.Readarr);
+            return Ok(config.Adapt<ArrConfigDto>());
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
     [HttpGet("notifications")]
     public async Task<IActionResult> GetNotificationsConfig()
     {
@@ -773,6 +791,37 @@ public class ConfigurationController : ControllerBase
             DataContext.Lock.Release();
         }
     }
+
+    [HttpPut("readarr")]
+    public async Task<IActionResult> UpdateReadarrConfig([FromBody] UpdateReadarrConfigDto newConfigDto)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get existing config
+            var config = await _dataContext.ArrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Readarr);
+
+            config.FailedImportMaxStrikes = newConfigDto.FailedImportMaxStrikes;
+
+            // Validate the configuration
+            config.Validate();
+
+            // Persist the configuration
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(new { Message = "Readarr configuration updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save Readarr configuration");
+            throw;
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
     
     /// <summary>
     /// Updates a job schedule based on configuration changes
@@ -1130,6 +1179,116 @@ public class ConfigurationController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete Lidarr instance with ID {Id}", id);
+            throw;
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpPost("readarr/instances")]
+    public async Task<IActionResult> CreateReadarrInstance([FromBody] CreateArrInstanceDto newInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Readarr config to add the instance to
+            var config = await _dataContext.ArrConfigs
+                .FirstAsync(x => x.Type == InstanceType.Readarr);
+
+            // Create the new instance
+            var instance = new ArrInstance
+            {
+                Enabled = newInstance.Enabled,
+                Name = newInstance.Name,
+                Url = new Uri(newInstance.Url),
+                ApiKey = newInstance.ApiKey,
+                ArrConfigId = config.Id,
+            };
+            
+            // Add to the config's instances collection
+            await _dataContext.ArrInstances.AddAsync(instance);
+            // Save changes
+            await _dataContext.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetReadarrConfig), new { id = instance.Id }, instance.Adapt<ArrInstanceDto>());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create Readarr instance");
+            throw;
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpPut("readarr/instances/{id}")]
+    public async Task<IActionResult> UpdateReadarrInstance(Guid id, [FromBody] CreateArrInstanceDto updatedInstance)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Readarr config and find the instance
+            var config = await _dataContext.ArrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync(x => x.Type == InstanceType.Readarr);
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Readarr instance with ID {id} not found");
+            }
+
+            // Update the instance properties
+            instance.Enabled = updatedInstance.Enabled;
+            instance.Name = updatedInstance.Name;
+            instance.Url = new Uri(updatedInstance.Url);
+            instance.ApiKey = updatedInstance.ApiKey;
+
+            await _dataContext.SaveChangesAsync();
+
+            return Ok(instance.Adapt<ArrInstanceDto>());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update Readarr instance with ID {Id}", id);
+            throw;
+        }
+        finally
+        {
+            DataContext.Lock.Release();
+        }
+    }
+
+    [HttpDelete("readarr/instances/{id}")]
+    public async Task<IActionResult> DeleteReadarrInstance(Guid id)
+    {
+        await DataContext.Lock.WaitAsync();
+        try
+        {
+            // Get the Readarr config and find the instance
+            var config = await _dataContext.ArrConfigs
+                .Include(c => c.Instances)
+                .FirstAsync(x => x.Type == InstanceType.Readarr);
+
+            var instance = config.Instances.FirstOrDefault(i => i.Id == id);
+            if (instance == null)
+            {
+                return NotFound($"Readarr instance with ID {id} not found");
+            }
+
+            // Remove the instance
+            config.Instances.Remove(instance);
+            await _dataContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete Readarr instance with ID {Id}", id);
             throw;
         }
         finally

@@ -1,6 +1,6 @@
 using System.Text;
 using Cleanuparr.Domain.Entities.Arr.Queue;
-using Cleanuparr.Domain.Entities.Radarr;
+using Cleanuparr.Domain.Entities.Readarr;
 using Cleanuparr.Infrastructure.Features.Arr.Interfaces;
 using Cleanuparr.Infrastructure.Features.ItemStriker;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
@@ -12,10 +12,10 @@ using Newtonsoft.Json;
 
 namespace Cleanuparr.Infrastructure.Features.Arr;
 
-public class RadarrClient : ArrClient, IRadarrClient
+public class ReadarrClient : ArrClient, IReadarrClient
 {
-    public RadarrClient(
-        ILogger<ArrClient> logger,
+    public ReadarrClient(
+        ILogger<ReadarrClient> logger,
         IHttpClientFactory httpClientFactory,
         IStriker striker,
         IDryRunInterceptor dryRunInterceptor
@@ -25,17 +25,17 @@ public class RadarrClient : ArrClient, IRadarrClient
 
     protected override string GetQueueUrlPath()
     {
-        return "/api/v3/queue";
+        return "/api/v1/queue";
     }
 
     protected override string GetQueueUrlQuery(int page)
     {
-        return $"page={page}&pageSize=200&includeUnknownMovieItems=true&includeMovie=true";
+        return $"page={page}&pageSize=200&includeUnknownAuthorItems=true&includeAuthor=true&includeBook=true";
     }
 
     protected override string GetQueueDeleteUrlPath(long recordId)
     {
-        return $"/api/v3/queue/{recordId}";
+        return $"/api/v1/queue/{recordId}";
     }
 
     protected override string GetQueueDeleteUrlQuery(bool removeFromClient)
@@ -56,12 +56,12 @@ public class RadarrClient : ArrClient, IRadarrClient
         List<long> ids = items.Select(item => item.Id).ToList();
         
         UriBuilder uriBuilder = new(arrInstance.Url);
-        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v3/command";
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v1/command";
         
-        RadarrCommand command = new()
+        ReadarrCommand command = new()
         {
-            Name = "MoviesSearch",
-            MovieIds = ids,
+            Name = "BookSearch",
+            BookIds = ids,
         };
         
         using HttpRequestMessage request = new(HttpMethod.Post, uriBuilder.Uri);
@@ -90,39 +90,39 @@ public class RadarrClient : ArrClient, IRadarrClient
 
     public override bool IsRecordValid(QueueRecord record)
     {
-        if (record.MovieId is 0)
+        if (record.AuthorId is 0 || record.BookId is 0)
         {
-            _logger.LogDebug("skip | movie id missing | {title}", record.Title);
+            _logger.LogDebug("skip | author id and/or book id missing | {title}", record.Title);
             return false;
         }
         
         return base.IsRecordValid(record);
     }
 
-    private static string GetSearchLog(Uri instanceUrl, RadarrCommand command, bool success, string? logContext)
+    private static string GetSearchLog(Uri instanceUrl, ReadarrCommand command, bool success, string? logContext)
     {
         string status = success ? "triggered" : "failed";
-        string message = logContext ?? $"movie ids: {string.Join(',', command.MovieIds)}";
+        string message = logContext ?? $"book ids: {string.Join(',', command.BookIds)}";
 
-        return $"movie search {status} | {instanceUrl} | {message}";
+        return $"book search {status} | {instanceUrl} | {message}";
     }
 
-    private async Task<string?> ComputeCommandLogContextAsync(ArrInstance arrInstance, RadarrCommand command)
+    private async Task<string?> ComputeCommandLogContextAsync(ArrInstance arrInstance, ReadarrCommand command)
     {
         try
         {
             StringBuilder log = new();
 
-            foreach (long movieId in command.MovieIds)
+            foreach (long bookId in command.BookIds)
             {
-                Movie? movie = await GetMovie(arrInstance, movieId);
+                Book? book = await GetBookAsync(arrInstance, bookId);
 
-                if (movie is null)
+                if (book is null)
                 {
                     return null;
                 }
 
-                log.Append($"[{movie.Title}]");
+                log.Append($"[{book.Title}]");
             }
 
             return log.ToString();
@@ -135,10 +135,10 @@ public class RadarrClient : ArrClient, IRadarrClient
         return null;
     }
 
-    private async Task<Movie?> GetMovie(ArrInstance arrInstance, long movieId)
+    private async Task<Book?> GetBookAsync(ArrInstance arrInstance, long bookId)
     {
         UriBuilder uriBuilder = new(arrInstance.Url);
-        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v3/movie/{movieId}";
+        uriBuilder.Path = $"{uriBuilder.Path.TrimEnd('/')}/api/v1/book/{bookId}";
         
         using HttpRequestMessage request = new(HttpMethod.Get, uriBuilder.Uri);
         SetApiKey(request, arrInstance.ApiKey);
@@ -147,6 +147,6 @@ public class RadarrClient : ArrClient, IRadarrClient
         response.EnsureSuccessStatusCode();
                 
         string responseBody = await response.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<Movie>(responseBody);
+        return JsonConvert.DeserializeObject<Book>(responseBody);
     }
-}
+} 

@@ -1,8 +1,8 @@
 ﻿namespace Cleanuparr.Domain.Entities.Arr.Queue;
 
-public record Image
+public sealed record ReadarrImage
 {
     public required string CoverType { get; init; }
     
-    public required Uri RemoteUrl { get; init; }
+    public required Uri Url { get; init; }
 }

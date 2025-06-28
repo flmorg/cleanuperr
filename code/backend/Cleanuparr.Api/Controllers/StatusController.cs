@@ -52,6 +52,10 @@ public class StatusController : ControllerBase
                 .Include(x => x.Instances)
                 .AsNoTracking()
                 .FirstAsync(x => x.Type == InstanceType.Lidarr);
+            var readarrConfig = await _dataContext.ArrConfigs
+                .Include(x => x.Instances)
+                .AsNoTracking()
+                .FirstAsync(x => x.Type == InstanceType.Readarr);
             
             var status = new
             {
@@ -80,6 +84,10 @@ public class StatusController : ControllerBase
                     Lidarr = new
                     {
                         InstanceCount = lidarrConfig.Instances.Count
+                    },
+                    Readarr = new
+                    {
+                        InstanceCount = readarrConfig.Instances.Count
                     }
                 }
             };
