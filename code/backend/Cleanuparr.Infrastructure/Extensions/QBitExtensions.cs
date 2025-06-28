@@ -1,5 +1,4 @@
 ﻿using Cleanuparr.Infrastructure.Services;
-using Infrastructure.Services;
 using QBittorrent.Client;
 
 namespace Cleanuparr.Infrastructure.Extensions;

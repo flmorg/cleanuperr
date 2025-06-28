@@ -1,10 +1,11 @@
 using System.Collections.Concurrent;
 using Cleanuparr.Infrastructure.Models;
+using Cleanuparr.Infrastructure.Services.Interfaces;
 using Cleanuparr.Infrastructure.Utilities;
-using Infrastructure.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Impl.Matchers;
+using Quartz.Spi;
 
 namespace Cleanuparr.Infrastructure.Services;
 
@@ -22,7 +23,7 @@ public class JobManagementService : IJobManagementService
 
     public async Task<bool> StartJob(JobType jobType, JobSchedule? schedule = null, string? directCronExpression = null)
     {
-        string jobName = jobType.ToJobName();
+        string jobName = jobType.ToString();
         string? cronExpression = null;
         
         // Validate and set the cron expression
@@ -59,60 +60,48 @@ public class JobManagementService : IJobManagementService
             // Check if job exists, create it if it doesn't
             if (!await scheduler.CheckExists(jobKey))
             {
-                _logger.LogInformation("Job {name} does not exist, creating it", jobName);
-                
-                // Create the job based on its type
-                if (!await CreateJobIfNotExists(scheduler, jobType, jobKey))
-                {
-                    _logger.LogError("Failed to create job {name}", jobName);
-                    return false;
-                }
+                _logger.LogError("Job {name} does not exist in scheduler. " +
+                                "Jobs should be created at startup by BackgroundJobManager.", jobName);
+                return false;
             }
 
             // Store the job key for later use
             _jobKeys.TryAdd(jobName, jobKey);
 
-            // If cron expression is provided, update the trigger
+            // Clean up all existing triggers for this job first
+            await CleanupAllTriggersForJob(scheduler, jobKey);
+
+            // If cron expression is provided, create and schedule the main trigger
             if (!string.IsNullOrEmpty(cronExpression))
             {
-                var triggerKey = new TriggerKey($"{jobName}Trigger");
-                var existingTrigger = await scheduler.GetTrigger(triggerKey);
+                var triggerKey = new TriggerKey($"{jobName}-trigger");
+                var newTrigger = TriggerBuilder.Create()
+                    .WithIdentity(triggerKey)
+                    .ForJob(jobKey)
+                    .WithCronSchedule(cronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
+                    .Build();
                 
-                if (existingTrigger != null)
-                {
-                    var newTrigger = TriggerBuilder.Create()
-                        .WithIdentity(triggerKey)
-                        .ForJob(jobKey)
-                        .WithCronSchedule(cronExpression)
-                        .Build();
-                    
-                    await scheduler.RescheduleJob(triggerKey, newTrigger);
-                }
-                else
-                {
-                    var trigger = TriggerBuilder.Create()
-                        .WithIdentity(triggerKey)
-                        .ForJob(jobKey)
-                        .WithCronSchedule(cronExpression)
-                        .Build();
-                    
-                    await scheduler.ScheduleJob(trigger);
-                }
+                await scheduler.ScheduleJob(newTrigger);
+                
+                // Compute next fire time for logging
+                IReadOnlyList<DateTimeOffset> nextFireTimes = TriggerUtils.ComputeFireTimes((IOperableTrigger)newTrigger, null, 1);
+                _logger.LogInformation("Job {name} scheduled with cron expression '{cronExpression}', next run at {nextRunTime}", 
+                    jobName, cronExpression, nextFireTimes.FirstOrDefault().LocalDateTime);
+                
+                // Optionally trigger immediate execution for startup
+                // await TriggerJobImmediately(scheduler, jobKey, "startup");
             }
             else
             {
-                // If no trigger exists, create a simple one-time trigger
-                var triggers = await scheduler.GetTriggersOfJob(jobKey);
-                if (!triggers.Any())
-                {
-                    var trigger = TriggerBuilder.Create()
-                        .WithIdentity($"{jobName}Trigger")
-                        .ForJob(jobKey)
-                        .StartNow()
-                        .Build();
-                    
-                    await scheduler.ScheduleJob(trigger);
-                }
+                // If no cron expression, create a one-time trigger to run now
+                var oneTimeTrigger = TriggerBuilder.Create()
+                    .WithIdentity($"{jobName}-onetime-trigger")
+                    .ForJob(jobKey)
+                    .StartNow()
+                    .Build();
+                
+                await scheduler.ScheduleJob(oneTimeTrigger);
+                _logger.LogInformation("Job {name} scheduled for immediate one-time execution", jobName);
             }
 
             // Resume the job if it's paused
@@ -128,21 +117,86 @@ public class JobManagementService : IJobManagementService
     }
 
     /// <summary>
-    /// Creates a job in the scheduler if it doesn't exist based on the job type.
-    /// Note: Since this is in the Infrastructure layer, we cannot directly reference Application layer job types.
-    /// Job creation is now handled at startup by BackgroundJobManager.
+    /// Cleans up all existing triggers for a job to ensure a clean state
     /// </summary>
-    private Task<bool> CreateJobIfNotExists(IScheduler scheduler, JobType jobType, JobKey jobKey)
+    private async Task CleanupAllTriggersForJob(IScheduler scheduler, JobKey jobKey)
     {
-        _logger.LogError("Job {jobName} of type {jobType} does not exist in scheduler. " +
-                        "Jobs should be created at startup by BackgroundJobManager, regardless of enabled status.", 
-                        jobKey.Name, jobType);
-        return Task.FromResult(false);
+        try
+        {
+            var existingTriggers = await scheduler.GetTriggersOfJob(jobKey);
+            foreach (var trigger in existingTriggers)
+            {
+                await scheduler.UnscheduleJob(trigger.Key);
+                _logger.LogDebug("Removed existing trigger {triggerKey} for job {jobKey}", 
+                    trigger.Key.Name, jobKey.Name);
+            }
+            
+            if (existingTriggers.Any())
+            {
+                _logger.LogDebug("Cleaned up {count} existing triggers for job {jobName}", 
+                    existingTriggers.Count, jobKey.Name);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error cleaning up triggers for job {jobName}", jobKey.Name);
+        }
     }
+
+    /// <summary>
+    /// Triggers a job immediately with a one-time trigger
+    /// </summary>
+    private async Task TriggerJobImmediately(IScheduler scheduler, JobKey jobKey, string reason)
+    {
+        try
+        {
+            var immediateTrigger = TriggerBuilder.Create()
+                .WithIdentity($"{jobKey.Name}-immediate-{reason}-{DateTimeOffset.UtcNow.Ticks}")
+                .ForJob(jobKey)
+                .StartNow()
+                .Build();
+            
+            await scheduler.ScheduleJob(immediateTrigger);
+            _logger.LogDebug("Triggered job {jobName} immediately for reason: {reason}", jobKey.Name, reason);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to trigger job {jobName} immediately", jobKey.Name);
+        }
+    }
+
+    /// <summary>
+    /// Gets the main scheduled trigger for a job (excludes one-time triggers)
+    /// </summary>
+    public async Task<ITrigger?> GetMainTrigger(JobType jobType)
+    {
+        string jobName = jobType.ToString();
+        try
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
+            var jobKey = new JobKey(jobName);
+            
+            if (!await scheduler.CheckExists(jobKey))
+            {
+                return null;
+            }
+
+            // Look for the main trigger (follows our naming convention)
+            var mainTriggerKey = new TriggerKey($"{jobName}-trigger");
+            return await scheduler.GetTrigger(mainTriggerKey);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting main trigger for job {jobName}", jobName);
+            return null;
+        }
+    }
+
+
 
     public async Task<bool> StopJob(JobType jobType)
     {
-        string jobName = jobType.ToJobName();
+        string jobName = jobType.ToString();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -154,12 +208,8 @@ public class JobManagementService : IJobManagementService
                 return false;
             }
 
-            // Unschedule all triggers for this job
-            var triggers = await scheduler.GetTriggersOfJob(jobKey);
-            foreach (var trigger in triggers)
-            {
-                await scheduler.UnscheduleJob(trigger.Key);
-            }
+            // Clean up all triggers for this job (reuse our centralized method)
+            await CleanupAllTriggersForJob(scheduler, jobKey);
 
             _logger.LogInformation("Job {name} stopped successfully", jobName);
             return true;
@@ -173,7 +223,7 @@ public class JobManagementService : IJobManagementService
 
     public async Task<bool> PauseJob(JobType jobType)
     {
-        string jobName = jobType.ToJobName();
+        string jobName = jobType.ToString();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -198,7 +248,7 @@ public class JobManagementService : IJobManagementService
 
     public async Task<bool> ResumeJob(JobType jobType)
     {
-        string jobName = jobType.ToJobName();
+        string jobName = jobType.ToString();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -221,11 +271,11 @@ public class JobManagementService : IJobManagementService
         }
     }
 
-    public async Task<IReadOnlyList<JobInfo>> GetAllJobs()
+    public async Task<IReadOnlyList<JobInfo>> GetAllJobs(IScheduler? scheduler = null)
     {
         try
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
+            scheduler ??= await _schedulerFactory.GetScheduler();
             var result = new List<JobInfo>();
             
             var jobGroups = await scheduler.GetJobGroupNames();
@@ -283,7 +333,7 @@ public class JobManagementService : IJobManagementService
 
     public async Task<JobInfo> GetJob(JobType jobType)
     {
-        string jobName = jobType.ToJobName();
+        string jobName = jobType.ToString();
         try
         {
             var scheduler = await _schedulerFactory.GetScheduler();
@@ -339,12 +389,37 @@ public class JobManagementService : IJobManagementService
         }
     }
 
+    public async Task<bool> TriggerJobOnce(JobType jobType)
+    {
+        string jobName = jobType.ToString();
+        try
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
+            var jobKey = new JobKey(jobName);
+            
+            if (!await scheduler.CheckExists(jobKey))
+            {
+                _logger.LogError("Job {name} does not exist", jobName);
+                return false;
+            }
+
+            await TriggerJobImmediately(scheduler, jobKey, "manual");
+            _logger.LogInformation("Job {name} triggered for one-time execution", jobName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error triggering job {jobName}", jobName);
+            return false;
+        }
+    }
+
     public async Task<bool> UpdateJobSchedule(JobType jobType, JobSchedule schedule)
     {
         if (schedule == null)
             throw new ArgumentNullException(nameof(schedule));
             
-        string jobName = jobType.ToJobName();
+        string jobName = jobType.ToString();
         string cronExpression = schedule.ToCronExpression();
         
         try
@@ -358,24 +433,18 @@ public class JobManagementService : IJobManagementService
                 return false;
             }
 
-            var triggerKey = new TriggerKey($"{jobName}Trigger");
-            var existingTrigger = await scheduler.GetTrigger(triggerKey);
-            
+            // Clean up all existing triggers for this job
+            await CleanupAllTriggersForJob(scheduler, jobKey);
+
+            // Create new trigger with consistent naming
+            var triggerKey = new TriggerKey($"{jobName}-trigger");
             var newTrigger = TriggerBuilder.Create()
                 .WithIdentity(triggerKey)
                 .ForJob(jobKey)
-                .WithSchedule(SimpleScheduleBuilder.RepeatSecondlyForever(10))
-                .WithCronSchedule(cronExpression)
+                .WithCronSchedule(cronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
                 .Build();
             
-            if (existingTrigger != null)
-            {
-                await scheduler.RescheduleJob(triggerKey, newTrigger);
-            }
-            else
-            {
-                await scheduler.ScheduleJob(newTrigger);
-            }
+            await scheduler.ScheduleJob(newTrigger);
             
             _logger.LogInformation("Job {name} schedule updated successfully to {cronExpression}", jobName, cronExpression);
             return true;

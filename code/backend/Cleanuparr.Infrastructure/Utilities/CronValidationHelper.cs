@@ -35,7 +35,7 @@ public static class CronValidationHelper
             IOperableTrigger triggerObj = (IOperableTrigger)TriggerBuilder.Create()
                 .WithIdentity("ValidationTrigger")
                 .StartNow()
-                .WithCronSchedule(cronExpression)
+                .WithCronSchedule(cronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
                 .Build();
 
             IReadOnlyList<DateTimeOffset> nextFireTimes = TriggerUtils.ComputeFireTimes(triggerObj, null, 2);

@@ -12,9 +12,9 @@ using Cleanuparr.Infrastructure.Features.ItemStriker;
 using Cleanuparr.Infrastructure.Features.Security;
 using Cleanuparr.Infrastructure.Interceptors;
 using Cleanuparr.Infrastructure.Services;
+using Cleanuparr.Infrastructure.Services.Interfaces;
 using Cleanuparr.Persistence;
 using Infrastructure.Interceptors;
-using Infrastructure.Services.Interfaces;
 using Infrastructure.Verticals.Files;
 
 namespace Cleanuparr.Api.DependencyInjection;

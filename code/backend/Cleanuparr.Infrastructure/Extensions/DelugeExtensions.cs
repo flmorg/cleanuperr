@@ -1,6 +1,5 @@
 ﻿using Cleanuparr.Domain.Entities.Deluge.Response;
 using Cleanuparr.Infrastructure.Services;
-using Infrastructure.Services;
 
 namespace Cleanuparr.Infrastructure.Extensions;
 
