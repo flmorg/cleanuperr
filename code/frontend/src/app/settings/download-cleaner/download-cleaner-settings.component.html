@@ -113,7 +113,16 @@
       <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
         <!-- Seeding Settings -->
         <p-accordion-panel [disabled]="!downloadCleanerForm.get('enabled')?.value" [value]="0">
-          <p-accordion-header>Seeding Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Seeding Settings
+          </p-accordion-header>
           <p-accordion-content>
             <!-- Delete Private Option -->
             <div class="field-row">
@@ -230,7 +239,16 @@
 
         <!-- Unlinked Download Settings -->
         <p-accordion-panel [disabled]="!downloadCleanerForm.get('enabled')?.value" [value]="1">
-          <p-accordion-header>Unlinked Download Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Unlinked Download Settings
+          </p-accordion-header>
           <p-accordion-content>
             <div class="field-row">
               <label class="field-label">

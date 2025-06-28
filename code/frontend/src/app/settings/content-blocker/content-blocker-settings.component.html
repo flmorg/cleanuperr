@@ -140,7 +140,16 @@
       <p-accordion [multiple]="false" [value]="activeAccordionIndices" styleClass="mt-3">
         <!-- Sonarr Settings -->
         <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="0">
-          <p-accordion-header>Sonarr Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Sonarr Settings
+          </p-accordion-header>
           <p-accordion-content>
             <div formGroupName="sonarr">
               <div class="field-row">
@@ -201,7 +210,16 @@
 
         <!-- Radarr Settings -->
         <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="1">
-          <p-accordion-header>Radarr Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Radarr Settings
+          </p-accordion-header>
           <p-accordion-content>
             <div formGroupName="radarr">
               <div class="field-row">
@@ -262,7 +280,16 @@
 
         <!-- Lidarr Settings -->
         <p-accordion-panel [disabled]="!contentBlockerForm.get('enabled')?.value" [value]="2">
-          <p-accordion-header>Lidarr Settings</p-accordion-header>
+          <p-accordion-header>
+            <ng-template #toggleicon let-active="active">
+              @if (active) {
+                <i class="pi pi-chevron-up"></i>
+              } @else {
+                <i class="pi pi-chevron-down"></i>
+              }
+            </ng-template>
+            Lidarr Settings
+          </p-accordion-header>
           <p-accordion-content>
             <div formGroupName="lidarr">
               <div class="field-row">
