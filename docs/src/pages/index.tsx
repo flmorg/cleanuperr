@@ -207,7 +207,7 @@ function IntegrationsSection() {
     { name: "Sonarr", icon: "📺", color: "#3578e5" },
     { name: "Radarr", icon: "🎬", color: "#ffc107" },
     { name: "Lidarr", icon: "🎵", color: "#28a745" },
-    //{ name: "Readarr", icon: "📚", color: "#6f42c1" },
+    { name: "Readarr", icon: "📚", color: "#6f42c1" },
     //{ name: "Whisparr", icon: "🔞", color: "#dc3545" },
     { name: "qBittorrent", icon: "⬇️", color: "#17a2b8" },
     { name: "Deluge", icon: "🌊", color: "#fd7e14" },
