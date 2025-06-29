@@ -1,4 +1,6 @@
-namespace Data.Models.Arr.Queue;
+using Data.Models.Arr.Queue;
+
+namespace Cleanuparr.Domain.Entities.Arr.Queue;
 
 public sealed record QueueRecord
 {
@@ -20,6 +22,13 @@ public sealed record QueueRecord
     public long AlbumId { get; init; }
     
     public QueueAlbum? Album { get; init; }
+    
+    // Readarr
+    public long AuthorId { get; init; }
+    
+    public long BookId { get; init; }
+    
+    public QueueBook? Book { get; init; }
     
     // common
     public required string Title { get; init; }

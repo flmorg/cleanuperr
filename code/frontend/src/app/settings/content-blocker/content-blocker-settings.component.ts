@@ -149,6 +149,11 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
         blocklistPath: [{ value: "", disabled: true }],
         blocklistType: [{ value: BlocklistType.Blacklist, disabled: true }],
       }),
+      readarr: this.formBuilder.group({
+        enabled: [{ value: false, disabled: true }],
+        blocklistPath: [{ value: "", disabled: true }],
+        blocklistType: [{ value: BlocklistType.Blacklist, disabled: true }],
+      }),
     });
 
     // Create an effect to update the form when the configuration changes
@@ -169,6 +174,7 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
           sonarr: config.sonarr,
           radarr: config.radarr,
           lidarr: config.lidarr,
+          readarr: config.readarr,
         });
 
         // Update all form control states
@@ -278,7 +284,7 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
     }
       
     // Listen for changes to blocklist enabled states
-    ['sonarr', 'radarr', 'lidarr'].forEach(arrType => {
+    ['sonarr', 'radarr', 'lidarr', 'readarr'].forEach(arrType => {
       const enabledControl = this.contentBlockerForm.get(`${arrType}.enabled`);
       
       if (enabledControl) {
@@ -348,6 +354,7 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       this.updateBlocklistDependentControls('sonarr', config.sonarr?.enabled || false);
       this.updateBlocklistDependentControls('radarr', config.radarr?.enabled || false);
       this.updateBlocklistDependentControls('lidarr', config.lidarr?.enabled || false);
+      this.updateBlocklistDependentControls('readarr', config.readarr?.enabled || false);
     }
   }
 
@@ -407,15 +414,18 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       this.contentBlockerForm.get("sonarr.enabled")?.enable({ onlySelf: true });
       this.contentBlockerForm.get("radarr.enabled")?.enable({ onlySelf: true });
       this.contentBlockerForm.get("lidarr.enabled")?.enable({ onlySelf: true });
+      this.contentBlockerForm.get("readarr.enabled")?.enable({ onlySelf: true });
       
       // Update dependent controls based on current enabled states
       const sonarrEnabled = this.contentBlockerForm.get("sonarr.enabled")?.value || false;
       const radarrEnabled = this.contentBlockerForm.get("radarr.enabled")?.value || false;
       const lidarrEnabled = this.contentBlockerForm.get("lidarr.enabled")?.value || false;
+      const readarrEnabled = this.contentBlockerForm.get("readarr.enabled")?.value || false;
       
       this.updateBlocklistDependentControls('sonarr', sonarrEnabled);
       this.updateBlocklistDependentControls('radarr', radarrEnabled);
       this.updateBlocklistDependentControls('lidarr', lidarrEnabled);
+      this.updateBlocklistDependentControls('readarr', readarrEnabled);
     } else {
       // Disable all scheduling controls
       cronExpressionControl?.disable();
@@ -440,6 +450,9 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
       this.contentBlockerForm.get("lidarr.enabled")?.disable({ onlySelf: true });
       this.contentBlockerForm.get("lidarr.blocklistPath")?.disable({ onlySelf: true });
       this.contentBlockerForm.get("lidarr.blocklistType")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("readarr.enabled")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("readarr.blocklistPath")?.disable({ onlySelf: true });
+      this.contentBlockerForm.get("readarr.blocklistType")?.disable({ onlySelf: true });
 
       // Save current active accordion state before clearing it
       this.activeAccordionIndices = [];
@@ -479,6 +492,11 @@ export class ContentBlockerSettingsComponent implements OnDestroy, CanComponentD
           blocklistType: BlocklistType.Blacklist,
         },
         lidarr: formValue.lidarr || {
+          enabled: false,
+          blocklistPath: "",
+          blocklistType: BlocklistType.Blacklist,
+        },
+        readarr: formValue.readarr || {
           enabled: false,
           blocklistPath: "",
           blocklistType: BlocklistType.Blacklist,

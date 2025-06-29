@@ -1,3 +1,4 @@
+using Cleanuparr.Domain.Entities.Arr.Queue;
 using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Events;
 using Cleanuparr.Infrastructure.Features.Arr;
@@ -42,10 +43,12 @@ public sealed class QueueCleaner : GenericHandler
         var sonarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Sonarr));
         var radarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr));
         var lidarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr));
+        var readarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Readarr));
         
         await ProcessArrConfigAsync(sonarrConfig, InstanceType.Sonarr);
         await ProcessArrConfigAsync(radarrConfig, InstanceType.Radarr);
         await ProcessArrConfigAsync(lidarrConfig, InstanceType.Lidarr);
+        await ProcessArrConfigAsync(readarrConfig, InstanceType.Readarr);
     }
 
     protected override async Task ProcessInstanceAsync(ArrInstance instance, InstanceType instanceType)

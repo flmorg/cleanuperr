@@ -41,4 +41,5 @@ export interface ContentBlockerConfig {
   sonarr: BlocklistSettings;
   radarr: BlocklistSettings;
   lidarr: BlocklistSettings;
+  readarr: BlocklistSettings;
 } 

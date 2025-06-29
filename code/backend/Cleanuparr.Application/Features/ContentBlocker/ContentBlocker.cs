@@ -1,4 +1,5 @@
-﻿using Cleanuparr.Domain.Enums;
+﻿using Cleanuparr.Domain.Entities.Arr.Queue;
+using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Events;
 using Cleanuparr.Infrastructure.Features.Arr;
 using Cleanuparr.Infrastructure.Features.Arr.Interfaces;
@@ -63,6 +64,7 @@ public sealed class ContentBlocker : GenericHandler
         var sonarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Sonarr));
         var radarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Radarr));
         var lidarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Lidarr));
+        var readarrConfig = ContextProvider.Get<ArrConfig>(nameof(InstanceType.Readarr));
 
         if (config.Sonarr.Enabled)
         {
@@ -77,6 +79,11 @@ public sealed class ContentBlocker : GenericHandler
         if (config.Lidarr.Enabled)
         {
             await ProcessArrConfigAsync(lidarrConfig, InstanceType.Lidarr);
+        }
+        
+        if (config.Readarr.Enabled)
+        {
+            await ProcessArrConfigAsync(readarrConfig, InstanceType.Readarr);
         }
     }
 

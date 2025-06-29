@@ -37,6 +37,7 @@ public static class ServicesDI
             .AddTransient<SonarrClient>()
             .AddTransient<RadarrClient>()
             .AddTransient<LidarrClient>()
+            .AddTransient<ReadarrClient>()
             .AddTransient<ArrClientFactory>()
             .AddTransient<QueueCleaner>()
             .AddTransient<ContentBlocker>()

@@ -47,6 +47,12 @@
       </div>
       <span>Lidarr</span>
     </a>
+    <a [routerLink]="['/readarr']" class="nav-item" [class.active]="router.url.includes('/readarr')" (click)="onNavItemClick()">
+      <div class="nav-icon-wrapper">
+        <i class="pi pi-book"></i>
+      </div>
+      <span>Readarr</span>
+    </a>
     <a [routerLink]="['/download-clients']" class="nav-item" [class.active]="router.url.includes('/download-clients')" (click)="onNavItemClick()">
       <div class="nav-icon-wrapper">
         <i class="pi pi-download"></i>
