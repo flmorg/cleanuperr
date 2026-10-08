@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { form, required, FormField } from '@angular/forms/signals';
+import { form, required, disabled, FormField } from '@angular/forms/signals';
 import { PageHeaderComponent } from '@layout/page-header/page-header.component';
 import {
   CardComponent, ButtonComponent, InputComponent, ToggleComponent,
@@ -114,6 +114,7 @@ export class DownloadClientsComponent implements HasPendingChanges {
       when: ({ valueOf }) => valueOf(p.typeName) === DownloadClientTypeName.Sabnzbd,
       message: 'API key is required',
     });
+    disabled(p.typeName, () => this.editingClient() !== null);
   });
 
   readonly hasModalErrors = computed(() => this.clientForm().invalid());

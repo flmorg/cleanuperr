@@ -417,6 +417,20 @@ describe('DownloadClientsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Edit Client');
   });
 
+  it('locks the client type while editing and unlocks it when adding', () => {
+    const { fixture, component } = setup();
+
+    component.openEditModal(QBIT);
+    fixture.detectChanges();
+
+    expect(component.clientForm.typeName().disabled()).toBe(true);
+
+    component.openAddModal();
+    fixture.detectChanges();
+
+    expect(component.clientForm.typeName().disabled()).toBe(false);
+  });
+
   it('creates a client from the modal values and reloads the list', () => {
     const { fixture, component, api, toast } = setup();
 
