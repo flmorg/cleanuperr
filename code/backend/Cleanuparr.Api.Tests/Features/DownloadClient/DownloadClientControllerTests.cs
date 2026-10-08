@@ -303,6 +303,30 @@ public class DownloadClientControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task UpdateDownloadClientConfig_ChangedTypeName_PropagatesValidationException()
+    {
+        // Arrange
+        DownloadClientConfig client = NewClient("orig", DownloadClientTypeName.qBittorrent);
+        _dataContext.DownloadClients.Add(client);
+        await _dataContext.SaveChangesAsync();
+
+        UpdateDownloadClientRequest request = new()
+        {
+            Name = "renamed",
+            Host = "http://newhost:9090",
+            TypeName = DownloadClientTypeName.rTorrent,
+        };
+
+        // Act / Assert
+        Cleanuparr.Domain.Exceptions.ValidationException exception = await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+            () => _controller.UpdateDownloadClientConfig(client.Id, request));
+        exception.Message.ShouldContain("cannot be changed");
+
+        DownloadClientConfig saved = await _dataContext.DownloadClients.AsNoTracking().FirstAsync(c => c.Id == client.Id);
+        saved.TypeName.ShouldBe(DownloadClientTypeName.qBittorrent);
+    }
+
+    [Fact]
     public async Task DeleteDownloadClientConfig_ExistingClient_RemovesAndUnregistersHttpClient()
     {
         // Arrange
