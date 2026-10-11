@@ -779,6 +779,42 @@ public class TransmissionServiceTests : IClassFixture<TransmissionServiceFixture
         }
 
         [Fact]
+        public async Task MetadataPending_EmptyFilesAndFileStats_FoundTrue_SkipsFileCheck()
+        {
+            const string hash = "metadata-pending-hash";
+            TransmissionService sut = _fixture.CreateSut();
+            SetMalwareBlockerContext();
+
+            StubClient(hash, [], isPrivate: true);
+
+            BlockFilesResult result = await sut.BlockUnwantedFilesAsync(hash, Array.Empty<string>());
+
+            result.Found.ShouldBeTrue();
+            result.IsPrivate.ShouldBeTrue();
+            result.ShouldRemove.ShouldBeFalse();
+
+            await _fixture.ClientWrapper
+                .DidNotReceive()
+                .TorrentSetAsync(Arg.Any<TorrentSettings>());
+        }
+
+        [Fact]
+        public async Task NullTorrent_ReturnsFoundFalse()
+        {
+            const string hash = "missing-hash";
+            TransmissionService sut = _fixture.CreateSut();
+            SetMalwareBlockerContext();
+
+            _fixture.ClientWrapper
+                .TorrentGetAsync(Arg.Any<string[]>(), hash)
+                .Returns((TransmissionTorrents?)null);
+
+            BlockFilesResult result = await sut.BlockUnwantedFilesAsync(hash, Array.Empty<string>());
+
+            result.Found.ShouldBeFalse();
+        }
+
+        [Fact]
         public async Task DryRun_AllFilesMalware_VerdictSet_ButNoTorrentSetCall()
         {
             const string hash = "dry-run-hash";

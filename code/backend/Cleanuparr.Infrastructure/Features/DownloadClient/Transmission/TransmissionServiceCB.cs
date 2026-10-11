@@ -16,15 +16,9 @@ public partial class TransmissionService
         TorrentInfo? download = await GetTorrentAsync(downloadId);
         BlockFilesResult result = new();
 
-        if (download?.FileStats is null || download.FileStats.Length == 0 || download.Name is null)
+        if (download?.Name is null)
         {
             _logger.LogDebug("Failed to find torrent {DownloadId} in the {Name} download client", downloadId, _downloadClientConfig.Name);
-            return result;
-        }
-
-        if (download.Files is null)
-        {
-            _logger.LogDebug("Torrent {DownloadId} has no files", downloadId);
             return result;
         }
 
@@ -46,6 +40,12 @@ public partial class TransmissionService
         {
             // ignore private trackers
             _logger.LogDebug("skip files check | download is private | {Name}", download.Name);
+            return result;
+        }
+
+        if (download.Files is null || download.Files.Length == 0 || download.FileStats is null || download.FileStats.Length == 0)
+        {
+            _logger.LogDebug("skip files check | no files found | {Name}", download.Name);
             return result;
         }
 
