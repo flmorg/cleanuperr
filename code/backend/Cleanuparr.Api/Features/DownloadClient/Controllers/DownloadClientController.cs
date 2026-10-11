@@ -5,6 +5,7 @@ using Cleanuparr.Api.Extensions;
 using Cleanuparr.Api.Features.DownloadClient.Contracts.Requests;
 using Cleanuparr.Api.Features.DownloadClient.Contracts.Responses;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Features.DownloadClient;
 using Cleanuparr.Infrastructure.Http.DynamicHttpClientSystem;
 using Cleanuparr.Persistence;
@@ -99,6 +100,11 @@ public sealed class DownloadClientController : ControllerBase
             if (existingClient is null)
             {
                 return this.ProblemResult(StatusCodes.Status404NotFound, $"Download client with ID {id} not found");
+            }
+
+            if (updatedClient.TypeName != existingClient.TypeName)
+            {
+                throw new ValidationException("Download client type cannot be changed");
             }
 
             var clientToPersist = updatedClient.ApplyTo(existingClient);

@@ -137,6 +137,25 @@ test.describe('DownloadClient: invalid type validation', () => {
 
     await api.downloadClient.delete(created.id);
   });
+
+  test('update changing typeName returns 400 and keeps the original type', async ({ api }) => {
+    const payload = buildDownloadClientPayload('qbittorrent', {
+      name: 'base-for-type-change',
+      host: TEST_CONFIG.mocks.downloadClientUrl,
+      username: 'admin',
+      password: 'admin',
+    });
+    const created = await (await api.downloadClient.create(payload)).json();
+
+    const res = await api.downloadClient.update(created.id, { ...payload, typeName: 'rTorrent' });
+    expect(res.status).toBe(400);
+
+    const list = await (await api.downloadClient.list()).json();
+    const stored = list.clients.find((c: { id: string }) => c.id === created.id);
+    expect(stored.typeName.toLowerCase()).toBe(payload.typeName?.toLowerCase());
+
+    await api.downloadClient.delete(created.id);
+  });
 });
 
 test.describe('DownloadClient: API key validation', () => {
