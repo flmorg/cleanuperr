@@ -97,6 +97,15 @@ export class TransmissionDriver implements TorrentClientDriver {
     });
   }
 
+  /** Adds a magnet unpaused, so Transmission keeps fetching its metadata. */
+  async addMagnet({ magnetUri, savePath }: { magnetUri: string; savePath: string }): Promise<void> {
+    await this.call('torrent-add', {
+      filename: magnetUri,
+      'download-dir': savePath,
+      paused: false,
+    });
+  }
+
   /** Returns the torrent's labels (Transmission's tag equivalent). */
   async getTorrentLabels(infoHash: string): Promise<string[]> {
     const args = await this.call('torrent-get', { ids: [infoHash], fields: ['hashString', 'labels'] });
