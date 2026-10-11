@@ -11,14 +11,14 @@ namespace Cleanuparr.Infrastructure.Features.DownloadClient.Transmission;
 public partial class TransmissionService
 {
     /// <inheritdoc/>
-    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(string hash, IReadOnlyList<string> ignoredDownloads)
+    public override async Task<BlockFilesResult> BlockUnwantedFilesAsync(string downloadId, IReadOnlyList<string> ignoredDownloads)
     {
-        TorrentInfo? download = await GetTorrentAsync(hash);
+        TorrentInfo? download = await GetTorrentAsync(downloadId);
         BlockFilesResult result = new();
 
         if (download?.Name is null)
         {
-            _logger.LogDebug("Failed to find torrent {Hash} in the {Name} download client", hash, _downloadClientConfig.Name);
+            _logger.LogDebug("Failed to find torrent {DownloadId} in the {Name} download client", downloadId, _downloadClientConfig.Name);
             return result;
         }
 
@@ -31,7 +31,7 @@ public partial class TransmissionService
         bool isPrivate = download.IsPrivate ?? false;
         result.IsPrivate = isPrivate;
         result.Found = true;
-        result.Torrent = new TransmissionItemWrapper(download);
+        result.Item = new TransmissionItemWrapper(download);
         SetDownloadClientContext();
 
         var malwareBlockerConfig = ContextProvider.Get<ContentBlockerConfig>();
