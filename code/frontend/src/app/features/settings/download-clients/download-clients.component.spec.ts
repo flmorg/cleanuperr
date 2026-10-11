@@ -116,12 +116,15 @@ function hintFor(fixture: ComponentFixture<DownloadClientsComponent>, label: str
   return field?.querySelector('.input-hint')?.textContent!.trim() ?? '';
 }
 
+function clientTypeTrigger(fixture: ComponentFixture<DownloadClientsComponent>): HTMLButtonElement {
+  return fixture.nativeElement.querySelector('.select-trigger') as HTMLButtonElement;
+}
+
 function chooseClientType(
   fixture: ComponentFixture<DownloadClientsComponent>,
   label: string,
 ): void {
-  const trigger = fixture.nativeElement.querySelector('.select-trigger') as HTMLButtonElement;
-  trigger.click();
+  clientTypeTrigger(fixture).click();
   fixture.detectChanges();
 
   const option = Array.from(fixture.nativeElement.querySelectorAll('.select-option')).find(
@@ -424,11 +427,13 @@ describe('DownloadClientsComponent', () => {
     fixture.detectChanges();
 
     expect(component.clientForm.typeName().disabled()).toBe(true);
+    expect(clientTypeTrigger(fixture).disabled).toBe(true);
 
     component.openAddModal();
     fixture.detectChanges();
 
     expect(component.clientForm.typeName().disabled()).toBe(false);
+    expect(clientTypeTrigger(fixture).disabled).toBe(false);
   });
 
   it('creates a client from the modal values and reloads the list', () => {
