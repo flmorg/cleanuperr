@@ -45,6 +45,17 @@ describe('chart-window.util', () => {
   });
 
   describe('formatBucketDate', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    const forceTwelveHourLocale = () => {
+      const original = Date.prototype.toLocaleTimeString;
+      vi.spyOn(Date.prototype, 'toLocaleTimeString').mockImplementation(function (this: Date, _locale, options) {
+        return original.call(this, 'en-US', options);
+      });
+    };
+
     it('keeps the calendar day of the bucket regardless of the local timezone', () => {
       expect(formatBucketDate('2026-03-15T23:00:00Z', 168)).toContain('15');
     });
@@ -60,6 +71,18 @@ describe('chart-window.util', () => {
 
       expect(formatted).toMatch(/\d/);
       expect(formatted).not.toBe(formatBucketDate('2026-03-15T23:00:00Z', 168));
+    });
+
+    it('formats 24h windows with a 24-hour clock', () => {
+      forceTwelveHourLocale();
+
+      expect(formatBucketDate(new Date(2026, 2, 15, 13, 0).toISOString(), 24)).toBe('13:00');
+    });
+
+    it('formats midnight as 00 rather than 24', () => {
+      forceTwelveHourLocale();
+
+      expect(formatBucketDate(new Date(2026, 2, 15, 0, 0).toISOString(), 24)).toBe('00:00');
     });
   });
 
