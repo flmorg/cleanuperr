@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Cleanuparr.Domain.Entities.HealthCheck;
 using Cleanuparr.Infrastructure.Events;
 using Cleanuparr.Infrastructure.Events.Interfaces;
@@ -40,6 +41,11 @@ public partial class QBitService : TorrentDownloadService, IDeadTorrentCapable
         httpClientProvider, eventPublisher, blocklistProvider, downloadClientConfig, queueRuleEvaluator, seedingRuleEvaluator, timeProvider
     )
     {
+        if (!string.IsNullOrEmpty(downloadClientConfig.ApiKey))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", downloadClientConfig.ApiKey);
+        }
+
         var qBittorrentClient = new QBittorrentClient(_httpClient, downloadClientConfig.Url);
         _client = new QBittorrentClientWrapper(qBittorrentClient);
     }
@@ -69,6 +75,12 @@ public partial class QBitService : TorrentDownloadService, IDeadTorrentCapable
     
     public override async Task LoginAsync()
     {
+        if (!string.IsNullOrEmpty(_downloadClientConfig.ApiKey))
+        {
+            _logger.LogDebug("API key configured for client {ClientId}, skipping login", _downloadClientConfig.Id);
+            return;
+        }
+
         if (string.IsNullOrEmpty(_downloadClientConfig.Username) && string.IsNullOrEmpty(_downloadClientConfig.Password))
         {
             _logger.LogDebug("No credentials configured for client {ClientId}, skipping login", _downloadClientConfig.Id);
@@ -93,10 +105,16 @@ public partial class QBitService : TorrentDownloadService, IDeadTorrentCapable
         
         try
         {
-            bool hasCredentials = !string.IsNullOrEmpty(_downloadClientConfig.Username) || 
+            bool hasCredentials = !string.IsNullOrEmpty(_downloadClientConfig.Username) ||
                                   !string.IsNullOrEmpty(_downloadClientConfig.Password);
 
-            if (hasCredentials)
+            if (!string.IsNullOrEmpty(_downloadClientConfig.ApiKey))
+            {
+                // login with an API key returns 403, so probe an auth-protected endpoint
+                await _client.GetAlternativeSpeedLimitsEnabledAsync();
+                _logger.LogDebug("Health check: Successfully authenticated to qBittorrent client {ClientId}", _downloadClientConfig.Id);
+            }
+            else if (hasCredentials)
             {
                 // If credentials are provided, we must be able to log in for the service to be healthy
                 await _client.LoginAsync(_downloadClientConfig.Username, _downloadClientConfig.Password);

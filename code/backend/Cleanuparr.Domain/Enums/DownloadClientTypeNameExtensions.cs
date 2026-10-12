@@ -4,7 +4,7 @@ public static class DownloadClientTypeNameExtensions
 {
     private static readonly Dictionary<DownloadClientTypeName, DownloadClientAuthField[]> AuthFields = new()
     {
-        [DownloadClientTypeName.qBittorrent] = [DownloadClientAuthField.Username, DownloadClientAuthField.Password],
+        [DownloadClientTypeName.qBittorrent] = [DownloadClientAuthField.Username, DownloadClientAuthField.Password, DownloadClientAuthField.ApiKey],
         [DownloadClientTypeName.Deluge] = [DownloadClientAuthField.Password],
         [DownloadClientTypeName.Transmission] = [DownloadClientAuthField.Username, DownloadClientAuthField.Password],
         [DownloadClientTypeName.uTorrent] = [DownloadClientAuthField.Username, DownloadClientAuthField.Password],
@@ -37,6 +37,13 @@ public static class DownloadClientTypeNameExtensions
     /// </summary>
     public static bool RequiresAuthField(this DownloadClientTypeName typeName, DownloadClientAuthField field) =>
         AuthFields.TryGetValue(typeName, out var fields) && fields is [var only] && only == field;
+
+    /// <summary>
+    /// True when the client type accepts an API key alongside a username or password, so the two must not be mixed.
+    /// </summary>
+    public static bool SupportsApiKeyAndCredentials(this DownloadClientTypeName typeName) =>
+        typeName.SupportsAuthField(DownloadClientAuthField.ApiKey) &&
+        (typeName.SupportsAuthField(DownloadClientAuthField.Username) || typeName.SupportsAuthField(DownloadClientAuthField.Password));
 
     private static readonly DownloadClientCapability[] BaseTorrentCapabilities =
     [

@@ -102,6 +102,49 @@ public class DownloadClientControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateDownloadClientConfig_QBittorrentWithApiKey_PersistsApiKey()
+    {
+        // Arrange
+        var request = new CreateDownloadClientRequest
+        {
+            Enabled = true,
+            Name = "qbit-key-client",
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Host = "http://localhost:8080",
+            ApiKey = "qbt_abcdefghijklmnopqrstuvwxyz12",
+        };
+
+        // Act
+        await _controller.CreateDownloadClientConfig(request);
+
+        // Assert
+        var saved = await _dataContext.DownloadClients.AsNoTracking().FirstAsync(c => c.Name == "qbit-key-client");
+        saved.ApiKey.ShouldBe("qbt_abcdefghijklmnopqrstuvwxyz12");
+        saved.Username.ShouldBeNull();
+        saved.Password.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task CreateDownloadClientConfig_QBittorrentWithApiKeyAndPassword_PropagatesValidationException()
+    {
+        // Arrange
+        var request = new CreateDownloadClientRequest
+        {
+            Enabled = true,
+            Name = "qbit-conflict-client",
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Host = "http://localhost:8080",
+            ApiKey = "qbt_abcdefghijklmnopqrstuvwxyz12",
+            Password = "pass",
+        };
+
+        // Act / Assert
+        Cleanuparr.Domain.Exceptions.ValidationException exception = await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+            () => _controller.CreateDownloadClientConfig(request));
+        exception.Message.ShouldBe("Use either an API key or a username and password, not both");
+    }
+
+    [Fact]
     public async Task CreateDownloadClientConfig_SabnzbdWithNoType_StoresUsenet()
     {
         // Arrange
@@ -239,6 +282,44 @@ public class DownloadClientControllerTests : IDisposable
         var saved = await _dataContext.DownloadClients.AsNoTracking().FirstAsync(c => c.Id == client.Id);
         saved.Name.ShouldBe("renamed");
         saved.Host!.ToString().ShouldContain("newhost");
+    }
+
+    [Fact]
+    public async Task UpdateDownloadClientConfig_SwitchFromCredentialsToApiKey_ClearingUsernameAndPassword_Succeeds()
+    {
+        // Arrange
+        DownloadClientConfig client = new()
+        {
+            Id = Guid.NewGuid(),
+            Name = "qbit-client",
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Type = DownloadClientType.Torrent,
+            Host = new Uri("http://localhost:8080"),
+            Username = "admin",
+            Password = "admin",
+        };
+        _dataContext.DownloadClients.Add(client);
+        await _dataContext.SaveChangesAsync();
+
+        UpdateDownloadClientRequest request = new()
+        {
+            Name = "qbit-client",
+            Host = "http://localhost:8080",
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Username = null,
+            Password = null,
+            ApiKey = "qbt_abcdefghijklmnopqrstuvwxyz12",
+        };
+
+        // Act
+        var result = await _controller.UpdateDownloadClientConfig(client.Id, request);
+
+        // Assert
+        result.ShouldBeOfType<OkObjectResult>();
+        DownloadClientConfig saved = await _dataContext.DownloadClients.AsNoTracking().FirstAsync(c => c.Id == client.Id);
+        saved.ApiKey.ShouldBe("qbt_abcdefghijklmnopqrstuvwxyz12");
+        saved.Username.ShouldBeNull();
+        saved.Password.ShouldBeNull();
     }
 
     [Fact]
@@ -404,6 +485,26 @@ public class DownloadClientControllerTests : IDisposable
 
         // Assert
         result.ShouldBeOfType<ObjectResult>().StatusCode.ShouldBe(400);
+    }
+
+    [Fact]
+    public async Task TestDownloadClient_QBittorrentWithApiKeyAndPassword_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = new TestDownloadClientRequest
+        {
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Host = "http://localhost:8080",
+            ApiKey = "qbt_abcdefghijklmnopqrstuvwxyz12",
+            Password = "pass",
+        };
+
+        // Act
+        var result = await _controller.TestDownloadClient(request);
+
+        // Assert
+        result.ShouldBeOfType<ObjectResult>().StatusCode.ShouldBe(400);
+        _downloadServiceFactory.DidNotReceive().GetDownloadService(Arg.Any<DownloadClientConfig>());
     }
 
     [Fact]
