@@ -158,6 +158,58 @@ test.describe('DownloadClient: invalid type validation', () => {
   });
 });
 
+test.describe('DownloadClient: qBittorrent API key', () => {
+  test('create with an api key alone masks it in the response', async ({ api }) => {
+    const payload = buildDownloadClientPayload('qbittorrent', {
+      name: `qb-key-e2e-${Date.now()}`,
+      host: TEST_CONFIG.mocks.downloadClientUrl,
+      apiKey: 'qb-create-key',
+    });
+    const created = await (await api.downloadClient.create(payload)).json();
+    expect(created.apiKey).toBe('••••••••');
+
+    await api.downloadClient.delete(created.id);
+  });
+
+  test('create with an api key and a password returns 400', async ({ api }) => {
+    const payload = buildDownloadClientPayload('qbittorrent', {
+      name: 'qb-key-plus-password',
+      host: TEST_CONFIG.mocks.downloadClientUrl,
+      apiKey: 'qb-create-key',
+      password: 'admin',
+    });
+    const res = await api.downloadClient.create(payload);
+    expect(res.status).toBe(400);
+  });
+
+  test('update a username/password client to an api key with credentials cleared succeeds', async ({ api }) => {
+    const created = await (
+      await api.downloadClient.create(
+        buildDownloadClientPayload('qbittorrent', {
+          name: 'qb-key-update',
+          host: TEST_CONFIG.mocks.downloadClientUrl,
+          username: 'admin',
+          password: 'admin',
+        }),
+      )
+    ).json();
+
+    const update = await api.downloadClient.update(created.id, {
+      name: 'qb-key-update',
+      typeName: 'qBittorrent',
+      host: TEST_CONFIG.mocks.downloadClientUrl,
+      apiKey: 'qb-update-key',
+      username: '',
+      password: '',
+    });
+    expect(update.ok).toBe(true);
+    const updated = await update.json();
+    expect(updated.apiKey).toBe('••••••••');
+
+    await api.downloadClient.delete(created.id);
+  });
+});
+
 test.describe('DownloadClient: API key validation', () => {
   test('create SABnzbd with an empty API key returns 400', async ({ api }) => {
     const payload = buildDownloadClientPayload('sabnzbd', {

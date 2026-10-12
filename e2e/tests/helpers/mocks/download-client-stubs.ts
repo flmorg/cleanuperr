@@ -30,6 +30,30 @@ export function qbitTorrentsStub(torrents: Array<Record<string, unknown>> = []):
   };
 }
 
+/**
+ * The health check probes this endpoint for an API-key client, since logging in with an
+ * API key returns 403. Real qBittorrent 5.2 answers plain text "0"/"1".
+ */
+export function qbitSpeedLimitsModeStub(apiKey: string): Mapping {
+  return {
+    request: {
+      method: 'GET',
+      urlPath: '/api/v2/transfer/speedLimitsMode',
+      headers: { Authorization: { equalTo: `Bearer ${apiKey}` } },
+    },
+    response: { status: 200, body: '0', headers: { 'Content-Type': 'text/plain' } },
+    priority: 1,
+  };
+}
+
+/** Real qBittorrent rejects a Bearer token that doesn't match the configured API key with 403. */
+export function qbitRejectedApiKeyStub(): Mapping {
+  return {
+    request: { method: 'GET', urlPath: '/api/v2/transfer/speedLimitsMode' },
+    response: { status: 403, body: 'Forbidden' },
+  };
+}
+
 export function delugeLoginStub(sessionCookie = 'test-deluge'): Mapping {
   return {
     request: {

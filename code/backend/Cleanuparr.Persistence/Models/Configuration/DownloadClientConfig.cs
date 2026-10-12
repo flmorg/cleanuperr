@@ -120,5 +120,11 @@ public sealed record DownloadClientConfig
         {
             throw new ValidationException("API key cannot be empty");
         }
+
+        if (TypeName.SupportsApiKeyAndCredentials() && !string.IsNullOrWhiteSpace(ApiKey) &&
+            (!string.IsNullOrWhiteSpace(Username) || !string.IsNullOrWhiteSpace(Password)))
+        {
+            throw new ValidationException("Use either an API key or a username and password, not both");
+        }
     }
 }

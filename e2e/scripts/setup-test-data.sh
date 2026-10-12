@@ -54,6 +54,7 @@ WebUI\HostHeaderValidation=false
 WebUI\LocalHostAuth=false
 WebUI\AuthSubnetWhitelistEnabled=true
 WebUI\AuthSubnetWhitelist=127.0.0.0/8, ::1/128
+WebUI\APIKey=qbt_0000000000000000000000000e2e
 WebUI\Username=admin
 WebUI\Password_PBKDF2="@ByteArray(ARQ77eY1NUZ366igo9pHIQ==:Bn3qWLqOY3qE6Z+sCx2NoO5q4nhgxhUL3eRD4Zw3+5p9C7+RmrI20bzAjcwHKqcWa+5z6QBQGckCB8sFCnVTGw==)"
 Downloads\SavePath=/downloads

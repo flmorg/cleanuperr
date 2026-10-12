@@ -22,6 +22,43 @@ test.describe('DownloadClient — test connection', () => {
   // stateful retries that don't model cleanly with WireMock. Both failure
   // branches are exercised by the generic "host unreachable" case below.
 
+  // An API key client skips login and probes an auth-protected endpoint instead.
+  test('qbittorrent: an api key alone succeeds', async ({ api, mocks }) => {
+    await mocks.downloadClient.stub(DownloadClientStubs.qbitSpeedLimitsModeStub('right-key'));
+    const res = await api.downloadClient.test(
+      buildDownloadClientPayload('qbittorrent', {
+        name: 'qb-key-conn',
+        host: TEST_CONFIG.mocks.downloadClientUrl,
+        apiKey: 'right-key',
+      }),
+    );
+    expect(res.ok).toBe(true);
+  });
+
+  test('qbittorrent: a wrong api key fails test-connection', async ({ api, mocks }) => {
+    await mocks.downloadClient.stub(DownloadClientStubs.qbitRejectedApiKeyStub());
+    const res = await api.downloadClient.test(
+      buildDownloadClientPayload('qbittorrent', {
+        name: 'qb-key-conn-wrong',
+        host: TEST_CONFIG.mocks.downloadClientUrl,
+        apiKey: 'wrong-key',
+      }),
+    );
+    expect(res.ok).toBe(false);
+  });
+
+  test('qbittorrent: an api key combined with a password is rejected', async ({ api }) => {
+    const res = await api.downloadClient.test(
+      buildDownloadClientPayload('qbittorrent', {
+        name: 'qb-key-plus-password',
+        host: TEST_CONFIG.mocks.downloadClientUrl,
+        apiKey: 'right-key',
+        password: 'admin',
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
   test('deluge: success on auth.login', async ({ api, mocks }) => {
     await mocks.downloadClient.stub(DownloadClientStubs.delugeLoginStub());
     const res = await api.downloadClient.test(
@@ -151,5 +188,35 @@ test.describe('DownloadClient — test connection', () => {
     });
     const res = await api.downloadClient.test(payload);
     expect(res.status).toBe(400);
+  });
+});
+
+/**
+ * Against the real qBittorrent container rather than WireMock, since the api-key auth
+ * path (AuthController::apiKeySessionInitialize) bypasses isAuthNeeded()'s LocalHostAuth /
+ * AuthSubnetWhitelist check entirely: a wrong key gets no session and a real 403, even from
+ * a request originating on 127.0.0.0/8 under this stack's network_mode: host.
+ */
+test.describe('DownloadClient: test connection (real qBittorrent container)', () => {
+  test('qbittorrent: the seeded api key succeeds', async ({ api }) => {
+    const res = await api.downloadClient.test(
+      buildDownloadClientPayload('qbittorrent', {
+        name: 'qb-live-key-conn',
+        host: 'http://localhost:8090',
+        apiKey: TEST_CONFIG.liveQbittorrent.apiKey,
+      }),
+    );
+    expect(res.ok).toBe(true);
+  });
+
+  test('qbittorrent: a wrong api key fails', async ({ api }) => {
+    const res = await api.downloadClient.test(
+      buildDownloadClientPayload('qbittorrent', {
+        name: 'qb-live-key-conn-wrong',
+        host: 'http://localhost:8090',
+        apiKey: 'qbt_1111111111111111111111111111',
+      }),
+    );
+    expect(res.ok).toBe(false);
   });
 });

@@ -226,6 +226,71 @@ public sealed class DownloadClientConfigTests
         Should.NotThrow(() => config.Validate());
     }
 
+    [Fact]
+    public void Validate_QBittorrentWithApiKeyOnly_DoesNotThrow()
+    {
+        var config = new DownloadClientConfig
+        {
+            Name = "My qBittorrent",
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Type = DownloadClientType.Torrent,
+            Host = new Uri("http://localhost:8080"),
+            ApiKey = "qbt_abcdefghijklmnopqrstuvwxyz12"
+        };
+
+        Should.NotThrow(() => config.Validate());
+    }
+
+    [Fact]
+    public void Validate_QBittorrentWithApiKeyAndPassword_ThrowsValidationException()
+    {
+        var config = new DownloadClientConfig
+        {
+            Name = "My qBittorrent",
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Type = DownloadClientType.Torrent,
+            Host = new Uri("http://localhost:8080"),
+            ApiKey = "qbt_abcdefghijklmnopqrstuvwxyz12",
+            Password = "pass"
+        };
+
+        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        exception.Message.ShouldBe("Use either an API key or a username and password, not both");
+    }
+
+    [Fact]
+    public void Validate_QBittorrentWithApiKeyAndUsername_ThrowsValidationException()
+    {
+        var config = new DownloadClientConfig
+        {
+            Name = "My qBittorrent",
+            TypeName = DownloadClientTypeName.qBittorrent,
+            Type = DownloadClientType.Torrent,
+            Host = new Uri("http://localhost:8080"),
+            ApiKey = "qbt_abcdefghijklmnopqrstuvwxyz12",
+            Username = "admin"
+        };
+
+        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        exception.Message.ShouldBe("Use either an API key or a username and password, not both");
+    }
+
+    [Fact]
+    public void Validate_SabnzbdWithApiKeyAndPassword_DoesNotThrow()
+    {
+        var config = new DownloadClientConfig
+        {
+            Name = "My Sabnzbd",
+            TypeName = DownloadClientTypeName.Sabnzbd,
+            Type = DownloadClientType.Usenet,
+            Host = new Uri("http://localhost:8080"),
+            ApiKey = "a-real-key",
+            Password = "unused"
+        };
+
+        Should.NotThrow(() => config.Validate());
+    }
+
     #endregion
 
     #region Url Property Tests

@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { form, required, disabled, FormField } from '@angular/forms/signals';
+import { form, required, disabled, validate, FormField } from '@angular/forms/signals';
 import { PageHeaderComponent } from '@layout/page-header/page-header.component';
 import {
   CardComponent, ButtonComponent, InputComponent, ToggleComponent,
@@ -114,6 +114,15 @@ export class DownloadClientsComponent implements HasPendingChanges {
       when: ({ valueOf }) => valueOf(p.typeName) === DownloadClientTypeName.Sabnzbd,
       message: 'API key is required',
     });
+    validate(p.apiKey, () => {
+      const m = this.clientModel();
+      const fields = this.authFieldsByType()[m.typeName] ?? [];
+      const supportsBoth = fields.includes('apiKey') && (fields.includes('username') || fields.includes('password'));
+      const has = (v: string | null | undefined): boolean => !!v && v.trim() !== '';
+      return supportsBoth && has(m.apiKey) && (has(m.username) || has(m.password))
+        ? { kind: 'exclusive', message: 'Use either an API key or a username and password, not both' }
+        : undefined;
+    });
     disabled(p.typeName, () => this.editingClient() !== null);
   });
 
@@ -133,7 +142,15 @@ export class DownloadClientsComponent implements HasPendingChanges {
   readonly showApiKeyField = computed(() =>
     (this.authFieldsByType()[this.clientModel().typeName] ?? []).includes('apiKey'));
 
-  readonly apiKeyHint = 'API key from SABnzbd > Config > General';
+  readonly apiKeyHint = computed(() => {
+    if (this.clientModel().typeName === DownloadClientTypeName.qBittorrent) {
+      return 'qBittorrent 5.2+: Options > WebUI > API key. Leave username and password empty.';
+    }
+    return 'API key from SABnzbd > Config > General';
+  });
+
+  readonly apiKeyFeatureId = computed(() =>
+    this.clientModel().typeName === DownloadClientTypeName.qBittorrent ? 'qbit-api-key' : undefined);
 
   readonly usernameHint = computed(() => {
     if (this.clientModel().typeName === DownloadClientTypeName.rTorrent) {
@@ -204,7 +221,7 @@ export class DownloadClientsComponent implements HasPendingChanges {
       name: client.name,
       typeName: client.typeName,
       host: client.host,
-      username: client.username,
+      username: client.username ?? '',
       password: client.password ?? '',
       apiKey: client.apiKey ?? '',
       urlBase: client.urlBase,
