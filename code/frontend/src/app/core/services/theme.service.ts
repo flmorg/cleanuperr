@@ -35,6 +35,7 @@ export const ACCENT_PRESET_HEX: Record<AccentPreset, string> = {
   teal:    '#14b8a6',
 };
 
+// index.html reads this key before Angular boots.
 const THEME_KEY = 'cleanuparr-theme';
 const PERFORMANCE_MODE_KEY = 'cleanuparr-performance-mode';
 const FULL_WIDTH_KEY = 'cleanuparr-full-width';
