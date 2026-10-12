@@ -42,7 +42,9 @@ const TYPES: DownloadClientTypesResponse = {
   types: [
     {
       typeName: DownloadClientTypeName.qBittorrent,
-      authFields: [DownloadClientAuthField.Username, DownloadClientAuthField.Password],
+      authFields: [
+        DownloadClientAuthField.Username, DownloadClientAuthField.Password, DownloadClientAuthField.ApiKey,
+      ],
       capabilities: [DownloadClientCapability.SeedingCleanup, DownloadClientCapability.TagFiltering],
     },
     {
@@ -253,6 +255,10 @@ describe('DownloadClientsComponent', () => {
     expect(fieldLabels(fixture)).not.toContain('Username');
     expect(fieldLabels(fixture)).not.toContain('Password');
     expect(fieldLabels(fixture)).toContain('API Key');
+
+    component.clientForm.apiKey().value.set('sab-key');
+    fixture.detectChanges();
+    expect(hintFor(fixture, 'API Key')).toBe('API key from SABnzbd > Config > General');
   });
 
   it('blocks saving a SABnzbd client with an empty API key and shows the error', () => {
@@ -315,9 +321,66 @@ describe('DownloadClientsComponent', () => {
     component.openAddModal();
     fixture.detectChanges();
 
-    expect(component.clientModel().typeName).toBe(DownloadClientTypeName.qBittorrent);
+    chooseClientType(fixture, 'Deluge');
+
+    expect(component.clientModel().typeName).toBe(DownloadClientTypeName.Deluge);
     expect(component.showApiKeyField()).toBe(false);
     expect(fieldLabels(fixture)).not.toContain('API Key');
+  });
+
+  it('shows the API key field for qBittorrent alongside username and password', () => {
+    const { fixture, component } = setup();
+
+    component.openAddModal();
+    fixture.detectChanges();
+
+    expect(component.clientModel().typeName).toBe(DownloadClientTypeName.qBittorrent);
+    expect(component.showUsernameField()).toBe(true);
+    expect(component.showPasswordField()).toBe(true);
+    expect(component.showApiKeyField()).toBe(true);
+    expect(fieldLabels(fixture)).toContain('API Key');
+    expect(hintFor(fixture, 'API Key'))
+      .toBe('qBittorrent 5.2+: Options > WebUI > API key. Leave username and password empty.');
+  });
+
+  it('blocks saving a qBittorrent client with both an API key and a password', () => {
+    const { fixture, component, api } = setup();
+
+    component.openAddModal();
+    component.clientForm.name().value.set('qbit box');
+    component.clientForm.host().value.set('http://localhost:8080');
+    component.clientForm.password().value.set('secret');
+    component.clientForm.apiKey().value.set('qbit-key');
+    fixture.detectChanges();
+
+    expect(component.hasModalErrors()).toBe(true);
+    expect(component.clientForm.apiKey().errors()[0].message)
+      .toBe('Use either an API key or a username and password, not both');
+
+    component.saveClient();
+    expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it('saves a qBittorrent client with only an API key', () => {
+    const { fixture, component, api } = setup();
+
+    component.openAddModal();
+    component.clientForm.name().value.set('qbit box');
+    component.clientForm.host().value.set('http://localhost:8080');
+    component.clientForm.apiKey().value.set('qbit-key');
+    fixture.detectChanges();
+
+    expect(component.hasModalErrors()).toBe(false);
+
+    component.saveClient();
+    fixture.detectChanges();
+
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        typeName: DownloadClientTypeName.qBittorrent,
+        apiKey: 'qbit-key',
+      }),
+    );
   });
 
   it('saves a SABnzbd client with the Usenet client type', () => {

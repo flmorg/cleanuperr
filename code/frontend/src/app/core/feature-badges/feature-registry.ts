@@ -50,4 +50,5 @@ export const NEW_FEATURES: NewFeature[] = [
   { id: 'change-username' },
   { id: 'force-import' },
   { id: 'usenet-queue-cleaner' },
+  { id: 'qbit-api-key' },
 ];
