@@ -6,11 +6,22 @@ const DATA_ATTRIBUTES = ['data-theme', 'data-performance-mode', 'data-full-width
 
 describe('ThemeService', () => {
   const root = document.documentElement;
+  let darkMatches = false;
+  let darkListeners: ((event: MediaQueryListEvent) => void)[];
 
-  function setup(): ThemeService {
+  function setup(initialSystemDark = false): ThemeService {
+    darkMatches = initialSystemDark;
     const service = TestBed.inject(ThemeService);
     TestBed.tick();
     return service;
+  }
+
+  function fireSystemThemeChange(matches: boolean): void {
+    darkMatches = matches;
+    for (const listener of darkListeners) {
+      listener({ matches } as MediaQueryListEvent);
+    }
+    TestBed.tick();
   }
 
   function brandStop(shade: number): string {
@@ -29,7 +40,20 @@ describe('ThemeService', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    darkMatches = false;
+    darkListeners = [];
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      get matches(): boolean {
+        return query === '(prefers-color-scheme: dark)' ? darkMatches : false;
+      },
+      addEventListener: (type: string, listener: (event: MediaQueryListEvent) => void) => {
+        if (type === 'change' && query === '(prefers-color-scheme: dark)')
+        {
+          darkListeners.push(listener);
+        }
+      },
+      removeEventListener: () => undefined,
+    }));
   });
 
   afterEach(() => {
@@ -164,6 +188,85 @@ describe('ThemeService', () => {
     expect(service.theme()).toBe('light');
     expect(root.getAttribute('data-theme')).toBe('light');
     expect(service.accent()).toBe('default');
+  });
+
+  it('resolves to dark from the system preference when nothing is stored', () => {
+    const service = setup(true);
+
+    expect(service.preference()).toBe('system');
+    expect(service.theme()).toBe('dark');
+    expect(root.getAttribute('data-theme')).toBe('dark');
+  });
+
+  it('resolves to light from the system preference when nothing is stored', () => {
+    const service = setup(false);
+
+    expect(service.preference()).toBe('system');
+    expect(service.theme()).toBe('light');
+    expect(root.getAttribute('data-theme')).toBe('light');
+  });
+
+  it('restores a stored system preference', () => {
+    localStorage.setItem('cleanuparr-theme', 'system');
+
+    const service = setup(true);
+
+    expect(service.preference()).toBe('system');
+    expect(service.theme()).toBe('dark');
+  });
+
+  it('restores a legacy stored dark or light theme as an explicit preference', () => {
+    localStorage.setItem('cleanuparr-theme', 'dark');
+
+    const service = setup(true);
+
+    expect(service.preference()).toBe('dark');
+    expect(service.theme()).toBe('dark');
+  });
+
+  it('follows a system theme change while the preference is system', () => {
+    const service = setup(false);
+
+    expect(service.theme()).toBe('light');
+
+    fireSystemThemeChange(true);
+
+    expect(service.theme()).toBe('dark');
+    expect(root.getAttribute('data-theme')).toBe('dark');
+  });
+
+  it('ignores a system theme change while the preference is explicit', () => {
+    const service = setup(false);
+
+    service.setTheme('light');
+    TestBed.tick();
+
+    fireSystemThemeChange(true);
+
+    expect(service.theme()).toBe('light');
+    expect(root.getAttribute('data-theme')).toBe('light');
+  });
+
+  it('cycles dark to light to system to dark, persisting each step', () => {
+    const service = setup(false);
+
+    service.setTheme('dark');
+    TestBed.tick();
+
+    service.cycleTheme();
+    TestBed.tick();
+    expect(service.preference()).toBe('light');
+    expect(localStorage.getItem('cleanuparr-theme')).toBe('light');
+
+    service.cycleTheme();
+    TestBed.tick();
+    expect(service.preference()).toBe('system');
+    expect(localStorage.getItem('cleanuparr-theme')).toBe('system');
+
+    service.cycleTheme();
+    TestBed.tick();
+    expect(service.preference()).toBe('dark');
+    expect(localStorage.getItem('cleanuparr-theme')).toBe('dark');
   });
 
   it('falls back to the default accent when the stored accent or custom hex is unusable', () => {

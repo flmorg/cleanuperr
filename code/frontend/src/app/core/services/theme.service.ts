@@ -1,6 +1,9 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal, computed, effect } from '@angular/core';
 
 export type Theme = 'dark' | 'light';
+export type ThemePreference = Theme | 'system';
+
+const THEME_PREFERENCE_ORDER: readonly ThemePreference[] = ['dark', 'light', 'system'];
 
 export const ACCENT_PRESETS = [
   'default',
@@ -53,13 +56,22 @@ const LIGHTNESS_STOPS: Record<(typeof BRAND_SHADES)[number], number> = {
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly root = document.documentElement;
-  private readonly _theme = signal<Theme>('dark');
+  private readonly _preference = signal<ThemePreference>('system');
+  private readonly _systemDark = signal(false);
   private readonly _performanceMode = signal(false);
   private readonly _fullWidth = signal(false);
   private readonly _accent = signal<Accent>('default');
   private readonly _customAccent = signal<string>(DEFAULT_CUSTOM_ACCENT);
 
-  readonly theme = this._theme.asReadonly();
+  readonly theme = computed<Theme>(() => {
+    const preference = this._preference();
+    if (preference === 'dark' || preference === 'light')
+    {
+      return preference;
+    }
+    return this._systemDark() ? 'dark' : 'light';
+  });
+  readonly preference = this._preference.asReadonly();
   readonly performanceMode = this._performanceMode.asReadonly();
   readonly fullWidth = this._fullWidth.asReadonly();
   readonly accent = this._accent.asReadonly();
@@ -67,19 +79,20 @@ export class ThemeService {
 
   constructor() {
     this.restoreFromStorage();
+    this.watchSystemTheme();
     this.detectSystemPreferences();
     this.bindToDom();
   }
 
-  toggleTheme(): void {
-    const next = this._theme() === 'dark' ? 'light' : 'dark';
-    this._theme.set(next);
-    localStorage.setItem(THEME_KEY, next);
+  cycleTheme(): void {
+    const index = THEME_PREFERENCE_ORDER.indexOf(this._preference());
+    const next = THEME_PREFERENCE_ORDER[(index + 1) % THEME_PREFERENCE_ORDER.length];
+    this.setTheme(next);
   }
 
-  setTheme(theme: Theme): void {
-    this._theme.set(theme);
-    localStorage.setItem(THEME_KEY, theme);
+  setTheme(preference: ThemePreference): void {
+    this._preference.set(preference);
+    localStorage.setItem(THEME_KEY, preference);
   }
 
   togglePerformanceMode(): void {
@@ -105,7 +118,7 @@ export class ThemeService {
    * `*-dark.svg` (designed for light backgrounds) convention.
    */
   themedIconSrc(src: string): string {
-    if (this._theme() === 'dark')
+    if (this.theme() === 'dark')
     {
       return src;
     }
@@ -128,8 +141,8 @@ export class ThemeService {
 
   private restoreFromStorage(): void {
     const savedTheme = localStorage.getItem(THEME_KEY);
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      this._theme.set(savedTheme);
+    if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
+      this._preference.set(savedTheme);
     }
 
     const saved = localStorage.getItem(PERFORMANCE_MODE_KEY);
@@ -162,9 +175,17 @@ export class ThemeService {
     }
   }
 
+  private watchSystemTheme(): void {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    this._systemDark.set(prefersDark.matches);
+    prefersDark.addEventListener('change', (event) => {
+      this._systemDark.set(event.matches);
+    });
+  }
+
   private bindToDom(): void {
     effect(() => {
-      this.root.setAttribute('data-theme', this._theme());
+      this.root.setAttribute('data-theme', this.theme());
     });
 
     effect(() => {

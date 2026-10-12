@@ -19,7 +19,7 @@ describe('NavSidebarComponent', () => {
   });
 
   function setup(status: AppStatus | null = null): Harness {
-    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => undefined, removeEventListener: () => undefined }));
     const appStatus = signal(status);
     const logouts: number[] = [];
 

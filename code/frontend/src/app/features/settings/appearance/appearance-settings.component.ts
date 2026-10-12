@@ -5,7 +5,7 @@ import {
   ACCENT_PRESETS,
   ACCENT_PRESET_HEX,
   Accent,
-  Theme,
+  ThemePreference,
   ThemeService,
 } from '@core/services/theme.service';
 
@@ -36,7 +36,7 @@ export class AppearanceSettingsComponent {
     color: ACCENT_PRESET_HEX[value],
   }));
 
-  selectTheme(theme: Theme): void {
+  selectTheme(theme: ThemePreference): void {
     this.themeService.setTheme(theme);
   }
 

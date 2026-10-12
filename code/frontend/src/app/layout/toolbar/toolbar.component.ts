@@ -22,7 +22,7 @@ export class ToolbarComponent {
   fullWidth = this.themeService.fullWidth;
 
   onToggleTheme(): void {
-    this.themeService.toggleTheme();
+    this.themeService.cycleTheme();
   }
 
   onTogglePerformanceMode(): void {

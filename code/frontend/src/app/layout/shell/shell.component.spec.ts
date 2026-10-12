@@ -25,7 +25,7 @@ describe('ShellComponent', () => {
   }
 
   function setup(width = DESKTOP_WIDTH): Harness {
-    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => undefined, removeEventListener: () => undefined }));
     setWidth(width);
     const hubCalls: string[] = [];
 
