@@ -61,6 +61,20 @@ describe('chart-window.util', () => {
       expect(formatted).toMatch(/\d/);
       expect(formatted).not.toBe(formatBucketDate('2026-03-15T23:00:00Z', 168));
     });
+
+    it('formats 24h windows with a 24-hour clock', () => {
+      const formatted = formatBucketDate(new Date(2026, 2, 15, 13, 0).toISOString(), 24);
+
+      expect(formatted).toContain('13');
+      expect(formatted).not.toMatch(/am|pm/i);
+    });
+
+    it('formats midnight as 00 rather than 24', () => {
+      const formatted = formatBucketDate(new Date(2026, 2, 15, 0, 0).toISOString(), 24);
+
+      expect(formatted).toContain('00');
+      expect(formatted).not.toContain('24');
+    });
   });
 
   describe('getChartDuration', () => {

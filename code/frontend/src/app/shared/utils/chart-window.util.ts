@@ -28,7 +28,7 @@ export function getChartDuration(): number {
 
 export function formatBucketDate(date: string, hours: number): string {
   if (hours <= 24) {
-    return new Date(date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return new Date(date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   }
   if (hours >= 8760) {
     return new Date(`${date.slice(0, 10)}T00:00:00`).toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
