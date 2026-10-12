@@ -383,6 +383,50 @@ describe('DownloadClientsComponent', () => {
     );
   });
 
+  it('blocks saving a qBittorrent client with both an API key and a username', () => {
+    const { fixture, component, api } = setup();
+
+    component.openAddModal();
+    component.clientForm.name().value.set('qbit box');
+    component.clientForm.host().value.set('http://localhost:8080');
+    component.clientForm.username().value.set('admin');
+    component.clientForm.apiKey().value.set('qbit-key');
+    fixture.detectChanges();
+
+    expect(component.hasModalErrors()).toBe(true);
+    expect(component.clientForm.apiKey().errors()[0].message)
+      .toBe('Use either an API key or a username and password, not both');
+
+    component.saveClient();
+    expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it('edits a qBittorrent client with a null username and an API key placeholder without showing the exclusive error', () => {
+    const qbitApiKeyOnly: ClientConfig = {
+      ...QBIT,
+      username: null as unknown as string,
+      password: undefined,
+      apiKey: 'qbit-placeholder-key',
+    };
+    const { fixture, component, api } = setup(createApi({ clients: [qbitApiKeyOnly] }));
+
+    component.openEditModal(qbitApiKeyOnly);
+    fixture.detectChanges();
+
+    expect(component.hasModalErrors()).toBe(false);
+
+    component.clientForm.name().value.set('qbit box renamed');
+    fixture.detectChanges();
+
+    component.saveClient();
+    fixture.detectChanges();
+
+    expect(api.update).toHaveBeenCalledWith(
+      qbitApiKeyOnly.id,
+      expect.objectContaining({ name: 'qbit box renamed', apiKey: 'qbit-placeholder-key' }),
+    );
+  });
+
   it('saves a SABnzbd client with the Usenet client type', () => {
     const { fixture, component, api } = setup();
 

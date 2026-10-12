@@ -118,7 +118,8 @@ export class DownloadClientsComponent implements HasPendingChanges {
       const m = this.clientModel();
       const fields = this.authFieldsByType()[m.typeName] ?? [];
       const supportsBoth = fields.includes('apiKey') && (fields.includes('username') || fields.includes('password'));
-      return supportsBoth && m.apiKey !== '' && (m.username !== '' || m.password !== '')
+      const has = (v: string | null | undefined): boolean => !!v && v.trim() !== '';
+      return supportsBoth && has(m.apiKey) && (has(m.username) || has(m.password))
         ? { kind: 'exclusive', message: 'Use either an API key or a username and password, not both' }
         : undefined;
     });
@@ -220,7 +221,7 @@ export class DownloadClientsComponent implements HasPendingChanges {
       name: client.name,
       typeName: client.typeName,
       host: client.host,
-      username: client.username,
+      username: client.username ?? '',
       password: client.password ?? '',
       apiKey: client.apiKey ?? '',
       urlBase: client.urlBase,
