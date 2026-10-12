@@ -10,6 +10,7 @@ import {
   inject,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { RootDataKey } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-animated-counter',
@@ -46,7 +47,7 @@ export class AnimatedCounterComponent implements OnDestroy {
       }
 
       // Skip animation in performance mode
-      if (document.documentElement.dataset['performanceMode'] === 'true') {
+      if (document.documentElement.dataset[RootDataKey.PerformanceMode] === 'true') {
         this.displayValue.set(target);
         return;
       }

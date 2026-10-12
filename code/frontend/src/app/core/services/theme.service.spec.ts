@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { ThemeService } from './theme.service';
+import { RootDataKey, ThemeService } from './theme.service';
 
 const BRAND_SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
-const DATA_ATTRIBUTES = ['data-theme', 'data-performance-mode', 'data-full-width', 'data-accent'];
 
 describe('ThemeService', () => {
   const root = document.documentElement;
@@ -59,8 +58,8 @@ describe('ThemeService', () => {
   afterEach(() => {
     localStorage.clear();
     vi.unstubAllGlobals();
-    for (const attribute of DATA_ATTRIBUTES) {
-      root.removeAttribute(attribute);
+    for (const key of Object.values(RootDataKey)) {
+      delete root.dataset[key];
     }
     for (const shade of BRAND_SHADES) {
       root.style.removeProperty(`--brand-${shade}`);
@@ -155,7 +154,7 @@ describe('ThemeService', () => {
 
     expect(service.customAccent()).toBe('#8b5cf6');
     expect(service.accent()).toBe('default');
-    expect(root.getAttribute('data-accent')).toBe('default');
+    expect(root.dataset[RootDataKey.Accent]).toBe('default');
     expect(brandStop(500)).toBe('');
     expect(localStorage.getItem('cleanuparr-custom-accent')).toBeNull();
   });
@@ -167,13 +166,13 @@ describe('ThemeService', () => {
     TestBed.tick();
 
     expect(service.accent()).toBe('custom');
-    expect(root.getAttribute('data-accent')).toBe('custom');
+    expect(root.dataset[RootDataKey.Accent]).toBe('custom');
     expect(brandStop(500)).toBe('#f43f5e');
 
     service.setAccent('teal');
     TestBed.tick();
 
-    expect(root.getAttribute('data-accent')).toBe('teal');
+    expect(root.dataset[RootDataKey.Accent]).toBe('teal');
     expect(brandStop(500)).toBe('');
     expect(root.style.getPropertyValue('--accent-rgb')).toBe('');
     expect(service.customAccent()).toBe('#f43f5e');
@@ -186,7 +185,7 @@ describe('ThemeService', () => {
     const service = setup();
 
     expect(service.theme()).toBe('light');
-    expect(root.getAttribute('data-theme')).toBe('light');
+    expect(root.dataset[RootDataKey.Theme]).toBe('light');
     expect(service.accent()).toBe('default');
   });
 
@@ -195,7 +194,7 @@ describe('ThemeService', () => {
 
     expect(service.preference()).toBe('system');
     expect(service.theme()).toBe('dark');
-    expect(root.getAttribute('data-theme')).toBe('dark');
+    expect(root.dataset[RootDataKey.Theme]).toBe('dark');
   });
 
   it('resolves to light from the system preference when nothing is stored', () => {
@@ -203,7 +202,7 @@ describe('ThemeService', () => {
 
     expect(service.preference()).toBe('system');
     expect(service.theme()).toBe('light');
-    expect(root.getAttribute('data-theme')).toBe('light');
+    expect(root.dataset[RootDataKey.Theme]).toBe('light');
   });
 
   it('restores a stored system preference', () => {
@@ -232,7 +231,7 @@ describe('ThemeService', () => {
     fireSystemThemeChange(true);
 
     expect(service.theme()).toBe('dark');
-    expect(root.getAttribute('data-theme')).toBe('dark');
+    expect(root.dataset[RootDataKey.Theme]).toBe('dark');
   });
 
   it('ignores a system theme change while the preference is explicit', () => {
@@ -244,7 +243,7 @@ describe('ThemeService', () => {
     fireSystemThemeChange(true);
 
     expect(service.theme()).toBe('light');
-    expect(root.getAttribute('data-theme')).toBe('light');
+    expect(root.dataset[RootDataKey.Theme]).toBe('light');
   });
 
   it('cycles dark to light to system to dark, persisting each step', () => {

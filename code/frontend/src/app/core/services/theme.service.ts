@@ -3,6 +3,13 @@ import { Injectable, signal, computed, effect } from '@angular/core';
 export type Theme = 'dark' | 'light';
 export type ThemePreference = Theme | 'system';
 
+export enum RootDataKey {
+  Theme = 'theme',
+  PerformanceMode = 'performanceMode',
+  FullWidth = 'fullWidth',
+  Accent = 'accent',
+}
+
 const THEME_PREFERENCE_ORDER: readonly ThemePreference[] = ['dark', 'light', 'system'];
 
 export const ACCENT_PRESETS = [
@@ -185,20 +192,20 @@ export class ThemeService {
 
   private bindToDom(): void {
     effect(() => {
-      this.root.setAttribute('data-theme', this.theme());
+      this.root.dataset[RootDataKey.Theme] = this.theme();
     });
 
     effect(() => {
-      this.root.setAttribute('data-performance-mode', String(this._performanceMode()));
+      this.root.dataset[RootDataKey.PerformanceMode] = String(this._performanceMode());
     });
 
     effect(() => {
-      this.root.setAttribute('data-full-width', String(this._fullWidth()));
+      this.root.dataset[RootDataKey.FullWidth] = String(this._fullWidth());
     });
 
     effect(() => {
       const accent = this._accent();
-      this.root.setAttribute('data-accent', accent);
+      this.root.dataset[RootDataKey.Accent] = accent;
 
       if (accent === 'custom')
       {
