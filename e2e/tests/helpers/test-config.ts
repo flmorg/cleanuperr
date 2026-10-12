@@ -37,6 +37,12 @@ export const TEST_CONFIG = {
     seededMovieTitle: 'F1',
   },
 
+  // Real qBittorrent container: the API key seeded into
+  // test-data/qbittorrent-config/qBittorrent/qBittorrent.conf by setup-test-data.sh.
+  liveQbittorrent: {
+    apiKey: 'qbt_0000000000000000000000000e2e',
+  },
+
   // The real LazyLibrarian container.
   // Its api keys and library come from the committed seed in e2e/lazylibrarian-seed.
   liveLazyLibrarian: {
