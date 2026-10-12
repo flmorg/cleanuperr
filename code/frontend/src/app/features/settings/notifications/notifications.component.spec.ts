@@ -71,7 +71,7 @@ interface Setup {
 
 describe('NotificationsComponent', () => {
   beforeEach(() => {
-    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener: () => undefined, removeEventListener: () => undefined }));
   });
 
   afterEach(() => {

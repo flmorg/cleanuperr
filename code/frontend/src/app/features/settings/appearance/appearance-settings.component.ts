@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { PageHeaderComponent } from '@layout/page-header/page-header.component';
 import { CardComponent } from '@ui';
+import { NewBadgeComponent } from '@ui/new-badge/new-badge.component';
 import {
   ACCENT_PRESETS,
   ACCENT_PRESET_HEX,
   Accent,
-  Theme,
+  ThemePreference,
   ThemeService,
 } from '@core/services/theme.service';
 
@@ -18,7 +19,7 @@ interface AccentSwatch {
 @Component({
   selector: 'app-appearance-settings',
   standalone: true,
-  imports: [PageHeaderComponent, CardComponent],
+  imports: [PageHeaderComponent, CardComponent, NewBadgeComponent],
   templateUrl: './appearance-settings.component.html',
   styleUrl: './appearance-settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -26,7 +27,7 @@ interface AccentSwatch {
 export class AppearanceSettingsComponent {
   private readonly themeService = inject(ThemeService);
 
-  readonly theme = this.themeService.theme;
+  readonly preference = this.themeService.preference;
   readonly accent = this.themeService.accent;
   readonly customAccent = this.themeService.customAccent;
 
@@ -36,7 +37,7 @@ export class AppearanceSettingsComponent {
     color: ACCENT_PRESET_HEX[value],
   }));
 
-  selectTheme(theme: Theme): void {
+  selectTheme(theme: ThemePreference): void {
     this.themeService.setTheme(theme);
   }
 

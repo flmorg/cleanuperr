@@ -5,12 +5,13 @@
 
 <div class="settings-form">
   <app-card header="Theme">
-    <p class="section-hint">Choose between dark and light color modes.</p>
+    <p class="section-hint">Choose dark, light, or follow your system setting.</p>
     <div class="theme-options">
       <button
         type="button"
         class="theme-option"
-        [class.theme-option--active]="theme() === 'dark'"
+        [class.theme-option--active]="preference() === 'dark'"
+        [attr.aria-pressed]="preference() === 'dark'"
         (click)="selectTheme('dark')"
       >
         <span class="theme-option__preview theme-option__preview--dark"></span>
@@ -19,11 +20,25 @@
       <button
         type="button"
         class="theme-option"
-        [class.theme-option--active]="theme() === 'light'"
+        [class.theme-option--active]="preference() === 'light'"
+        [attr.aria-pressed]="preference() === 'light'"
         (click)="selectTheme('light')"
       >
         <span class="theme-option__preview theme-option__preview--light"></span>
         <span class="theme-option__label">Light</span>
+      </button>
+      <button
+        type="button"
+        class="theme-option"
+        [class.theme-option--active]="preference() === 'system'"
+        [attr.aria-pressed]="preference() === 'system'"
+        (click)="selectTheme('system')"
+      >
+        <span class="theme-option__preview theme-option__preview--system"></span>
+        <span class="theme-option__label">
+          System
+          <app-new-badge variant="inline" featureId="theme-follow-system" />
+        </span>
       </button>
     </div>
   </app-card>

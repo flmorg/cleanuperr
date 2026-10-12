@@ -6,13 +6,15 @@
   </div>
 
   <div class="toolbar__right">
-    <button
-      class="toolbar__icon-btn"
-      (click)="onToggleTheme()"
-      [attr.aria-label]="theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'"
-    >
-      <ng-icon [name]="theme() === 'dark' ? 'tablerSun' : 'tablerMoon'" />
-    </button>
+    <app-tooltip [text]="themeTooltip()">
+      <button
+        class="toolbar__icon-btn"
+        (click)="onToggleTheme()"
+        [attr.aria-label]="themeTooltip()"
+      >
+        <ng-icon [name]="themeIcon()" />
+      </button>
+    </app-tooltip>
 
     <app-tooltip text="Expands page content edge-to-edge on wide monitors, removing the default width cap.">
       <app-toggle
