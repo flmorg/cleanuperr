@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Cleanuparr.Domain.Entities;
+using Cleanuparr.Domain.Entities.HealthCheck;
 using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Features.Context;
 using Cleanuparr.Infrastructure.Features.DownloadClient;
@@ -1746,6 +1747,100 @@ public class QBitServiceTests : IClassFixture<QBitServiceFixture>
             // Assert
             httpClient.DefaultRequestHeaders.Authorization?.Scheme.ShouldBe("Bearer");
             httpClient.DefaultRequestHeaders.Authorization?.Parameter.ShouldBe(config.ApiKey);
+        }
+
+        [Fact]
+        public void Constructor_WhitespaceApiKey_DoesNotSetAuthorizationHeader()
+        {
+            // Arrange
+            HttpClient httpClient = new();
+            _fixture.HttpClientProvider.CreateClient(Arg.Any<DownloadClientConfig>()).Returns(httpClient);
+            DownloadClientConfig config = CreateApiKeyConfig();
+            config.ApiKey = "   ";
+
+            // Act
+            using QBitService sut = new(
+                _fixture.Logger,
+                _fixture.FilenameEvaluator,
+                _fixture.Striker,
+                _fixture.DryRunInterceptor,
+                _fixture.HardLinkFileService,
+                _fixture.HttpClientProvider,
+                _fixture.EventPublisher,
+                _fixture.BlocklistProvider,
+                config,
+                _fixture.RuleEvaluator,
+                _fixture.SeedingRuleEvaluator,
+                TimeProvider.System
+            );
+
+            // Assert
+            httpClient.DefaultRequestHeaders.Authorization.ShouldBeNull();
+        }
+
+        [Fact]
+        public async Task LoginAsync_CredentialsConfigured_LogsIn()
+        {
+            // Arrange
+            DownloadClientConfig config = CreateApiKeyConfig();
+            config.ApiKey = null;
+            config.Username = "admin";
+            config.Password = "admin";
+            QBitService sut = _fixture.CreateSut(config);
+
+            // Act
+            await sut.LoginAsync();
+
+            // Assert
+            await _fixture.ClientWrapper
+                .Received(1)
+                .LoginAsync(config.Username, config.Password);
+        }
+
+        [Fact]
+        public async Task HealthCheckAsync_CredentialsConfigured_LogsInAndReportsHealthy()
+        {
+            // Arrange
+            DownloadClientConfig config = CreateApiKeyConfig();
+            config.ApiKey = null;
+            config.Username = "admin";
+            config.Password = "admin";
+            QBitService sut = _fixture.CreateSut(config);
+
+            // Act
+            HealthCheckResult result = await sut.HealthCheckAsync();
+
+            // Assert
+            result.IsHealthy.ShouldBeTrue();
+            await _fixture.ClientWrapper
+                .Received(1)
+                .LoginAsync(config.Username, config.Password);
+            await _fixture.ClientWrapper
+                .DidNotReceive()
+                .GetAlternativeSpeedLimitsEnabledAsync();
+        }
+
+        [Fact]
+        public async Task HealthCheckAsync_WhitespaceApiKey_UsesCredentials()
+        {
+            // Arrange
+            DownloadClientConfig config = CreateApiKeyConfig();
+            config.ApiKey = "   ";
+            config.Username = "admin";
+            config.Password = "admin";
+            QBitService sut = _fixture.CreateSut(config);
+
+            // Act
+            HealthCheckResult result = await sut.HealthCheckAsync();
+
+            // Assert
+            result.IsHealthy.ShouldBeTrue();
+            await _fixture.ClientWrapper
+                .Received(1)
+                .LoginAsync(config.Username, config.Password);
+            await _fixture.ClientWrapper
+                .DidNotReceive()
+                .GetAlternativeSpeedLimitsEnabledAsync();
         }
 
         [Fact]

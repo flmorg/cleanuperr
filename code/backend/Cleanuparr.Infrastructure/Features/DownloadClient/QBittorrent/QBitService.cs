@@ -41,7 +41,7 @@ public partial class QBitService : TorrentDownloadService, IDeadTorrentCapable
         httpClientProvider, eventPublisher, blocklistProvider, downloadClientConfig, queueRuleEvaluator, seedingRuleEvaluator, timeProvider
     )
     {
-        if (!string.IsNullOrEmpty(downloadClientConfig.ApiKey))
+        if (!string.IsNullOrWhiteSpace(downloadClientConfig.ApiKey))
         {
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", downloadClientConfig.ApiKey);
         }
@@ -75,7 +75,7 @@ public partial class QBitService : TorrentDownloadService, IDeadTorrentCapable
     
     public override async Task LoginAsync()
     {
-        if (!string.IsNullOrEmpty(_downloadClientConfig.ApiKey))
+        if (!string.IsNullOrWhiteSpace(_downloadClientConfig.ApiKey))
         {
             _logger.LogDebug("API key configured for client {ClientId}, skipping login", _downloadClientConfig.Id);
             return;
@@ -108,7 +108,7 @@ public partial class QBitService : TorrentDownloadService, IDeadTorrentCapable
             bool hasCredentials = !string.IsNullOrEmpty(_downloadClientConfig.Username) ||
                                   !string.IsNullOrEmpty(_downloadClientConfig.Password);
 
-            if (!string.IsNullOrEmpty(_downloadClientConfig.ApiKey))
+            if (!string.IsNullOrWhiteSpace(_downloadClientConfig.ApiKey))
             {
                 // login with an API key returns 403, so probe an auth-protected endpoint
                 await _client.GetAlternativeSpeedLimitsEnabledAsync();
