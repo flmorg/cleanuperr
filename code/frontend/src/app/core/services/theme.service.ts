@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal, computed, effect } from '@angular/core';
 
 export type Theme = 'dark' | 'light';
 export type ThemePreference = Theme | 'system';
@@ -63,6 +63,7 @@ const LIGHTNESS_STOPS: Record<(typeof BRAND_SHADES)[number], number> = {
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly root = document.documentElement;
+  private readonly destroyRef = inject(DestroyRef);
   private readonly _preference = signal<ThemePreference>('system');
   private readonly _systemDark = signal(false);
   private readonly _performanceMode = signal(false);
@@ -185,9 +186,11 @@ export class ThemeService {
   private watchSystemTheme(): void {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
     this._systemDark.set(prefersDark.matches);
-    prefersDark.addEventListener('change', (event) => {
+    const onChange = (event: MediaQueryListEvent): void => {
       this._systemDark.set(event.matches);
-    });
+    };
+    prefersDark.addEventListener('change', onChange);
+    this.destroyRef.onDestroy(() => prefersDark.removeEventListener('change', onChange));
   }
 
   private bindToDom(): void {

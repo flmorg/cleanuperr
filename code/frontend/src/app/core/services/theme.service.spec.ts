@@ -51,7 +51,9 @@ describe('ThemeService', () => {
           darkListeners.push(listener);
         }
       },
-      removeEventListener: () => undefined,
+      removeEventListener: (type: string, listener: (event: MediaQueryListEvent) => void) => {
+        darkListeners = darkListeners.filter((registered) => registered !== listener);
+      },
     }));
   });
 
@@ -65,6 +67,15 @@ describe('ThemeService', () => {
       root.style.removeProperty(`--brand-${shade}`);
     }
     root.style.removeProperty('--accent-rgb');
+  });
+
+  it('removes its system theme listener when the injector is destroyed', () => {
+    setup();
+    expect(darkListeners.length).toBe(1);
+
+    TestBed.resetTestingModule();
+
+    expect(darkListeners.length).toBe(0);
   });
 
   it('round-trips the picked hex back through the mid brand stop and publishes its rgb triple', () => {
