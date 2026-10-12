@@ -14,7 +14,7 @@
 
 .theme-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
   margin-top: var(--space-2);
 
@@ -62,9 +62,34 @@
     &--light {
       background: linear-gradient(135deg, #ffffff 0%, var(--brand-100) 100%);
     }
+
+    &--system {
+      position: relative;
+      overflow: hidden;
+
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+
+      &::before {
+        background: linear-gradient(135deg, var(--brand-950) 0%, #0c0614 100%);
+        clip-path: polygon(0 0, 100% 0, 0 100%);
+      }
+
+      &::after {
+        background: linear-gradient(135deg, #ffffff 0%, var(--brand-100) 100%);
+        clip-path: polygon(100% 0, 100% 100%, 0 100%);
+      }
+    }
   }
 
   &__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
   }
