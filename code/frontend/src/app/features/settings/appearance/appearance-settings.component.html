@@ -11,6 +11,7 @@
         type="button"
         class="theme-option"
         [class.theme-option--active]="preference() === 'dark'"
+        [attr.aria-pressed]="preference() === 'dark'"
         (click)="selectTheme('dark')"
       >
         <span class="theme-option__preview theme-option__preview--dark"></span>
@@ -20,6 +21,7 @@
         type="button"
         class="theme-option"
         [class.theme-option--active]="preference() === 'light'"
+        [attr.aria-pressed]="preference() === 'light'"
         (click)="selectTheme('light')"
       >
         <span class="theme-option__preview theme-option__preview--light"></span>
@@ -29,6 +31,7 @@
         type="button"
         class="theme-option"
         [class.theme-option--active]="preference() === 'system'"
+        [attr.aria-pressed]="preference() === 'system'"
         (click)="selectTheme('system')"
       >
         <span class="theme-option__preview theme-option__preview--system"></span>

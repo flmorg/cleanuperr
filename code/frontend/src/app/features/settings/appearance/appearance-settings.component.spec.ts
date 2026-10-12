@@ -73,6 +73,21 @@ describe('AppearanceSettingsComponent', () => {
     expect(system.classList).not.toContain('theme-option--active');
   });
 
+  it('exposes the current preference through aria-pressed', () => {
+    const { fixture, themeService } = setup();
+
+    const [dark, light, system] = themeOptions(fixture);
+    expect(system.getAttribute('aria-pressed')).toBe('true');
+    expect(dark.getAttribute('aria-pressed')).toBe('false');
+    expect(light.getAttribute('aria-pressed')).toBe('false');
+
+    themeService.preference.set('light');
+    fixture.detectChanges();
+
+    expect(light.getAttribute('aria-pressed')).toBe('true');
+    expect(system.getAttribute('aria-pressed')).toBe('false');
+  });
+
   it('calls setTheme with the clicked preference', () => {
     const { fixture, themeService } = setup();
 
