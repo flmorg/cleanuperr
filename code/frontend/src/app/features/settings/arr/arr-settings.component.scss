@@ -5,6 +5,8 @@
 
 .settings-form { @include settings-form; }
 .modal-form { @include modal-form; }
+.form-stack { @include form-stack; }
+.form-actions { @include form-actions; }
 
 .instances-header {
   @include list-header;

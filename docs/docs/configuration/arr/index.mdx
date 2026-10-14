@@ -106,6 +106,26 @@ The API version for this *arr application. Select the version that matches your 
 
 </div>
 
+<div className={styles.section}>
+
+<SectionTitle>
+  Failed Import
+</SectionTitle>
+
+<ConfigSection
+  title="Failed Import Max Strikes"
+>
+
+Per-app override of the Queue Cleaner's [Failed Import Max Strikes](../queue-cleaner#failed-import-max-strikes) setting.
+
+- **Off**: this app uses the Queue Cleaner's global value.
+- **On, 0**: failed import strikes are disabled for this app.
+- **On, 3 or higher**: this app uses its own max strikes value instead of the global one.
+
+</ConfigSection>
+
+</div>
+
 </div>
 
 ## LazyLibrarian

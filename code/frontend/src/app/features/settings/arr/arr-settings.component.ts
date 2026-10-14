@@ -1,8 +1,8 @@
 import { Component, ChangeDetectionStrategy, inject, signal, input, computed, effect, untracked } from '@angular/core';
-import { form, required, FormField } from '@angular/forms/signals';
+import { form, required, validate, FormField } from '@angular/forms/signals';
 import { PageHeaderComponent } from '@layout/page-header/page-header.component';
 import {
-  CardComponent, ButtonComponent, InputComponent, ToggleComponent,
+  CardComponent, ButtonComponent, InputComponent, ToggleComponent, NumberInputComponent,
   SelectComponent, ModalComponent, EmptyStateComponent, BadgeComponent, LoadingStateComponent,
   type SelectOption,
 } from '@ui';
@@ -13,7 +13,8 @@ import { ConfirmService } from '@core/services/confirm.service';
 import { ArrInstance, CreateArrInstanceDto, TestArrInstanceRequest } from '@shared/models/arr-config.model';
 import { ArrType } from '@shared/models/enums';
 import { HasPendingChanges } from '@core/guards/pending-changes.guard';
-import { createSettingsResource } from '@shared/utils/settings-resource.util';
+import { createSettingsResource, saveSettings } from '@shared/utils/settings-resource.util';
+import { createDirtyTracker } from '@shared/utils/dirty-tracker.util';
 
 const ARR_VERSION_OPTIONS: Record<string, SelectOption[]> = {
   sonarr:  [{ label: 'v4', value: 4 }],
@@ -46,12 +47,17 @@ interface ArrInstanceFormModel {
   enabled: boolean;
 }
 
+interface FailedImportFormModel {
+  override: boolean;
+  maxStrikes: number | null;
+}
+
 @Component({
   selector: 'app-arr-settings',
   standalone: true,
   imports: [
     PageHeaderComponent, CardComponent, ButtonComponent, InputComponent,
-    ToggleComponent, SelectComponent, ModalComponent, EmptyStateComponent,
+    ToggleComponent, NumberInputComponent, SelectComponent, ModalComponent, EmptyStateComponent,
     BadgeComponent, LoadingStateComponent, FormField,
   ],
   templateUrl: './arr-settings.component.html',
@@ -90,6 +96,43 @@ export class ArrSettingsComponent implements HasPendingChanges {
     this.configResource.hasValue() ? (this.configResource.value().instances ?? []) : [],
   );
 
+  // Failed import override
+  readonly failedImportSaving = signal(false);
+  readonly failedImportSaved = signal(false);
+  readonly failedImportModel = signal<FailedImportFormModel>({ override: false, maxStrikes: 3 });
+  readonly failedImportForm = form(this.failedImportModel, (p) => {
+    validate(p.maxStrikes, ({ value, valueOf }) => {
+      if (!valueOf(p.override)) {
+        return undefined;
+      }
+      if (value() === null) {
+        return { kind: 'required', message: 'This field is required' };
+      }
+      if (!Number.isInteger(value())) {
+        return { kind: 'integer', message: 'Value must be a whole number' };
+      }
+      if (value()! < 0) {
+        return { kind: 'min', message: 'Value cannot be negative' };
+      }
+      if (value()! > 0 && value()! < 3) {
+        return { kind: 'min', message: 'Minimum value is 3' };
+      }
+      if (value()! > 5000) {
+        return { kind: 'max', message: 'Value cannot exceed 5000' };
+      }
+      return undefined;
+    });
+  });
+  readonly failedImportHasErrors = computed(() => this.failedImportForm().invalid());
+
+  private readonly failedImportDirtyTracker = createDirtyTracker(
+    this.failedImportModel,
+    (m) => (m.override ? m.maxStrikes : -1),
+  );
+  readonly failedImportDirty = this.failedImportDirtyTracker.dirty;
+  /** Arr type the failed import model was last seeded from; unsaved edits survive only same-type reloads. */
+  private seededType: string | null = null;
+
   // Modal state
   readonly modalVisible = signal(false);
   readonly editingInstance = signal<ArrInstance | null>(null);
@@ -117,6 +160,26 @@ export class ArrSettingsComponent implements HasPendingChanges {
       if (options.length > 0) {
         untracked(() => this.instanceModel.update(m => ({ ...m, version: options[0].value as number })));
       }
+    });
+
+    effect(() => {
+      if (!this.configResource.hasValue()) {
+        return;
+      }
+      const config = this.configResource.value();
+      untracked(() => {
+        const type = this.type();
+        if (this.seededType === type && this.failedImportDirty()) {
+          return;
+        }
+        this.seededType = type;
+        this.failedImportModel.set(
+          config.failedImportMaxStrikes >= 0
+            ? { override: true, maxStrikes: config.failedImportMaxStrikes }
+            : { override: false, maxStrikes: 3 },
+        );
+        this.failedImportDirtyTracker.markSaved();
+      });
     });
   }
 
@@ -224,7 +287,24 @@ export class ArrSettingsComponent implements HasPendingChanges {
     });
   }
 
+  saveFailedImport(): void {
+    if (this.failedImportForm().invalid()) {
+      return;
+    }
+    const m = this.failedImportModel();
+    const maxStrikes = m.override ? (m.maxStrikes ?? 3) : -1;
+
+    saveSettings({
+      request: this.api.updateConfig(this.type() as ArrType, { failedImportMaxStrikes: maxStrikes }),
+      toast: this.toast,
+      saving: this.failedImportSaving,
+      saved: this.failedImportSaved,
+      successMessage: 'Failed import settings saved',
+      onSaved: () => this.failedImportDirtyTracker.markSaved(m),
+    });
+  }
+
   hasPendingChanges(): boolean {
-    return this.modalDirty();
+    return this.modalDirty() || this.failedImportDirty();
   }
 }

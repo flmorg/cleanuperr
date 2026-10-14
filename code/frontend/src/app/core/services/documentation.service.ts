@@ -199,6 +199,8 @@ export class DocumentationService {
       'externalUrl': 'external-url',
       'apiKey': 'api-key',
       'version': 'api-version',
+      'failedImportOverride': 'failed-import-max-strikes',
+      'failedImportMaxStrikes': 'failed-import-max-strikes',
     },
     'account': {
       'oidcEnabled': 'enable-oidc',
