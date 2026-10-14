@@ -3,6 +3,7 @@ using Cleanuparr.Api.Features.Arr.Contracts.Requests;
 using Cleanuparr.Api.Features.Arr.Controllers;
 using Cleanuparr.Api.Tests.TestHelpers;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Events.Interfaces;
 using Cleanuparr.Api.Features.Arr.Contracts.Responses;
 using Cleanuparr.Infrastructure.Features.Arr.Interfaces;
@@ -103,17 +104,35 @@ public class ArrConfigControllerTests : IDisposable
         saved.FailedImportMaxStrikes.ShouldBe((short)7);
     }
 
-    [Fact]
-    public async Task UpdateSonarrConfig_DefaultStrikes_PassesThrough()
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    [InlineData(3)]
+    public async Task UpdateSonarrConfig_ValidStrikes_PersistsValue(short strikes)
     {
-        // ArrConfig.Validate is currently a no-op; -1 (the default disabled value) is accepted
-        var request = new UpdateArrConfigRequest { FailedImportMaxStrikes = -1 };
+        // Arrange
+        var request = new UpdateArrConfigRequest { FailedImportMaxStrikes = strikes };
 
         // Act
         var result = await _controller.UpdateSonarrConfig(request);
 
         // Assert
         result.ShouldBeOfType<OkObjectResult>();
+        var saved = await _dataContext.ArrConfigs.AsNoTracking().FirstAsync(c => c.Type == InstanceType.Sonarr);
+        saved.FailedImportMaxStrikes.ShouldBe(strikes);
+    }
+
+    [Theory]
+    [InlineData(-2)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task UpdateSonarrConfig_InvalidStrikes_ThrowsValidationException(short strikes)
+    {
+        // Arrange
+        var request = new UpdateArrConfigRequest { FailedImportMaxStrikes = strikes };
+
+        // Act & Assert
+        await Should.ThrowAsync<ValidationException>(() => _controller.UpdateSonarrConfig(request));
     }
 
     #endregion
