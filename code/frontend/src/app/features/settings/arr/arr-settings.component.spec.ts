@@ -34,6 +34,7 @@ const CONFIG: ArrConfig = {
 function createApi(config: ArrConfig = CONFIG) {
   return {
     getConfig: vi.fn(() => of(config)),
+    updateConfig: vi.fn(() => of(undefined)),
     createInstance: vi.fn(() => of(INSTANCE)),
     updateInstance: vi.fn(() => of(INSTANCE)),
     deleteInstance: vi.fn(() => of(undefined)),
@@ -440,5 +441,104 @@ describe('ArrSettingsComponent', () => {
     fixture.detectChanges();
 
     expect(toast.error).toHaveBeenCalledWith('Delete error');
+  });
+
+  it('seeds the override toggle off and hides the number input when the config value is -1', () => {
+    const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    expect(component.failedImportModel()).toEqual({ override: false, maxStrikes: 3 });
+    expect(fixture.nativeElement.querySelector('app-number-input')).toBeNull();
+    expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('seeds the override toggle on with the configured value', () => {
+    const { component } = setup('sonarr', createApi({ failedImportMaxStrikes: 3, instances: [] }));
+
+    expect(component.failedImportModel()).toEqual({ override: true, maxStrikes: 3 });
+    expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('enables the override, sets a value and saves it', () => {
+    const { fixture, component, api, toast } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+    component.failedImportForm.maxStrikes().value.set(5);
+    fixture.detectChanges();
+
+    expect(component.hasPendingChanges()).toBe(true);
+
+    component.saveFailedImport();
+    fixture.detectChanges();
+
+    expect(api.updateConfig).toHaveBeenCalledWith('sonarr', { failedImportMaxStrikes: 5 });
+    expect(toast.success).toHaveBeenCalledWith('Failed import settings saved');
+    expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('disabling the override sends -1', () => {
+    const { fixture, component, api } = setup('sonarr', createApi({ failedImportMaxStrikes: 5, instances: [] }));
+
+    component.failedImportForm.override().value.set(false);
+    fixture.detectChanges();
+
+    component.saveFailedImport();
+    fixture.detectChanges();
+
+    expect(api.updateConfig).toHaveBeenCalledWith('sonarr', { failedImportMaxStrikes: -1 });
+  });
+
+  it('rejects 1 and 2 strikes, accepts 0, and disables save while invalid', () => {
+    const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+
+    component.failedImportForm.maxStrikes().value.set(1);
+    fixture.detectChanges();
+    expect(component.failedImportHasErrors()).toBe(true);
+    expect(component.failedImportForm.maxStrikes().errors()[0].message).toBe('Minimum value is 3');
+
+    component.failedImportForm.maxStrikes().value.set(2);
+    fixture.detectChanges();
+    expect(component.failedImportHasErrors()).toBe(true);
+
+    component.failedImportForm.maxStrikes().value.set(0);
+    fixture.detectChanges();
+    expect(component.failedImportHasErrors()).toBe(false);
+
+    component.failedImportForm.maxStrikes().value.set(1);
+    fixture.detectChanges();
+    const saveButton = fixture.nativeElement.querySelector('.form-actions button') as HTMLButtonElement;
+    expect(saveButton.disabled).toBe(true);
+  });
+
+  it('stays clean when the override is toggled back off after editing the hidden value', () => {
+    const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+    component.failedImportForm.maxStrikes().value.set(9999);
+    fixture.detectChanges();
+    component.failedImportForm.override().value.set(false);
+    fixture.detectChanges();
+
+    expect(component.hasPendingChanges()).toBe(false);
+    expect(component.failedImportHasErrors()).toBe(false);
+  });
+
+  it('toasts the error when saving the failed import override fails', () => {
+    const api = createApi({ failedImportMaxStrikes: -1, instances: [] });
+    api.updateConfig.mockReturnValue(throwError(() => new ApiError('Save failed')));
+    const { fixture, component, toast } = setup('sonarr', api);
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+
+    component.saveFailedImport();
+    fixture.detectChanges();
+
+    expect(toast.error).toHaveBeenCalledWith('Save failed');
+    expect(component.failedImportSaving()).toBe(false);
   });
 });

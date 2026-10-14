@@ -18,6 +18,27 @@
   <app-loading-state message="Loading settings..." />
 } @else if (!loader.loading()) {
   <div class="settings-form">
+    <app-card header="Failed Import">
+      <div class="form-stack">
+        <app-toggle label="Override global max strikes" [formField]="failedImportForm.override"
+          hint="Use a different failed import max strikes value than the queue cleaner setting"
+          helpKey="arr:failedImportOverride" />
+        @if (failedImportForm.override().value()) {
+          <app-number-input label="Max Strikes" [formField]="failedImportForm.maxStrikes"
+            hint="Number of strikes before action is taken (0 to disable for this app, min 3 to enable)"
+            [error]="failedImportForm.maxStrikes().errors()[0]?.message"
+            helpKey="arr:failedImportMaxStrikes" />
+        }
+      </div>
+      <div class="form-actions">
+        <app-button variant="primary" [glowing]="failedImportDirty()" [loading]="failedImportSaving()"
+          [disabled]="failedImportSaving() || failedImportSaved() || failedImportHasErrors() || !failedImportDirty()"
+          (clicked)="saveFailedImport()">
+          {{ failedImportSaved() ? 'Saved!' : 'Save Settings' }}
+        </app-button>
+      </div>
+    </app-card>
+
     <app-card>
       <div class="instances-header">
         <h3 class="instances-header__title">Instances</h3>
