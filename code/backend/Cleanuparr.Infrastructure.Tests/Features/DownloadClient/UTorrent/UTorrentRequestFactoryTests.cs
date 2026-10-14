@@ -25,4 +25,23 @@ public class UTorrentRequestFactoryTests
 
         request.ToQueryString().ShouldBe("token=csrf-token&action=stop&hash=HASH123");
     }
+
+    [Fact]
+    public void CreateStartTorrentRequest_UsesStartActionWithHash()
+    {
+        UTorrentRequest request = UTorrentRequestFactory.CreateStartTorrentRequest("HASH123");
+
+        request.Action.ShouldBe("action=start");
+        request.Parameters.ShouldHaveSingleItem();
+        request.Parameters[0].ShouldBe(("hash", "HASH123"));
+    }
+
+    [Fact]
+    public void CreateStartTorrentRequest_QueryString_CarriesTokenActionAndHash()
+    {
+        UTorrentRequest request = UTorrentRequestFactory.CreateStartTorrentRequest("HASH123");
+        request.Token = "csrf-token";
+
+        request.ToQueryString().ShouldBe("token=csrf-token&action=start&hash=HASH123");
+    }
 }

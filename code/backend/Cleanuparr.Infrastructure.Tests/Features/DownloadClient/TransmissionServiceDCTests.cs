@@ -551,6 +551,53 @@ public class TransmissionServiceDCTests : IClassFixture<TransmissionServiceFixtu
         }
     }
 
+    public class ResumeDownload_Tests : TransmissionServiceDCTests
+    {
+        public ResumeDownload_Tests(TransmissionServiceFixture fixture) : base(fixture)
+        {
+        }
+
+        [Fact]
+        public async Task StartsById()
+        {
+            // Arrange
+            TransmissionService sut = _fixture.CreateSut();
+            TorrentInfo torrentInfo = new TorrentInfo { Id = 123, HashString = "test-hash" };
+            TransmissionItemWrapper torrentWrapper = new TransmissionItemWrapper(torrentInfo);
+
+            _fixture.ClientWrapper
+                .TorrentStartAsync(Arg.Is<long[]>(ids => ids.Contains(123)))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await sut.ResumeDownload(torrentWrapper);
+
+            // Assert
+            await _fixture.ClientWrapper.Received(1)
+                .TorrentStartAsync(Arg.Is<long[]>(ids => ids.Contains(123)));
+        }
+
+        [Fact]
+        public async Task DoesNotDeleteTheTorrent()
+        {
+            // Arrange
+            TransmissionService sut = _fixture.CreateSut();
+            TorrentInfo torrentInfo = new TorrentInfo { Id = 123, HashString = "test-hash" };
+            TransmissionItemWrapper torrentWrapper = new TransmissionItemWrapper(torrentInfo);
+
+            _fixture.ClientWrapper
+                .TorrentStartAsync(Arg.Any<long[]>())
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await sut.ResumeDownload(torrentWrapper);
+
+            // Assert
+            await _fixture.ClientWrapper.DidNotReceive()
+                .TorrentRemoveAsync(Arg.Any<long[]>(), Arg.Any<bool>());
+        }
+    }
+
     public class IsStopped_Tests : TransmissionServiceDCTests
     {
         public IsStopped_Tests(TransmissionServiceFixture fixture) : base(fixture)
