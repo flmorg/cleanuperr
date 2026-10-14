@@ -3,6 +3,15 @@ import { ApplicationPathService } from './base-path.service';
 
 type FieldMappings = Record<string, Record<string, string>>;
 
+function strikeSectionKeys(prefix: string, anchor: string): Record<string, string> {
+  return {
+    [`${prefix}.maxStrikes`]: `${anchor}-max-strikes`,
+    [`${prefix}.ignorePrivate`]: `${anchor}-ignore-private`,
+    [`${prefix}.deletePrivate`]: `${anchor}-delete-private`,
+    [`${prefix}.changeCategory`]: `${anchor}-change-category`,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class DocumentationService {
   private readonly pathService = inject(ApplicationPathService);
@@ -14,20 +23,14 @@ export class DocumentationService {
       'useAdvancedScheduling': 'scheduling-mode',
       'cronExpression': 'cron-expression',
       'processNoContentId': 'process-downloads-with-no-content-id',
-      'failedImport.maxStrikes': 'failed-import-max-strikes',
-      'failedImport.ignorePrivate': 'failed-import-ignore-private',
-      'failedImport.deletePrivate': 'failed-import-delete-private',
-      'failedImport.changeCategory': 'failed-import-change-category',
+      ...strikeSectionKeys('failedImport', 'failed-import'),
       'failedImport.skipIfNotFoundInClient': 'failed-import-skip-if-not-found-in-client',
       'failedImport.pattern-mode': 'failed-import-pattern-mode',
       'failedImport.patterns': 'failed-import-patterns',
       'failedImport.forceImport': 'failed-import-force-import',
       'failedImport.forceImportMaxTries': 'failed-import-force-import-max-tries',
       'downloadingMetadataMaxStrikes': 'stalled-downloading-metadata-max-strikes',
-      'errored.maxStrikes': 'errored-max-strikes',
-      'errored.ignorePrivate': 'errored-ignore-private',
-      'errored.deletePrivate': 'errored-delete-private',
-      'errored.changeCategory': 'errored-change-category',
+      ...strikeSectionKeys('errored', 'errored'),
       'stallRule.name': 'stalled-rule-name',
       'stallRule.enabled': 'stalled-enabled',
       'stallRule.maxStrikes': 'stalled-max-strikes',
