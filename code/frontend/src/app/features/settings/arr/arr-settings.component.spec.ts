@@ -541,4 +541,53 @@ describe('ArrSettingsComponent', () => {
     expect(toast.error).toHaveBeenCalledWith('Save failed');
     expect(component.failedImportSaving()).toBe(false);
   });
+
+  it('keeps unsaved failed import edits when an instance is saved', () => {
+    const { fixture, component, api } = setup('sonarr');
+
+    api.getConfig.mockReturnValue(of({ ...CONFIG }));
+    component.failedImportForm.maxStrikes().value.set(9);
+    fixture.detectChanges();
+
+    component.openEditModal(INSTANCE);
+    fixture.detectChanges();
+    component.saveInstance();
+    fixture.detectChanges();
+
+    expect(api.getConfig).toHaveBeenCalledTimes(2);
+    expect(component.failedImportModel().maxStrikes).toBe(9);
+    expect(component.hasPendingChanges()).toBe(true);
+  });
+
+  it('keeps unsaved failed import edits when an instance is deleted', async () => {
+    const { fixture, component, api, confirm } = setup('sonarr');
+
+    api.getConfig.mockReturnValue(of({ ...CONFIG }));
+    component.failedImportForm.maxStrikes().value.set(9);
+    fixture.detectChanges();
+
+    const accepted = component.deleteInstance(INSTANCE);
+    confirm.accept();
+    await accepted;
+    fixture.detectChanges();
+
+    expect(api.getConfig).toHaveBeenCalledTimes(2);
+    expect(component.failedImportModel().maxStrikes).toBe(9);
+    expect(component.hasPendingChanges()).toBe(true);
+  });
+
+  it('reseeds the failed import settings on reload when there are no unsaved edits', () => {
+    const api = createApi();
+    const { fixture, component } = setup('sonarr', api);
+
+    api.getConfig.mockReturnValueOnce(of({ ...CONFIG, failedImportMaxStrikes: 7 }));
+
+    component.openEditModal(INSTANCE);
+    fixture.detectChanges();
+    component.saveInstance();
+    fixture.detectChanges();
+
+    expect(component.failedImportModel().maxStrikes).toBe(7);
+    expect(component.hasPendingChanges()).toBe(false);
+  });
 });

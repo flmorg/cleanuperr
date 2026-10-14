@@ -163,6 +163,9 @@ export class ArrSettingsComponent implements HasPendingChanges {
       }
       const config = this.configResource.value();
       untracked(() => {
+        if (this.failedImportDirty()) {
+          return;
+        }
         this.failedImportModel.set(
           config.failedImportMaxStrikes >= 0
             ? { override: true, maxStrikes: config.failedImportMaxStrikes }
