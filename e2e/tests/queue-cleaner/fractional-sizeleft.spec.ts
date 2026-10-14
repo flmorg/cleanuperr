@@ -49,7 +49,6 @@ test.describe.serial('QueueCleaner — fractional sizeleft from Sonarr v3', () =
 
     // The failed import check needs a pattern that matches the status message.
     const currentQcConfig = await (await api.queueCleaner.getConfig()).json();
-    const currentArrConfig = await (await api.arr.getConfig('sonarr')).json();
 
     try {
       const qc = await api.queueCleaner.updateConfig({
@@ -63,10 +62,6 @@ test.describe.serial('QueueCleaner — fractional sizeleft from Sonarr v3', () =
       });
       expect(qc.ok, `queue cleaner updateConfig: ${qc.status}`).toBe(true);
 
-      // The arr value replaces the 3 strikes above, so one job run is enough.
-      const cfg = await api.arr.updateConfig('sonarr', { failedImportMaxStrikes: 1 });
-      expect(cfg.ok, `arr updateConfig: ${cfg.status}`).toBe(true);
-
       const created = await api.arr.createInstance('sonarr', {
         name: 'sonarr-fractional-sizeleft',
         url: TEST_CONFIG.mocks.arrUrl,
@@ -76,8 +71,11 @@ test.describe.serial('QueueCleaner — fractional sizeleft from Sonarr v3', () =
       });
       expect(created.ok, `createInstance: ${created.status}`).toBe(true);
 
-      const trigger = await api.jobs.trigger('QueueCleaner');
-      expect(trigger.status).toBeLessThan(300);
+      // The arr override only accepts 0 or 3 and up, so the strikes are collected run by run.
+      for (let run = 0; run < 3; run++) {
+        const trigger = await api.jobs.trigger('QueueCleaner');
+        expect(trigger.status).toBeLessThan(300);
+      }
 
       await expect
         .poll(
@@ -93,7 +91,6 @@ test.describe.serial('QueueCleaner — fractional sizeleft from Sonarr v3', () =
         .toBe(true);
     } finally {
       await api.queueCleaner.updateConfig(currentQcConfig);
-      await api.arr.updateConfig('sonarr', { failedImportMaxStrikes: currentArrConfig.failedImportMaxStrikes });
     }
   });
 });

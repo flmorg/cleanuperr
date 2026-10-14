@@ -84,7 +84,7 @@ public sealed class QueueCleanerConfigTests
             DownloadingMetadataMaxStrikes = maxStrikes
         };
 
-        var exception = Should.Throw<System.ComponentModel.DataAnnotations.ValidationException>(() => config.Validate());
+        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
         exception.Message.ShouldBe("the minimum value for downloading metadata max strikes must be 3");
     }
 
@@ -127,8 +127,7 @@ public sealed class QueueCleanerConfigTests
             Errored = new ErroredConfig { MaxStrikes = maxStrikes }
         };
 
-        Cleanuparr.Domain.Exceptions.ValidationException exception =
-            Should.Throw<Cleanuparr.Domain.Exceptions.ValidationException>(() => config.Validate());
+        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
         exception.Message.ShouldBe("the minimum value for errored max strikes must be 3");
     }
 

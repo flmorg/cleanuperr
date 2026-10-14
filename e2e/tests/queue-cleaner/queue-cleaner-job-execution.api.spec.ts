@@ -221,7 +221,6 @@ test.describe('QueueCleaner: SABnzbd job execution (mocked)', () => {
     await mocks.arr.stub(ArrStubs.arrQueueDeleteStub());
 
     const currentQcConfig = await (await api.queueCleaner.getConfig()).json();
-    const currentArrConfig = await (await api.arr.getConfig('sonarr')).json();
 
     try {
       const qc = await api.queueCleaner.updateConfig({
@@ -236,16 +235,16 @@ test.describe('QueueCleaner: SABnzbd job execution (mocked)', () => {
       });
       expect(qc.ok, `queue cleaner updateConfig: ${qc.status}`).toBe(true);
 
-      const cfg = await api.arr.updateConfig('sonarr', { failedImportMaxStrikes: 1 });
-      expect(cfg.ok, `arr updateConfig: ${cfg.status}`).toBe(true);
-
       await registerSabClient(api);
       await api.arr.createInstance('sonarr', {
         name: 'sonarr-sab-qc-missing', url: TEST_CONFIG.mocks.arrUrl, apiKey: 'k', version: 3, enabled: true,
       });
 
-      const trigger = await api.jobs.trigger('QueueCleaner');
-      expect(trigger.status).toBeLessThan(300);
+      // The arr override only accepts 0 or 3 and up, so the strikes are collected run by run.
+      for (let run = 0; run < 3; run++) {
+        const trigger = await api.jobs.trigger('QueueCleaner');
+        expect(trigger.status).toBeLessThan(300);
+      }
 
       await expect
         .poll(
@@ -255,7 +254,6 @@ test.describe('QueueCleaner: SABnzbd job execution (mocked)', () => {
         .toBeGreaterThan(0);
     } finally {
       await api.queueCleaner.updateConfig(currentQcConfig);
-      await api.arr.updateConfig('sonarr', { failedImportMaxStrikes: currentArrConfig.failedImportMaxStrikes });
     }
   });
 });

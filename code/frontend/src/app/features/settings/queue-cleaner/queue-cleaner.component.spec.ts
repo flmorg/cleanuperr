@@ -501,24 +501,26 @@ describe('QueueCleanerComponent', () => {
     );
   });
 
-  it('rejects 1 and 2 errored strikes, accepts 0 and 3 or more', () => {
+  // The API rejects 1 and 2 for all three, so the form must not let them through.
+  it.each([
+    ['erroredMaxStrikes'],
+    ['metadataMaxStrikes'],
+    ['failedMaxStrikes'],
+  ] as const)('rejects 1 and 2 for %s, accepts 0 and 3 or more', (field) => {
     const { fixture, component } = setup();
+    const strikeField = () => component.qcForm[field]();
 
-    component.qcForm.erroredMaxStrikes().value.set(1);
-    fixture.detectChanges();
-    expect(component.qcForm.erroredMaxStrikes().errors()[0].message).toBe('Minimum value is 3 (or 0 to disable)');
+    for (const rejected of [1, 2]) {
+      strikeField().value.set(rejected);
+      fixture.detectChanges();
+      expect(strikeField().errors()[0].message).toBe('Minimum value is 3 (or 0 to disable)');
+    }
 
-    component.qcForm.erroredMaxStrikes().value.set(2);
-    fixture.detectChanges();
-    expect(component.qcForm.erroredMaxStrikes().errors()[0].message).toBe('Minimum value is 3 (or 0 to disable)');
-
-    component.qcForm.erroredMaxStrikes().value.set(0);
-    fixture.detectChanges();
-    expect(component.qcForm.erroredMaxStrikes().errors().length).toBe(0);
-
-    component.qcForm.erroredMaxStrikes().value.set(3);
-    fixture.detectChanges();
-    expect(component.qcForm.erroredMaxStrikes().errors().length).toBe(0);
+    for (const accepted of [0, 3, 10]) {
+      strikeField().value.set(accepted);
+      fixture.detectChanges();
+      expect(strikeField().errors().length).toBe(0);
+    }
   });
 
   it('shows the load error and recovers on retry', () => {

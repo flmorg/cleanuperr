@@ -59,6 +59,16 @@ interface QueueCleanerFormModel {
   erroredChangeCategory: boolean;
 }
 
+/**
+ * Every strike limit shares one rule: 0 disables the check and 3 is the lowest enabled value.
+ * The API rejects 1 and 2, so without this the form saves a value the server refuses.
+ */
+function strikeLimitError(strikes: number | null): { kind: string; message: string } | undefined {
+  return strikes !== null && strikes > 0 && strikes < 3
+    ? { kind: 'min', message: 'Minimum value is 3 (or 0 to disable)' }
+    : undefined;
+}
+
 @Component({
   selector: 'app-queue-cleaner',
   standalone: true,
@@ -141,6 +151,7 @@ export class QueueCleanerComponent implements HasPendingChanges {
     required(p.failedMaxStrikes, { message: 'This field is required' });
     min(p.failedMaxStrikes, 0, { message: 'Value cannot be negative' });
     max(p.failedMaxStrikes, 5000, { message: 'Value cannot exceed 5000' });
+    validate(p.failedMaxStrikes, ({ value }) => strikeLimitError(value()));
 
     required(p.failedForceImportMaxTries, { message: 'This field is required' });
     min(p.failedForceImportMaxTries, 1, { message: 'Value must be at least 1' });
@@ -149,16 +160,12 @@ export class QueueCleanerComponent implements HasPendingChanges {
     required(p.metadataMaxStrikes, { message: 'This field is required' });
     min(p.metadataMaxStrikes, 0, { message: 'Value cannot be negative' });
     max(p.metadataMaxStrikes, 5000, { message: 'Value cannot exceed 5000' });
+    validate(p.metadataMaxStrikes, ({ value }) => strikeLimitError(value()));
 
     required(p.erroredMaxStrikes, { message: 'This field is required' });
     min(p.erroredMaxStrikes, 0, { message: 'Value cannot be negative' });
     max(p.erroredMaxStrikes, 5000, { message: 'Value cannot exceed 5000' });
-    validate(p.erroredMaxStrikes, ({ value }) => {
-      const strikes = value();
-      return strikes !== null && strikes > 0 && strikes < 3
-        ? { kind: 'min', message: 'Minimum value is 3 (or 0 to disable)' }
-        : undefined;
-    });
+    validate(p.erroredMaxStrikes, ({ value }) => strikeLimitError(value()));
 
     validate(p.scheduleEvery, ({ value, valueOf }) => {
       if (!valueOf(p.enabled) || valueOf(p.useAdvancedScheduling)) {
