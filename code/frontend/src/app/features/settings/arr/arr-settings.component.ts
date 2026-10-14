@@ -108,6 +108,9 @@ export class ArrSettingsComponent implements HasPendingChanges {
       if (value() === null) {
         return { kind: 'required', message: 'This field is required' };
       }
+      if (!Number.isInteger(value())) {
+        return { kind: 'integer', message: 'Value must be a whole number' };
+      }
       if (value()! < 0) {
         return { kind: 'min', message: 'Value cannot be negative' };
       }

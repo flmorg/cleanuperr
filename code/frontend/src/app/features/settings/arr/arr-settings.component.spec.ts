@@ -513,6 +513,24 @@ describe('ArrSettingsComponent', () => {
     expect(saveButton.disabled).toBe(true);
   });
 
+  it('rejects fractional failed import strikes', () => {
+    const { fixture, component, api } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+
+    component.failedImportForm.maxStrikes().value.set(3.5);
+    fixture.detectChanges();
+
+    expect(component.failedImportForm.maxStrikes().errors()[0].message).toBe('Value must be a whole number');
+    expect(component.failedImportHasErrors()).toBe(true);
+
+    component.saveFailedImport();
+    fixture.detectChanges();
+
+    expect(api.updateConfig).not.toHaveBeenCalled();
+  });
+
   it('stays clean when the override is toggled back off after editing the hidden value', () => {
     const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
 
