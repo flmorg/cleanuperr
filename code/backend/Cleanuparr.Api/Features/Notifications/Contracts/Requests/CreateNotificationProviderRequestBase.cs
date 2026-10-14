@@ -25,4 +25,6 @@ public abstract record CreateNotificationProviderRequestBase
     public bool OnSearchItemGrabbed { get; init; }
 
     public bool OnForceImported { get; init; }
+
+    public bool OnErroredStrike { get; init; }
 }

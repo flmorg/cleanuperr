@@ -25,6 +25,7 @@ const DEFAULT_EVENTS = {
   onSearchTriggered: false,
   onSearchItemGrabbed: false,
   onForceImported: false,
+  onErroredStrike: false,
 };
 
 const NTFY_PROVIDER: NotificationProviderDto = {
@@ -43,6 +44,7 @@ const NTFY_PROVIDER: NotificationProviderDto = {
     onSearchTriggered: false,
     onSearchItemGrabbed: true,
     onForceImported: false,
+    onErroredStrike: false,
   },
   configuration: {
     serverUrl: 'https://ntfy.example.com',

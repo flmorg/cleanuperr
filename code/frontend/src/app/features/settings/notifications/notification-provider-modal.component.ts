@@ -64,6 +64,7 @@ function createDefaultModalModel(): NotificationProviderFormModel {
     pushoverRetry: 30, pushoverExpire: 3600, pushoverSound: '', pushoverCustomSound: '', pushoverTags: [],
     onFailedImportStrike: false, onStalledStrike: false, onSlowStrike: false, onQueueItemDeleted: false,
     onDownloadCleaned: false, onDownloadStopped: false, onCategoryChanged: false, onSearchTriggered: false, onSearchItemGrabbed: false, onForceImported: false,
+    onErroredStrike: false,
   };
 }
 
@@ -356,6 +357,7 @@ export class NotificationProviderModalComponent {
     model.onSearchTriggered = provider.events.onSearchTriggered;
     model.onSearchItemGrabbed = provider.events.onSearchItemGrabbed;
     model.onForceImported = provider.events.onForceImported;
+    model.onErroredStrike = provider.events.onErroredStrike;
 
     return model;
   }

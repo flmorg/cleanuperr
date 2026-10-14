@@ -55,6 +55,7 @@ function baseModel(overrides: Partial<NotificationProviderFormModel> = {}): Noti
     onSearchTriggered: false,
     onSearchItemGrabbed: false,
     onForceImported: false,
+    onErroredStrike: false,
     ...overrides,
   };
 }
@@ -70,6 +71,7 @@ const eventFlags = {
   onSearchTriggered: false,
   onSearchItemGrabbed: false,
   onForceImported: false,
+  onErroredStrike: false,
 };
 
 describe('NOTIFICATION_PROVIDER_DESCRIPTORS', () => {

@@ -110,7 +110,7 @@ public class NotificationPublisherTests
     [Theory]
     [InlineData(StrikeType.Stalled, NotificationEventType.StalledStrike)]
     [InlineData(StrikeType.DownloadingMetadata, NotificationEventType.StalledStrike)]
-    [InlineData(StrikeType.Errored, NotificationEventType.StalledStrike)]
+    [InlineData(StrikeType.Errored, NotificationEventType.ErroredStrike)]
     [InlineData(StrikeType.FailedImport, NotificationEventType.FailedImportStrike)]
     [InlineData(StrikeType.SlowSpeed, NotificationEventType.SlowSpeedStrike)]
     [InlineData(StrikeType.SlowTime, NotificationEventType.SlowTimeStrike)]
