@@ -1,6 +1,6 @@
 ﻿namespace Cleanuparr.Infrastructure.Features.Notifications.Models;
 
-public sealed record NotificationEventFlags
+public record NotificationEventFlags
 {
     public bool OnFailedImportStrike { get; init; }
     
