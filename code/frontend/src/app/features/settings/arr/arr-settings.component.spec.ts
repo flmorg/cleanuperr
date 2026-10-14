@@ -657,4 +657,19 @@ describe('ArrSettingsComponent', () => {
     expect(component.failedImportModel().maxStrikes).toBe(7);
     expect(component.hasPendingChanges()).toBe(false);
   });
+
+  it('reseeds the failed import settings when the arr type changes despite unsaved edits', () => {
+    const { fixture, component, api } = setup('sonarr');
+
+    component.failedImportForm.maxStrikes().value.set(9);
+    fixture.detectChanges();
+
+    api.getConfig.mockReturnValue(of({ ...CONFIG, failedImportMaxStrikes: -1 }));
+    fixture.componentRef.setInput('type', 'radarr');
+    fixture.detectChanges();
+
+    expect(api.getConfig).toHaveBeenLastCalledWith('radarr');
+    expect(component.failedImportModel()).toEqual({ override: false, maxStrikes: 3 });
+    expect(component.hasPendingChanges()).toBe(false);
+  });
 });

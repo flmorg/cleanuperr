@@ -130,6 +130,8 @@ export class ArrSettingsComponent implements HasPendingChanges {
     (m) => (m.override ? m.maxStrikes : -1),
   );
   readonly failedImportDirty = this.failedImportDirtyTracker.dirty;
+  /** Arr type the failed import model was last seeded from; unsaved edits survive only same-type reloads. */
+  private seededType: string | null = null;
 
   // Modal state
   readonly modalVisible = signal(false);
@@ -166,9 +168,11 @@ export class ArrSettingsComponent implements HasPendingChanges {
       }
       const config = this.configResource.value();
       untracked(() => {
-        if (this.failedImportDirty()) {
+        const type = this.type();
+        if (this.seededType === type && this.failedImportDirty()) {
           return;
         }
+        this.seededType = type;
         this.failedImportModel.set(
           config.failedImportMaxStrikes >= 0
             ? { override: true, maxStrikes: config.failedImportMaxStrikes }
