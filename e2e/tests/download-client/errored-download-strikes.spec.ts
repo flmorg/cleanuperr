@@ -281,7 +281,7 @@ test.describe('Queue Cleaner errored downloads', () => {
         RESUME_FAILURE_LOG,
       );
 
-      await api.jobs.trigger('QueueCleaner');
+      expect((await api.jobs.trigger('QueueCleaner')).status).toBeLessThan(300);
 
       await expect
         .poll(async () => (await queueDeletes(mocks)).length, {
@@ -336,7 +336,7 @@ test.describe('Queue Cleaner errored downloads', () => {
         'transmission',
       );
 
-      await api.jobs.trigger('QueueCleaner');
+      expect((await api.jobs.trigger('QueueCleaner')).status).toBeLessThan(300);
       await expect.poll(() => countEvents(api, 'ErroredStrike', torrent.infoHash), { timeout: 60_000 }).toBe(1);
 
       // Put the data back and clear the error, the way a reconnected drive would.
@@ -346,7 +346,7 @@ test.describe('Queue Cleaner errored downloads', () => {
         .poll(async () => (await transmission.getError(torrent.infoHash)).error, { timeout: 60_000 })
         .toBe(0);
 
-      await api.jobs.trigger('QueueCleaner');
+      expect((await api.jobs.trigger('QueueCleaner')).status).toBeLessThan(300);
 
       await expect
         .poll(() => countEvents(api, 'StrikeReset', torrent.infoHash), {
