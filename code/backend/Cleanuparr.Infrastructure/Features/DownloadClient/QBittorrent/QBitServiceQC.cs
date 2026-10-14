@@ -86,6 +86,12 @@ public partial class QBitService
     /// <inheritdoc/>
     protected override Func<Task<bool>>? GetAltSpeedLimitProbe() => IsAltSpeedLimitActiveAsync;
 
+    /// <inheritdoc/>
+    protected override Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> CheckIfErrored(
+        ITorrentItemWrapper wrapper,
+        ErroredConfig erroredConfig) =>
+        StrikeErroredAsync(wrapper, erroredConfig, () => ResumeDownload(wrapper));
+
     /// <summary>
     /// qBittorrent can stall on metadata before any content arrives.
     /// That stall gets its own strike before the shared stall check.

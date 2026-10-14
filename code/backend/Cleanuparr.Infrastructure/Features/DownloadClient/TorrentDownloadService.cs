@@ -97,20 +97,13 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
     {
         ErroredConfig erroredConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig)).Errored;
 
-        if (this is IErrorRecoveryCapable errorRecoveryCapable && erroredConfig.MaxStrikes > 0)
+        if (erroredConfig.MaxStrikes > 0)
         {
-            if (!wrapper.IsErrored())
+            (bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)? erroredResult = await CheckIfErrored(wrapper, erroredConfig);
+
+            if (erroredResult is not null)
             {
-                // A download that recovered is no longer errored
-                await _striker.ResetStrikeAsync(wrapper.DownloadId, wrapper.Name, StrikeType.Errored);
-            }
-            else if (erroredConfig.IgnorePrivate && wrapper.IsPrivate)
-            {
-                _logger.LogTrace("skip errored check | download is private | {Name}", wrapper.Name);
-            }
-            else
-            {
-                return await CheckIfErrored(wrapper, errorRecoveryCapable, erroredConfig);
+                return erroredResult.Value;
             }
         }
 
@@ -124,13 +117,38 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
     }
 
     /// <summary>
-    /// Strikes an errored download and asks the client to resume it, until the strike limit removes it.
+    /// Hook for clients that implement <see cref="IErrorRecoveryCapable"/>.
+    /// Clients without that capability return null here, so the caller falls through to the stall check.
     /// </summary>
-    private async Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)> CheckIfErrored(
+    protected virtual Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> CheckIfErrored(
         ITorrentItemWrapper wrapper,
-        IErrorRecoveryCapable errorRecoveryCapable,
         ErroredConfig erroredConfig)
     {
+        return Task.FromResult<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?>(null);
+    }
+
+    /// <summary>
+    /// Strikes an errored download and asks the client to resume it, until the strike limit removes it.
+    /// Returns null when the download isn't errored (or is private and ignored), so the caller falls through to the stall check.
+    /// </summary>
+    protected async Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> StrikeErroredAsync(
+        ITorrentItemWrapper wrapper,
+        ErroredConfig erroredConfig,
+        Func<Task> resume)
+    {
+        if (!wrapper.IsErrored())
+        {
+            // A download that recovered is no longer errored
+            await _striker.ResetStrikeAsync(wrapper.DownloadId, wrapper.Name, StrikeType.Errored);
+            return null;
+        }
+
+        if (erroredConfig.IgnorePrivate && wrapper.IsPrivate)
+        {
+            _logger.LogTrace("skip errored check | download is private | {Name}", wrapper.Name);
+            return null;
+        }
+
         _logger.LogDebug(
             "download is errored | {Reason} | {Name}",
             string.IsNullOrWhiteSpace(wrapper.ErrorMessage) ? "no error reported by the client" : wrapper.ErrorMessage,
@@ -152,7 +170,7 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
 
         try
         {
-            await _dryRunInterceptor.InterceptAsync(() => errorRecoveryCapable.ResumeDownload(wrapper));
+            await _dryRunInterceptor.InterceptAsync(resume);
         }
         catch (Exception exception)
         {

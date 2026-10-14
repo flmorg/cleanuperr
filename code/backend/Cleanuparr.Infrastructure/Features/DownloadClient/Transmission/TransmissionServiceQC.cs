@@ -1,4 +1,6 @@
-﻿using Cleanuparr.Domain.Enums;
+﻿using Cleanuparr.Domain.Entities;
+using Cleanuparr.Domain.Enums;
+using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 using Transmission.API.RPC.Entity;
 
@@ -68,4 +70,10 @@ public partial class TransmissionService
 
     /// <inheritdoc/>
     protected override Func<Task<bool>>? GetAltSpeedLimitProbe() => IsAltSpeedLimitActiveAsync;
+
+    /// <inheritdoc/>
+    protected override Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> CheckIfErrored(
+        ITorrentItemWrapper wrapper,
+        ErroredConfig erroredConfig) =>
+        StrikeErroredAsync(wrapper, erroredConfig, () => ResumeDownload(wrapper));
 }
