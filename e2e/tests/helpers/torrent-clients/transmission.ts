@@ -120,6 +120,24 @@ export class TransmissionDriver implements TorrentClientDriver {
     return t?.downloadDir as string | undefined;
   }
 
+  /**
+   * Transmission's local-error state.
+   * `error` is 0 none, 1 tracker warning, 2 tracker error, 3 local error.
+   */
+  async getError(infoHash: string): Promise<{ error: number; errorString: string }> {
+    const args = await this.call('torrent-get', { ids: [infoHash], fields: ['hashString', 'error', 'errorString'] });
+    const t = (args.torrents ?? [])[0];
+    return { error: Number(t?.error ?? 0), errorString: String(t?.errorString ?? '') };
+  }
+
+  /**
+   * Re-checks the torrent's data against its pieces.
+   * With the data gone this sets `error` to 3, which is how a spec reaches the errored state.
+   */
+  async verifyTorrent(infoHash: string): Promise<void> {
+    await this.call('torrent-verify', { ids: [infoHash] });
+  }
+
   /** Transmission reports status 0 (TR_STATUS_STOPPED) for a stopped torrent. */
   async isStopped(infoHash: string): Promise<boolean> {
     const args = await this.call('torrent-get', { ids: [infoHash], fields: ['hashString', 'status'] });
