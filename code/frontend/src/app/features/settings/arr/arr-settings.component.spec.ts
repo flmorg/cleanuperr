@@ -531,6 +531,55 @@ describe('ArrSettingsComponent', () => {
     expect(api.updateConfig).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [null, 'This field is required'],
+    [-5, 'Value cannot be negative'],
+    [5001, 'Value cannot exceed 5000'],
+  ])('rejects a failed import maxStrikes of %s with "%s"', (maxStrikes, message) => {
+    const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+
+    component.failedImportForm.maxStrikes().value.set(maxStrikes);
+    fixture.detectChanges();
+
+    expect(component.failedImportForm.maxStrikes().errors()[0].message).toBe(message);
+  });
+
+  it('accepts a failed import maxStrikes of 5000', () => {
+    const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+
+    component.failedImportForm.maxStrikes().value.set(5000);
+    fixture.detectChanges();
+
+    expect(component.failedImportForm.maxStrikes().errors().length).toBe(0);
+  });
+
+  it('ignores an invalid failed import maxStrikes while the override is off', () => {
+    const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.maxStrikes().value.set(1);
+    fixture.detectChanges();
+
+    expect(component.failedImportForm.maxStrikes().errors().length).toBe(0);
+    expect(component.failedImportHasErrors()).toBe(false);
+  });
+
+  it('renders the failed import maxStrikes error message in the number input', () => {
+    const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+    component.failedImportForm.maxStrikes().value.set(1);
+    fixture.detectChanges();
+
+    expect(text(fixture, '.number-error')).toEqual(['Minimum value is 3']);
+  });
+
   it('stays clean when the override is toggled back off after editing the hidden value', () => {
     const { fixture, component } = setup('sonarr', createApi({ failedImportMaxStrikes: -1, instances: [] }));
 
