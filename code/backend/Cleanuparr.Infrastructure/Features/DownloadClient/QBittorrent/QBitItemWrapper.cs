@@ -132,7 +132,6 @@ public sealed class QBitItemWrapper : ITorrentItemWrapper
     public bool IsErrored() => Info.State is TorrentState.Error or TorrentState.MissingFiles;
 
     /// <inheritdoc/>
-    /// <remarks>qBittorrent exposes no per-torrent error text; its only error detail is the global log.</remarks>
     public string? ErrorMessage => null;
 
     public bool IsMetadataDownloading() => Info.State is TorrentState.FetchingMetadata or TorrentState.ForcedFetchingMetadata;

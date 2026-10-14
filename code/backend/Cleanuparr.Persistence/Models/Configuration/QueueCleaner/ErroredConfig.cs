@@ -7,8 +7,7 @@ namespace Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 public sealed record ErroredConfig
 {
     /// <summary>
-    /// Strikes before a download the client reports as errored is removed.
-    /// 0 disables the check. Not supported by rTorrent, which reports no error state.
+    /// Strikes before a download reported as errored is removed.
     /// </summary>
     public ushort MaxStrikes { get; init; }
 

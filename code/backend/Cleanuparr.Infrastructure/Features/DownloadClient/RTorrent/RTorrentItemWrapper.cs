@@ -93,7 +93,6 @@ public sealed class RTorrentItemWrapper : ITorrentItemWrapper
 
     /// <summary>
     /// rTorrent reports no error state.
-    /// Its only message field also carries routine tracker text, so there is nothing safe to match on.
     /// </summary>
     public bool IsErrored() => false;
 

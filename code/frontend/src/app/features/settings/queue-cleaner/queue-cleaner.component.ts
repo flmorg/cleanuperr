@@ -209,7 +209,7 @@ export class QueueCleanerComponent implements HasPendingChanges {
   });
 
   // UI-only expansion state
-  readonly failedExpanded = signal(true);
+  readonly failedExpanded = signal(false);
   readonly metadataExpanded = signal(false);
   readonly erroredExpanded = signal(false);
 

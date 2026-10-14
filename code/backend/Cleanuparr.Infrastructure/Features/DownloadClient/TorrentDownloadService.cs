@@ -101,13 +101,11 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
         {
             if (!wrapper.IsErrored())
             {
-                // A download that recovered is no longer errored, whether it resumed downloading or
-                // finished and started seeding. Without this reset its strikes outlive the incident.
+                // A download that recovered is no longer errored
                 await _striker.ResetStrikeAsync(wrapper.DownloadId, wrapper.Name, StrikeType.Errored);
             }
             else if (erroredConfig.IgnorePrivate && wrapper.IsPrivate)
             {
-                // Leaves any existing strikes alone: being ignored is not evidence of recovery.
                 _logger.LogTrace("skip errored check | download is private | {Name}", wrapper.Name);
             }
             else
