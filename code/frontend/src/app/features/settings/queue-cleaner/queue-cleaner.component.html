@@ -139,6 +139,11 @@
             hint="Disable this if you want to keep private torrents in the download client even if they are removed from the arrs"
             helpKey="queue-cleaner:errored.deletePrivate" />
         }
+
+        <div class="form-divider"></div>
+
+        <app-toggle label="Resume download after each strike" [checked]="true" [forceDisabled]="true"
+          hint="Cleanuparr asks the download client to resume an errored download every time it strikes it, giving it a chance to recover before the strike limit removes it" />
       </div>
     </app-accordion>
 
