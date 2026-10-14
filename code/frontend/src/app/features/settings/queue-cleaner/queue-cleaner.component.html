@@ -144,6 +144,8 @@
 
         <app-toggle label="Resume download after each strike" [checked]="true" [forceDisabled]="true"
           hint="Cleanuparr asks the download client to resume an errored download every time it strikes it, giving it a chance to recover before the strike limit removes it" />
+        <app-toggle label="Reset strikes on recovery" [checked]="true" [forceDisabled]="true"
+          hint="Reset strike count when the download recovers from being errored" />
       </div>
     </app-accordion>
 
