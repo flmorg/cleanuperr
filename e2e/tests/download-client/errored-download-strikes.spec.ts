@@ -176,6 +176,11 @@ function queueDeletes(mocks: MockServers): Promise<Array<{ url: string }>> {
   return mocks.arr.findRequests({ method: 'DELETE', urlPattern: '/api/v3/queue/.*' });
 }
 
+/** Count of GET /api/v3/queue calls so far, the request every QueueCleaner run makes to fetch the queue. */
+async function queueGetCount(mocks: MockServers): Promise<number> {
+  return (await mocks.arr.findRequests({ method: 'GET', urlPath: '/api/v3/queue' })).length;
+}
+
 /**
  * Drives a Transmission torrent into its local-error state and stubs the *arr queue for it.
  *
@@ -212,10 +217,28 @@ async function arrangeErroredTransmissionTorrent(
   return { infoHash: torrent.infoHash };
 }
 
+/**
+ * Triggers one Queue Cleaner run and waits until it queries the *arr queue.
+ *
+ * The trigger endpoint only schedules the Quartz job. The job disallows concurrent execution,
+ * so a run that has started also proves the previous run finished.
+ */
+async function runQueueCleaner(api: CleanuparrApi, mocks: MockServers): Promise<void> {
+  const before = await queueGetCount(mocks);
+  expect((await api.jobs.trigger('QueueCleaner')).status).toBeLessThan(300);
+
+  await expect
+    .poll(() => queueGetCount(mocks), {
+      message: 'QueueCleaner run never queried the *arr queue',
+      timeout: 60_000,
+    })
+    .toBeGreaterThan(before);
+}
+
 /** Runs the Queue Cleaner enough times to reach the strike limit. */
-async function strikeToTheLimit(api: CleanuparrApi): Promise<void> {
+async function strikeToTheLimit(api: CleanuparrApi, mocks: MockServers): Promise<void> {
   for (let run = 0; run < MAX_STRIKES; run++) {
-    expect((await api.jobs.trigger('QueueCleaner')).status).toBeLessThan(300);
+    await runQueueCleaner(api, mocks);
   }
 }
 
@@ -447,7 +470,9 @@ test.describe('Queue Cleaner errored downloads', () => {
         { ignorePrivate: true },
       );
 
-      await strikeToTheLimit(api);
+      await strikeToTheLimit(api, mocks);
+      // starts only after the last strike run has finished
+      await runQueueCleaner(api, mocks);
 
       expect(await countEvents(api, 'ErroredStrike', torrent.infoHash)).toBe(0);
       expect(await queueDeletes(mocks)).toHaveLength(0);
@@ -473,7 +498,7 @@ test.describe('Queue Cleaner errored downloads', () => {
         { deletePrivate: true },
       );
 
-      await strikeToTheLimit(api);
+      await strikeToTheLimit(api, mocks);
 
       await expect
         .poll(async () => (await queueDeletes(mocks)).length, {
@@ -506,7 +531,7 @@ test.describe('Queue Cleaner errored downloads', () => {
         { changeCategory: true },
       );
 
-      await strikeToTheLimit(api);
+      await strikeToTheLimit(api, mocks);
 
       await expect
         .poll(async () => (await queueDeletes(mocks)).length, {
