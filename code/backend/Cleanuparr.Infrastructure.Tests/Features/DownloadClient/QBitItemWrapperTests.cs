@@ -531,6 +531,40 @@ public class QBitItemWrapperTests
         result.ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData(TorrentState.Error, true)]
+    [InlineData(TorrentState.MissingFiles, true)]
+    [InlineData(TorrentState.Downloading, false)]
+    [InlineData(TorrentState.PausedDownload, false)]
+    public void IsErrored_ReturnsCorrectValue(TorrentState state, bool expected)
+    {
+        // Arrange
+        var torrentInfo = new TorrentInfo { State = state };
+        var trackers = new List<TorrentTracker>();
+        var wrapper = new QBitItemWrapper(torrentInfo, trackers, false);
+
+        // Act
+        var result = wrapper.IsErrored();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ErrorMessage_ReturnsNull()
+    {
+        // Arrange
+        var torrentInfo = new TorrentInfo { State = TorrentState.Error };
+        var trackers = new List<TorrentTracker>();
+        var wrapper = new QBitItemWrapper(torrentInfo, trackers, false);
+
+        // Act
+        var result = wrapper.ErrorMessage;
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
     [Fact]
     public void IsIgnored_WithEmptyList_ReturnsFalse()
     {

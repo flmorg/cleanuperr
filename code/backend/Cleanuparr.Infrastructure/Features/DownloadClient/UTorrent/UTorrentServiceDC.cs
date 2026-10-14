@@ -71,6 +71,13 @@ public partial class UTorrentService
         await _client.StopTorrentsAsync([hash]);
     }
 
+    /// <inheritdoc cref="IErrorRecoveryCapable.ResumeDownload"/>
+    public async Task ResumeDownload(IDownloadItem item)
+    {
+        string hash = item.DownloadId.ToLowerInvariant();
+        await _client.StartTorrentsAsync([hash]);
+    }
+
     public override async Task CreateCategoryAsync(string name)
     {
         await Task.CompletedTask;

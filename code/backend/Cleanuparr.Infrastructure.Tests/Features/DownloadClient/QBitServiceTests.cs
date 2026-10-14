@@ -709,6 +709,277 @@ public class QBitServiceTests : IClassFixture<QBitServiceFixture>
         }
     }
 
+    public class ShouldRemoveFromArrQueueAsync_ErroredScenarios : QBitServiceTests
+    {
+        public ShouldRemoveFromArrQueueAsync_ErroredScenarios(QBitServiceFixture fixture) : base(fixture)
+        {
+        }
+
+        private void ArrangeTorrent(string hash, TorrentState state, bool isPrivate = false)
+        {
+            TorrentInfo torrentInfo = new()
+            {
+                Hash = hash,
+                Name = "Test Torrent",
+                State = state
+            };
+
+            _fixture.ClientWrapper
+                .GetTorrentListAsync(Arg.Is<TorrentListQuery>(q => q.Hashes != null && q.Hashes.Contains(hash)))
+                .Returns(new[] { torrentInfo });
+
+            _fixture.ClientWrapper
+                .GetTorrentTrackersAsync(hash)
+                .Returns(Array.Empty<TorrentTracker>());
+
+            _fixture.ClientWrapper
+                .GetTorrentPropertiesAsync(hash)
+                .Returns(new TorrentProperties
+                {
+                    AdditionalData = new Dictionary<string, JToken>
+                    {
+                        { "is_private", JToken.FromObject(isPrivate) }
+                    }
+                });
+
+            _fixture.ClientWrapper
+                .GetTorrentContentsAsync(hash)
+                .Returns(new[]
+                {
+                    new TorrentContent { Index = 0, Priority = TorrentContentPriority.Normal }
+                });
+        }
+
+        [Theory]
+        [InlineData(TorrentState.Error)]
+        [InlineData(TorrentState.MissingFiles)]
+        public async Task Errored_BelowMaxStrikes_ResumesWithoutRemoving(TorrentState state)
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3 }
+            });
+
+            ArrangeTorrent(hash, state);
+
+            _fixture.Striker
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>())
+                .Returns(false);
+
+            DownloadCheckResult result = await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            result.ShouldRemove.ShouldBeFalse();
+            await _fixture.Striker.Received(1)
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>());
+            await _fixture.ClientWrapper.Received(1)
+                .ResumeAsync(Arg.Is<IEnumerable<string>>(hashes => hashes.Contains(hash)));
+        }
+
+        [Fact]
+        public async Task Errored_ExceedsMaxStrikes_RemovesWithoutResuming()
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3 }
+            });
+
+            ArrangeTorrent(hash, TorrentState.Error);
+
+            _fixture.Striker
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>())
+                .Returns(true);
+
+            DownloadCheckResult result = await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            result.ShouldRemove.ShouldBeTrue();
+            result.DeleteReason.ShouldBe(DeleteReason.Errored);
+            result.DeleteFromClient.ShouldBeFalse();
+            result.ChangeCategory.ShouldBeFalse();
+            await _fixture.ClientWrapper.DidNotReceive()
+                .ResumeAsync(Arg.Any<IEnumerable<string>>());
+        }
+
+        [Fact]
+        public async Task Errored_WithDeletePrivate_DeletesFromClient()
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3, DeletePrivate = true }
+            });
+
+            ArrangeTorrent(hash, TorrentState.Error, isPrivate: true);
+
+            _fixture.Striker
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>())
+                .Returns(true);
+
+            DownloadCheckResult result = await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            result.ShouldRemove.ShouldBeTrue();
+            result.DeleteFromClient.ShouldBeTrue();
+        }
+
+        [Fact]
+        public async Task Errored_WithChangeCategory_ChangesCategoryInsteadOfDeleting()
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3, ChangeCategory = true }
+            });
+
+            ArrangeTorrent(hash, TorrentState.Error);
+
+            _fixture.Striker
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>())
+                .Returns(true);
+
+            DownloadCheckResult result = await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            result.ShouldRemove.ShouldBeTrue();
+            result.ChangeCategory.ShouldBeTrue();
+            result.DeleteFromClient.ShouldBeFalse();
+        }
+
+        [Fact]
+        public async Task Errored_WithIgnorePrivate_SkipsPrivateDownload()
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3, IgnorePrivate = true }
+            });
+
+            ArrangeTorrent(hash, TorrentState.Error, isPrivate: true);
+
+            DownloadCheckResult result = await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            result.ShouldRemove.ShouldBeFalse();
+            await _fixture.Striker.DidNotReceive()
+                .StrikeAndCheckLimit(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<ushort>(), StrikeType.Errored, Arg.Any<long?>());
+            await _fixture.Striker.DidNotReceive()
+                .ResetStrikeAsync(Arg.Any<string>(), Arg.Any<string>(), StrikeType.Errored);
+            await _fixture.ClientWrapper.DidNotReceive()
+                .ResumeAsync(Arg.Any<IEnumerable<string>>());
+        }
+
+        [Fact]
+        public async Task Errored_WithIgnorePrivate_StillChecksPublicDownload()
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3, IgnorePrivate = true }
+            });
+
+            ArrangeTorrent(hash, TorrentState.Error);
+
+            _fixture.Striker
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>())
+                .Returns(false);
+
+            await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            await _fixture.Striker.Received(1)
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>());
+        }
+
+        [Fact]
+        public async Task Errored_WithStrikesDisabled_DoesNothing()
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 0 }
+            });
+
+            ArrangeTorrent(hash, TorrentState.Error);
+
+            DownloadCheckResult result = await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            result.ShouldRemove.ShouldBeFalse();
+            await _fixture.Striker.DidNotReceive()
+                .StrikeAndCheckLimit(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<ushort>(), Arg.Any<StrikeType>(), Arg.Any<long?>());
+            await _fixture.Striker.DidNotReceive()
+                .ResetStrikeAsync(Arg.Any<string>(), Arg.Any<string>(), StrikeType.Errored);
+            await _fixture.ClientWrapper.DidNotReceive()
+                .ResumeAsync(Arg.Any<IEnumerable<string>>());
+        }
+
+        [Fact]
+        public async Task Errored_ResumeFailure_DoesNotFailTheCheck()
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3 }
+            });
+
+            ArrangeTorrent(hash, TorrentState.Error);
+
+            _fixture.Striker
+                .StrikeAndCheckLimit(hash, Arg.Any<string>(), (ushort)3, StrikeType.Errored, Arg.Any<long?>())
+                .Returns(false);
+
+            _fixture.ClientWrapper
+                .ResumeAsync(Arg.Any<IEnumerable<string>>())
+                .Returns(Task.FromException(new InvalidOperationException("client refused")));
+
+            DownloadCheckResult result = await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            result.ShouldRemove.ShouldBeFalse();
+        }
+
+        [Theory]
+        [InlineData(TorrentState.Downloading)]
+        [InlineData(TorrentState.Uploading)]
+        public async Task NotErrored_ResetsErroredStrikes(TorrentState state)
+        {
+            const string hash = "test-hash";
+            QBitService sut = _fixture.CreateSut();
+
+            ContextProvider.Set(nameof(QueueCleanerConfig), new QueueCleanerConfig
+            {
+                Id = Guid.NewGuid(),
+                Errored = new ErroredConfig { MaxStrikes = 3 }
+            });
+
+            ArrangeTorrent(hash, state);
+
+            await sut.ShouldRemoveFromArrQueueAsync(hash, Array.Empty<string>());
+
+            await _fixture.Striker.Received(1)
+                .ResetStrikeAsync(hash, Arg.Any<string>(), StrikeType.Errored);
+        }
+    }
+
     public class ShouldRemoveFromArrQueueAsync_SlowDownloadScenarios : QBitServiceTests
     {
         public ShouldRemoveFromArrQueueAsync_SlowDownloadScenarios(QBitServiceFixture fixture) : base(fixture)

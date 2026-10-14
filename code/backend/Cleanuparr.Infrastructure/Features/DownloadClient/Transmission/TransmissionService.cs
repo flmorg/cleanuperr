@@ -16,7 +16,7 @@ using Transmission.API.RPC.Entity;
 
 namespace Cleanuparr.Infrastructure.Features.DownloadClient.Transmission;
 
-public partial class TransmissionService : TorrentDownloadService, IDeadTorrentCapable
+public partial class TransmissionService : TorrentDownloadService, IDeadTorrentCapable, IErrorRecoveryCapable
 {
     private readonly ITransmissionClientWrapper _client;
     private bool? _altSpeedLimitActive;
@@ -42,6 +42,8 @@ public partial class TransmissionService : TorrentDownloadService, IDeadTorrentC
         TorrentFields.LABELS,
         TorrentFields.IS_FINISHED,
         TorrentFields.ADDED_DATE,
+        TorrentFields.ERROR,
+        TorrentFields.ERROR_STRING,
     ];
 
     public TransmissionService(

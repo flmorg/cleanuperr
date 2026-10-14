@@ -863,7 +863,7 @@ List<SeededItem> activeItems = seededItems.Where(s => !s.Item.IsRemoved).ToList(
 
 // ---- Strikes: climb per item; the overall timestamp distribution targets ~60-100 strike
 // events in the last 24h (dashboard "Statistics" default window) while keeping 7d/30d dense. ----
-StrikeType[] queueStrikeTypes = [StrikeType.Stalled, StrikeType.DownloadingMetadata, StrikeType.SlowSpeed, StrikeType.SlowTime];
+StrikeType[] queueStrikeTypes = [StrikeType.Stalled, StrikeType.DownloadingMetadata, StrikeType.SlowSpeed, StrikeType.SlowTime, StrikeType.Errored];
 
 List<(SeededItem Owner, StrikeType Type, int ClimbTo)> strikeAssignments = [];
 foreach (SeededItem seeded in seededItems)
@@ -927,6 +927,7 @@ foreach ((Strike strike, SeededItem owner) in strikes)
         StrikeType.SlowSpeed => EventType.SlowSpeedStrike,
         StrikeType.SlowTime => EventType.SlowTimeStrike,
         StrikeType.DeadTorrent => EventType.DeadTorrentStrike,
+        StrikeType.Errored => EventType.ErroredStrike,
         _ => EventType.StalledStrike,
     };
     int strikeCount = strikes.Count(s => s.Owner.Item.Id == owner.Item.Id && s.Strike.Type == strike.Type && s.Strike.CreatedAt <= strike.CreatedAt);

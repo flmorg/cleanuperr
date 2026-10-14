@@ -52,4 +52,5 @@ export const NEW_FEATURES: NewFeature[] = [
   { id: 'usenet-queue-cleaner' },
   { id: 'qbit-api-key' },
   { id: 'theme-follow-system' },
+  { id: 'errored-downloads' },
 ];

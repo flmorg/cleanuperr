@@ -14,4 +14,5 @@ public interface ITransmissionClientWrapper
     Task TorrentSetLocationAsync(long[] ids, string location, bool move);
     Task TorrentRemoveAsync(long[] ids, bool deleteLocalData);
     Task TorrentStopAsync(long[] ids);
+    Task TorrentStartAsync(long[] ids);
 }

@@ -82,6 +82,17 @@ public static class UTorrentRequestFactory
     }
 
     /// <summary>
+    /// Creates a request to start a torrent
+    /// </summary>
+    /// <param name="hash">Torrent hash</param>
+    /// <returns>Request for start torrent API call</returns>
+    public static UTorrentRequest CreateStartTorrentRequest(string hash)
+    {
+        return UTorrentRequest.Create("action=start", string.Empty)
+            .WithParameter("hash", hash);
+    }
+
+    /// <summary>
     /// Creates a request to set file priorities for a torrent
     /// </summary>
     /// <param name="hash">Torrent hash</param>

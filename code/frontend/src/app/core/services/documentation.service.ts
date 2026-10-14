@@ -24,6 +24,7 @@ export class DocumentationService {
       'failedImport.forceImport': 'failed-import-force-import',
       'failedImport.forceImportMaxTries': 'failed-import-force-import-max-tries',
       'downloadingMetadataMaxStrikes': 'stalled-downloading-metadata-max-strikes',
+      'erroredMaxStrikes': 'errored-downloads-max-strikes',
       'stallRule.name': 'stalled-rule-name',
       'stallRule.enabled': 'stalled-enabled',
       'stallRule.maxStrikes': 'stalled-max-strikes',

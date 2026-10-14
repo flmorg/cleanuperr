@@ -125,7 +125,7 @@ public class QueueCleanerConfigControllerTests : IDisposable
         };
 
         // Act + Assert
-        await Should.ThrowAsync<System.ComponentModel.DataAnnotations.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
             () => _controller.UpdateQueueCleanerConfig(request));
     }
 

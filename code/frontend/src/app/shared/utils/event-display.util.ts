@@ -9,6 +9,7 @@ const STRIKE_EVENT_TYPES: ReadonlySet<EventType> = new Set([
   EventType.SlowSpeedStrike,
   EventType.SlowTimeStrike,
   EventType.DeadTorrentStrike,
+  EventType.ErroredStrike,
 ]);
 
 export function eventTypeSeverity(eventType: string): BadgeSeverity {
@@ -28,6 +29,7 @@ export function eventTypeSeverity(eventType: string): BadgeSeverity {
     case EventType.SlowSpeedStrike:
     case EventType.SlowTimeStrike:
     case EventType.DeadTorrentStrike:
+    case EventType.ErroredStrike:
     case EventType.CategoryChanged:
       return 'info';
     default:

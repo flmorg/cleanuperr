@@ -12,6 +12,7 @@ public interface IDelugeClientWrapper
     Task<List<DownloadStatus>?> GetStatusForAllTorrents();
     Task DeleteTorrents(List<string> hashes, bool removeData);
     Task PauseTorrents(List<string> hashes);
+    Task ResumeTorrents(List<string> hashes);
     Task ChangeFilesPriority(string hash, List<int> priorities);
     Task<IReadOnlyList<string>> GetLabels();
     Task CreateLabel(string label);

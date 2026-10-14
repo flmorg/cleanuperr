@@ -40,4 +40,7 @@ public sealed class TransmissionClientWrapper : ITransmissionClientWrapper
 
     public Task TorrentStopAsync(long[] ids)
         => _client.TorrentStopAsync(Array.ConvertAll(ids, id => (object)id));
+
+    public Task TorrentStartAsync(long[] ids)
+        => _client.TorrentStartAsync(Array.ConvertAll(ids, id => (object)id));
 }

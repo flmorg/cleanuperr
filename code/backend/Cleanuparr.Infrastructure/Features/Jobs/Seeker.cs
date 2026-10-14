@@ -45,7 +45,8 @@ public sealed class Seeker : IHandler
         StrikeType.Stalled,
         StrikeType.SlowSpeed,
         StrikeType.SlowTime,
-        StrikeType.DownloadingMetadata
+        StrikeType.DownloadingMetadata,
+        StrikeType.Errored
     ];
 
     private readonly ILogger<Seeker> _logger;

@@ -57,4 +57,15 @@ public interface ITorrentItemWrapper : IDownloadItem
     IReadOnlyList<string> Tags { get; }
 
     bool IsStalled();
+
+    /// <summary>
+    /// Whether the download client reports this item as errored.
+    /// Only local failures count, since resuming cannot fix a tracker problem.
+    /// </summary>
+    bool IsErrored();
+
+    /// <summary>
+    /// The error text the download client reports, when it reports one.
+    /// </summary>
+    string? ErrorMessage { get; }
 }

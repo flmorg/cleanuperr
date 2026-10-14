@@ -367,6 +367,7 @@ public class NotificationPublisher : INotificationPublisher
             StrikeType.FailedImport => NotificationEventType.FailedImportStrike,
             StrikeType.SlowSpeed => NotificationEventType.SlowSpeedStrike,
             StrikeType.SlowTime => NotificationEventType.SlowTimeStrike,
+            StrikeType.Errored => NotificationEventType.StalledStrike,
             _ => throw new ArgumentOutOfRangeException(nameof(strikeType), strikeType, null)
         };
     }

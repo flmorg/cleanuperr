@@ -80,6 +80,14 @@ public partial class DelugeService
         await _client.PauseTorrents([hash]);
     }
 
+    /// <inheritdoc cref="IErrorRecoveryCapable.ResumeDownload"/>
+    public async Task ResumeDownload(IDownloadItem item)
+    {
+        string hash = item.DownloadId.ToLowerInvariant();
+
+        await _client.ResumeTorrents([hash]);
+    }
+
     public override async Task CreateCategoryAsync(string name)
     {
         IReadOnlyList<string> existingLabels = await _client.GetLabels();

@@ -16,6 +16,7 @@ public enum EventType
     StrikeReset,
     ForceImported,
     DownloadStopped,
+    ErroredStrike,
 
     /// <summary>
     /// Text this build does not know.

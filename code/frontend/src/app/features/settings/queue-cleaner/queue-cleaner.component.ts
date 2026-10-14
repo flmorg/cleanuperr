@@ -53,6 +53,10 @@ interface QueueCleanerFormModel {
   failedForceImport: boolean;
   failedForceImportMaxTries: number | null;
   metadataMaxStrikes: number | null;
+  erroredMaxStrikes: number | null;
+  erroredIgnorePrivate: boolean;
+  erroredDeletePrivate: boolean;
+  erroredChangeCategory: boolean;
 }
 
 @Component({
@@ -115,12 +119,22 @@ export class QueueCleanerComponent implements HasPendingChanges {
     failedForceImport: false,
     failedForceImportMaxTries: 3,
     metadataMaxStrikes: 3,
+    erroredMaxStrikes: 0,
+    erroredIgnorePrivate: false,
+    erroredDeletePrivate: false,
+    erroredChangeCategory: false,
   });
 
   readonly failedSubFieldsDisabled = computed(() => this.model().failedMaxStrikes === 0);
 
   readonly failedDeletePrivateDisabled = computed(() =>
     this.failedSubFieldsDisabled() || this.model().failedIgnorePrivate
+  );
+
+  readonly erroredSubFieldsDisabled = computed(() => this.model().erroredMaxStrikes === 0);
+
+  readonly erroredDeletePrivateDisabled = computed(() =>
+    this.erroredSubFieldsDisabled() || this.model().erroredIgnorePrivate
   );
 
   readonly qcForm = form(this.model, (p) => {
@@ -135,6 +149,16 @@ export class QueueCleanerComponent implements HasPendingChanges {
     required(p.metadataMaxStrikes, { message: 'This field is required' });
     min(p.metadataMaxStrikes, 0, { message: 'Value cannot be negative' });
     max(p.metadataMaxStrikes, 5000, { message: 'Value cannot exceed 5000' });
+
+    required(p.erroredMaxStrikes, { message: 'This field is required' });
+    min(p.erroredMaxStrikes, 0, { message: 'Value cannot be negative' });
+    max(p.erroredMaxStrikes, 5000, { message: 'Value cannot exceed 5000' });
+    validate(p.erroredMaxStrikes, ({ value }) => {
+      const strikes = value();
+      return strikes !== null && strikes > 0 && strikes < 3
+        ? { kind: 'min', message: 'Minimum value is 3 (or 0 to disable)' }
+        : undefined;
+    });
 
     validate(p.scheduleEvery, ({ value, valueOf }) => {
       if (!valueOf(p.enabled) || valueOf(p.useAdvancedScheduling)) {
@@ -166,6 +190,10 @@ export class QueueCleanerComponent implements HasPendingChanges {
     disabled(p.failedPatternMode, () => this.model().failedMaxStrikes === 0);
     disabled(p.failedPatterns, () => this.model().failedMaxStrikes === 0);
     disabled(p.failedForceImportMaxTries, () => !this.model().failedForceImport);
+
+    disabled(p.erroredIgnorePrivate, () => this.erroredSubFieldsDisabled());
+    disabled(p.erroredChangeCategory, () => this.erroredSubFieldsDisabled());
+    disabled(p.erroredDeletePrivate, () => this.erroredDeletePrivateDisabled());
   });
 
   readonly scheduleIntervalOptions = computed(() => {
@@ -176,6 +204,7 @@ export class QueueCleanerComponent implements HasPendingChanges {
   // UI-only expansion state
   readonly failedExpanded = signal(true);
   readonly metadataExpanded = signal(false);
+  readonly erroredExpanded = signal(false);
 
   // Stall rules
   readonly stallRules = computed(() => (this.stallRulesResource.hasValue() ? this.stallRulesResource.value() : []));
@@ -223,6 +252,20 @@ export class QueueCleanerComponent implements HasPendingChanges {
     });
 
     effect(() => {
+      const m = this.model();
+      if (m.erroredIgnorePrivate && m.erroredDeletePrivate) {
+        untracked(() => this.model.update(mm => ({ ...mm, erroredDeletePrivate: false })));
+      }
+    });
+
+    effect(() => {
+      const m = this.model();
+      if (m.erroredChangeCategory && m.erroredDeletePrivate) {
+        untracked(() => this.model.update(mm => ({ ...mm, erroredDeletePrivate: false })));
+      }
+    });
+
+    effect(() => {
       const config = this.configResource.hasValue() ? this.configResource.value() : undefined;
       if (!config) {
         return;
@@ -251,6 +294,10 @@ export class QueueCleanerComponent implements HasPendingChanges {
           failedForceImport: config.failedImport.forceImport,
           failedForceImportMaxTries: config.failedImport.forceImportMaxTries,
           metadataMaxStrikes: config.downloadingMetadataMaxStrikes,
+          erroredMaxStrikes: config.errored.maxStrikes,
+          erroredIgnorePrivate: config.errored.ignorePrivate,
+          erroredDeletePrivate: config.errored.deletePrivate,
+          erroredChangeCategory: config.errored.changeCategory,
         });
         this.dirtyTracker.markSaved();
       });
@@ -378,6 +425,12 @@ export class QueueCleanerComponent implements HasPendingChanges {
         forceImportMaxTries: m.failedForceImportMaxTries ?? 3,
       },
       downloadingMetadataMaxStrikes: m.metadataMaxStrikes ?? 3,
+      errored: {
+        maxStrikes: m.erroredMaxStrikes ?? 0,
+        ignorePrivate: m.erroredIgnorePrivate,
+        deletePrivate: m.erroredChangeCategory ? false : m.erroredDeletePrivate,
+        changeCategory: m.erroredChangeCategory,
+      },
     };
 
     saveSettings({

@@ -43,4 +43,7 @@ public sealed class UTorrentClientWrapper : IUTorrentClientWrapper
 
     public Task StopTorrentsAsync(List<string> hashes)
         => _client.StopTorrentsAsync(hashes);
+
+    public Task StartTorrentsAsync(List<string> hashes)
+        => _client.StartTorrentsAsync(hashes);
 }

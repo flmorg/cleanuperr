@@ -101,6 +101,62 @@ This setting will enable the processing of items that appear in the logs with th
 
 </div>
 
+<PrefixedSection prefix="errored">
+<div className={styles.section}>
+
+<SectionTitle>Errored Downloads Settings</SectionTitle>
+
+<ConfigSection
+  title="Max Strikes"
+>
+
+Number of strikes before a download the client reports as errored is removed from the queue. Set to 0 to disable, minimum 3 to enable.
+
+On each strike below the limit, Cleanuparr asks the download client to resume the download. Strikes reset once the download starts downloading again.
+
+This helps to handle cases such as an unavailable network path or a failed disk write.
+
+<Important>
+Supported for qBittorrent, Deluge, Transmission and uTorrent.
+</Important>
+
+</ConfigSection>
+
+<ConfigSection
+  title="Ignore Private"
+>
+
+When enabled, private torrents will be skipped during errored download cleaning. This is useful if you want to preserve private tracker content even when the client reports an error.
+
+</ConfigSection>
+
+<ConfigSection
+  title="Change Category"
+>
+
+When enabled, instead of deleting the item from the download client, Cleanuparr asks the *arr to change the download's category to the post-import category.
+
+<Important>
+The post-import category is configured per download client in your *arr application's settings, not in Cleanuparr. Cleanuparr only signals the *arr to perform the category change.
+</Important>
+
+</ConfigSection>
+
+<ConfigSection
+  title="Delete Private"
+>
+
+When enabled, private torrents that reach the maximum strikes will be deleted from the download client. Use with caution as this will permanently remove the download.
+
+<Warning>
+Setting this to true means private torrents will be permanently deleted, potentially affecting your private tracker account by receiving H&R if the seeding requirements are not met.
+</Warning>
+
+</ConfigSection>
+
+</div>
+</PrefixedSection>
+
 <PrefixedSection prefix="failed-import">
 <div className={styles.section}>
 

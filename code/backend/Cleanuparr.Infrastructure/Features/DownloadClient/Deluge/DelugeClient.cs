@@ -174,6 +174,14 @@ public sealed class DelugeClient
         ThrowOnFailures(failures, "pause");
     }
 
+    public async Task ResumeTorrents(List<string> hashes)
+    {
+        List<List<JsonElement>?>? failures =
+            await SendRequest<List<List<JsonElement>?>?>("core.resume_torrents", hashes);
+
+        ThrowOnFailures(failures, "resume");
+    }
+
     private static void ThrowOnFailures(List<List<JsonElement>?>? failures, string action)
     {
         List<string> errors = [];

@@ -450,6 +450,7 @@ public class StrikerTests : IDisposable
     [Theory]
     [InlineData(StrikeType.Stalled)]
     [InlineData(StrikeType.DownloadingMetadata)]
+    [InlineData(StrikeType.Errored)]
     [InlineData(StrikeType.FailedImport)]
     [InlineData(StrikeType.SlowSpeed)]
     [InlineData(StrikeType.SlowTime)]

@@ -10,6 +10,7 @@ using Cleanuparr.Infrastructure.Interceptors;
 using Cleanuparr.Infrastructure.Services.Interfaces;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
+using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 
 namespace Cleanuparr.Infrastructure.Features.DownloadClient;
@@ -94,6 +95,27 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
 
     protected virtual async Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)> CheckIfStuck(ITorrentItemWrapper wrapper)
     {
+        ErroredConfig erroredConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig)).Errored;
+
+        if (this is IErrorRecoveryCapable errorRecoveryCapable && erroredConfig.MaxStrikes > 0)
+        {
+            if (!wrapper.IsErrored())
+            {
+                // A download that recovered is no longer errored, whether it resumed downloading or
+                // finished and started seeding. Without this reset its strikes outlive the incident.
+                await _striker.ResetStrikeAsync(wrapper.DownloadId, wrapper.Name, StrikeType.Errored);
+            }
+            else if (erroredConfig.IgnorePrivate && wrapper.IsPrivate)
+            {
+                // Leaves any existing strikes alone: being ignored is not evidence of recovery.
+                _logger.LogTrace("skip errored check | download is private | {Name}", wrapper.Name);
+            }
+            else
+            {
+                return await CheckIfErrored(wrapper, errorRecoveryCapable, erroredConfig);
+            }
+        }
+
         if (!wrapper.IsStalled())
         {
             _logger.LogTrace("skip stalled check | download is not in stalled state | {Name}", wrapper.Name);
@@ -101,6 +123,45 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
         }
 
         return await _queueRuleEvaluator.EvaluateStallRulesAsync(wrapper);
+    }
+
+    /// <summary>
+    /// Strikes an errored download and asks the client to resume it, until the strike limit removes it.
+    /// </summary>
+    private async Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)> CheckIfErrored(
+        ITorrentItemWrapper wrapper,
+        IErrorRecoveryCapable errorRecoveryCapable,
+        ErroredConfig erroredConfig)
+    {
+        _logger.LogDebug(
+            "download is errored | {Reason} | {Name}",
+            string.IsNullOrWhiteSpace(wrapper.ErrorMessage) ? "no error reported by the client" : wrapper.ErrorMessage,
+            wrapper.Name
+        );
+
+        bool shouldRemove = await _striker.StrikeAndCheckLimit(
+            wrapper.DownloadId,
+            wrapper.Name,
+            erroredConfig.MaxStrikes,
+            StrikeType.Errored
+        );
+
+        if (shouldRemove)
+        {
+            bool deleteFromClient = erroredConfig is { ChangeCategory: false, DeletePrivate: true };
+            return (true, DeleteReason.Errored, deleteFromClient, erroredConfig.ChangeCategory);
+        }
+
+        try
+        {
+            await _dryRunInterceptor.InterceptAsync(() => errorRecoveryCapable.ResumeDownload(wrapper));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "failed to resume errored download | {Name}", wrapper.Name);
+        }
+
+        return (false, DeleteReason.None, false, false);
     }
 
     /// <inheritdoc cref="ISeedingCleanupCapable.GetSeedingDownloads"/>

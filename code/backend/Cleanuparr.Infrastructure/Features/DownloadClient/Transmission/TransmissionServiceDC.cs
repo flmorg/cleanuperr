@@ -85,6 +85,13 @@ public partial class TransmissionService
         await _client.TorrentStopAsync([transmissionTorrent.Info.Id]);
     }
 
+    /// <inheritdoc cref="IErrorRecoveryCapable.ResumeDownload"/>
+    public async Task ResumeDownload(IDownloadItem item)
+    {
+        TransmissionItemWrapper transmissionTorrent = (TransmissionItemWrapper)item;
+        await _client.TorrentStartAsync([transmissionTorrent.Info.Id]);
+    }
+
     public override async Task CreateCategoryAsync(string name)
     {
         await Task.CompletedTask;

@@ -1193,6 +1193,10 @@ namespace Cleanuparr.Persistence.Postgres.Migrations.Data
                         .HasColumnType("boolean")
                         .HasColumnName("on_download_stopped");
 
+                    b.Property<bool>("OnErroredStrike")
+                        .HasColumnType("boolean")
+                        .HasColumnName("on_errored_strike");
+
                     b.Property<bool>("OnFailedImportStrike")
                         .HasColumnType("boolean")
                         .HasColumnName("on_failed_import_strike");
@@ -1437,6 +1441,27 @@ namespace Cleanuparr.Persistence.Postgres.Migrations.Data
                     b.Property<bool>("UseAdvancedScheduling")
                         .HasColumnType("boolean")
                         .HasColumnName("use_advanced_scheduling");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Errored", "Cleanuparr.Persistence.Models.Configuration.QueueCleaner.QueueCleanerConfig.Errored#ErroredConfig", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<bool>("ChangeCategory")
+                                .HasColumnType("boolean")
+                                .HasColumnName("errored_change_category");
+
+                            b1.Property<bool>("DeletePrivate")
+                                .HasColumnType("boolean")
+                                .HasColumnName("errored_delete_private");
+
+                            b1.Property<bool>("IgnorePrivate")
+                                .HasColumnType("boolean")
+                                .HasColumnName("errored_ignore_private");
+
+                            b1.Property<int>("MaxStrikes")
+                                .HasColumnType("integer")
+                                .HasColumnName("errored_max_strikes");
+                        });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "FailedImport", "Cleanuparr.Persistence.Models.Configuration.QueueCleaner.QueueCleanerConfig.FailedImport#FailedImportConfig", b1 =>
                         {

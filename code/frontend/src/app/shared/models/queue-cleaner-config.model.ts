@@ -15,6 +15,13 @@ export interface FailedImportConfig {
   forceImportMaxTries: number;
 }
 
+export interface ErroredConfig {
+  maxStrikes: number;
+  ignorePrivate: boolean;
+  deletePrivate: boolean;
+  changeCategory: boolean;
+}
+
 export interface QueueCleanerConfig {
   enabled: boolean;
   cronExpression: string;
@@ -23,4 +30,5 @@ export interface QueueCleanerConfig {
   processNoContentId: boolean;
   failedImport: FailedImportConfig;
   downloadingMetadataMaxStrikes: number;
+  errored: ErroredConfig;
 }

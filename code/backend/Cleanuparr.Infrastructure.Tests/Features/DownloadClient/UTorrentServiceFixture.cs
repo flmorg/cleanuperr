@@ -88,6 +88,7 @@ public class UTorrentServiceFixture : IDisposable
 
     public void ResetMocks()
     {
+        JobContextSeed.SeedQueueCleanerConfig();
         SubstituteHelper.ClearPendingArgSpecs();
         Logger = Substitute.For<ILogger<UTorrentService>>();
         FilenameEvaluator = Substitute.For<IFilenameEvaluator>();

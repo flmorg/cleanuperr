@@ -87,6 +87,12 @@ public sealed class DelugeItemWrapper : ITorrentItemWrapper
     /// <remarks>
     /// A negative eta shows an unknown time, and it is not a stalled download.
     /// </remarks>
+    public bool IsErrored() => Info.State is DelugeState.Error;
+
+    /// <inheritdoc/>
+    /// <remarks>The requested Deluge status fields carry no error text; always returns <see langword="null"/>.</remarks>
+    public string? ErrorMessage => null;
+
     public bool IsStalled() => Info is { State: DelugeState.Downloading, DownloadSpeed: <= 0, Eta: 0 };
 
     public bool IsIgnored(IReadOnlyList<string> ignoredDownloads)

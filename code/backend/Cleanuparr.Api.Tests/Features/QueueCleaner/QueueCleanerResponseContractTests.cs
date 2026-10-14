@@ -63,6 +63,7 @@ public class QueueCleanerResponseContractTests : IDisposable
             "cronExpression",
             "downloadingMetadataMaxStrikes",
             "enabled",
+            "errored",
             "failedImport",
             "ignoredDownloads",
             "processNoContentId",

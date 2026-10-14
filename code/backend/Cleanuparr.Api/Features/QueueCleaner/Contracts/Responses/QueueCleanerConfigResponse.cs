@@ -18,6 +18,8 @@ public sealed record QueueCleanerConfigResponse
 
     public ushort DownloadingMetadataMaxStrikes { get; init; }
 
+    public required ErroredConfigResponse Errored { get; init; }
+
     public static QueueCleanerConfigResponse From(QueueCleanerConfig config) => new()
     {
         Enabled = config.Enabled,
@@ -27,5 +29,6 @@ public sealed record QueueCleanerConfigResponse
         IgnoredDownloads = config.IgnoredDownloads,
         ProcessNoContentId = config.ProcessNoContentId,
         DownloadingMetadataMaxStrikes = config.DownloadingMetadataMaxStrikes,
+        Errored = ErroredConfigResponse.From(config.Errored),
     };
 }

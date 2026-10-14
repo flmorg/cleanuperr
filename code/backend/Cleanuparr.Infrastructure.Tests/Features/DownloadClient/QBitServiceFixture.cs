@@ -94,6 +94,7 @@ public class QBitServiceFixture : IDisposable
 
     public void ResetMocks()
     {
+        JobContextSeed.SeedQueueCleanerConfig();
         SubstituteHelper.ClearPendingArgSpecs();
         Logger = Substitute.For<ILogger<QBitService>>();
         FilenameEvaluator = Substitute.For<IFilenameEvaluator>();

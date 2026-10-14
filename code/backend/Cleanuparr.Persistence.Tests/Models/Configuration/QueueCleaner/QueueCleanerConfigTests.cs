@@ -104,6 +104,62 @@ public sealed class QueueCleanerConfigTests
 
     #endregion
 
+    #region Validate - Errored Validation
+
+    [Fact]
+    public void Validate_WithZeroErroredMaxStrikes_DoesNotThrow()
+    {
+        QueueCleanerConfig config = new()
+        {
+            Errored = new ErroredConfig { MaxStrikes = 0 }
+        };
+
+        Should.NotThrow(() => config.Validate());
+    }
+
+    [Theory]
+    [InlineData((ushort)1)]
+    [InlineData((ushort)2)]
+    public void Validate_WithErroredMaxStrikesBetween1And2_ThrowsValidationException(ushort maxStrikes)
+    {
+        QueueCleanerConfig config = new()
+        {
+            Errored = new ErroredConfig { MaxStrikes = maxStrikes }
+        };
+
+        Cleanuparr.Domain.Exceptions.ValidationException exception =
+            Should.Throw<Cleanuparr.Domain.Exceptions.ValidationException>(() => config.Validate());
+        exception.Message.ShouldBe("the minimum value for errored max strikes must be 3");
+    }
+
+    [Theory]
+    [InlineData((ushort)3)]
+    [InlineData((ushort)5)]
+    [InlineData((ushort)100)]
+    public void Validate_WithValidErroredMaxStrikes_DoesNotThrow(ushort maxStrikes)
+    {
+        QueueCleanerConfig config = new()
+        {
+            Errored = new ErroredConfig { MaxStrikes = maxStrikes }
+        };
+
+        Should.NotThrow(() => config.Validate());
+    }
+
+    [Fact]
+    public void Validate_WithErroredDeletePrivateAndChangeCategory_ThrowsValidationException()
+    {
+        QueueCleanerConfig config = new()
+        {
+            Errored = new ErroredConfig { MaxStrikes = 3, DeletePrivate = true, ChangeCategory = true }
+        };
+
+        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        exception.Message.ShouldBe("Cannot enable both deletion and category changing");
+    }
+
+    #endregion
+
     #region Validate - FailedImport Validation
 
     [Fact]

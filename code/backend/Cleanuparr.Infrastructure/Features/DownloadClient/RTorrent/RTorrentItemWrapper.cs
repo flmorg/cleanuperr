@@ -92,6 +92,15 @@ public sealed class RTorrentItemWrapper : ITorrentItemWrapper
     public bool IsDownloading() => Info.State == 1 && Info.Complete == 0;
 
     /// <summary>
+    /// rTorrent reports no error state.
+    /// Its only message field also carries routine tracker text, so there is nothing safe to match on.
+    /// </summary>
+    public bool IsErrored() => false;
+
+    /// <inheritdoc/>
+    public string? ErrorMessage => null;
+
+    /// <summary>
     /// Stalled when downloading but no download speed and no ETA
     /// </summary>
     public bool IsStalled() => IsDownloading() && Info.DownRate <= 0 && Eta <= 0;

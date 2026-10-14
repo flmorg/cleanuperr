@@ -88,6 +88,7 @@ public class TransmissionServiceFixture : IDisposable
 
     public void ResetMocks()
     {
+        JobContextSeed.SeedQueueCleanerConfig();
         SubstituteHelper.ClearPendingArgSpecs();
         Logger = Substitute.For<ILogger<TransmissionService>>();
         FilenameEvaluator = Substitute.For<IFilenameEvaluator>();
