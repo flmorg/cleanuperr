@@ -1,0 +1,58 @@
+@use 'settings-layout' as *;
+@use 'list-layout' as *;
+
+:host {
+  display: block;
+}
+
+.section-header {
+  @include list-header;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font: inherit;
+  }
+
+  &__icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+}
+
+.strikes-panel {
+  padding: var(--space-4) 0;
+  margin-bottom: var(--space-2);
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+}
+
+.form-stack { @include form-stack; }
+.form-actions { @include form-actions; }
+
+.item-row {
+  @include item-row;
+
+  &__url {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
