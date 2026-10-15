@@ -26,6 +26,7 @@ const TYPE_COLORS: Record<string, string> = {
   [EventType.SlowTimeStrike]: '#84cc16',
   [EventType.DeadTorrentStrike]: '#14b8a6',
   [EventType.DownloadingMetadataStrike]: '#06b6d4',
+  [EventType.ErroredStrike]: '#f97316',
   [EventType.CategoryChanged]: '#3b82f6',
   [EventType.SearchTriggered]: '#8b5cf6',
   [EventType.DownloadMarkedForDeletion]: '#ec4899',

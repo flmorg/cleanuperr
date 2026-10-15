@@ -10,6 +10,7 @@ using Cleanuparr.Infrastructure.Interceptors;
 using Cleanuparr.Infrastructure.Services.Interfaces;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
+using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 
 namespace Cleanuparr.Infrastructure.Features.DownloadClient;
@@ -94,6 +95,18 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
 
     protected virtual async Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)> CheckIfStuck(ITorrentItemWrapper wrapper)
     {
+        ErroredConfig erroredConfig = ContextProvider.Get<QueueCleanerConfig>(nameof(QueueCleanerConfig)).Errored;
+
+        if (erroredConfig.MaxStrikes > 0)
+        {
+            (bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)? erroredResult = await CheckIfErrored(wrapper, erroredConfig);
+
+            if (erroredResult is not null)
+            {
+                return erroredResult.Value;
+            }
+        }
+
         if (!wrapper.IsStalled())
         {
             _logger.LogTrace("skip stalled check | download is not in stalled state | {Name}", wrapper.Name);
@@ -101,6 +114,70 @@ public abstract class TorrentDownloadService : DownloadService, ISeedingCleanupC
         }
 
         return await _queueRuleEvaluator.EvaluateStallRulesAsync(wrapper);
+    }
+
+    /// <summary>
+    /// Hook for clients that implement <see cref="IErrorRecoveryCapable"/>.
+    /// Clients without that capability return null here, so the caller falls through to the stall check.
+    /// </summary>
+    protected virtual Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> CheckIfErrored(
+        ITorrentItemWrapper wrapper,
+        ErroredConfig erroredConfig)
+    {
+        return Task.FromResult<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?>(null);
+    }
+
+    /// <summary>
+    /// Strikes an errored download and asks the client to resume it, until the strike limit removes it.
+    /// Returns null when the download isn't errored (or is private and ignored), so the caller falls through to the stall check.
+    /// </summary>
+    protected async Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> StrikeErroredAsync(
+        ITorrentItemWrapper wrapper,
+        ErroredConfig erroredConfig,
+        Func<Task> resume)
+    {
+        if (!wrapper.IsErrored())
+        {
+            // A download that recovered is no longer errored
+            await _striker.ResetStrikeAsync(wrapper.DownloadId, wrapper.Name, StrikeType.Errored);
+            return null;
+        }
+
+        if (erroredConfig.IgnorePrivate && wrapper.IsPrivate)
+        {
+            _logger.LogTrace("skip errored check | download is private | {Name}", wrapper.Name);
+            return null;
+        }
+
+        _logger.LogDebug(
+            "download is errored | {Reason} | {Name}",
+            string.IsNullOrWhiteSpace(wrapper.ErrorMessage) ? "no error reported by the client" : wrapper.ErrorMessage,
+            wrapper.Name
+        );
+
+        bool shouldRemove = await _striker.StrikeAndCheckLimit(
+            wrapper.DownloadId,
+            wrapper.Name,
+            erroredConfig.MaxStrikes,
+            StrikeType.Errored
+        );
+
+        if (shouldRemove)
+        {
+            bool deleteFromClient = erroredConfig is { ChangeCategory: false, DeletePrivate: true };
+            return (true, DeleteReason.Errored, deleteFromClient, erroredConfig.ChangeCategory);
+        }
+
+        try
+        {
+            await _dryRunInterceptor.InterceptAsync(resume);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "failed to resume errored download | {Name}", wrapper.Name);
+        }
+
+        return (false, DeleteReason.None, false, false);
     }
 
     /// <inheritdoc cref="ISeedingCleanupCapable.GetSeedingDownloads"/>

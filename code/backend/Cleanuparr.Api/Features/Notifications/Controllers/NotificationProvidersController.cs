@@ -151,7 +151,8 @@ public sealed class NotificationProvidersController : ControllerBase
                 OnCategoryChanged = request.OnCategoryChanged,
                 OnSearchTriggered = request.OnSearchTriggered,
                 OnSearchItemGrabbed = request.OnSearchItemGrabbed,
-                OnForceImported = request.OnForceImported
+                OnForceImported = request.OnForceImported,
+                OnErroredStrike = request.OnErroredStrike
             }, config);
 
             await _dataContext.NotificationConfigs.AddAsync(provider);
@@ -227,6 +228,7 @@ public sealed class NotificationProvidersController : ControllerBase
                 OnSearchTriggered = request.OnSearchTriggered,
                 OnSearchItemGrabbed = request.OnSearchItemGrabbed,
                 OnForceImported = request.OnForceImported,
+                OnErroredStrike = request.OnErroredStrike,
                 UpdatedAt = _timeProvider.GetUtcNow()
             }, newConfig);
 
@@ -328,7 +330,8 @@ public sealed class NotificationProvidersController : ControllerBase
                     OnCategoryChanged = false,
                     OnSearchTriggered = false,
                     OnSearchItemGrabbed = false,
-                    OnForceImported = false
+                    OnForceImported = false,
+                    OnErroredStrike = false
                 },
                 Configuration = config
             };
@@ -363,7 +366,8 @@ public sealed class NotificationProvidersController : ControllerBase
                 OnCategoryChanged = provider.OnCategoryChanged,
                 OnSearchTriggered = provider.OnSearchTriggered,
                 OnSearchItemGrabbed = provider.OnSearchItemGrabbed,
-                OnForceImported = provider.OnForceImported
+                OnForceImported = provider.OnForceImported,
+                OnErroredStrike = provider.OnErroredStrike
             },
             Configuration = (object?)descriptor.GetConfig(provider) ?? new object()
         };

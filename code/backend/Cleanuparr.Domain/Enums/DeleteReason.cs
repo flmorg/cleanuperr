@@ -13,4 +13,5 @@ public enum DeleteReason
     AllFilesBlocked,
     AtLeastOneFileBlocked,
     DownloadFailed,
+    Errored,
 }

@@ -35,6 +35,9 @@ public sealed class DelugeClientWrapper : IDelugeClientWrapper
     public Task PauseTorrents(List<string> hashes)
         => _client.PauseTorrents(hashes);
 
+    public Task ResumeTorrents(List<string> hashes)
+        => _client.ResumeTorrents(hashes);
+
     public Task ChangeFilesPriority(string hash, List<int> priorities)
         => _client.ChangeFilesPriority(hash, priorities);
 

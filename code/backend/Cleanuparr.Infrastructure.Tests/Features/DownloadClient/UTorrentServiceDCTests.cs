@@ -468,6 +468,75 @@ public class UTorrentServiceDCTests : IClassFixture<UTorrentServiceFixture>
         }
     }
 
+    public class ResumeDownload_Tests : UTorrentServiceDCTests
+    {
+        public ResumeDownload_Tests(UTorrentServiceFixture fixture) : base(fixture)
+        {
+        }
+
+        [Fact]
+        public async Task CallsClientStart()
+        {
+            // Arrange
+            UTorrentService sut = _fixture.CreateSut();
+            const string hash = "TEST-HASH";
+            ITorrentItemWrapper mockTorrent = Substitute.For<ITorrentItemWrapper>();
+            mockTorrent.DownloadId.Returns(hash);
+
+            _fixture.ClientWrapper
+                .StartTorrentsAsync(Arg.Is<List<string>>(h => h.Contains("test-hash")))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await sut.ResumeDownload(mockTorrent);
+
+            // Assert
+            await _fixture.ClientWrapper.Received(1)
+                .StartTorrentsAsync(Arg.Is<List<string>>(h => h.Contains("test-hash")));
+        }
+
+        [Fact]
+        public async Task NormalizesHashToLowercase()
+        {
+            // Arrange
+            UTorrentService sut = _fixture.CreateSut();
+            const string hash = "UPPERCASE-HASH";
+            ITorrentItemWrapper mockTorrent = Substitute.For<ITorrentItemWrapper>();
+            mockTorrent.DownloadId.Returns(hash);
+
+            _fixture.ClientWrapper
+                .StartTorrentsAsync(Arg.Any<List<string>>())
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await sut.ResumeDownload(mockTorrent);
+
+            // Assert
+            await _fixture.ClientWrapper.Received(1)
+                .StartTorrentsAsync(Arg.Is<List<string>>(h => h.Contains("uppercase-hash")));
+        }
+
+        [Fact]
+        public async Task DoesNotDeleteTheTorrent()
+        {
+            // Arrange
+            UTorrentService sut = _fixture.CreateSut();
+            ITorrentItemWrapper mockTorrent = Substitute.For<ITorrentItemWrapper>();
+            mockTorrent.DownloadId.Returns("TEST-HASH");
+
+            _fixture.ClientWrapper
+                .StartTorrentsAsync(Arg.Any<List<string>>())
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await sut.ResumeDownload(mockTorrent);
+
+            // Assert
+            await _fixture.ClientWrapper.DidNotReceive()
+                .RemoveTorrentsAsync(Arg.Any<List<string>>(), Arg.Any<bool>());
+        }
+    }
+
     public class IsStopped_Tests : UTorrentServiceDCTests
     {
         public IsStopped_Tests(UTorrentServiceFixture fixture) : base(fixture)

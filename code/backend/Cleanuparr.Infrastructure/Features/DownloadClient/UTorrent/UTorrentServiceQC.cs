@@ -2,6 +2,7 @@ using Cleanuparr.Domain.Entities;
 using Cleanuparr.Domain.Entities.UTorrent.Response;
 using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Features.DownloadClient.UTorrent.Extensions;
+using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 
 namespace Cleanuparr.Infrastructure.Features.DownloadClient.UTorrent;
@@ -79,4 +80,10 @@ public partial class UTorrentService
 
         return result;
     }
+
+    /// <inheritdoc/>
+    protected override Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> CheckIfErrored(
+        ITorrentItemWrapper wrapper,
+        ErroredConfig erroredConfig) =>
+        StrikeErroredAsync(wrapper, erroredConfig, () => ResumeDownload(wrapper));
 }

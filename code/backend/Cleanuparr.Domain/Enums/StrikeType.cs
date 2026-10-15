@@ -8,6 +8,7 @@ public enum StrikeType
     SlowSpeed,
     SlowTime,
     DeadTorrent,
+    Errored,
 
     /// <summary>
     /// Text this build does not know.

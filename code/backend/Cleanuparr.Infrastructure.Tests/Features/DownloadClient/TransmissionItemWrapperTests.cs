@@ -206,6 +206,41 @@ public class TransmissionItemWrapperTests
         result.ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData(3, true)]
+    [InlineData(0, false)]
+    [InlineData(1, false)]
+    [InlineData(2, false)]
+    [InlineData(null, false)]
+    public void IsErrored_ReturnsCorrectValue(int? error, bool expected)
+    {
+        // Arrange
+        var torrentInfo = new TorrentInfo { Error = error };
+        var wrapper = new TransmissionItemWrapper(torrentInfo);
+
+        // Act
+        var result = wrapper.IsErrored();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ErrorMessage_ReturnsErrorString()
+    {
+        // Arrange
+        // The text Transmission 4.0.6 returns for error 3 when the data is gone.
+        var expectedMessage = "No data found! Ensure your drives are connected or use \"Set Location\".";
+        var torrentInfo = new TorrentInfo { Error = 3, ErrorString = expectedMessage };
+        var wrapper = new TransmissionItemWrapper(torrentInfo);
+
+        // Act
+        var result = wrapper.ErrorMessage;
+
+        // Assert
+        result.ShouldBe(expectedMessage);
+    }
+
     [Fact]
     public void SeederCount_WithTrackerStats_ReturnsMaxSeederCount()
     {

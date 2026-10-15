@@ -44,6 +44,9 @@ public sealed class QBittorrentClientWrapper : IQBittorrentClientWrapper
     public Task PauseAsync(IEnumerable<string> hashes)
         => _client.PauseAsync(hashes);
 
+    public Task ResumeAsync(IEnumerable<string> hashes)
+        => _client.ResumeAsync(hashes);
+
     public Task AddTorrentTagAsync(IEnumerable<string> hashes, string tag)
         => _client.AddTorrentTagAsync(hashes, tag);
 

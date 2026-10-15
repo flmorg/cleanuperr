@@ -1,6 +1,6 @@
 ﻿namespace Cleanuparr.Infrastructure.Features.Notifications.Models;
 
-public sealed record NotificationEventFlags
+public record NotificationEventFlags
 {
     public bool OnFailedImportStrike { get; init; }
     
@@ -21,4 +21,6 @@ public sealed record NotificationEventFlags
     public bool OnSearchItemGrabbed { get; init; }
 
     public bool OnForceImported { get; init; }
+
+    public bool OnErroredStrike { get; init; }
 }

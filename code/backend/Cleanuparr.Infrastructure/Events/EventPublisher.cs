@@ -156,6 +156,7 @@ public class EventPublisher : IEventPublisher
             StrikeType.SlowSpeed => EventType.SlowSpeedStrike,
             StrikeType.SlowTime => EventType.SlowTimeStrike,
             StrikeType.DeadTorrent => EventType.DeadTorrentStrike,
+            StrikeType.Errored => EventType.ErroredStrike,
             _ => throw new ArgumentOutOfRangeException(nameof(strikeType), strikeType, null)
         };
 

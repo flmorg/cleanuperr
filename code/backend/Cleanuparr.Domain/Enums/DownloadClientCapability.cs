@@ -45,4 +45,9 @@ public enum DownloadClientCapability
     /// Reports a seeder count, so dead-torrent detection applies. Backs <c>IDeadTorrentCapable</c>.
     /// </summary>
     DeadTorrent,
+
+    /// <summary>
+    /// Reports an error state and can resume a download. Backs <c>IErrorRecoveryCapable</c>.
+    /// </summary>
+    ErrorRecovery,
 }

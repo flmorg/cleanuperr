@@ -26,6 +26,8 @@ public sealed record QueueCleanerConfig : IJobConfig
     public bool ProcessNoContentId { get; set; }
 
     public ushort DownloadingMetadataMaxStrikes { get; set; }
+
+    public ErroredConfig Errored { get; set; } = new();
     
     public List<StallRule> StallRules { get; set; } = [];
     
@@ -34,10 +36,11 @@ public sealed record QueueCleanerConfig : IJobConfig
     public void Validate()
     {
         FailedImport.Validate();
-        
+        Errored.Validate();
+
         if (DownloadingMetadataMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException("the minimum value for downloading metadata max strikes must be 3");
+            throw new Cleanuparr.Domain.Exceptions.ValidationException("the minimum value for downloading metadata max strikes must be 3");
         }
 
         foreach (var rule in StallRules)

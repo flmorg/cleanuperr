@@ -243,6 +243,23 @@ public sealed class UTorrentClient
         }
     }
 
+    public async Task StartTorrentsAsync(List<string> hashes)
+    {
+        try
+        {
+            foreach (string hash in hashes)
+            {
+                UTorrentRequest request = UTorrentRequestFactory.CreateStartTorrentRequest(hash);
+                await SendAuthenticatedRequestAsync(request);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start torrents in µTorrent client '{ClientName}'", _config.Name);
+            throw new UTorrentException($"Failed to start torrents: {ex.Message}", ex);
+        }
+    }
+
     /// <summary>
     /// Sends an authenticated request to the µTorrent API
     /// Handles automatic authentication and retry logic

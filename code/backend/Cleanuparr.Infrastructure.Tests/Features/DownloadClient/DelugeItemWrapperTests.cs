@@ -245,6 +245,48 @@ public class DelugeItemWrapperTests
         result.ShouldBe(expected);
     }
 
+    [Theory]
+    [InlineData(DelugeState.Error, true)]
+    [InlineData(DelugeState.Downloading, false)]
+    [InlineData(DelugeState.Seeding, false)]
+    [InlineData(DelugeState.Paused, false)]
+    public void IsErrored_ReturnsCorrectValue(DelugeState state, bool expected)
+    {
+        // Arrange
+        var downloadStatus = new DownloadStatus
+        {
+            State = state,
+            Trackers = new List<Tracker>(),
+            DownloadLocation = "/test/path"
+        };
+        var wrapper = new DelugeItemWrapper(downloadStatus);
+
+        // Act
+        var result = wrapper.IsErrored();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ErrorMessage_ReturnsNull()
+    {
+        // Arrange
+        var downloadStatus = new DownloadStatus
+        {
+            State = DelugeState.Error,
+            Trackers = new List<Tracker>(),
+            DownloadLocation = "/test/path"
+        };
+        var wrapper = new DelugeItemWrapper(downloadStatus);
+
+        // Act
+        var result = wrapper.ErrorMessage;
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
     [Fact]
     public void IsIgnored_WithEmptyList_ReturnsFalse()
     {

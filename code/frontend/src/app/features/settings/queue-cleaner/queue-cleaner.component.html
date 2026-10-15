@@ -119,6 +119,36 @@
       </div>
     </app-accordion>
 
+    <app-accordion header="Errored Downloads" subtitle="Settings for downloads the client reports as errored (not supported by some download clients)" [(expanded)]="erroredExpanded" featureId="errored-downloads">
+      <div class="form-stack">
+        <app-number-input label="Max Strikes" [formField]="qcForm.erroredMaxStrikes"
+          hint="Number of strikes before action is taken (0 to disable, min 3 to enable)"
+          [error]="qcForm.erroredMaxStrikes().errors()[0]?.message"
+          helpKey="queue-cleaner:errored.maxStrikes" />
+
+        <div class="form-divider"></div>
+
+        <app-toggle label="Ignore Private Torrents" [formField]="qcForm.erroredIgnorePrivate" [forceDisabled]="qcForm.erroredIgnorePrivate().disabled()"
+          hint="When enabled, private torrents will not be checked for being errored"
+          helpKey="queue-cleaner:errored.ignorePrivate" />
+        <app-toggle label="Change category instead of delete" [formField]="qcForm.erroredChangeCategory" [forceDisabled]="qcForm.erroredChangeCategory().disabled()"
+          hint="Changes the category to the post-import category set in your arr"
+          helpKey="queue-cleaner:errored.changeCategory" />
+        @if (!qcForm.erroredChangeCategory().value()) {
+          <app-toggle label="Delete Private from Client" [formField]="qcForm.erroredDeletePrivate" [forceDisabled]="qcForm.erroredDeletePrivate().disabled()"
+            hint="Disable this if you want to keep private torrents in the download client even if they are removed from the arrs"
+            helpKey="queue-cleaner:errored.deletePrivate" />
+        }
+
+        <div class="form-divider"></div>
+
+        <app-toggle label="Resume download after each strike" [checked]="true" [forceDisabled]="true"
+          hint="Cleanuparr asks the download client to resume an errored download every time it strikes it, giving it a chance to recover before the strike limit removes it" />
+        <app-toggle label="Reset strikes on recovery" [checked]="true" [forceDisabled]="true"
+          hint="Reset strike count when the download recovers from being errored" />
+      </div>
+    </app-accordion>
+
     <!-- Stalled Download Rules -->
     <app-accordion header="Stalled Download Rules" subtitle="Rules for detecting and handling stalled downloads" [(expanded)]="stallExpanded">
       @if (stallCoverage().hasGaps) {

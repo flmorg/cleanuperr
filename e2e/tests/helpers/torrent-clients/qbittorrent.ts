@@ -126,6 +126,18 @@ export class QBittorrentDriver implements TorrentClientDriver {
     }
   }
 
+  /** The torrent's raw qBittorrent state string, or undefined when it is gone. */
+  async getState(infoHash: string): Promise<string | undefined> {
+    const res = await fetch(`${this.directHost}/api/v2/torrents/info?hashes=${infoHash.toLowerCase()}`, {
+      headers: this.cookie ? { Cookie: this.cookie } : undefined,
+    });
+    if (!res.ok) {
+      throw new Error(`qBittorrent info failed: ${res.status} ${await res.text()}`);
+    }
+    const torrents = (await res.json()) as Array<{ state?: string }>;
+    return torrents[0]?.state;
+  }
+
   /**
    * Change a torrent's display name without touching files on disk.
    */

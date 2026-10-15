@@ -89,6 +89,7 @@ public class RTorrentServiceFixture : IDisposable
 
     public void ResetMocks()
     {
+        JobContextSeed.SeedQueueCleanerConfig();
         SubstituteHelper.ClearPendingArgSpecs();
         Logger = Substitute.For<ILogger<RTorrentService>>();
         FilenameEvaluator = Substitute.For<IFilenameEvaluator>();

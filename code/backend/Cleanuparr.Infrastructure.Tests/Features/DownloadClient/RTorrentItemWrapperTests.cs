@@ -506,6 +506,39 @@ public class RTorrentItemWrapperTests
         }
     }
 
+    public class IsErrored_Tests
+    {
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        public void AlwaysReturnsFalse_SinceRTorrentReportsNoErrorState(int state)
+        {
+            // Arrange
+            var torrent = new RTorrentTorrent { Hash = "HASH1", Name = "Test", State = state };
+            var wrapper = new RTorrentItemWrapper(torrent, null, TimeProvider.System);
+
+            // Act
+            var result = wrapper.IsErrored();
+
+            // Assert
+            result.ShouldBeFalse();
+        }
+
+        [Fact]
+        public void ErrorMessage_ReturnsNull()
+        {
+            // Arrange
+            var torrent = new RTorrentTorrent { Hash = "HASH1", Name = "Test" };
+            var wrapper = new RTorrentItemWrapper(torrent, null, TimeProvider.System);
+
+            // Act
+            var result = wrapper.ErrorMessage;
+
+            // Assert
+            result.ShouldBeNull();
+        }
+    }
+
     public class IsIgnored_Tests
     {
         [Fact]

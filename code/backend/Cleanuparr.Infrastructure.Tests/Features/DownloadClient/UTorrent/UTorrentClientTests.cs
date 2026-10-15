@@ -67,6 +67,35 @@ public class UTorrentClientTests
         ex.Message.ShouldContain("Failed to stop torrents");
     }
 
+    [Fact]
+    public async Task StartTorrentsAsync_SendsOneStartRequestPerHash()
+    {
+        _httpService.SendRawRequestAsync(Arg.Any<UTorrentRequest>(), "guid-cookie").Returns("{}");
+
+        await _client.StartTorrentsAsync(["HASH1", "HASH2"]);
+
+        await _httpService.Received(1).SendRawRequestAsync(
+            Arg.Is<UTorrentRequest>(r =>
+                r.Action == "action=start" && r.Token == "csrf-token" && HasHash(r, "HASH1")),
+            "guid-cookie");
+        await _httpService.Received(1).SendRawRequestAsync(
+            Arg.Is<UTorrentRequest>(r =>
+                r.Action == "action=start" && HasHash(r, "HASH2")),
+            "guid-cookie");
+    }
+
+    [Fact]
+    public async Task StartTorrentsAsync_WhenTheClientFails_ThrowsUTorrentException()
+    {
+        _httpService.SendRawRequestAsync(Arg.Any<UTorrentRequest>(), Arg.Any<string>())
+            .ThrowsAsync(new HttpRequestException("connection refused"));
+
+        UTorrentException ex = await Should.ThrowAsync<UTorrentException>(
+            () => _client.StartTorrentsAsync(["HASH1"]));
+
+        ex.Message.ShouldContain("Failed to start torrents");
+    }
+
     private static bool HasHash(UTorrentRequest request, string hash) =>
         request.Parameters.Any(p => p.Name == "hash" && p.Value == hash);
 }

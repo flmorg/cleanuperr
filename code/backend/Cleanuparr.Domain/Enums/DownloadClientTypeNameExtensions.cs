@@ -77,14 +77,24 @@ public static class DownloadClientTypeNameExtensions
         [
             ..SeedersCapableTorrentCapabilities,
             DownloadClientCapability.TagFiltering,
+            DownloadClientCapability.ErrorRecovery,
         ],
-        [DownloadClientTypeName.Deluge] = SeedersCapableTorrentCapabilities,
+        [DownloadClientTypeName.Deluge] =
+        [
+            ..SeedersCapableTorrentCapabilities,
+            DownloadClientCapability.ErrorRecovery,
+        ],
         [DownloadClientTypeName.Transmission] =
         [
             ..SeedersCapableTorrentCapabilities,
             DownloadClientCapability.TagFiltering,
+            DownloadClientCapability.ErrorRecovery,
         ],
-        [DownloadClientTypeName.uTorrent] = SeedersCapableTorrentCapabilities,
+        [DownloadClientTypeName.uTorrent] =
+        [
+            ..SeedersCapableTorrentCapabilities,
+            DownloadClientCapability.ErrorRecovery,
+        ],
         [DownloadClientTypeName.rTorrent] = BaseTorrentCapabilities,
         [DownloadClientTypeName.Sabnzbd] = UsenetCapabilities,
     };

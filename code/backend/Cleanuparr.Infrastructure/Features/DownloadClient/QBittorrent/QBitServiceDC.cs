@@ -110,6 +110,12 @@ public partial class QBitService
         await _client.PauseAsync([item.DownloadId]);
     }
 
+    /// <inheritdoc cref="IErrorRecoveryCapable.ResumeDownload"/>
+    public async Task ResumeDownload(IDownloadItem item)
+    {
+        await _client.ResumeAsync([item.DownloadId]);
+    }
+
     public override async Task CreateCategoryAsync(string name)
     {
         IReadOnlyDictionary<string, Category>? existingCategories = await _client.GetCategoriesAsync();

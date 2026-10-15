@@ -14,6 +14,8 @@ public sealed record UpdateQueueCleanerConfigRequest
 
     public ushort DownloadingMetadataMaxStrikes { get; init; }
 
+    public ErroredConfig Errored { get; init; } = new();
+
     public bool ProcessNoContentId { get; init; }
 
     public List<string> IgnoredDownloads { get; set; } = [];

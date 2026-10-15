@@ -149,6 +149,10 @@ public class DownloadClientCapabilityConsistencyTests : IDisposable
         (service is IDeadTorrentCapable).ShouldBe(
             typeName.SupportsCapability(DownloadClientCapability.DeadTorrent),
             $"IDeadTorrentCapable mismatch for {typeName}");
+
+        (service is IErrorRecoveryCapable).ShouldBe(
+            typeName.SupportsCapability(DownloadClientCapability.ErrorRecovery),
+            $"IErrorRecoveryCapable mismatch for {typeName}");
     }
 
     /// <summary>

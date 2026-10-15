@@ -1188,6 +1188,10 @@ namespace Cleanuparr.Persistence.Migrations.Data
                         .HasColumnType("INTEGER")
                         .HasColumnName("on_download_stopped");
 
+                    b.Property<bool>("OnErroredStrike")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("on_errored_strike");
+
                     b.Property<bool>("OnFailedImportStrike")
                         .HasColumnType("INTEGER")
                         .HasColumnName("on_failed_import_strike");
@@ -1433,6 +1437,27 @@ namespace Cleanuparr.Persistence.Migrations.Data
                     b.Property<bool>("UseAdvancedScheduling")
                         .HasColumnType("INTEGER")
                         .HasColumnName("use_advanced_scheduling");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Errored", "Cleanuparr.Persistence.Models.Configuration.QueueCleaner.QueueCleanerConfig.Errored#ErroredConfig", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<bool>("ChangeCategory")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("errored_change_category");
+
+                            b1.Property<bool>("DeletePrivate")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("errored_delete_private");
+
+                            b1.Property<bool>("IgnorePrivate")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("errored_ignore_private");
+
+                            b1.Property<ushort>("MaxStrikes")
+                                .HasColumnType("INTEGER")
+                                .HasColumnName("errored_max_strikes");
+                        });
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "FailedImport", "Cleanuparr.Persistence.Models.Configuration.QueueCleaner.QueueCleanerConfig.FailedImport#FailedImportConfig", b1 =>
                         {

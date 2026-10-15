@@ -90,6 +90,10 @@ public sealed class UTorrentItemWrapper : ITorrentItemWrapper
 
     public bool IsStalled() => IsDownloading() && Info is { DownloadSpeed: 0, ETA: 0 };
 
+    public bool IsErrored() => (Info.Status & UTorrentStatus.Error) != 0;
+
+    public string? ErrorMessage => Info.StatusMessage;
+
     // Filtering methods
     public bool IsIgnored(IReadOnlyList<string> ignoredDownloads)
     {

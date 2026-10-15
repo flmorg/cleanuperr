@@ -88,6 +88,7 @@ public class DelugeServiceFixture : IDisposable
 
     public void ResetMocks()
     {
+        JobContextSeed.SeedQueueCleanerConfig();
         SubstituteHelper.ClearPendingArgSpecs();
         Logger = Substitute.For<ILogger<DelugeService>>();
         FilenameEvaluator = Substitute.For<IFilenameEvaluator>();

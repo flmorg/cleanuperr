@@ -144,6 +144,11 @@ public sealed class TransmissionItemWrapper : ITorrentItemWrapper
     public bool IsDownloading() => Info.Status == 4;
     public bool IsStalled() => Info is { Status: 4, RateDownload: <= 0, Eta: <= 0 };
 
+    // Transmission error: 0=none, 1=tracker warning, 2=tracker error, 3=local error
+    public bool IsErrored() => Info.Error is 3;
+
+    public string? ErrorMessage => Info.ErrorString;
+
     public bool IsIgnored(IReadOnlyList<string> ignoredDownloads)
     {
         if (ignoredDownloads.Count == 0)

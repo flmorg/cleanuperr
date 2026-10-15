@@ -33,6 +33,20 @@ export function appLogsSince(since: string): string {
   });
 }
 
+/**
+ * Restarts one compose service and returns once the command exits.
+ *
+ * A download client that reloads its resume data finds the files a spec deleted are gone.
+ * qBittorrent then reports `missingFiles`, which is the only route into its errored state:
+ * deleting the data alone makes it re-download instead.
+ */
+export function restartComposeService(service: string): void {
+  execSync(`docker compose -f ${COMPOSE_FILE} restart ${service}`, {
+    stdio: 'inherit',
+    env: process.env,
+  });
+}
+
 function restartAppContainer(): void {
   execSync(`docker compose -f ${COMPOSE_FILE} restart app`, {
     stdio: 'inherit',

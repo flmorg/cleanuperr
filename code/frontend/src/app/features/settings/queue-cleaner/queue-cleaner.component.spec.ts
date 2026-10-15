@@ -27,6 +27,7 @@ const CONFIG: QueueCleanerConfig = {
     forceImportMaxTries: 3,
   },
   downloadingMetadataMaxStrikes: 6,
+  errored: { maxStrikes: 0, ignorePrivate: false, deletePrivate: false, changeCategory: false },
 };
 
 const STALL_RULES: StallRule[] = [
@@ -152,6 +153,7 @@ describe('QueueCleanerComponent', () => {
     expect(component.qcForm.failedPatterns().value()).toEqual(['unpack']);
     expect(component.qcForm.failedPatternMode().value()).toBe(PatternMode.Exclude);
     expect(component.qcForm.metadataMaxStrikes().value()).toBe(6);
+    expect(component.qcForm.erroredMaxStrikes().value()).toBe(0);
     expect(component.dirty()).toBe(false);
     expect(component.hasPendingChanges()).toBe(false);
   });
@@ -339,9 +341,64 @@ describe('QueueCleanerComponent', () => {
         forceImportMaxTries: 3,
       },
       downloadingMetadataMaxStrikes: 9,
+      errored: { maxStrikes: 0, ignorePrivate: false, deletePrivate: false, changeCategory: false },
     });
     expect(component.dirty()).toBe(false);
     expect(component.saved()).toBe(true);
+  });
+
+  it('disables the errored sub-toggles while max strikes is 0', () => {
+    const { fixture, component } = setup();
+
+    expect(component.qcForm.erroredIgnorePrivate().disabled()).toBe(true);
+    expect(component.qcForm.erroredChangeCategory().disabled()).toBe(true);
+    expect(component.qcForm.erroredDeletePrivate().disabled()).toBe(true);
+
+    component.qcForm.erroredMaxStrikes().value.set(3);
+    fixture.detectChanges();
+
+    expect(component.qcForm.erroredIgnorePrivate().disabled()).toBe(false);
+    expect(component.qcForm.erroredChangeCategory().disabled()).toBe(false);
+    expect(component.qcForm.erroredDeletePrivate().disabled()).toBe(false);
+  });
+
+  it('clears errored delete private when ignore private or change category turns on', () => {
+    const { fixture, component } = setup();
+
+    component.qcForm.erroredMaxStrikes().value.set(3);
+    component.qcForm.erroredDeletePrivate().value.set(true);
+    fixture.detectChanges();
+
+    component.qcForm.erroredIgnorePrivate().value.set(true);
+    fixture.detectChanges();
+
+    expect(component.qcForm.erroredDeletePrivate().value()).toBe(false);
+
+    component.qcForm.erroredIgnorePrivate().value.set(false);
+    component.qcForm.erroredDeletePrivate().value.set(true);
+    fixture.detectChanges();
+
+    component.qcForm.erroredChangeCategory().value.set(true);
+    fixture.detectChanges();
+
+    expect(component.qcForm.erroredDeletePrivate().value()).toBe(false);
+  });
+
+  it('sends the errored download settings', () => {
+    const { fixture, component, api } = setup();
+
+    component.qcForm.erroredMaxStrikes().value.set(5);
+    component.qcForm.erroredDeletePrivate().value.set(true);
+    fixture.detectChanges();
+
+    component.save();
+    fixture.detectChanges();
+
+    expect(api.updateConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errored: { maxStrikes: 5, ignorePrivate: false, deletePrivate: true, changeCategory: false },
+      })
+    );
   });
 
   it('sends the force import toggle', () => {
@@ -442,6 +499,28 @@ describe('QueueCleanerComponent', () => {
         downloadingMetadataMaxStrikes: 3,
       }),
     );
+  });
+
+  // The API rejects 1 and 2 for all three, so the form must not let them through.
+  it.each([
+    ['erroredMaxStrikes'],
+    ['metadataMaxStrikes'],
+    ['failedMaxStrikes'],
+  ] as const)('rejects 1 and 2 for %s, accepts 0 and 3 or more', (field) => {
+    const { fixture, component } = setup();
+    const strikeField = () => component.qcForm[field]();
+
+    for (const rejected of [1, 2]) {
+      strikeField().value.set(rejected);
+      fixture.detectChanges();
+      expect(strikeField().errors()[0].message).toBe('Minimum value is 3 (or 0 to disable)');
+    }
+
+    for (const accepted of [0, 3, 10]) {
+      strikeField().value.set(accepted);
+      fixture.detectChanges();
+      expect(strikeField().errors().length).toBe(0);
+    }
   });
 
   it('shows the load error and recovers on retry', () => {

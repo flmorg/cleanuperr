@@ -1152,6 +1152,54 @@ public class QBitServiceDCTests : IClassFixture<QBitServiceFixture>
         }
     }
 
+    public class ResumeDownload_Tests : QBitServiceDCTests
+    {
+        public ResumeDownload_Tests(QBitServiceFixture fixture) : base(fixture)
+        {
+        }
+
+        [Fact]
+        public async Task CallsClientResume()
+        {
+            // Arrange
+            QBitService sut = _fixture.CreateSut();
+            const string hash = "test-hash";
+            ITorrentItemWrapper mockTorrent = Substitute.For<ITorrentItemWrapper>();
+            mockTorrent.DownloadId.Returns(hash);
+
+            _fixture.ClientWrapper
+                .ResumeAsync(Arg.Is<IEnumerable<string>>(h => h.Contains(hash)))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await sut.ResumeDownload(mockTorrent);
+
+            // Assert
+            await _fixture.ClientWrapper.Received(1)
+                .ResumeAsync(Arg.Is<IEnumerable<string>>(h => h.Contains(hash)));
+        }
+
+        [Fact]
+        public async Task DoesNotDeleteTheTorrent()
+        {
+            // Arrange
+            QBitService sut = _fixture.CreateSut();
+            ITorrentItemWrapper mockTorrent = Substitute.For<ITorrentItemWrapper>();
+            mockTorrent.DownloadId.Returns("test-hash");
+
+            _fixture.ClientWrapper
+                .ResumeAsync(Arg.Any<IEnumerable<string>>())
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await sut.ResumeDownload(mockTorrent);
+
+            // Assert
+            await _fixture.ClientWrapper.DidNotReceive()
+                .DeleteAsync(Arg.Any<IEnumerable<string>>(), Arg.Any<bool>());
+        }
+    }
+
     public class IsStopped_Tests : QBitServiceDCTests
     {
         public IsStopped_Tests(QBitServiceFixture fixture) : base(fixture)

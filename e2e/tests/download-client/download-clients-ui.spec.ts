@@ -1,7 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Locator } from '@playwright/test';
 import { loginAndGotoSettings, selectOption } from '../helpers/ui';
 
 // Behavior-parity spec for the Download Clients create/edit modal (client-type driven fields).
+
+/**
+ * Matches a field by its label.
+ *
+ * Field hints mention other fields by name, so filtering on the whole field's text picks up unrelated fields as well: the API Key hint says to leave the username and password empty.
+ */
+function field(modal: Locator, label: string): Locator {
+  return modal.locator('app-input').filter({ has: modal.page().locator('label.input-label', { hasText: label }) });
+}
 test.describe('Download Clients UI', () => {
   test('client type switching shows/hides fields and auto-fills URL base', async ({ page }) => {
     await loginAndGotoSettings(page, 'download-clients');
@@ -9,8 +18,8 @@ test.describe('Download Clients UI', () => {
     const modal = page.getByRole('dialog', { name: 'Add Client' });
     await expect(modal).toBeVisible();
 
-    const username = modal.locator('app-input').filter({ hasText: 'Username' });
-    const urlBase = modal.locator('app-input').filter({ hasText: 'URL Base' }).locator('input');
+    const username = field(modal, 'Username');
+    const urlBase = field(modal, 'URL Base').locator('input');
 
     // qBittorrent (default) shows Username.
     await expect(username).toBeVisible();
@@ -37,16 +46,16 @@ test.describe('Download Clients UI', () => {
 
     await selectOption(modal, 'Client Type', 'SABnzbd');
 
-    await expect(modal.locator('app-input').filter({ hasText: 'Username' })).toHaveCount(0);
-    await expect(modal.locator('app-input').filter({ hasText: 'Password' })).toHaveCount(0);
-    await expect(modal.locator('app-input').filter({ hasText: 'API Key' })).toBeVisible();
+    await expect(field(modal, 'Username')).toHaveCount(0);
+    await expect(field(modal, 'Password')).toHaveCount(0);
+    await expect(field(modal, 'API Key')).toBeVisible();
 
     const save = modal.getByRole('button', { name: 'Save' });
     await modal.locator('app-input').first().locator('input').fill('E2E SAB Client'); // Name
     await modal.locator('app-input').filter({ hasText: 'Host' }).locator('input').fill('http://localhost:8090');
     await expect(save).toBeDisabled();
 
-    await modal.locator('app-input').filter({ hasText: 'API Key' }).locator('input').fill('sab-api-key');
+    await field(modal, 'API Key').locator('input').fill('sab-api-key');
     await expect(save).toBeEnabled();
   });
 

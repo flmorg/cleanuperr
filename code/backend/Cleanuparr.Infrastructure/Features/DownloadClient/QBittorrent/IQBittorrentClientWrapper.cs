@@ -17,6 +17,7 @@ public interface IQBittorrentClientWrapper : IDisposable
     Task AddCategoryAsync(string category);
     Task DeleteAsync(IEnumerable<string> hashes, bool deleteDownloadedData);
     Task PauseAsync(IEnumerable<string> hashes);
+    Task ResumeAsync(IEnumerable<string> hashes);
     Task AddTorrentTagAsync(IEnumerable<string> hashes, string tag);
     Task SetTorrentCategoryAsync(IEnumerable<string> hashes, string category);
     Task SetFilePriorityAsync(string hash, int fileIndex, TorrentContentPriority priority);

@@ -2,6 +2,7 @@ using Cleanuparr.Domain.Entities;
 using Cleanuparr.Domain.Entities.Deluge.Response;
 using Cleanuparr.Domain.Enums;
 using Cleanuparr.Infrastructure.Extensions;
+using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Microsoft.Extensions.Logging;
 
 namespace Cleanuparr.Infrastructure.Features.DownloadClient.Deluge;
@@ -73,4 +74,10 @@ public partial class DelugeService
 
         return result;
     }
+
+    /// <inheritdoc/>
+    protected override Task<(bool ShouldRemove, DeleteReason Reason, bool DeleteFromClient, bool ChangeCategory)?> CheckIfErrored(
+        ITorrentItemWrapper wrapper,
+        ErroredConfig erroredConfig) =>
+        StrikeErroredAsync(wrapper, erroredConfig, () => ResumeDownload(wrapper));
 }

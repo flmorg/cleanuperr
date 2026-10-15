@@ -45,6 +45,7 @@ public class StatsService : IStatsService
         [EventType.SlowSpeedStrike] = StrikeType.SlowSpeed,
         [EventType.SlowTimeStrike] = StrikeType.SlowTime,
         [EventType.DeadTorrentStrike] = StrikeType.DeadTorrent,
+        [EventType.ErroredStrike] = StrikeType.Errored,
     };
 
     private static readonly EventType[] StrikeEventTypes = [.. StrikeEventToType.Keys];

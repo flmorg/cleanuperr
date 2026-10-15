@@ -141,6 +141,7 @@ export enum DeleteReason {
   AllFilesBlocked = 'AllFilesBlocked',
   AtLeastOneFileBlocked = 'AtLeastOneFileBlocked',
   DownloadFailed = 'DownloadFailed',
+  Errored = 'Errored',
 }
 
 export enum InstanceType {
@@ -196,6 +197,7 @@ export enum EventType {
   SlowSpeedStrike = 'SlowSpeedStrike',
   SlowTimeStrike = 'SlowTimeStrike',
   DeadTorrentStrike = 'DeadTorrentStrike',
+  ErroredStrike = 'ErroredStrike',
   QueueItemDeleted = 'QueueItemDeleted',
   DownloadCleaned = 'DownloadCleaned',
   CategoryChanged = 'CategoryChanged',

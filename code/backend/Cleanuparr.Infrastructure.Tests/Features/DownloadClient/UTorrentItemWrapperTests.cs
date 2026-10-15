@@ -224,6 +224,41 @@ public class UTorrentItemWrapperTests
         result.ShouldBe(0L);
     }
 
+    [Theory]
+    [InlineData(UTorrentStatus.Error, true)]
+    [InlineData(UTorrentStatus.Error | UTorrentStatus.Started, true)]
+    [InlineData(UTorrentStatus.Started, false)]
+    [InlineData(0, false)]
+    public void IsErrored_ReturnsCorrectValue(int status, bool expected)
+    {
+        // Arrange
+        var torrentItem = new UTorrentItem { Status = status };
+        var torrentProperties = new UTorrentProperties();
+        var wrapper = new UTorrentItemWrapper(torrentItem, torrentProperties, TimeProvider.System);
+
+        // Act
+        var result = wrapper.IsErrored();
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void ErrorMessage_ReturnsStatusMessage()
+    {
+        // Arrange
+        var expectedMessage = "Disk write error";
+        var torrentItem = new UTorrentItem { Status = UTorrentStatus.Error, StatusMessage = expectedMessage };
+        var torrentProperties = new UTorrentProperties();
+        var wrapper = new UTorrentItemWrapper(torrentItem, torrentProperties, TimeProvider.System);
+
+        // Act
+        var result = wrapper.ErrorMessage;
+
+        // Assert
+        result.ShouldBe(expectedMessage);
+    }
+
     [Fact]
     public void IsIgnored_WithEmptyList_ReturnsFalse()
     {
