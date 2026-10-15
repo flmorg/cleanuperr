@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.QueueCleaner;
 
@@ -76,7 +76,7 @@ public sealed class FailedImportConfigTests
             Patterns = ["pattern"]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("The minimum value for failed imports max strikes must be 3");
     }
 
@@ -107,7 +107,7 @@ public sealed class FailedImportConfigTests
             Patterns = []
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("At least one pattern must be specified when using the Include pattern mode");
     }
 
@@ -162,7 +162,7 @@ public sealed class FailedImportConfigTests
             Patterns = []
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("The minimum value for failed imports max strikes must be 3");
     }
 
@@ -180,7 +180,7 @@ public sealed class FailedImportConfigTests
             ForceImportMaxTries = 0,
         };
 
-        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        CustomValidationException exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Force import max tries must be at least 1");
     }
 
@@ -194,7 +194,7 @@ public sealed class FailedImportConfigTests
             ForceImportMaxTries = 5001,
         };
 
-        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        CustomValidationException exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Force import max tries must be at most 5000");
     }
 
@@ -305,7 +305,7 @@ public sealed class FailedImportConfigTests
             DeletePrivate = true,
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Cannot enable both deletion and category changing");
     }
 

@@ -269,7 +269,7 @@ public class SeedingRulesControllerTests : IDisposable
         var client = SeedingRulesTestDataFactory.AddDownloadClient(_dataContext);
         var request = CreateValidRequest(categories: []);
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.CreateSeedingRule(client.Id, request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.CreateSeedingRule(client.Id, request));
     }
 
     [Fact]
@@ -338,7 +338,7 @@ public class SeedingRulesControllerTests : IDisposable
         DownloadClientConfig client = SeedingRulesTestDataFactory.AddDownloadClient(_dataContext);
         SeedingRuleRequest request = CreateValidRequest(action: SeedingRuleAction.Unknown);
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.CreateSeedingRule(client.Id, request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.CreateSeedingRule(client.Id, request));
     }
 
     [Fact]
@@ -347,7 +347,7 @@ public class SeedingRulesControllerTests : IDisposable
         DownloadClientConfig client = SeedingRulesTestDataFactory.AddDownloadClient(_dataContext);
         SeedingRuleRequest request = CreateValidRequest(action: (SeedingRuleAction)5);
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.CreateSeedingRule(client.Id, request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.CreateSeedingRule(client.Id, request));
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -444,7 +444,7 @@ public class SeedingRulesControllerTests : IDisposable
         // Both maxRatio and maxSeedTime negative → validation failure
         var request = CreateValidRequest(maxRatio: -1, maxSeedTime: -1);
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.UpdateSeedingRule(rule.Id, request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.UpdateSeedingRule(rule.Id, request));
     }
 
     [Theory]
@@ -474,7 +474,7 @@ public class SeedingRulesControllerTests : IDisposable
 
         SeedingRuleRequest request = CreateValidRequest(action: SeedingRuleAction.Unknown);
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.UpdateSeedingRule(rule.Id, request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.UpdateSeedingRule(rule.Id, request));
     }
 
     [Fact]
@@ -485,7 +485,7 @@ public class SeedingRulesControllerTests : IDisposable
 
         SeedingRuleRequest request = CreateValidRequest(action: (SeedingRuleAction)5);
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.UpdateSeedingRule(rule.Id, request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.UpdateSeedingRule(rule.Id, request));
     }
 
     // ──────────────────────────────────────────────────────────────────────

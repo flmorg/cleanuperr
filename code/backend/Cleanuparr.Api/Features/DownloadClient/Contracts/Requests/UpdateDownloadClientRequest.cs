@@ -35,32 +35,32 @@ public sealed record UpdateDownloadClientRequest
     {
         if (TypeName is DownloadClientTypeName.Unknown || !Enum.IsDefined(TypeName))
         {
-            throw new ValidationException("Unsupported download client type");
+            throw new CustomValidationException("Unsupported download client type");
         }
 
         if (string.IsNullOrWhiteSpace(Name))
         {
-            throw new ValidationException("Client name cannot be empty");
+            throw new CustomValidationException("Client name cannot be empty");
         }
 
         if (string.IsNullOrWhiteSpace(Host))
         {
-            throw new ValidationException("Host cannot be empty");
+            throw new CustomValidationException("Host cannot be empty");
         }
 
         if (!Uri.TryCreate(Host, UriKind.RelativeOrAbsolute, out _))
         {
-            throw new ValidationException("Host is not a valid URL");
+            throw new CustomValidationException("Host is not a valid URL");
         }
 
         if (!string.IsNullOrWhiteSpace(ExternalUrl) && !Uri.TryCreate(ExternalUrl, UriKind.RelativeOrAbsolute, out _))
         {
-            throw new ValidationException("External URL is not a valid URL");
+            throw new CustomValidationException("External URL is not a valid URL");
         }
 
         if (TypeName.RequiresAuthField(DownloadClientAuthField.ApiKey) && string.IsNullOrWhiteSpace(ApiKey) && !ApiKey.IsPlaceholder())
         {
-            throw new ValidationException("API key cannot be empty");
+            throw new CustomValidationException("API key cannot be empty");
         }
     }
 

@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Shared.Attributes;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Notification;
 
@@ -86,22 +86,22 @@ public sealed record AppriseConfig : IConfig
     {
         if (string.IsNullOrWhiteSpace(Url))
         {
-            throw new ValidationException("Apprise server URL is required for API mode");
+            throw new CustomValidationException("Apprise server URL is required for API mode");
         }
 
         if (Uri is null)
         {
-            throw new ValidationException("Apprise server URL must be a valid HTTP or HTTPS URL");
+            throw new CustomValidationException("Apprise server URL must be a valid HTTP or HTTPS URL");
         }
 
         if (string.IsNullOrWhiteSpace(Key))
         {
-            throw new ValidationException("Apprise configuration key is required for API mode");
+            throw new CustomValidationException("Apprise configuration key is required for API mode");
         }
 
         if (Key.Length < 2)
         {
-            throw new ValidationException("Apprise configuration key must be at least 2 characters long");
+            throw new CustomValidationException("Apprise configuration key must be at least 2 characters long");
         }
     }
 
@@ -109,7 +109,7 @@ public sealed record AppriseConfig : IConfig
     {
         if (string.IsNullOrWhiteSpace(ServiceUrls))
         {
-            throw new ValidationException("At least one service URL is required for CLI mode");
+            throw new CustomValidationException("At least one service URL is required for CLI mode");
         }
     }
 }

@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Notification;
 
@@ -91,7 +91,7 @@ public sealed class NotifiarrConfigTests
             ChannelId = "123456789012345678"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Notifiarr API key is required");
     }
 
@@ -104,7 +104,7 @@ public sealed class NotifiarrConfigTests
             ChannelId = "123456789012345678"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Notifiarr API key must be at least 10 characters long");
     }
 
@@ -132,7 +132,7 @@ public sealed class NotifiarrConfigTests
             ChannelId = channelId ?? string.Empty
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Discord channel ID is required");
     }
 
@@ -149,7 +149,7 @@ public sealed class NotifiarrConfigTests
             ChannelId = channelId
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Discord channel ID must be a valid numeric ID");
     }
 

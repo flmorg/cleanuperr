@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 
@@ -45,27 +45,27 @@ public sealed record DeadTorrentConfig : IConfig
 
         if (string.IsNullOrWhiteSpace(TargetCategory))
         {
-            throw new ValidationException("Dead torrent target category is required");
+            throw new CustomValidationException("Dead torrent target category is required");
         }
 
         if (Categories.Count is 0)
         {
-            throw new ValidationException("No dead torrent categories configured");
+            throw new CustomValidationException("No dead torrent categories configured");
         }
 
         if (Categories.Contains(TargetCategory, StringComparer.OrdinalIgnoreCase))
         {
-            throw new ValidationException("The dead torrent target category should not be present in dead torrent categories");
+            throw new CustomValidationException("The dead torrent target category should not be present in dead torrent categories");
         }
 
         if (Categories.Any(string.IsNullOrWhiteSpace))
         {
-            throw new ValidationException("Empty dead torrent category filter found");
+            throw new CustomValidationException("Empty dead torrent category filter found");
         }
 
         if (MaxStrikes < 3)
         {
-            throw new ValidationException("Dead torrent max strikes must be at least 3");
+            throw new CustomValidationException("Dead torrent max strikes must be at least 3");
         }
     }
 }

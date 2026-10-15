@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Notification;
 
@@ -142,7 +142,7 @@ public sealed class AppriseConfigTests
             Key = "my-config-key"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Apprise server URL is required for API mode");
     }
 
@@ -155,7 +155,7 @@ public sealed class AppriseConfigTests
             Key = "my-config-key"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Apprise server URL must be a valid HTTP or HTTPS URL");
     }
 
@@ -171,7 +171,7 @@ public sealed class AppriseConfigTests
             Key = key ?? string.Empty
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Apprise configuration key is required for API mode");
     }
 
@@ -184,7 +184,7 @@ public sealed class AppriseConfigTests
             Key = "a"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Apprise configuration key must be at least 2 characters long");
     }
 
@@ -255,7 +255,7 @@ public sealed class AppriseConfigTests
             ServiceUrls = serviceUrls
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("At least one service URL is required for CLI mode");
     }
 

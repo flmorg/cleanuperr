@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.General;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.General;
 
@@ -58,7 +58,7 @@ public sealed class LoggingConfigTests
             RollingSizeMB = 101
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Log rolling size cannot exceed 100 MB");
     }
 
@@ -90,7 +90,7 @@ public sealed class LoggingConfigTests
             RetainedFileCount = 51
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Log retained file count cannot exceed 50");
     }
 
@@ -122,7 +122,7 @@ public sealed class LoggingConfigTests
             TimeLimitHours = 1441
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Log time limit cannot exceed 60 days");
     }
 
@@ -154,7 +154,7 @@ public sealed class LoggingConfigTests
             ArchiveRetainedCount = 101
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Log archive retained count cannot exceed 100");
     }
 
@@ -186,7 +186,7 @@ public sealed class LoggingConfigTests
             ArchiveTimeLimitHours = 1441
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Log archive time limit cannot exceed 60 days");
     }
 
@@ -220,7 +220,7 @@ public sealed class LoggingConfigTests
             ArchiveTimeLimitHours = 0
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Archiving is enabled, but no retention policy is set. Please set either a retained file count or time limit");
     }
 

@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.QueueCleaner;
 
@@ -57,7 +57,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = 100
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Rule name cannot be empty");
     }
 
@@ -72,7 +72,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = 100
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Rule name cannot be empty");
     }
 
@@ -87,7 +87,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = 100
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Rule name cannot be empty");
     }
 
@@ -109,7 +109,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = 100
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Max strikes must be at least 3");
     }
 
@@ -148,7 +148,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = 100
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Minimum completion percentage must be between 0 and 100");
     }
 
@@ -187,7 +187,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = maxCompletionPercentage
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Maximum completion percentage must be between 1 and 100");
     }
 
@@ -202,7 +202,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = 0
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Maximum completion percentage must be greater than 0");
     }
 
@@ -238,7 +238,7 @@ public sealed class QueueRuleTests
             MaxCompletionPercentage = 25
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Maximum completion percentage must be greater than or equal to the minimum completion percentage");
     }
 
@@ -345,7 +345,7 @@ public sealed class QueueRuleTests
             DeletePrivateTorrentsFromClient = true,
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Cannot enable both deletion and category changing");
     }
 

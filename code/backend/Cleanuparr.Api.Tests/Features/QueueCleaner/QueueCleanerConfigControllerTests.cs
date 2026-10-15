@@ -106,7 +106,7 @@ public class QueueCleanerConfigControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.UpdateQueueCleanerConfig(request));
         await _jobManagementService.DidNotReceive().StartJob(Arg.Any<JobType>(), Arg.Any<Cleanuparr.Infrastructure.Models.JobSchedule?>(), Arg.Any<string?>());
     }
@@ -125,7 +125,7 @@ public class QueueCleanerConfigControllerTests : IDisposable
         };
 
         // Act + Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.UpdateQueueCleanerConfig(request));
     }
 

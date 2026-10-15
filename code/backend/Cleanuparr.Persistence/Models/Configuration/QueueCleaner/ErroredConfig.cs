@@ -21,12 +21,12 @@ public sealed record ErroredConfig
     {
         if (MaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException("the minimum value for errored max strikes must be 3");
+            throw new CustomValidationException("the minimum value for errored max strikes must be 3");
         }
 
         if (ChangeCategory && DeletePrivate)
         {
-            throw new ValidationException("Cannot enable both deletion and category changing");
+            throw new CustomValidationException("Cannot enable both deletion and category changing");
         }
     }
 }

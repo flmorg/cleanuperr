@@ -19,7 +19,7 @@ public sealed record AuthConfig : IConfig
         {
             if (!IsValidIpOrCidr(entry))
             {
-                throw new ValidationException($"Invalid IP address or CIDR range: {entry}");
+                throw new CustomValidationException($"Invalid IP address or CIDR range: {entry}");
             }
         }
     }

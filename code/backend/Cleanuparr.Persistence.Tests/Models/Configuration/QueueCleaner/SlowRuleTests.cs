@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.QueueCleaner;
 
@@ -89,7 +89,7 @@ public sealed class SlowRuleTests
         };
 
         // Base class validation runs first
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Max strikes must be at least 3");
     }
 
@@ -108,7 +108,7 @@ public sealed class SlowRuleTests
             MaxTimeHours = -1
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Maximum time cannot be negative");
     }
 
@@ -141,7 +141,7 @@ public sealed class SlowRuleTests
             MaxTimeHours = 0
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Either minimum speed or maximum time must be specified");
     }
 
@@ -156,7 +156,7 @@ public sealed class SlowRuleTests
             MaxTimeHours = 0
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Either minimum speed or maximum time must be specified");
     }
 
@@ -179,7 +179,7 @@ public sealed class SlowRuleTests
             MaxTimeHours = 0
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Invalid minimum speed format");
     }
 
@@ -250,7 +250,7 @@ public sealed class SlowRuleTests
             IgnoreAboveSize = ignoreAboveSize
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldContain("invalid value for slow ignore above size");
     }
 

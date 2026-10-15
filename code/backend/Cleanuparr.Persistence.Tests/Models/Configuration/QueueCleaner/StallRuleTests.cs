@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.QueueCleaner;
 
@@ -108,7 +108,7 @@ public sealed class StallRuleTests
         };
 
         // Base class validation runs first
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldBe("Max strikes must be at least 3");
     }
 
@@ -130,7 +130,7 @@ public sealed class StallRuleTests
             MinimumProgress = minimumProgress
         };
 
-        var exception = Should.Throw<ValidationException>(() => rule.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => rule.Validate());
         exception.Message.ShouldContain("Invalid minimum progress value");
     }
 

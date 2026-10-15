@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Cleanuparr.Domain.Enums;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Arr;
 
@@ -21,12 +21,12 @@ public class ArrConfig : IConfig
     {
         if (FailedImportMaxStrikes < -1)
         {
-            throw new ValidationException("Failed import max strikes must be -1 or greater");
+            throw new CustomValidationException("Failed import max strikes must be -1 or greater");
         }
 
         if (FailedImportMaxStrikes is > 0 and < 3)
         {
-            throw new ValidationException("The minimum value for failed import max strikes must be 3");
+            throw new CustomValidationException("The minimum value for failed import max strikes must be 3");
         }
     }
 }

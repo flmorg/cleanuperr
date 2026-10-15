@@ -103,28 +103,28 @@ public sealed record DownloadClientConfig
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            throw new ValidationException($"Client name cannot be empty");
+            throw new CustomValidationException($"Client name cannot be empty");
         }
 
         if (Host is null)
         {
-            throw new ValidationException($"Host cannot be empty");
+            throw new CustomValidationException($"Host cannot be empty");
         }
 
         if (!string.IsNullOrWhiteSpace(DownloadDirectorySource) != !string.IsNullOrWhiteSpace(DownloadDirectoryTarget))
         {
-            throw new ValidationException("Both download directory source and target must be set, or both must be empty");
+            throw new CustomValidationException("Both download directory source and target must be set, or both must be empty");
         }
 
         if (TypeName.RequiresAuthField(DownloadClientAuthField.ApiKey) && string.IsNullOrWhiteSpace(ApiKey))
         {
-            throw new ValidationException("API key cannot be empty");
+            throw new CustomValidationException("API key cannot be empty");
         }
 
         if (TypeName.SupportsApiKeyAndCredentials() && !string.IsNullOrWhiteSpace(ApiKey) &&
             (!string.IsNullOrWhiteSpace(Username) || !string.IsNullOrWhiteSpace(Password)))
         {
-            throw new ValidationException("Use either an API key or a username and password, not both");
+            throw new CustomValidationException("Use either an API key or a username and password, not both");
         }
     }
 }

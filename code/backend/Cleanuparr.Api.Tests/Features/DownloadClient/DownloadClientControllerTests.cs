@@ -139,7 +139,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert
-        Cleanuparr.Domain.Exceptions.ValidationException exception = await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        Cleanuparr.Domain.Exceptions.CustomValidationException exception = await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.CreateDownloadClientConfig(request));
         exception.Message.ShouldBe("Use either an API key or a username and password, not both");
     }
@@ -204,7 +204,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert — Validate throws, controller's generic catch logs and re-throws
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.CreateDownloadClientConfig(request));
     }
 
@@ -220,7 +220,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.CreateDownloadClientConfig(request));
     }
 
@@ -236,7 +236,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.CreateDownloadClientConfig(request));
     }
 
@@ -339,7 +339,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.UpdateDownloadClientConfig(client.Id, request));
     }
 
@@ -359,7 +359,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.UpdateDownloadClientConfig(client.Id, request));
     }
 
@@ -379,7 +379,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.UpdateDownloadClientConfig(client.Id, request));
     }
 
@@ -399,7 +399,7 @@ public class DownloadClientControllerTests : IDisposable
         };
 
         // Act / Assert
-        Cleanuparr.Domain.Exceptions.ValidationException exception = await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        Cleanuparr.Domain.Exceptions.CustomValidationException exception = await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.UpdateDownloadClientConfig(client.Id, request));
         exception.Message.ShouldContain("cannot be changed");
 

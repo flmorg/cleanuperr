@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Utilities;
 
 namespace Cleanuparr.Infrastructure.Models;
@@ -30,13 +30,13 @@ public class JobSchedule
     /// <summary>
     /// Validates the job schedule against the predefined valid values
     /// </summary>
-    /// <exception cref="ValidationException">Thrown when the value is not valid for the selected unit</exception>
+    /// <exception cref="CustomValidationException">Thrown when the value is not valid for the selected unit</exception>
     public void Validate()
     {
         if (!ScheduleOptions.IsValidValue(Type, Every))
         {
             var validValues = string.Join(", ", ScheduleOptions.GetValidValues(Type));
-            throw new ValidationException($"Invalid value for {Type}: {Every}. Valid values are: {validValues}");
+            throw new CustomValidationException($"Invalid value for {Type}: {Every}. Valid values are: {validValues}");
         }
     }
 }

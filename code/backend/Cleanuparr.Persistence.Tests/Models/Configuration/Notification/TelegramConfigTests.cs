@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Notification;
 
@@ -151,7 +151,7 @@ public sealed class TelegramConfigTests
             ChatId = "123456789"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Telegram bot token is required");
     }
 
@@ -167,7 +167,7 @@ public sealed class TelegramConfigTests
             ChatId = "123456789"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Telegram bot token must be at least 10 characters long");
     }
 
@@ -195,7 +195,7 @@ public sealed class TelegramConfigTests
             ChatId = chatId ?? string.Empty
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Telegram chat ID is required");
     }
 
@@ -211,7 +211,7 @@ public sealed class TelegramConfigTests
             ChatId = chatId
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Telegram chat ID must be a valid integer (negative IDs allowed for groups)");
     }
 
@@ -240,7 +240,7 @@ public sealed class TelegramConfigTests
             TopicId = topicId
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Telegram topic ID must be a valid integer when specified");
     }
 

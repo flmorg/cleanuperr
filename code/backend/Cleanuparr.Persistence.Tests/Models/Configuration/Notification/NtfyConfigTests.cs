@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Notification;
 
@@ -248,7 +248,7 @@ public sealed class NtfyConfigTests
             AuthenticationType = NtfyAuthenticationType.None
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("ntfy server URL is required");
     }
 
@@ -262,7 +262,7 @@ public sealed class NtfyConfigTests
             AuthenticationType = NtfyAuthenticationType.None
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("ntfy server URL must be a valid HTTP or HTTPS URL");
     }
 
@@ -276,7 +276,7 @@ public sealed class NtfyConfigTests
             AuthenticationType = NtfyAuthenticationType.None
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("At least one ntfy topic is required");
     }
 
@@ -290,7 +290,7 @@ public sealed class NtfyConfigTests
             AuthenticationType = NtfyAuthenticationType.None
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("At least one ntfy topic is required");
     }
 
@@ -328,7 +328,7 @@ public sealed class NtfyConfigTests
             Password = "pass"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Username is required for Basic Auth");
     }
 
@@ -347,7 +347,7 @@ public sealed class NtfyConfigTests
             Password = password
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Password is required for Basic Auth");
     }
 
@@ -379,7 +379,7 @@ public sealed class NtfyConfigTests
             AccessToken = accessToken
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Access token is required for Token authentication");
     }
 

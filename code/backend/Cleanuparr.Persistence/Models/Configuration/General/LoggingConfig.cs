@@ -27,32 +27,32 @@ public sealed record LoggingConfig : IConfig
     {
         if (RollingSizeMB > 100)
         {
-            throw new ValidationException("Log rolling size cannot exceed 100 MB");
+            throw new CustomValidationException("Log rolling size cannot exceed 100 MB");
         }
 
         if (RetainedFileCount > 50)
         {
-            throw new ValidationException("Log retained file count cannot exceed 50");
+            throw new CustomValidationException("Log retained file count cannot exceed 50");
         }
         
         if (TimeLimitHours > 1440) // 24 * 60
         {
-            throw new ValidationException("Log time limit cannot exceed 60 days");
+            throw new CustomValidationException("Log time limit cannot exceed 60 days");
         }
 
         if (ArchiveRetainedCount > 100)
         {
-            throw new ValidationException("Log archive retained count cannot exceed 100");
+            throw new CustomValidationException("Log archive retained count cannot exceed 100");
         }
 
         if (ArchiveTimeLimitHours > 1440) // 24 * 60
         {
-            throw new ValidationException("Log archive time limit cannot exceed 60 days");
+            throw new CustomValidationException("Log archive time limit cannot exceed 60 days");
         }
         
         if (ArchiveRetainedCount is 0 && ArchiveTimeLimitHours is 0 && ArchiveEnabled)
         {
-            throw new ValidationException("Archiving is enabled, but no retention policy is set. Please set either a retained file count or time limit");
+            throw new CustomValidationException("Archiving is enabled, but no retention policy is set. Please set either a retained file count or time limit");
         }
     }
 }

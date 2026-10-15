@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.DownloadCleaner;
 
@@ -60,7 +60,7 @@ public sealed class DeadTorrentConfigTests
             MaxStrikes = 3
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Dead torrent target category is required");
     }
 
@@ -75,7 +75,7 @@ public sealed class DeadTorrentConfigTests
             MaxStrikes = 3
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("No dead torrent categories configured");
     }
 
@@ -90,7 +90,7 @@ public sealed class DeadTorrentConfigTests
             MaxStrikes = 3
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("The dead torrent target category should not be present in dead torrent categories");
     }
 
@@ -105,7 +105,7 @@ public sealed class DeadTorrentConfigTests
             MaxStrikes = 3
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Empty dead torrent category filter found");
     }
 
@@ -122,7 +122,7 @@ public sealed class DeadTorrentConfigTests
             MaxStrikes = strikes
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Dead torrent max strikes must be at least 3");
     }
 }

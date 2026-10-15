@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Shared.Attributes;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Notification;
 
@@ -37,23 +37,23 @@ public sealed record GotifyConfig : IConfig
     {
         if (string.IsNullOrWhiteSpace(ServerUrl))
         {
-            throw new ValidationException("Gotify server URL is required");
+            throw new CustomValidationException("Gotify server URL is required");
         }
 
         if (!Uri.TryCreate(ServerUrl, UriKind.Absolute, out var uri) ||
             (uri.Scheme != "http" && uri.Scheme != "https"))
         {
-            throw new ValidationException("Gotify server URL must be a valid HTTP or HTTPS URL");
+            throw new CustomValidationException("Gotify server URL must be a valid HTTP or HTTPS URL");
         }
 
         if (string.IsNullOrWhiteSpace(ApplicationToken))
         {
-            throw new ValidationException("Gotify application token is required");
+            throw new CustomValidationException("Gotify application token is required");
         }
 
         if (Priority < 0 || Priority > 10)
         {
-            throw new ValidationException("Priority must be between 0 and 10");
+            throw new CustomValidationException("Priority must be between 0 and 10");
         }
     }
 }

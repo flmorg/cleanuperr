@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.DownloadCleaner;
 
@@ -141,7 +141,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("At least one category must be specified");
     }
 
@@ -161,7 +161,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Rule name can not be empty");
     }
 
@@ -177,7 +177,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Rule name can not be empty");
     }
 
@@ -193,7 +193,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Rule name can not be empty");
     }
 
@@ -214,7 +214,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Either max ratio or max seed time must be set to a non-negative value");
     }
 
@@ -234,7 +234,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Either max ratio or max seed time must be set to a non-negative value");
     }
 
@@ -253,7 +253,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Max ratio must be -1 (disabled) or a non-negative number");
     }
 
@@ -272,7 +272,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Max seed time must be -1 (disabled) or a non-negative number");
     }
 
@@ -293,7 +293,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Min seed time can not be negative");
     }
 
@@ -313,7 +313,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Min seed time can not be negative");
     }
 
@@ -386,7 +386,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Min seeders can not be less than 0");
     }
 
@@ -445,7 +445,7 @@ public sealed class QBitSeedingRuleTests
             DeleteSourceFiles = true
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Max inactive days must be -1 (disabled) or a non-negative number");
     }
 

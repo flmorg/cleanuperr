@@ -1,4 +1,4 @@
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 
@@ -13,7 +13,7 @@ public interface IInactivityFilterable
     {
         if (MaxInactiveDays is < 0 and not -1)
         {
-            throw new ValidationException("Max inactive days must be -1 (disabled) or a non-negative number");
+            throw new CustomValidationException("Max inactive days must be -1 (disabled) or a non-negative number");
         }
     }
 }

@@ -37,19 +37,19 @@ public sealed record StallRule : QueueRule
 
         if (MaxStrikes < 3)
         {
-            throw new ValidationException("Stall rule max strikes must be at least 3");
+            throw new CustomValidationException("Stall rule max strikes must be at least 3");
         }
 
         if (!string.IsNullOrWhiteSpace(MinimumProgress))
         {
             if (!ByteSize.TryParse(MinimumProgress, out var parsed))
             {
-                throw new ValidationException($"Invalid minimum progress value: {MinimumProgress}");
+                throw new CustomValidationException($"Invalid minimum progress value: {MinimumProgress}");
             }
 
             if (parsed.HasValue && parsed.Value.Bytes < 0)
             {
-                throw new ValidationException("Minimum progress must be zero or greater");
+                throw new CustomValidationException("Minimum progress must be zero or greater");
             }
         }
     }

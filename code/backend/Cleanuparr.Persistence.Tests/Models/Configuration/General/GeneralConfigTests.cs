@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.General;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.General;
 
@@ -29,7 +29,7 @@ public sealed class GeneralConfigTests
             HttpTimeout = 0,
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("HTTP_TIMEOUT must be greater than 0");
     }
 
@@ -64,7 +64,7 @@ public sealed class GeneralConfigTests
             }
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Log rolling size cannot exceed 100 MB");
     }
 

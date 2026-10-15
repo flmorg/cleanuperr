@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Shared.Attributes;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Notification;
 
@@ -102,29 +102,29 @@ public sealed partial record PushoverConfig : IConfig
     {
         if (string.IsNullOrWhiteSpace(ApiToken))
         {
-            throw new ValidationException("Pushover API token is required");
+            throw new CustomValidationException("Pushover API token is required");
         }
 
         if (string.IsNullOrWhiteSpace(UserKey))
         {
-            throw new ValidationException("Pushover user key is required");
+            throw new CustomValidationException("Pushover user key is required");
         }
 
         if (Priority == PushoverPriority.Emergency)
         {
             if (!Retry.HasValue || Retry.Value < 30)
             {
-                throw new ValidationException("Retry interval must be at least 30 seconds for emergency priority");
+                throw new CustomValidationException("Retry interval must be at least 30 seconds for emergency priority");
             }
 
             if (!Expire.HasValue || Expire.Value < 1)
             {
-                throw new ValidationException("Expire time is required for emergency priority");
+                throw new CustomValidationException("Expire time is required for emergency priority");
             }
 
             if (Expire.Value > 10800)
             {
-                throw new ValidationException("Expire time cannot exceed 10800 seconds (3 hours)");
+                throw new CustomValidationException("Expire time cannot exceed 10800 seconds (3 hours)");
             }
         }
 
@@ -133,19 +133,19 @@ public sealed partial record PushoverConfig : IConfig
         {
             if (device.Length > 25)
             {
-                throw new ValidationException($"Device name '{device}' exceeds 25 character limit");
+                throw new CustomValidationException($"Device name '{device}' exceeds 25 character limit");
             }
 
             if (!DeviceNameRegex().IsMatch(device))
             {
-                throw new ValidationException($"Device name '{device}' contains invalid characters. Only letters, numbers, underscores, and hyphens are allowed.");
+                throw new CustomValidationException($"Device name '{device}' contains invalid characters. Only letters, numbers, underscores, and hyphens are allowed.");
             }
         }
 
         // Validate sound - if provided, must not be whitespace-only
         if (Sound is not null && Sound.Length > 0 && string.IsNullOrWhiteSpace(Sound))
         {
-            throw new ValidationException("Sound name cannot be empty or whitespace when specified");
+            throw new CustomValidationException("Sound name cannot be empty or whitespace when specified");
         }
     }
 }

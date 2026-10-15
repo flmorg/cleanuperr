@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Seeker;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Seeker;
 
@@ -49,7 +49,7 @@ public sealed class SeekerConfigTests
     {
         var config = new SeekerConfig { SearchInterval = 1 };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldContain("at least");
     }
 
@@ -58,7 +58,7 @@ public sealed class SeekerConfigTests
     {
         var config = new SeekerConfig { SearchInterval = 361 };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldContain("at most");
     }
 
@@ -73,7 +73,7 @@ public sealed class SeekerConfigTests
     {
         var config = new SeekerConfig { SearchInterval = interval };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldContain("Invalid search interval");
     }
 

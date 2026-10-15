@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 
@@ -87,12 +87,12 @@ public sealed record OrphanedFilesConfig : IConfig
 
         if (ScanDirectories.Count == 0)
         {
-            throw new ValidationException("At least one scan directory is required when orphaned files cleanup is enabled for this client");
+            throw new CustomValidationException("At least one scan directory is required when orphaned files cleanup is enabled for this client");
         }
 
         if (string.IsNullOrWhiteSpace(OrphanedDirectory))
         {
-            throw new ValidationException("Orphaned directory is required when orphaned files cleanup is enabled for this client");
+            throw new CustomValidationException("Orphaned directory is required when orphaned files cleanup is enabled for this client");
         }
 
         foreach (var scanDir in ScanDirectories)
@@ -130,13 +130,13 @@ public sealed record OrphanedFilesConfig : IConfig
 
             if (string.Equals(normalizedScan, normalizedOrphaned, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ValidationException(
+                throw new CustomValidationException(
                     $"Orphaned directory '{normalizedOrphaned}' cannot equal scan directory '{normalizedScan}'.");
             }
 
             if (normalizedScan.StartsWith(normalizedOrphaned + sep, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ValidationException(
+                throw new CustomValidationException(
                     $"Orphaned directory '{normalizedOrphaned}' cannot be an ancestor of scan directory '{normalizedScan}'.");
             }
         }
@@ -171,7 +171,7 @@ public sealed record OrphanedFilesConfig : IConfig
             || a.StartsWith(b + sep, StringComparison.OrdinalIgnoreCase)
             || b.StartsWith(a + sep, StringComparison.OrdinalIgnoreCase))
         {
-            throw new ValidationException(
+            throw new CustomValidationException(
                 $"Path overlap detected: {aLabel} '{a}' overlaps with {bLabel} '{b}'. Scan directories and orphaned directories must not overlap across clients.");
         }
     }

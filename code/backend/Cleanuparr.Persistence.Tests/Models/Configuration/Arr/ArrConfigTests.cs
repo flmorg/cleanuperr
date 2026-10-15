@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Arr;
 
@@ -41,7 +41,7 @@ public sealed class ArrConfigTests
             FailedImportMaxStrikes = strikes,
         };
 
-        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        CustomValidationException exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Failed import max strikes must be -1 or greater");
     }
 
@@ -60,7 +60,7 @@ public sealed class ArrConfigTests
             FailedImportMaxStrikes = strikes,
         };
 
-        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        CustomValidationException exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("The minimum value for failed import max strikes must be 3");
     }
 

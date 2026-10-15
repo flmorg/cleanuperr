@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Shared.Helpers;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.General;
 
@@ -51,32 +51,32 @@ public sealed record GeneralConfig : IConfig
     {
         if (HttpTimeout is 0)
         {
-            throw new ValidationException("HTTP_TIMEOUT must be greater than 0");
+            throw new CustomValidationException("HTTP_TIMEOUT must be greater than 0");
         }
 
         if (StrikeInactivityWindowHours is 0)
         {
-            throw new ValidationException("STRIKE_INACTIVITY_WINDOW_HOURS must be greater than 0");
+            throw new CustomValidationException("STRIKE_INACTIVITY_WINDOW_HOURS must be greater than 0");
         }
 
         if (StrikeInactivityWindowHours > 168)
         {
-            throw new ValidationException("STRIKE_INACTIVITY_WINDOW_HOURS must be less than or equal to 168");
+            throw new CustomValidationException("STRIKE_INACTIVITY_WINDOW_HOURS must be less than or equal to 168");
         }
 
         if (HistoryRetentionDays is 0)
         {
-            throw new ValidationException("HISTORY_RETENTION_DAYS must be greater than 0");
+            throw new CustomValidationException("HISTORY_RETENTION_DAYS must be greater than 0");
         }
 
         if (HistoryRetentionDays > 3650)
         {
-            throw new ValidationException("HISTORY_RETENTION_DAYS must be less than or equal to 3650");
+            throw new CustomValidationException("HISTORY_RETENTION_DAYS must be less than or equal to 3650");
         }
 
         if (ConnectivityCheckEnabled && ConnectivityCheckUrls.Count is 0)
         {
-            throw new ValidationException("At least one connectivity check URL is required when the internet connectivity check is enabled");
+            throw new CustomValidationException("At least one connectivity check URL is required when the internet connectivity check is enabled");
         }
 
         Log.Validate();

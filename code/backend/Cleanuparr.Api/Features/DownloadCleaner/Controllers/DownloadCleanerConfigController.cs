@@ -1,8 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-
 using Cleanuparr.Api.Features.DownloadCleaner.Contracts.Requests;
 using Cleanuparr.Api.Features.DownloadCleaner.Contracts.Responses;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Services.Interfaces;
 using Cleanuparr.Infrastructure.Utilities;
 using Cleanuparr.Persistence;
@@ -11,7 +10,6 @@ using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Cleanuparr.Api.Features.DownloadCleaner.Controllers;
 
@@ -113,7 +111,7 @@ public sealed class DownloadCleanerConfigController : ControllerBase
         {
             if (newConfigDto is null)
             {
-                throw new ValidationException("Request body cannot be null");
+                throw new CustomValidationException("Request body cannot be null");
             }
 
             // Validate cron expression format
