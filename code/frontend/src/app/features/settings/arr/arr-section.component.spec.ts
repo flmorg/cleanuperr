@@ -55,6 +55,7 @@ interface Setup {
     <app-arr-section
       [type]="type()"
       [config]="config()"
+      [reloading]="reloading()"
       (add)="onAdd()"
       (edit)="onEdit($event)"
       (delete)="onDelete($event)"
@@ -64,6 +65,7 @@ interface Setup {
 class HostComponent {
   type = input.required<ArrType>();
   config = input.required<ArrConfig>();
+  reloading = input(false);
   onAdd = vi.fn();
   onEdit = vi.fn();
   onDelete = vi.fn();
@@ -270,6 +272,24 @@ describe('ArrSectionComponent', () => {
 
     expect(api.updateConfig).toHaveBeenCalledWith('sonarr', { failedImportMaxStrikes: 5 });
     expect(saveButton.textContent!.trim()).toBe('Saved!');
+  });
+
+  it('disables Save Settings while the parent reloads', () => {
+    const { fixture, component } = setup();
+
+    component.strikesOpen.set(true);
+    component.failedImportForm.maxStrikes().value.set(9);
+    fixture.componentRef.setInput('reloading', true);
+    fixture.detectChanges();
+
+    const saveButton = fixture.nativeElement.querySelector('.form-actions button') as HTMLButtonElement;
+    expect(component.hasPendingChanges()).toBe(true);
+    expect(saveButton.disabled).toBe(true);
+
+    fixture.componentRef.setInput('reloading', false);
+    fixture.detectChanges();
+
+    expect(saveButton.disabled).toBe(false);
   });
 
   it('disabling the override sends -1', () => {

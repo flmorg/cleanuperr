@@ -31,7 +31,7 @@
       </div>
       <div class="form-actions">
         <app-button variant="primary" [glowing]="failedImportDirty()" [loading]="failedImportSaving()"
-          [disabled]="failedImportSaving() || failedImportSaved() || failedImportHasErrors() || !failedImportDirty()"
+          [disabled]="reloading() || failedImportSaving() || failedImportSaved() || failedImportHasErrors() || !failedImportDirty()"
           (clicked)="saveFailedImport()">
           {{ failedImportSaved() ? 'Saved!' : 'Save Settings' }}
         </app-button>

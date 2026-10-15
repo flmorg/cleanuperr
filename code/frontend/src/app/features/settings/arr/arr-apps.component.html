@@ -21,6 +21,7 @@
       <app-arr-section
         [type]="entry.type"
         [config]="entry.config"
+        [reloading]="configResource.isLoading()"
         (add)="openAddModal(entry.type)"
         (edit)="openEditModal(entry.type, $event)"
         (delete)="deleteInstance(entry.type, $event)"

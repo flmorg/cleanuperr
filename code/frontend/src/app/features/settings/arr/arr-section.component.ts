@@ -41,6 +41,7 @@ export class ArrSectionComponent {
 
   readonly type = input.required<ArrType>();
   readonly config = input.required<ArrConfig>();
+  readonly reloading = input(false);
 
   readonly add = output<void>();
   readonly edit = output<ArrInstance>();
