@@ -1,0 +1,57 @@
+<app-card>
+  <div class="section-header">
+    <div class="section-header__title">
+      <img [src]="themedIconSrc(meta().iconSrc)" alt="" aria-hidden="true" class="section-header__icon" />
+      <h3 class="section-header__name">{{ meta().displayName }} instances</h3>
+      @if (meta().experimental) {
+        <app-badge severity="warning" size="sm">Experimental</app-badge>
+      }
+    </div>
+    <div class="section-header__actions">
+      <app-button variant="ghost" size="sm" [ariaExpanded]="panelVisible()" (clicked)="toggleStrikesPanel()">
+        <ng-icon name="tablerAdjustmentsHorizontal" size="16" />
+        Strikes
+      </app-button>
+      <app-button variant="primary" size="sm" (clicked)="onAddClick()">Add</app-button>
+    </div>
+  </div>
+
+  @if (panelVisible()) {
+    <div class="strikes-panel">
+      <div class="form-stack">
+        <app-toggle label="Override global max strikes" [formField]="failedImportForm.override"
+          hint="Use a different failed import max strikes value than the queue cleaner setting"
+          helpKey="arr:failedImportOverride" />
+        @if (failedImportForm.override().value()) {
+          <app-number-input label="Max Strikes" [formField]="failedImportForm.maxStrikes"
+            hint="Number of strikes before action is taken (0 to disable for this app, min 3 to enable)"
+            [error]="failedImportForm.maxStrikes().errors()[0]?.message"
+            helpKey="arr:failedImportMaxStrikes" />
+        }
+      </div>
+      <div class="form-actions">
+        <app-button variant="primary" [glowing]="failedImportDirty()" [loading]="failedImportSaving()"
+          [disabled]="reloading() || failedImportSaving() || failedImportSaved() || failedImportHasErrors() || !failedImportDirty()"
+          (clicked)="saveFailedImport()">
+          {{ failedImportSaved() ? 'Saved!' : 'Save Settings' }}
+        </app-button>
+      </div>
+    </div>
+  }
+
+  @for (instance of instances(); track instance.id) {
+    <div class="item-row">
+      <div class="item-row__info">
+        <span class="item-row__name">{{ instance.name }}</span>
+        <app-badge [severity]="instance.enabled ? 'success' : 'default'" size="sm">
+          {{ instance.enabled ? 'Enabled' : 'Disabled' }}
+        </app-badge>
+        <span class="item-row__url">{{ instance.url }}</span>
+      </div>
+      <div class="item-row__actions">
+        <app-button variant="ghost" size="sm" (clicked)="onEditClick(instance)">Edit</app-button>
+        <app-button variant="destructive" size="sm" (clicked)="onDeleteClick(instance)">Delete</app-button>
+      </div>
+    </div>
+  }
+</app-card>

@@ -10,7 +10,6 @@ import { ROUTES } from '@shared/routes';
 interface NavItem {
   label: string;
   icon?: string;
-  iconSrc?: string;
   route: string;
 }
 
@@ -35,7 +34,6 @@ export class NavSidebarComponent {
   navClicked = output<void>();
 
   settingsExpanded = signal(true);
-  mediaAppsExpanded = signal(true);
 
   readonly currentVersion = computed(() => this.hub.appStatus()?.currentVersion ?? null);
   readonly latestVersion = computed(() => this.hub.appStatus()?.latestVersion ?? null);
@@ -60,16 +58,7 @@ export class NavSidebarComponent {
     { label: 'Download Cleaner', icon: 'tablerTrash', route: '/settings/download-cleaner' },
     { label: 'Blacklist Sync', icon: 'tablerBan', route: '/settings/blacklist-sync' },
     { label: 'Seeker', icon: 'tablerSearch', route: '/settings/seeker' },
-  ];
-
-  mediaAppItems: NavItem[] = [
-    { label: 'Sonarr', iconSrc: 'icons/ext/sonarr-light.svg', route: '/settings/arr/sonarr' },
-    { label: 'Radarr', iconSrc: 'icons/ext/radarr-light.svg', route: '/settings/arr/radarr' },
-    { label: 'Lidarr', iconSrc: 'icons/ext/lidarr-light.svg', route: '/settings/arr/lidarr' },
-    { label: 'Readarr', iconSrc: 'icons/ext/readarr-light.svg', route: '/settings/arr/readarr' },
-    { label: 'Whisparr', iconSrc: 'icons/ext/whisparr-light.svg', route: '/settings/arr/whisparr' },
-    { label: 'Sportarr', iconSrc: 'icons/ext/sportarr-light.svg', route: '/settings/arr/sportarr' },
-    { label: 'LazyLibrarian', iconSrc: 'icons/ext/lazylibrarian-light.svg', route: '/settings/arr/lazylibrarian' },
+    { label: 'Media Managers', icon: 'tablerApps', route: '/settings/arr' },
     { label: 'Download Clients', icon: 'tablerDownload', route: '/settings/download-clients' },
   ];
 
@@ -87,10 +76,6 @@ export class NavSidebarComponent {
 
   toggleSettings(): void {
     this.settingsExpanded.set(!this.settingsExpanded());
-  }
-
-  toggleMediaApps(): void {
-    this.mediaAppsExpanded.set(!this.mediaAppsExpanded());
   }
 
   logout(): void {

@@ -1,0 +1,101 @@
+<app-page-header
+  title="Media Managers"
+  subtitle="Manage media manager connections"
+/>
+
+@if (loadError()) {
+  <app-empty-state
+    icon="tablerPlugConnectedX"
+    heading="Could not connect to server"
+    description="Failed to load settings. Please check that the server is running and try again."
+  >
+    <app-button variant="primary" size="sm" (clicked)="retry()">
+      Retry
+    </app-button>
+  </app-empty-state>
+} @else if (loader.showSpinner() && !configResource.hasValue()) {
+  <app-loading-state message="Loading settings..." />
+} @else if (configResource.hasValue()) {
+  <div class="settings-form">
+    @for (entry of configured(); track entry.type) {
+      <app-arr-section
+        [type]="entry.type"
+        [config]="entry.config"
+        [reloading]="configResource.isLoading()"
+        (add)="openAddModal(entry.type)"
+        (edit)="openEditModal(entry.type, $event)"
+        (delete)="deleteInstance(entry.type, $event)"
+      />
+    } @empty {
+      <app-empty-state
+        heading="No media managers yet"
+        description="Pick an app below to connect it."
+      />
+    }
+
+    @if (unconfigured().length > 0) {
+      <app-card>
+        <div class="list-header">
+          <h3 class="list-header__title">Add another app</h3>
+        </div>
+
+        <div class="selection-grid">
+          @for (type of unconfigured(); track type) {
+            <button class="selection-card" (click)="openAddModal(type)">
+              <span class="selection-card__icon-wrapper">
+                <img
+                  [src]="themeService.themedIconSrc(ARR_APP_META[type].iconSrc)"
+                  alt=""
+                  aria-hidden="true"
+                  class="selection-card__icon"
+                />
+              </span>
+              <span class="selection-card__name">{{ ARR_APP_META[type].displayName }}</span>
+              @if (ARR_APP_META[type].experimental) {
+                <app-badge severity="warning" size="sm">Experimental</app-badge>
+              }
+            </button>
+          }
+        </div>
+      </app-card>
+    }
+  </div>
+}
+
+<!-- Add/Edit Modal -->
+<app-modal
+  [title]="(modalIsEdit() ? 'Edit' : 'Add') + ' ' + modalDisplayName() + ' Instance'"
+  [(visible)]="modalVisible"
+>
+  <div class="modal-form">
+    <app-toggle label="Enabled" [formField]="instanceForm.enabled"
+      hint="Enable or disable this instance"
+      helpKey="arr:enabled" />
+    <app-input label="Name" placeholder="My Instance" [formField]="instanceForm.name"
+      hint="A unique name to identify this instance"
+      [error]="instanceForm.name().errors()[0]?.message"
+      helpKey="arr:name" />
+    <app-input label="URL" [placeholder]="'http://localhost:' + modalMeta().defaultPort" type="url" [formField]="instanceForm.url"
+      hint="Full URL including protocol and port"
+      [error]="instanceForm.url().errors()[0]?.message"
+      helpKey="arr:url" />
+    <app-input label="External URL" [placeholder]="'https://' + modalType() + '.example.com'" type="url" [formField]="instanceForm.externalUrl"
+      hint="Optional URL used in notifications for clickable links (e.g., when internal Docker URLs are not reachable externally)"
+      helpKey="arr:externalUrl" />
+    <app-input label="API Key" placeholder="Enter API key" type="password" [revealable]="false" [formField]="instanceForm.apiKey"
+      hint="API key from your arr application's Settings > General"
+      [error]="instanceForm.apiKey().errors()[0]?.message"
+      helpKey="arr:apiKey" />
+    <app-select label="API Version" [options]="modalMeta().versionOptions" [formField]="instanceForm.version"
+      hint="API version for this application"
+      helpKey="arr:version" />
+  </div>
+  <div modal-footer>
+    <app-button variant="secondary" size="sm" [loading]="testing()" (clicked)="testConnection()">
+      Test
+    </app-button>
+    <app-button variant="primary" size="sm" [loading]="saving()" [disabled]="hasModalErrors()" (clicked)="saveInstance()">
+      Save
+    </app-button>
+  </div>
+</app-modal>

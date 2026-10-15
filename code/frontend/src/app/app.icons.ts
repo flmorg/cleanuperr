@@ -1,4 +1,5 @@
 import {
+  tablerAdjustmentsHorizontal,
   tablerLayoutDashboard,
   tablerFileText,
   tablerBell,
@@ -50,9 +51,11 @@ import {
   tablerGripVertical,
   tablerFilter,
   tablerPalette,
+  tablerApps,
 } from '@ng-icons/tabler-icons';
 
 export const APP_ICONS = {
+  tablerAdjustmentsHorizontal,
   tablerLayoutDashboard,
   tablerFileText,
   tablerBell,
@@ -104,4 +107,5 @@ export const APP_ICONS = {
   tablerGripVertical,
   tablerFilter,
   tablerPalette,
+  tablerApps,
 };
