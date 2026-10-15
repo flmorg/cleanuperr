@@ -58,7 +58,7 @@ export class ArrAppsComponent implements HasPendingChanges {
     )),
     errorMessage: 'Failed to load media manager settings',
   });
-  private readonly configResource = this.settings.resource;
+  readonly configResource = this.settings.resource;
 
   readonly loader = this.settings.loader;
   readonly loadError = this.settings.loadError;

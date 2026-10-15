@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { ArrApi } from '@core/api/arr.api';
 import { ConfirmService } from '@core/services/confirm.service';
 import { ThemeService } from '@core/services/theme.service';
@@ -299,6 +299,37 @@ describe('ArrAppsComponent', () => {
     fixture.detectChanges();
 
     expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('keeps an arr-section instance mounted and its unsaved edits while a delete reload is in flight', async () => {
+    const api = createApi();
+    const { fixture, component, confirm } = setup(api);
+
+    const sectionBefore = component.sections()[0];
+    const sectionElBefore = fixture.nativeElement.querySelectorAll('app-arr-section')[0];
+    sectionBefore.failedImportForm.override().value.set(true);
+    sectionBefore.failedImportForm.maxStrikes().value.set(9);
+    fixture.detectChanges();
+
+    const pending = new Subject<ArrConfig>();
+    api.getConfig.mockReturnValue(pending);
+
+    const deleted = component.deleteInstance('radarr', RADARR_INSTANCE);
+    confirm.accept();
+    await deleted;
+    fixture.detectChanges();
+
+    expect(component.loader.loading()).toBe(true);
+    expect(fixture.nativeElement.querySelectorAll('app-arr-section')[0]).toBe(sectionElBefore);
+    expect(component.sections()[0]).toBe(sectionBefore);
+
+    pending.next(SONARR_CONFIG);
+    pending.complete();
+    fixture.detectChanges();
+
+    const sectionAfter = component.sections()[0];
+    expect(sectionAfter).toBe(sectionBefore);
+    expect(sectionAfter.failedImportModel()).toEqual({ override: true, maxStrikes: 9 });
   });
 
   it('reports pending changes from arr-section components', () => {

@@ -13,9 +13,9 @@
       Retry
     </app-button>
   </app-empty-state>
-} @else if (loader.showSpinner()) {
+} @else if (loader.showSpinner() && !configResource.hasValue()) {
   <app-loading-state message="Loading settings..." />
-} @else if (!loader.loading()) {
+} @else if (configResource.hasValue()) {
   <div class="settings-form">
     @for (entry of configured(); track entry.type) {
       <app-arr-section
