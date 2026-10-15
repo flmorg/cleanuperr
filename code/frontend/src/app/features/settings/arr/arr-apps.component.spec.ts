@@ -338,10 +338,9 @@ describe('ArrAppsComponent', () => {
     expect(component.hasPendingChanges()).toBe(false);
 
     const sections = component.sections();
-    if (sections.length > 0) {
-      vi.spyOn(sections[0], 'hasPendingChanges').mockReturnValue(true);
-      expect(component.hasPendingChanges()).toBe(true);
-    }
+    expect(sections.length).toBeGreaterThan(0);
+    vi.spyOn(sections[0], 'hasPendingChanges').mockReturnValue(true);
+    expect(component.hasPendingChanges()).toBe(true);
   });
 
   it('shows connection error state and recovers on retry', () => {
@@ -397,33 +396,30 @@ describe('ArrAppsComponent', () => {
     const { component } = setup();
 
     const sections = component.sections();
-    if (sections.length > 0) {
-      const openAddSpy = vi.spyOn(component, 'openAddModal');
-      sections[0].onAddClick();
-      expect(openAddSpy).toHaveBeenCalled();
-    }
+    expect(sections.length).toBeGreaterThan(0);
+    const openAddSpy = vi.spyOn(component, 'openAddModal');
+    sections[0].onAddClick();
+    expect(openAddSpy).toHaveBeenCalled();
   });
 
   it('emits from arr-section when edit is clicked', () => {
     const { component } = setup();
 
     const sections = component.sections();
-    if (sections.length > 0) {
-      const openEditSpy = vi.spyOn(component, 'openEditModal');
-      sections[0].onEditClick(SONARR_INSTANCE);
-      expect(openEditSpy).toHaveBeenCalled();
-    }
+    expect(sections.length).toBeGreaterThan(0);
+    const openEditSpy = vi.spyOn(component, 'openEditModal');
+    sections[0].onEditClick(SONARR_INSTANCE);
+    expect(openEditSpy).toHaveBeenCalled();
   });
 
   it('emits from arr-section when delete is clicked', () => {
     const { component } = setup();
 
     const sections = component.sections();
-    if (sections.length > 0) {
-      const deleteSpy = vi.spyOn(component, 'deleteInstance');
-      sections[0].onDeleteClick(SONARR_INSTANCE);
-      expect(deleteSpy).toHaveBeenCalled();
-    }
+    expect(sections.length).toBeGreaterThan(0);
+    const deleteSpy = vi.spyOn(component, 'deleteInstance');
+    sections[0].onDeleteClick(SONARR_INSTANCE);
+    expect(deleteSpy).toHaveBeenCalled();
   });
 
   it('disables save button when form has errors', () => {
@@ -432,10 +428,10 @@ describe('ArrAppsComponent', () => {
     component.openAddModal('sonarr');
     fixture.detectChanges();
 
-    const saveButton = fixture.nativeElement.querySelector('button[aria-label*="Save"]') as HTMLButtonElement | null;
-    if (saveButton) {
-      expect(saveButton.disabled).toBe(true);
-    }
+    const saveButton = Array.from(fixture.nativeElement.querySelectorAll('[modal-footer] button'))
+      .find((el) => (el as HTMLElement).textContent!.trim() === 'Save') as HTMLButtonElement | undefined;
+    expect(saveButton).toBeDefined();
+    expect(saveButton!.disabled).toBe(true);
   });
 
   it('validates required fields', () => {
