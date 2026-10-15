@@ -134,7 +134,7 @@ public class DownloadCleanerConfigControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.UpdateDownloadCleanerConfig(request));
     }
 

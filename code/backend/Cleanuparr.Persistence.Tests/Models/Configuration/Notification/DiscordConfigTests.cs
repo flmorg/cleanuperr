@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Notification;
 
@@ -75,7 +75,7 @@ public sealed class DiscordConfigTests
             WebhookUrl = webhookUrl ?? string.Empty
         };
 
-        var ex = Should.Throw<ValidationException>(() => config.Validate());
+        var ex = Should.Throw<CustomValidationException>(() => config.Validate());
         ex.Message.ShouldContain("required");
     }
 
@@ -91,7 +91,7 @@ public sealed class DiscordConfigTests
             WebhookUrl = webhookUrl
         };
 
-        var ex = Should.Throw<ValidationException>(() => config.Validate());
+        var ex = Should.Throw<CustomValidationException>(() => config.Validate());
         ex.Message.ShouldContain("valid Discord webhook URL");
     }
 
@@ -117,7 +117,7 @@ public sealed class DiscordConfigTests
             AvatarUrl = "not-a-valid-url"
         };
 
-        var ex = Should.Throw<ValidationException>(() => config.Validate());
+        var ex = Should.Throw<CustomValidationException>(() => config.Validate());
         ex.Message.ShouldContain("valid URL");
     }
 

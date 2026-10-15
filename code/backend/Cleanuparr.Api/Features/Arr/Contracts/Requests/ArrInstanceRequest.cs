@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
 using Cleanuparr.Shared.Helpers;
 
@@ -29,7 +28,7 @@ public sealed record ArrInstanceRequest
     {
         if (ApiKey.IsPlaceholder())
         {
-            throw new ValidationException("API key is required when creating a new instance");
+            throw new CustomValidationException("API key is required when creating a new instance");
         }
 
         return new()

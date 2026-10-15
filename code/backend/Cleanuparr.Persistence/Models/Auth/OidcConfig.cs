@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Shared.Attributes;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Auth;
 
@@ -66,7 +66,7 @@ public sealed record OidcConfig
     {
         if (ExclusiveMode && !Enabled)
         {
-            throw new ValidationException("OIDC must be enabled to use exclusive mode");
+            throw new CustomValidationException("OIDC must be enabled to use exclusive mode");
         }
 
         if (!Enabled)
@@ -76,40 +76,40 @@ public sealed record OidcConfig
 
         if (string.IsNullOrWhiteSpace(IssuerUrl))
         {
-            throw new ValidationException("OIDC Issuer URL is required when OIDC is enabled");
+            throw new CustomValidationException("OIDC Issuer URL is required when OIDC is enabled");
         }
 
         if (!Uri.TryCreate(IssuerUrl, UriKind.Absolute, out var issuerUri))
         {
-            throw new ValidationException("OIDC Issuer URL must be a valid absolute URL");
+            throw new CustomValidationException("OIDC Issuer URL must be a valid absolute URL");
         }
 
         // Enforce HTTPS except for localhost (development)
         if (issuerUri.Scheme != "https" && !IsLocalhost(issuerUri))
         {
-            throw new ValidationException("OIDC Issuer URL must use HTTPS");
+            throw new CustomValidationException("OIDC Issuer URL must use HTTPS");
         }
 
         if (string.IsNullOrWhiteSpace(ClientId))
         {
-            throw new ValidationException("OIDC Client ID is required when OIDC is enabled");
+            throw new CustomValidationException("OIDC Client ID is required when OIDC is enabled");
         }
 
         if (string.IsNullOrWhiteSpace(ProviderName))
         {
-            throw new ValidationException("OIDC Provider Name is required when OIDC is enabled");
+            throw new CustomValidationException("OIDC Provider Name is required when OIDC is enabled");
         }
 
         if (!string.IsNullOrWhiteSpace(RedirectUrl))
         {
             if (!Uri.TryCreate(RedirectUrl, UriKind.Absolute, out var redirectUri))
             {
-                throw new ValidationException("OIDC Redirect URL must be a valid absolute URL");
+                throw new CustomValidationException("OIDC Redirect URL must be a valid absolute URL");
             }
 
             if (redirectUri.Scheme is not ("http" or "https"))
             {
-                throw new ValidationException("OIDC Redirect URL must use HTTP or HTTPS");
+                throw new CustomValidationException("OIDC Redirect URL must use HTTP or HTTPS");
             }
         }
     }

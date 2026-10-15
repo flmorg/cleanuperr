@@ -104,7 +104,7 @@ public sealed class DownloadClientController : ControllerBase
 
             if (updatedClient.TypeName != existingClient.TypeName)
             {
-                throw new ValidationException("Download client type cannot be changed");
+                throw new CustomValidationException("Download client type cannot be changed");
             }
 
             var clientToPersist = updatedClient.ApplyTo(existingClient);

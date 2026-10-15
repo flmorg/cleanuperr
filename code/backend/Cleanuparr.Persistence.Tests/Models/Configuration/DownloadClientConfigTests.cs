@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration;
 
@@ -53,7 +53,7 @@ public sealed class DownloadClientConfigTests
             Host = new Uri("http://localhost:8080")
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Client name cannot be empty");
     }
 
@@ -68,7 +68,7 @@ public sealed class DownloadClientConfigTests
             Host = new Uri("http://localhost:8080")
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Client name cannot be empty");
     }
 
@@ -83,7 +83,7 @@ public sealed class DownloadClientConfigTests
             Host = new Uri("http://localhost:8080")
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Client name cannot be empty");
     }
 
@@ -102,7 +102,7 @@ public sealed class DownloadClientConfigTests
             Host = null
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Host cannot be empty");
     }
 
@@ -123,7 +123,7 @@ public sealed class DownloadClientConfigTests
             DownloadDirectoryTarget = null
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Both download directory source and target must be set, or both must be empty");
     }
 
@@ -140,7 +140,7 @@ public sealed class DownloadClientConfigTests
             DownloadDirectoryTarget = "/data/downloads"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Both download directory source and target must be set, or both must be empty");
     }
 
@@ -192,7 +192,7 @@ public sealed class DownloadClientConfigTests
             ApiKey = null
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("API key cannot be empty");
     }
 
@@ -254,7 +254,7 @@ public sealed class DownloadClientConfigTests
             Password = "pass"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Use either an API key or a username and password, not both");
     }
 
@@ -271,7 +271,7 @@ public sealed class DownloadClientConfigTests
             Username = "admin"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Use either an API key or a username and password, not both");
     }
 

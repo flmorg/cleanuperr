@@ -164,7 +164,7 @@ public class UnlinkedConfigControllerTests : IDisposable
         };
 
         // Act + Assert
-        await Should.ThrowAsync<ValidationException>(
+        await Should.ThrowAsync<CustomValidationException>(
             () => _controller.UpdateUnlinkedConfig(client.Id, dto));
     }
 
@@ -181,7 +181,7 @@ public class UnlinkedConfigControllerTests : IDisposable
         };
 
         // Act + Assert
-        await Should.ThrowAsync<ValidationException>(
+        await Should.ThrowAsync<CustomValidationException>(
             () => _controller.UpdateUnlinkedConfig(client.Id, dto));
     }
 

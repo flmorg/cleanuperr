@@ -27,7 +27,7 @@ public class CronValidationHelperTests
     public void ValidateCronExpression_InvalidSyntax_ThrowsValidationException(string cronExpression)
     {
         // Act & Assert
-        var exception = Should.Throw<ValidationException>(
+        var exception = Should.Throw<CustomValidationException>(
             () => CronValidationHelper.ValidateCronExpression(cronExpression));
         exception.Message.ShouldContain("Invalid cron expression");
     }
@@ -39,7 +39,7 @@ public class CronValidationHelperTests
     public void ValidateCronExpression_NullOrEmpty_ThrowsValidationException(string? cronExpression)
     {
         // Act & Assert
-        var exception = Should.Throw<ValidationException>(
+        var exception = Should.Throw<CustomValidationException>(
             () => CronValidationHelper.ValidateCronExpression(cronExpression!));
         exception.Message.ShouldContain("cannot be null or empty");
     }
@@ -52,7 +52,7 @@ public class CronValidationHelperTests
     public void ValidateCronExpression_TriggersTooFast_ThrowsValidationException(string cronExpression)
     {
         // Act & Assert - minimum is 30 seconds
-        var exception = Should.Throw<ValidationException>(
+        var exception = Should.Throw<CustomValidationException>(
             () => CronValidationHelper.ValidateCronExpression(cronExpression));
         exception.Message.ShouldContain("minimum");
     }
@@ -63,7 +63,7 @@ public class CronValidationHelperTests
     public void ValidateCronExpression_TriggersTooSlow_ThrowsValidationException(string cronExpression)
     {
         // Act & Assert - maximum is 6 hours
-        var exception = Should.Throw<ValidationException>(
+        var exception = Should.Throw<CustomValidationException>(
             () => CronValidationHelper.ValidateCronExpression(cronExpression));
         exception.Message.ShouldContain("maximum");
     }
@@ -104,7 +104,7 @@ public class CronValidationHelperTests
         const string cronExpression = "*/5 * * * * ?";
 
         // Act & Assert - should fail because null uses default limits (30 second minimum)
-        var exception = Should.Throw<ValidationException>(
+        var exception = Should.Throw<CustomValidationException>(
             () => CronValidationHelper.ValidateCronExpression(cronExpression, null));
         exception.Message.ShouldContain("minimum");
     }
@@ -119,7 +119,7 @@ public class CronValidationHelperTests
         const string cronExpression = "*/5 * * * * ?";
 
         // Act & Assert
-        var exception = Should.Throw<ValidationException>(
+        var exception = Should.Throw<CustomValidationException>(
             () => CronValidationHelper.ValidateCronExpression(cronExpression, jobType));
         exception.Message.ShouldContain("minimum");
     }

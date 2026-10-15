@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Shared.Attributes;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Notification;
 
@@ -37,22 +37,22 @@ public sealed record NotifiarrConfig : IConfig
     {
         if (string.IsNullOrWhiteSpace(ApiKey))
         {
-            throw new ValidationException("Notifiarr API key is required");
+            throw new CustomValidationException("Notifiarr API key is required");
         }
         
         if (ApiKey.Length < 10)
         {
-            throw new ValidationException("Notifiarr API key must be at least 10 characters long");
+            throw new CustomValidationException("Notifiarr API key must be at least 10 characters long");
         }
         
         if (string.IsNullOrWhiteSpace(ChannelId))
         {
-            throw new ValidationException("Discord channel ID is required");
+            throw new CustomValidationException("Discord channel ID is required");
         }
         
         if (!ulong.TryParse(ChannelId, out _))
         {
-            throw new ValidationException("Discord channel ID must be a valid numeric ID");
+            throw new CustomValidationException("Discord channel ID must be a valid numeric ID");
         }
     }
 }

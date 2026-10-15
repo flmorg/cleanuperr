@@ -1,5 +1,5 @@
 using Cleanuparr.Domain.Enums;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 
@@ -51,37 +51,37 @@ public interface ISeedingRule : IConfig
     {
         if (string.IsNullOrEmpty(Name.Trim()))
         {
-            throw new ValidationException("Rule name can not be empty");
+            throw new CustomValidationException("Rule name can not be empty");
         }
 
         if (Categories.Count == 0)
         {
-            throw new ValidationException("At least one category must be specified");
+            throw new CustomValidationException("At least one category must be specified");
         }
 
         if (MaxRatio < 0 && MaxSeedTime < 0)
         {
-            throw new ValidationException("Either max ratio or max seed time must be set to a non-negative value");
+            throw new CustomValidationException("Either max ratio or max seed time must be set to a non-negative value");
         }
 
         if (MaxRatio is < 0 and not -1)
         {
-            throw new ValidationException("Max ratio must be -1 (disabled) or a non-negative number");
+            throw new CustomValidationException("Max ratio must be -1 (disabled) or a non-negative number");
         }
 
         if (MaxSeedTime is < 0 and not -1)
         {
-            throw new ValidationException("Max seed time must be -1 (disabled) or a non-negative number");
+            throw new CustomValidationException("Max seed time must be -1 (disabled) or a non-negative number");
         }
 
         if (MinSeedTime < 0)
         {
-            throw new ValidationException("Min seed time can not be negative");
+            throw new CustomValidationException("Min seed time can not be negative");
         }
 
         if (Action is not SeedingRuleAction.Delete and not SeedingRuleAction.Stop)
         {
-            throw new ValidationException("Unknown seeding rule action");
+            throw new CustomValidationException("Unknown seeding rule action");
         }
     }
 }

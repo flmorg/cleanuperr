@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Models;
 using Cleanuparr.Infrastructure.Utilities;
 using Shouldly;
@@ -134,7 +134,7 @@ public class CronExpressionConverterTests
         var schedule = new JobSchedule { Every = value, Type = unit };
 
         // Act & Assert
-        Should.Throw<ValidationException>(() => CronExpressionConverter.ConvertToCronExpression(schedule));
+        Should.Throw<CustomValidationException>(() => CronExpressionConverter.ConvertToCronExpression(schedule));
     }
 
     [Theory]

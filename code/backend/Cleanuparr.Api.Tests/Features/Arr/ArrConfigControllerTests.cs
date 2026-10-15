@@ -132,7 +132,7 @@ public class ArrConfigControllerTests : IDisposable
         var request = new UpdateArrConfigRequest { FailedImportMaxStrikes = strikes };
 
         // Act & Assert
-        await Should.ThrowAsync<ValidationException>(() => _controller.UpdateSonarrConfig(request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.UpdateSonarrConfig(request));
     }
 
     #endregion
@@ -177,7 +177,7 @@ public class ArrConfigControllerTests : IDisposable
         };
 
         // Act / Assert
-        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.ValidationException>(
+        await Should.ThrowAsync<Cleanuparr.Domain.Exceptions.CustomValidationException>(
             () => _controller.CreateSonarrInstance(request));
     }
 

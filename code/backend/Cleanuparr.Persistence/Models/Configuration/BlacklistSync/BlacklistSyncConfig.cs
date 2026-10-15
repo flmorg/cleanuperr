@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.BlacklistSync;
 
@@ -28,7 +28,7 @@ public sealed record BlacklistSyncConfig : IJobConfig
 
         if (string.IsNullOrWhiteSpace(BlacklistPath))
         {
-            throw new ValidationException("Blacklist sync is enabled but the path is not configured");
+            throw new CustomValidationException("Blacklist sync is enabled but the path is not configured");
         }
 
         bool isValidPath = Uri.TryCreate(BlacklistPath, UriKind.Absolute, out var uri) &&
@@ -37,7 +37,7 @@ public sealed record BlacklistSyncConfig : IJobConfig
 
         if (!isValidPath)
         {
-            throw new ValidationException("Blacklist path must be a valid URL or an existing local file path");
+            throw new CustomValidationException("Blacklist path must be a valid URL or an existing local file path");
         }
     }
 }

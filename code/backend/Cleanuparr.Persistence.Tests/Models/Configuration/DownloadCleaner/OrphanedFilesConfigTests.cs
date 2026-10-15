@@ -1,9 +1,9 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.DownloadCleaner;
 
@@ -64,7 +64,7 @@ public sealed class OrphanedFilesConfigTests
     {
         var config = new OrphanedFilesConfig { Enabled = true, ScanDirectories = [], OrphanedDirectory = "/downloads/orphaned" };
 
-        Should.Throw<ValidationException>(() => config.Validate())
+        Should.Throw<CustomValidationException>(() => config.Validate())
             .Message.ShouldContain("scan directory");
     }
 
@@ -78,7 +78,7 @@ public sealed class OrphanedFilesConfigTests
             OrphanedDirectory = string.Empty,
         };
 
-        Should.Throw<ValidationException>(() => config.Validate())
+        Should.Throw<CustomValidationException>(() => config.Validate())
             .Message.ShouldContain("Orphaned directory");
     }
 
@@ -116,7 +116,7 @@ public sealed class OrphanedFilesConfigTests
             OrphanedDirectory = "/downloads/orphaned-b",
         };
 
-        Should.Throw<ValidationException>(() => config.Validate([sibling]))
+        Should.Throw<CustomValidationException>(() => config.Validate([sibling]))
             .Message.ShouldContain("overlap");
     }
 
@@ -137,7 +137,7 @@ public sealed class OrphanedFilesConfigTests
             OrphanedDirectory = "/downloads/orphaned-b",
         };
 
-        Should.Throw<ValidationException>(() => config.Validate([sibling]))
+        Should.Throw<CustomValidationException>(() => config.Validate([sibling]))
             .Message.ShouldContain("overlap");
     }
 
@@ -158,7 +158,7 @@ public sealed class OrphanedFilesConfigTests
             OrphanedDirectory = "/orphaned-b",
         };
 
-        Should.Throw<ValidationException>(() => config.Validate([sibling]))
+        Should.Throw<CustomValidationException>(() => config.Validate([sibling]))
             .Message.ShouldContain("overlap");
     }
 
@@ -179,7 +179,7 @@ public sealed class OrphanedFilesConfigTests
             OrphanedDirectory = "/downloads/orphaned",
         };
 
-        Should.Throw<ValidationException>(() => config.Validate([sibling]))
+        Should.Throw<CustomValidationException>(() => config.Validate([sibling]))
             .Message.ShouldContain("overlap");
     }
 
@@ -200,7 +200,7 @@ public sealed class OrphanedFilesConfigTests
             OrphanedDirectory = "/orphaned-b",
         };
 
-        Should.Throw<ValidationException>(() => config.Validate([sibling]))
+        Should.Throw<CustomValidationException>(() => config.Validate([sibling]))
             .Message.ShouldContain("overlap");
     }
 
@@ -241,7 +241,7 @@ public sealed class OrphanedFilesConfigTests
             OrphanedDirectory = "/orphaned-b",
         };
 
-        Should.Throw<ValidationException>(() => config.Validate([sibling]));
+        Should.Throw<CustomValidationException>(() => config.Validate([sibling]));
     }
 
     [Fact]
@@ -273,7 +273,7 @@ public sealed class OrphanedFilesConfigTests
 
         var otherClient = MakeDownloadClient("Other", "/data/downloads/movies");
 
-        Should.Throw<ValidationException>(() => config.Validate([], [otherClient]))
+        Should.Throw<CustomValidationException>(() => config.Validate([], [otherClient]))
             .Message.ShouldContain("overlap");
     }
 
@@ -289,7 +289,7 @@ public sealed class OrphanedFilesConfigTests
 
         var otherClient = MakeDownloadClient("Other", "/data/other-downloads/movies");
 
-        Should.Throw<ValidationException>(() => config.Validate([], [otherClient]))
+        Should.Throw<CustomValidationException>(() => config.Validate([], [otherClient]))
             .Message.ShouldContain("overlap");
     }
 

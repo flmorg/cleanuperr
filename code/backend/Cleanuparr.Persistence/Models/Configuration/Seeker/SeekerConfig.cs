@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Shared.Helpers;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Seeker;
 
@@ -53,24 +53,24 @@ public sealed record SeekerConfig : IConfig
     {
         if (SearchInterval < Constants.MinSearchIntervalMinutes)
         {
-            throw new ValidationException(
+            throw new CustomValidationException(
                 $"{nameof(SearchInterval)} must be at least {Constants.MinSearchIntervalMinutes} minute(s)");
         }
 
         if (SearchInterval > Constants.MaxSearchIntervalMinutes)
         {
-            throw new ValidationException(
+            throw new CustomValidationException(
                 $"{nameof(SearchInterval)} must be at most {Constants.MaxSearchIntervalMinutes} minutes");
         }
 
         if (!new List<int> { 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60, 120, 180, 240, 360 }.Contains(SearchInterval))
         {
-            throw new ValidationException($"Invalid search interval {SearchInterval}");
+            throw new CustomValidationException($"Invalid search interval {SearchInterval}");
         }
 
         if (PostReleaseGraceHours is < 0 or > 72)
         {
-            throw new ValidationException($"{nameof(PostReleaseGraceHours)} must be between 0 and 72");
+            throw new CustomValidationException($"{nameof(PostReleaseGraceHours)} must be between 0 and 72");
         }
     }
 

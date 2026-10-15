@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Notification;
 
@@ -80,7 +80,7 @@ public sealed class GotifyConfigTests
             ApplicationToken = "test-token"
         };
 
-        var ex = Should.Throw<ValidationException>(() => config.Validate());
+        var ex = Should.Throw<CustomValidationException>(() => config.Validate());
         ex.Message.ShouldContain("required");
     }
 
@@ -96,7 +96,7 @@ public sealed class GotifyConfigTests
             ApplicationToken = "test-token"
         };
 
-        var ex = Should.Throw<ValidationException>(() => config.Validate());
+        var ex = Should.Throw<CustomValidationException>(() => config.Validate());
         ex.Message.ShouldContain("valid HTTP or HTTPS URL");
     }
 
@@ -127,7 +127,7 @@ public sealed class GotifyConfigTests
             ApplicationToken = token ?? string.Empty
         };
 
-        var ex = Should.Throw<ValidationException>(() => config.Validate());
+        var ex = Should.Throw<CustomValidationException>(() => config.Validate());
         ex.Message.ShouldContain("required");
     }
 
@@ -144,7 +144,7 @@ public sealed class GotifyConfigTests
             Priority = priority
         };
 
-        var ex = Should.Throw<ValidationException>(() => config.Validate());
+        var ex = Should.Throw<CustomValidationException>(() => config.Validate());
         ex.Message.ShouldContain("Priority");
     }
 

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Utilities;
 
 namespace Cleanuparr.Infrastructure.Models;
@@ -36,7 +37,7 @@ public class JobSchedule
         if (!ScheduleOptions.IsValidValue(Type, Every))
         {
             var validValues = string.Join(", ", ScheduleOptions.GetValidValues(Type));
-            throw new ValidationException($"Invalid value for {Type}: {Every}. Valid values are: {validValues}");
+            throw new CustomValidationException($"Invalid value for {Type}: {Every}. Valid values are: {validValues}");
         }
     }
 }

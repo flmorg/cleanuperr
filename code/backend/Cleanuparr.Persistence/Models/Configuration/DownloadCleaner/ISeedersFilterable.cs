@@ -1,4 +1,4 @@
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 
@@ -13,7 +13,7 @@ public interface ISeedersFilterable
     {
         if (MinSeeders < 0)
         {
-            throw new ValidationException("Min seeders can not be less than 0");
+            throw new CustomValidationException("Min seeders can not be less than 0");
         }
     }
 }

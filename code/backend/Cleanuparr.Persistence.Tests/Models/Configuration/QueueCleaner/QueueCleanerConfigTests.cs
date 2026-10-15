@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.QueueCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.QueueCleaner;
 
@@ -84,7 +84,7 @@ public sealed class QueueCleanerConfigTests
             DownloadingMetadataMaxStrikes = maxStrikes
         };
 
-        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        CustomValidationException exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("the minimum value for downloading metadata max strikes must be 3");
     }
 
@@ -127,7 +127,7 @@ public sealed class QueueCleanerConfigTests
             Errored = new ErroredConfig { MaxStrikes = maxStrikes }
         };
 
-        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        CustomValidationException exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("the minimum value for errored max strikes must be 3");
     }
 
@@ -153,7 +153,7 @@ public sealed class QueueCleanerConfigTests
             Errored = new ErroredConfig { MaxStrikes = 3, DeletePrivate = true, ChangeCategory = true }
         };
 
-        ValidationException exception = Should.Throw<ValidationException>(() => config.Validate());
+        CustomValidationException exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Cannot enable both deletion and category changing");
     }
 
@@ -172,7 +172,7 @@ public sealed class QueueCleanerConfigTests
             }
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("The minimum value for failed imports max strikes must be 3");
     }
 
@@ -191,7 +191,7 @@ public sealed class QueueCleanerConfigTests
             ]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Rule name cannot be empty");
     }
 
@@ -207,7 +207,7 @@ public sealed class QueueCleanerConfigTests
             ]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Duplicate stall rule names found");
     }
 
@@ -256,7 +256,7 @@ public sealed class QueueCleanerConfigTests
             ]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Rule name cannot be empty");
     }
 
@@ -272,7 +272,7 @@ public sealed class QueueCleanerConfigTests
             ]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Duplicate slow rule names found");
     }
 

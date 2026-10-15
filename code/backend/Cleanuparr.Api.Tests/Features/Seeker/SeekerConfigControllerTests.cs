@@ -3,6 +3,7 @@ using Cleanuparr.Api.Features.Seeker.Contracts.Responses;
 using Cleanuparr.Api.Features.Seeker.Controllers;
 using Cleanuparr.Api.Tests.Features.Seeker.TestHelpers;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Services.Interfaces;
 using Cleanuparr.Persistence;
 using Cleanuparr.Persistence.Models.Configuration.Seeker;
@@ -11,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Api.Tests.Features.Seeker;
 
@@ -115,7 +115,7 @@ public class SeekerConfigControllerTests : IDisposable
             ]
         };
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.UpdateSeekerConfig(request));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.UpdateSeekerConfig(request));
     }
 
     [Fact]

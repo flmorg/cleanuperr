@@ -27,28 +27,28 @@ public sealed record TestDownloadClientRequest
     {
         if (TypeName is DownloadClientTypeName.Unknown || !Enum.IsDefined(TypeName))
         {
-            throw new ValidationException("Unsupported download client type");
+            throw new CustomValidationException("Unsupported download client type");
         }
 
         if (string.IsNullOrWhiteSpace(Host))
         {
-            throw new ValidationException("Host cannot be empty");
+            throw new CustomValidationException("Host cannot be empty");
         }
 
         if (!Uri.TryCreate(Host, UriKind.RelativeOrAbsolute, out _))
         {
-            throw new ValidationException("Host is not a valid URL");
+            throw new CustomValidationException("Host is not a valid URL");
         }
 
         if (TypeName.RequiresAuthField(DownloadClientAuthField.ApiKey) && string.IsNullOrWhiteSpace(ApiKey) && !ApiKey.IsPlaceholder())
         {
-            throw new ValidationException("API key cannot be empty");
+            throw new CustomValidationException("API key cannot be empty");
         }
 
         if (TypeName.SupportsApiKeyAndCredentials() && !string.IsNullOrWhiteSpace(ApiKey) &&
             (!string.IsNullOrWhiteSpace(Username) || !string.IsNullOrWhiteSpace(Password)))
         {
-            throw new ValidationException("Use either an API key or a username and password, not both");
+            throw new CustomValidationException("Use either an API key or a username and password, not both");
         }
     }
 
@@ -59,12 +59,12 @@ public sealed record TestDownloadClientRequest
 
         if (password.IsPlaceholder())
         {
-            throw new ValidationException("Password cannot be a placeholder value");
+            throw new CustomValidationException("Password cannot be a placeholder value");
         }
 
         if (apiKey.IsPlaceholder())
         {
-            throw new ValidationException("API key cannot be a placeholder value");
+            throw new CustomValidationException("API key cannot be a placeholder value");
         }
 
         return new()

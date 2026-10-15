@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
 using Cleanuparr.Shared.Helpers;
 
@@ -26,7 +25,7 @@ public sealed record TestArrInstanceRequest
 
         if (apiKey.IsPlaceholder())
         {
-            throw new ValidationException("API key cannot be a placeholder value");
+            throw new CustomValidationException("API key cannot be a placeholder value");
         }
 
         return new()

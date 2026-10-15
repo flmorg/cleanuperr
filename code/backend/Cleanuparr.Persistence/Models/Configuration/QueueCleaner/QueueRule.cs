@@ -37,37 +37,37 @@ public abstract record QueueRule : IConfig
     {
         if (string.IsNullOrWhiteSpace(Name))
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Rule name cannot be empty");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Rule name cannot be empty");
         }
 
         if (MaxStrikes < 3)
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Max strikes must be at least 3");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Max strikes must be at least 3");
         }
 
         if (MinCompletionPercentage > 100)
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Minimum completion percentage must be between 0 and 100");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Minimum completion percentage must be between 0 and 100");
         }
 
         if (MaxCompletionPercentage == 0)
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Maximum completion percentage must be greater than 0");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Maximum completion percentage must be greater than 0");
         }
 
         if (MaxCompletionPercentage > 100)
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Maximum completion percentage must be between 1 and 100");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Maximum completion percentage must be between 1 and 100");
         }
 
         if (MaxCompletionPercentage < MinCompletionPercentage)
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Maximum completion percentage must be greater than or equal to the minimum completion percentage");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Maximum completion percentage must be greater than or equal to the minimum completion percentage");
         }
 
         if (ChangeCategory && DeletePrivateTorrentsFromClient)
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Cannot enable both deletion and category changing");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Cannot enable both deletion and category changing");
         }
     }
     

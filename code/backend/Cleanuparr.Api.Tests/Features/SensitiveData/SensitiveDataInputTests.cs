@@ -3,12 +3,12 @@ using Cleanuparr.Api.Features.DownloadClient.Contracts.Requests;
 using Cleanuparr.Api.Features.Auth.Contracts.Requests;
 using Cleanuparr.Api.Features.General.Contracts.Requests;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Auth;
 using Cleanuparr.Persistence.Models.Configuration.Arr;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Shared.Helpers;
 using Shouldly;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Api.Tests.Features.SensitiveData;
 
@@ -90,7 +90,7 @@ public class SensitiveDataInputTests
             Version = 4,
         };
 
-        Should.Throw<ValidationException>(() => request.ToEntity(Guid.NewGuid()));
+        Should.Throw<CustomValidationException>(() => request.ToEntity(Guid.NewGuid()));
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public class SensitiveDataInputTests
             Version = 4,
         };
 
-        Should.Throw<ValidationException>(() => request.ToTestInstance());
+        Should.Throw<CustomValidationException>(() => request.ToTestInstance());
     }
 
     [Fact]
@@ -228,7 +228,7 @@ public class SensitiveDataInputTests
             Password = Placeholder,
         };
 
-        Should.Throw<ValidationException>(() => request.Validate());
+        Should.Throw<CustomValidationException>(() => request.Validate());
     }
 
     [Fact]
@@ -274,7 +274,7 @@ public class SensitiveDataInputTests
         };
 
         request.Validate();
-        Should.Throw<ValidationException>(() => request.ToTestConfig());
+        Should.Throw<CustomValidationException>(() => request.ToTestConfig());
     }
 
     [Fact]

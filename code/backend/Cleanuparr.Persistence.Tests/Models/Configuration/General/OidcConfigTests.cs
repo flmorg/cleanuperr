@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Auth;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Auth;
 
@@ -65,7 +65,7 @@ public sealed class OidcConfigTests
             ClientId = "my-client"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("OIDC Issuer URL is required when OIDC is enabled");
     }
 
@@ -79,7 +79,7 @@ public sealed class OidcConfigTests
             ClientId = "my-client"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("OIDC Issuer URL must be a valid absolute URL");
     }
 
@@ -93,7 +93,7 @@ public sealed class OidcConfigTests
             ClientId = "my-client"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("OIDC Issuer URL must use HTTPS");
     }
 
@@ -144,7 +144,7 @@ public sealed class OidcConfigTests
             ClientId = clientId
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("OIDC Client ID is required when OIDC is enabled");
     }
 
@@ -165,7 +165,7 @@ public sealed class OidcConfigTests
             ProviderName = providerName
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("OIDC Provider Name is required when OIDC is enabled");
     }
 
@@ -238,7 +238,7 @@ public sealed class OidcConfigTests
             AuthorizedSubject = "some-subject"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("OIDC must be enabled to use exclusive mode");
     }
 
@@ -349,7 +349,7 @@ public sealed class OidcConfigTests
             ClientId = "my-client"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("OIDC Issuer URL must use HTTPS");
     }
 

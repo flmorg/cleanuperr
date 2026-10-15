@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Infrastructure.Models;
 using Quartz;
 
@@ -24,7 +24,7 @@ public static class CronExpressionConverter
         if (!ScheduleOptions.IsValidValue(schedule.Type, schedule.Every))
         {
             var validValues = string.Join(", ", ScheduleOptions.GetValidValues(schedule.Type));
-            throw new ValidationException($"Invalid value for {schedule.Type}: {schedule.Every}. Valid values are: {validValues}");
+            throw new CustomValidationException($"Invalid value for {schedule.Type}: {schedule.Every}. Valid values are: {validValues}");
         }
 
         // Cron format: Seconds Minutes Hours Day-of-month Month Day-of-week Year

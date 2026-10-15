@@ -4,6 +4,7 @@ using Cleanuparr.Api.Features.DownloadCleaner.Controllers;
 using Cleanuparr.Api.Tests.Features.DownloadCleaner.TestHelpers;
 using Cleanuparr.Api.Tests.TestHelpers;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Api.Tests.Features.DownloadCleaner;
 
@@ -83,7 +83,7 @@ public class DeadTorrentConfigControllerTests : IDisposable
     {
         var client = SeedingRulesTestDataFactory.AddDownloadClient(_dataContext);
 
-        await Should.ThrowAsync<ValidationException>(() => _controller.UpdateDeadTorrentConfig(client.Id, ValidRequest(maxStrikes: 2)));
+        await Should.ThrowAsync<CustomValidationException>(() => _controller.UpdateDeadTorrentConfig(client.Id, ValidRequest(maxStrikes: 2)));
     }
 
     [Fact]

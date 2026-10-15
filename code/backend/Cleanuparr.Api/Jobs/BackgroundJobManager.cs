@@ -238,16 +238,16 @@ public class BackgroundJobManager : IHostedService
             
             if (triggerValue > Constants.TriggerMaxLimit)
             {
-                throw new ValidationException($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
+                throw new CustomValidationException($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
             }
             
             if (typeof(T) == typeof(SeekerJob) && triggerValue < Constants.SeekerMinLimit)
             {
-                throw new ValidationException($"{cronExpression} should have a fire time of minimum {Constants.SeekerMinLimit.TotalMinutes} minutes");
+                throw new CustomValidationException($"{cronExpression} should have a fire time of minimum {Constants.SeekerMinLimit.TotalMinutes} minutes");
             }
             else if (typeof(T) != typeof(MalwareBlocker) && triggerValue < Constants.TriggerMinLimit)
             {
-                throw new ValidationException($"{cronExpression} should have a fire time of minimum {Constants.TriggerMinLimit.TotalSeconds} seconds");
+                throw new CustomValidationException($"{cronExpression} should have a fire time of minimum {Constants.TriggerMinLimit.TotalSeconds} seconds");
             }
 
             if (triggerValue > StaticConfiguration.TriggerValue)

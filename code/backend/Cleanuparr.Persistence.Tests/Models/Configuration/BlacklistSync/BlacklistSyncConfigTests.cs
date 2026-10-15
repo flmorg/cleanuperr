@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.BlacklistSync;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.BlacklistSync;
 
@@ -46,7 +46,7 @@ public sealed class BlacklistSyncConfigTests
             BlacklistPath = null
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Blacklist sync is enabled but the path is not configured");
     }
 
@@ -59,7 +59,7 @@ public sealed class BlacklistSyncConfigTests
             BlacklistPath = ""
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Blacklist sync is enabled but the path is not configured");
     }
 
@@ -72,7 +72,7 @@ public sealed class BlacklistSyncConfigTests
             BlacklistPath = "   "
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Blacklist sync is enabled but the path is not configured");
     }
 
@@ -109,7 +109,7 @@ public sealed class BlacklistSyncConfigTests
             BlacklistPath = "/non/existent/path/blacklist.txt"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Blacklist path must be a valid URL or an existing local file path");
     }
 
@@ -122,7 +122,7 @@ public sealed class BlacklistSyncConfigTests
             BlacklistPath = "not-a-valid-url-or-path"
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Blacklist path must be a valid URL or an existing local file path");
     }
 
@@ -137,7 +137,7 @@ public sealed class BlacklistSyncConfigTests
             BlacklistPath = url
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Blacklist path must be a valid URL or an existing local file path");
     }
 

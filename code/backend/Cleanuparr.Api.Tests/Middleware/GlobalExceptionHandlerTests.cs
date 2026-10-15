@@ -47,7 +47,7 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task ValidationException_MapsTo400_WithMessageAsDetail()
     {
-        (bool handled, HttpContext context, ProblemDetails problemDetails) = await Handle(new ValidationException("Name is required"));
+        (bool handled, HttpContext context, ProblemDetails problemDetails) = await Handle(new CustomValidationException("Name is required"));
 
         handled.ShouldBeTrue();
         context.Response.StatusCode.ShouldBe(StatusCodes.Status400BadRequest);

@@ -30,7 +30,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
     {
         (int status, string title, string detail) = exception switch
         {
-            ValidationException => (StatusCodes.Status400BadRequest, "Validation failed", exception.Message),
+            CustomValidationException => (StatusCodes.Status400BadRequest, "Validation failed", exception.Message),
             NotificationTestException => (StatusCodes.Status400BadRequest, "Notification test failed", exception.Message),
             RateLimitException => (StatusCodes.Status429TooManyRequests, "Too many requests", exception.Message),
             _ => (StatusCodes.Status500InternalServerError, "An error occurred", "An unexpected error occurred"),

@@ -1,7 +1,7 @@
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.DownloadCleaner;
 
@@ -64,7 +64,7 @@ public sealed class UnlinkedConfigTests
             Categories = ["movies"]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Unlinked target category is required");
     }
 
@@ -78,7 +78,7 @@ public sealed class UnlinkedConfigTests
             Categories = []
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("No unlinked categories configured");
     }
 
@@ -92,7 +92,7 @@ public sealed class UnlinkedConfigTests
             Categories = ["movies", "cleanuparr-unlinked"]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("The unlinked target category should not be present in unlinked categories");
     }
 
@@ -106,7 +106,7 @@ public sealed class UnlinkedConfigTests
             Categories = ["movies", ""]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Empty unlinked category filter found");
     }
 
@@ -121,7 +121,7 @@ public sealed class UnlinkedConfigTests
             IgnoredRootDirs = ["/non/existent/path/that/should/not/exist"]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldContain("root directory does not exist");
     }
 

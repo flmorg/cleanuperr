@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Shared.Attributes;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Notification;
 
@@ -71,17 +71,17 @@ public sealed record NtfyConfig : IConfig
     {
         if (string.IsNullOrWhiteSpace(ServerUrl))
         {
-            throw new ValidationException("ntfy server URL is required");
+            throw new CustomValidationException("ntfy server URL is required");
         }
         
         if (Uri == null)
         {
-            throw new ValidationException("ntfy server URL must be a valid HTTP or HTTPS URL");
+            throw new CustomValidationException("ntfy server URL must be a valid HTTP or HTTPS URL");
         }
         
         if (!Topics.Any(t => !string.IsNullOrWhiteSpace(t)))
         {
-            throw new ValidationException("At least one ntfy topic is required");
+            throw new CustomValidationException("At least one ntfy topic is required");
         }
         
         ValidateAuthentication();
@@ -105,18 +105,18 @@ public sealed record NtfyConfig : IConfig
             case NtfyAuthenticationType.BasicAuth:
                 if (string.IsNullOrWhiteSpace(Username))
                 {
-                    throw new ValidationException("Username is required for Basic Auth");
+                    throw new CustomValidationException("Username is required for Basic Auth");
                 }
                 if (string.IsNullOrWhiteSpace(Password))
                 {
-                    throw new ValidationException("Password is required for Basic Auth");
+                    throw new CustomValidationException("Password is required for Basic Auth");
                 }
                 break;
                 
             case NtfyAuthenticationType.AccessToken:
                 if (string.IsNullOrWhiteSpace(AccessToken))
                 {
-                    throw new ValidationException("Access token is required for Token authentication");
+                    throw new CustomValidationException("Access token is required for Token authentication");
                 }
                 break;
         }

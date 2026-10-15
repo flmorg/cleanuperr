@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
+using Cleanuparr.Domain.Exceptions;
 
 namespace Cleanuparr.Persistence.Models.Configuration.DownloadCleaner;
 
@@ -33,29 +33,29 @@ public sealed record UnlinkedConfig : IConfig
 
         if (string.IsNullOrWhiteSpace(TargetCategory))
         {
-            throw new ValidationException("Unlinked target category is required");
+            throw new CustomValidationException("Unlinked target category is required");
         }
 
         if (Categories.Count is 0)
         {
-            throw new ValidationException("No unlinked categories configured");
+            throw new CustomValidationException("No unlinked categories configured");
         }
 
         if (Categories.Contains(TargetCategory, StringComparer.OrdinalIgnoreCase))
         {
-            throw new ValidationException("The unlinked target category should not be present in unlinked categories");
+            throw new CustomValidationException("The unlinked target category should not be present in unlinked categories");
         }
 
         if (Categories.Any(string.IsNullOrWhiteSpace))
         {
-            throw new ValidationException("Empty unlinked category filter found");
+            throw new CustomValidationException("Empty unlinked category filter found");
         }
 
         foreach (var dir in IgnoredRootDirs.Where(d => !string.IsNullOrEmpty(d)))
         {
             if (!Directory.Exists(dir))
             {
-                throw new ValidationException($"{dir} root directory does not exist or is not accessible (check permissions)");
+                throw new CustomValidationException($"{dir} root directory does not exist or is not accessible (check permissions)");
             }
         }
     }

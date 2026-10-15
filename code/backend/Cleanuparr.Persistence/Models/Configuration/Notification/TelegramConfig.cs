@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration;
 using Cleanuparr.Shared.Attributes;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Models.Configuration.Notification;
 
@@ -45,27 +45,27 @@ public sealed record TelegramConfig : IConfig
     {
         if (string.IsNullOrWhiteSpace(BotToken))
         {
-            throw new ValidationException("Telegram bot token is required");
+            throw new CustomValidationException("Telegram bot token is required");
         }
 
         if (BotToken.Length < 10)
         {
-            throw new ValidationException("Telegram bot token must be at least 10 characters long");
+            throw new CustomValidationException("Telegram bot token must be at least 10 characters long");
         }
 
         if (string.IsNullOrWhiteSpace(ChatId))
         {
-            throw new ValidationException("Telegram chat ID is required");
+            throw new CustomValidationException("Telegram chat ID is required");
         }
 
         if (!IsChatIdValid(ChatId))
         {
-            throw new ValidationException("Telegram chat ID must be a valid integer (negative IDs allowed for groups)");
+            throw new CustomValidationException("Telegram chat ID must be a valid integer (negative IDs allowed for groups)");
         }
 
         if (!IsTopicValid(TopicId))
         {
-            throw new ValidationException("Telegram topic ID must be a valid integer when specified");
+            throw new CustomValidationException("Telegram topic ID must be a valid integer when specified");
         }
     }
 

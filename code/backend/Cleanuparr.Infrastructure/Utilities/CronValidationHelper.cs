@@ -16,18 +16,18 @@ public static class CronValidationHelper
     /// Validates a cron expression against the application's trigger limits
     /// </summary>
     /// <param name="cronExpression">The cron expression to validate</param>
-    /// <exception cref="ValidationException">Thrown when the cron expression is invalid or violates trigger limits</exception>
+    /// <exception cref="CustomValidationException">Thrown when the cron expression is invalid or violates trigger limits</exception>
     public static void ValidateCronExpression(string cronExpression, JobType? jobType = null)
     {
         if (string.IsNullOrWhiteSpace(cronExpression))
         {
-            throw new ValidationException("Cron expression cannot be null or empty");
+            throw new CustomValidationException("Cron expression cannot be null or empty");
         }
 
         // First check if it's a valid cron expression
         if (!CronExpression.IsValidExpression(cronExpression))
         {
-            throw new ValidationException($"Invalid cron expression: {cronExpression}");
+            throw new CustomValidationException($"Invalid cron expression: {cronExpression}");
         }
 
         // Validate the trigger timing limits
@@ -43,34 +43,34 @@ public static class CronValidationHelper
             
             if (nextFireTimes.Count < 2)
             {
-                throw new ValidationException($"Could not compute fire times for cron expression: {cronExpression}");
+                throw new CustomValidationException($"Could not compute fire times for cron expression: {cronExpression}");
             }
             
             TimeSpan triggerValue = nextFireTimes[1] - nextFireTimes[0];
             
             if (triggerValue > Constants.TriggerMaxLimit)
             {
-                throw new ValidationException($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
+                throw new CustomValidationException($"{cronExpression} should have a fire time of maximum {Constants.TriggerMaxLimit.TotalHours} hours");
             }
             
             if (jobType is JobType.Seeker && triggerValue < Constants.SeekerMinLimit)
             {
-                throw new ValidationException($"{cronExpression} should have a fire time of minimum {Constants.SeekerMinLimit.TotalMinutes} minutes");
+                throw new CustomValidationException($"{cronExpression} should have a fire time of minimum {Constants.SeekerMinLimit.TotalMinutes} minutes");
             }
 
             if (jobType is not JobType.MalwareBlocker && triggerValue < Constants.TriggerMinLimit)
             {
-                throw new ValidationException($"{cronExpression} should have a fire time of minimum {Constants.TriggerMinLimit.TotalSeconds} seconds");
+                throw new CustomValidationException($"{cronExpression} should have a fire time of minimum {Constants.TriggerMinLimit.TotalSeconds} seconds");
             }
         }
-        catch (ValidationException)
+        catch (CustomValidationException)
         {
             // Re-throw validation exceptions as-is
             throw;
         }
         catch (Exception ex)
         {
-            throw new ValidationException($"Error validating cron expression '{cronExpression}'", ex);
+            throw new CustomValidationException($"Error validating cron expression '{cronExpression}'", ex);
         }
     }
 } 

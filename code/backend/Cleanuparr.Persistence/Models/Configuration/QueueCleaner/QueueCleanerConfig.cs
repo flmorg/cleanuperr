@@ -40,7 +40,7 @@ public sealed record QueueCleanerConfig : IJobConfig
 
         if (DownloadingMetadataMaxStrikes is > 0 and < 3)
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("the minimum value for downloading metadata max strikes must be 3");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("the minimum value for downloading metadata max strikes must be 3");
         }
 
         foreach (var rule in StallRules)
@@ -57,13 +57,13 @@ public sealed record QueueCleanerConfig : IJobConfig
         var stallNames = StallRules.Where(r => r.Enabled).Select(r => r.Name).ToList();
         if (stallNames.Count != stallNames.Distinct().Count())
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Duplicate stall rule names found");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Duplicate stall rule names found");
         }
             
         var slowNames = SlowRules.Where(r => r.Enabled).Select(r => r.Name).ToList();
         if (slowNames.Count != slowNames.Distinct().Count())
         {
-            throw new Cleanuparr.Domain.Exceptions.ValidationException("Duplicate slow rule names found");
+            throw new Cleanuparr.Domain.Exceptions.CustomValidationException("Duplicate slow rule names found");
         }
     }
 }

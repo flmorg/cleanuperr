@@ -1,8 +1,8 @@
 using Cleanuparr.Domain.Enums;
+using Cleanuparr.Domain.Exceptions;
 using Cleanuparr.Persistence.Models.Configuration.Notification;
 using Shouldly;
 using Xunit;
-using ValidationException = Cleanuparr.Domain.Exceptions.ValidationException;
 
 namespace Cleanuparr.Persistence.Tests.Models.Configuration.Notification;
 
@@ -215,7 +215,7 @@ public sealed class PushoverConfigTests
             Priority = PushoverPriority.Normal
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Pushover API token is required");
     }
 
@@ -232,7 +232,7 @@ public sealed class PushoverConfigTests
             Priority = PushoverPriority.Normal
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Pushover user key is required");
     }
 
@@ -300,7 +300,7 @@ public sealed class PushoverConfigTests
             Expire = 3600
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Retry interval must be at least 30 seconds for emergency priority");
     }
 
@@ -318,7 +318,7 @@ public sealed class PushoverConfigTests
             Expire = expire
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Expire time is required for emergency priority");
     }
 
@@ -334,7 +334,7 @@ public sealed class PushoverConfigTests
             Expire = 10801
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Expire time cannot exceed 10800 seconds (3 hours)");
     }
 
@@ -382,7 +382,7 @@ public sealed class PushoverConfigTests
             Devices = [longDeviceName]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe($"Device name '{longDeviceName}' exceeds 25 character limit");
     }
 
@@ -416,7 +416,7 @@ public sealed class PushoverConfigTests
             Devices = [deviceName]
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe($"Device name '{deviceName}' contains invalid characters. Only letters, numbers, underscores, and hyphens are allowed.");
     }
 
@@ -489,7 +489,7 @@ public sealed class PushoverConfigTests
             Sound = sound
         };
 
-        var exception = Should.Throw<ValidationException>(() => config.Validate());
+        var exception = Should.Throw<CustomValidationException>(() => config.Validate());
         exception.Message.ShouldBe("Sound name cannot be empty or whitespace when specified");
     }
 

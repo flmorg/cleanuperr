@@ -50,12 +50,12 @@ public sealed record SlowRule : QueueRule
 
         if (MaxStrikes < 3)
         {
-            throw new ValidationException("Slow rule max strikes must be at least 3");
+            throw new CustomValidationException("Slow rule max strikes must be at least 3");
         }
             
         if (MaxTimeHours < 0)
         {
-            throw new ValidationException("Maximum time cannot be negative");
+            throw new CustomValidationException("Maximum time cannot be negative");
         }
             
         bool hasMinSpeed = !string.IsNullOrEmpty(MinSpeed);
@@ -63,19 +63,19 @@ public sealed record SlowRule : QueueRule
 
         if (!hasMinSpeed && !hasMaxTime)
         {
-            throw new ValidationException("Either minimum speed or maximum time must be specified");
+            throw new CustomValidationException("Either minimum speed or maximum time must be specified");
         }
 
         if (hasMinSpeed && !ByteSize.TryParse(MinSpeed, out _))
         {
-            throw new ValidationException("Invalid minimum speed format");
+            throw new CustomValidationException("Invalid minimum speed format");
         }
 
         bool isIgnoreAboveSizeSet = !string.IsNullOrEmpty(IgnoreAboveSize);
         
         if (isIgnoreAboveSizeSet && ByteSize.TryParse(IgnoreAboveSize, out _) is false)
         {
-            throw new ValidationException($"invalid value for slow ignore above size: {IgnoreAboveSize}");
+            throw new CustomValidationException($"invalid value for slow ignore above size: {IgnoreAboveSize}");
         }
     }
     
