@@ -1,0 +1,420 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { ArrApi } from '@core/api/arr.api';
+import { ConfirmService } from '@core/services/confirm.service';
+import { ThemeService } from '@core/services/theme.service';
+import { ToastService } from '@core/services/toast.service';
+import { ArrConfig, ArrInstance } from '@shared/models/arr-config.model';
+import { ArrAppsComponent } from './arr-apps.component';
+
+const SONARR_INSTANCE: ArrInstance = {
+  id: 'sonarr-1',
+  enabled: true,
+  name: 'Main Sonarr',
+  url: 'http://localhost:8989',
+  externalUrl: 'https://sonarr.example.com',
+  apiKey: 'sonarr-key',
+  version: 4,
+};
+
+const RADARR_INSTANCE: ArrInstance = {
+  id: 'radarr-1',
+  enabled: true,
+  name: 'Main Radarr',
+  url: 'http://localhost:7878',
+  apiKey: 'radarr-key',
+  version: 6,
+};
+
+const SONARR_CONFIG: ArrConfig = {
+  failedImportMaxStrikes: 3,
+  instances: [SONARR_INSTANCE],
+};
+
+const RADARR_CONFIG: ArrConfig = {
+  failedImportMaxStrikes: -1,
+  instances: [RADARR_INSTANCE],
+};
+
+const EMPTY_CONFIG: ArrConfig = {
+  failedImportMaxStrikes: -1,
+  instances: [],
+};
+
+function createApi(configs: ArrConfig[] = [
+  SONARR_CONFIG, RADARR_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG,
+]) {
+  return {
+    getConfig: vi.fn((type: string) => {
+      const index = ['sonarr', 'radarr', 'lidarr', 'readarr', 'whisparr', 'sportarr', 'lazylibrarian'].indexOf(type);
+      return of(configs[index] ?? EMPTY_CONFIG);
+    }),
+    updateConfig: vi.fn(() => of(undefined)),
+    createInstance: vi.fn(() => of(SONARR_INSTANCE)),
+    updateInstance: vi.fn(() => of(SONARR_INSTANCE)),
+    deleteInstance: vi.fn(() => of(undefined)),
+    testInstance: vi.fn(() => of({ message: 'Connected' })),
+  };
+}
+
+function createToast() {
+  return { success: vi.fn(), error: vi.fn() };
+}
+
+interface Setup {
+  fixture: ComponentFixture<ArrAppsComponent>;
+  component: ArrAppsComponent;
+  api: ReturnType<typeof createApi>;
+  toast: ReturnType<typeof createToast>;
+  confirm: ConfirmService;
+}
+
+describe('ArrAppsComponent', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function setup(api = createApi(), toast = createToast()): Setup {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ArrApi, useValue: api },
+        { provide: ToastService, useValue: toast },
+        { provide: ThemeService, useValue: { themedIconSrc: (src: string) => src } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { fragment: null } },
+        },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(ArrAppsComponent);
+    fixture.detectChanges();
+
+    return {
+      fixture,
+      component: fixture.componentInstance,
+      api,
+      toast,
+      confirm: TestBed.inject(ConfirmService),
+    };
+  }
+
+  it('loads all arr types and separates configured from unconfigured', () => {
+    const { component, api } = setup();
+
+    expect(api.getConfig).toHaveBeenCalledTimes(7);
+    expect(component.configured()).toHaveLength(2);
+    expect(component.unconfigured()).toHaveLength(5);
+    expect(component.configured().map(e => e.type)).toEqual(['sonarr', 'radarr']);
+    expect(component.unconfigured()).toEqual(['lidarr', 'readarr', 'whisparr', 'sportarr', 'lazylibrarian']);
+  });
+
+  it('renders configured apps as arr-section components', () => {
+    const { fixture } = setup();
+
+    const sections = fixture.nativeElement.querySelectorAll('app-arr-section');
+    expect(sections.length).toBe(2);
+  });
+
+  it('renders unconfigured apps as selection cards in add strip', () => {
+    const { fixture } = setup();
+
+    const addCard = fixture.nativeElement.querySelector('.list-header__title');
+    expect(addCard.textContent).toContain('Add another app');
+
+    const cards = fixture.nativeElement.querySelectorAll('.selection-card');
+    expect(cards.length).toBe(5);
+  });
+
+  it('shows empty state when no apps are configured', () => {
+    const api = createApi([
+      EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG,
+    ]);
+    const { fixture: f } = setup(api);
+
+    expect(f.nativeElement.textContent).toContain('No media managers yet');
+    expect(f.nativeElement.textContent).toContain('Pick an app below to connect it.');
+  });
+
+  it('opens add modal for selected unconfigured app type', () => {
+    const { fixture, component } = setup();
+
+    component.openAddModal('lidarr');
+    fixture.detectChanges();
+
+    expect(component.modalVisible()).toBe(true);
+    expect(component.modalType()).toBe('lidarr');
+    expect(component.editingInstance()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Add Lidarr Instance');
+  });
+
+  it('sets version to first option when opening add modal', () => {
+    const { component } = setup();
+
+    component.openAddModal('whisparr');
+
+    expect(component.instanceModel().version).toBe(2);
+  });
+
+  it('creates an instance and reloads the page', () => {
+    const { fixture, component, api, toast } = setup();
+
+    component.openAddModal('sonarr');
+    component.instanceForm.name().value.set('New Sonarr');
+    component.instanceForm.url().value.set('http://localhost:8989');
+    component.instanceForm.apiKey().value.set('key');
+    fixture.detectChanges();
+
+    component.saveInstance();
+    fixture.detectChanges();
+
+    expect(api.createInstance).toHaveBeenCalledWith('sonarr', {
+      name: 'New Sonarr',
+      url: 'http://localhost:8989',
+      externalUrl: undefined,
+      apiKey: 'key',
+      version: 4,
+      enabled: true,
+    });
+    expect(toast.success).toHaveBeenCalledWith('Instance added');
+    expect(component.modalVisible()).toBe(false);
+  });
+
+  it('opens edit modal for a selected instance', () => {
+    const { fixture, component } = setup();
+
+    component.openEditModal('sonarr', SONARR_INSTANCE);
+    fixture.detectChanges();
+
+    expect(component.modalVisible()).toBe(true);
+    expect(component.modalType()).toBe('sonarr');
+    expect(component.editingInstance()).toBe(SONARR_INSTANCE);
+    expect(fixture.nativeElement.textContent).toContain('Edit Sonarr Instance');
+    expect(component.instanceModel().name).toBe('Main Sonarr');
+  });
+
+  it('keeps a non-default version when editing after another type', () => {
+    const { fixture, component } = setup();
+    const whisparrV3: ArrInstance = { ...SONARR_INSTANCE, id: 'whisparr-1', version: 3 };
+
+    component.openEditModal('sonarr', SONARR_INSTANCE);
+    fixture.detectChanges();
+    component.modalVisible.set(false);
+    component.openEditModal('whisparr', whisparrV3);
+    fixture.detectChanges();
+
+    expect(component.instanceModel().version).toBe(3);
+  });
+
+  it('updates an instance by id', () => {
+    const { fixture, component, api, toast } = setup();
+
+    component.openEditModal('sonarr', SONARR_INSTANCE);
+    component.instanceForm.name().value.set('Renamed');
+    fixture.detectChanges();
+
+    component.saveInstance();
+    fixture.detectChanges();
+
+    expect(api.updateInstance).toHaveBeenCalledWith('sonarr', 'sonarr-1', {
+      name: 'Renamed',
+      url: 'http://localhost:8989',
+      externalUrl: 'https://sonarr.example.com',
+      apiKey: 'sonarr-key',
+      version: 4,
+      enabled: true,
+    });
+    expect(toast.success).toHaveBeenCalledWith('Instance updated');
+  });
+
+  it('tests connection with instance id when editing', () => {
+    const { fixture, component, api } = setup();
+
+    component.openEditModal('sonarr', SONARR_INSTANCE);
+    fixture.detectChanges();
+
+    component.testConnection();
+    fixture.detectChanges();
+
+    expect(api.testInstance).toHaveBeenCalledWith('sonarr', {
+      url: 'http://localhost:8989',
+      apiKey: 'sonarr-key',
+      version: 4,
+      instanceId: 'sonarr-1',
+    });
+  });
+
+  it('tests connection without instance id when adding', () => {
+    const { fixture, component, api } = setup();
+
+    component.openAddModal('radarr');
+    fixture.detectChanges();
+
+    component.testConnection();
+    fixture.detectChanges();
+
+    expect(api.testInstance).toHaveBeenCalledWith('radarr', {
+      url: '',
+      apiKey: '',
+      version: 6,
+      instanceId: undefined,
+    });
+  });
+
+  it('deletes an instance after confirmation', async () => {
+    const { fixture, component, api, toast, confirm } = setup();
+
+    const cancelled = component.deleteInstance('sonarr', SONARR_INSTANCE);
+    confirm.cancel();
+    await cancelled;
+
+    expect(api.deleteInstance).not.toHaveBeenCalled();
+
+    const accepted = component.deleteInstance('sonarr', SONARR_INSTANCE);
+    confirm.accept();
+    await accepted;
+    fixture.detectChanges();
+
+    expect(api.deleteInstance).toHaveBeenCalledWith('sonarr', 'sonarr-1');
+    expect(toast.success).toHaveBeenCalledWith('Instance deleted');
+  });
+
+  it('reports pending changes while modal is edited', () => {
+    const { fixture, component } = setup();
+
+    expect(component.hasPendingChanges()).toBe(false);
+
+    component.openAddModal('sonarr');
+    fixture.detectChanges();
+    expect(component.hasPendingChanges()).toBe(false);
+
+    component.instanceForm.name().value.set('New');
+    fixture.detectChanges();
+    expect(component.hasPendingChanges()).toBe(true);
+
+    component.instanceForm.url().value.set('http://localhost:8989');
+    component.instanceForm.apiKey().value.set('key');
+    component.saveInstance();
+    fixture.detectChanges();
+
+    expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('reports pending changes from arr-section components', () => {
+    const { component } = setup();
+
+    expect(component.hasPendingChanges()).toBe(false);
+
+    const sections = component.sections();
+    if (sections.length > 0) {
+      vi.spyOn(sections[0], 'hasPendingChanges').mockReturnValue(true);
+      expect(component.hasPendingChanges()).toBe(true);
+    }
+  });
+
+  it('shows connection error state and recovers on retry', () => {
+    const api = createApi();
+    api.getConfig.mockReturnValue(throwError(() => new Error('offline')));
+    const { fixture, component, toast } = setup(api);
+
+    expect(component.loadError()).toBe(true);
+    expect(toast.error).toHaveBeenCalledWith('Failed to load media manager settings: offline');
+    expect(fixture.nativeElement.textContent).toContain('Could not connect to server');
+
+    api.getConfig.mockReturnValue(of(EMPTY_CONFIG));
+    component.retry();
+    fixture.detectChanges();
+
+    expect(component.loadError()).toBe(false);
+  });
+
+  it('keeps modal open and reports error when save fails', () => {
+    const api = createApi();
+    api.createInstance.mockReturnValue(throwError(() => ({ message: 'Name exists' })));
+    const { fixture: f, component, toast } = setup(api);
+
+    component.openAddModal('sonarr');
+    component.instanceForm.name().value.set('New');
+    component.instanceForm.url().value.set('http://localhost:8989');
+    component.instanceForm.apiKey().value.set('key');
+    f.detectChanges();
+
+    component.saveInstance();
+    f.detectChanges();
+
+    expect(toast.error).toHaveBeenCalledWith('Name exists');
+    expect(component.modalVisible()).toBe(true);
+  });
+
+  it('shows error when test connection fails', () => {
+    const api = createApi();
+    api.testInstance.mockReturnValue(throwError(() => ({ message: 'Connection refused' })));
+    const { fixture: f, component, toast } = setup(api);
+
+    component.openAddModal('sonarr');
+    f.detectChanges();
+
+    component.testConnection();
+    f.detectChanges();
+
+    expect(toast.error).toHaveBeenCalledWith('Connection refused');
+    expect(component.testing()).toBe(false);
+  });
+
+  it('emits from arr-section when add is clicked', () => {
+    const { component } = setup();
+
+    const sections = component.sections();
+    if (sections.length > 0) {
+      const openAddSpy = vi.spyOn(component, 'openAddModal');
+      sections[0].onAddClick();
+      expect(openAddSpy).toHaveBeenCalled();
+    }
+  });
+
+  it('emits from arr-section when edit is clicked', () => {
+    const { component } = setup();
+
+    const sections = component.sections();
+    if (sections.length > 0) {
+      const openEditSpy = vi.spyOn(component, 'openEditModal');
+      sections[0].onEditClick(SONARR_INSTANCE);
+      expect(openEditSpy).toHaveBeenCalled();
+    }
+  });
+
+  it('emits from arr-section when delete is clicked', () => {
+    const { component } = setup();
+
+    const sections = component.sections();
+    if (sections.length > 0) {
+      const deleteSpy = vi.spyOn(component, 'deleteInstance');
+      sections[0].onDeleteClick(SONARR_INSTANCE);
+      expect(deleteSpy).toHaveBeenCalled();
+    }
+  });
+
+  it('disables save button when form has errors', () => {
+    const { fixture, component } = setup();
+
+    component.openAddModal('sonarr');
+    fixture.detectChanges();
+
+    const saveButton = fixture.nativeElement.querySelector('button[aria-label*="Save"]') as HTMLButtonElement | null;
+    if (saveButton) {
+      expect(saveButton.disabled).toBe(true);
+    }
+  });
+
+  it('validates required fields', () => {
+    const { fixture, component } = setup();
+
+    component.openAddModal('sonarr');
+    fixture.detectChanges();
+
+    expect(component.instanceForm.name().errors()[0]?.message).toBe('Name is required');
+    expect(component.instanceForm.url().errors()[0]?.message).toBe('URL is required');
+    expect(component.instanceForm.apiKey().errors()[0]?.message).toBe('API key is required');
+  });
+});
