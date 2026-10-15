@@ -3,6 +3,7 @@ import { ShellComponent } from '@layout/shell/shell.component';
 import { AuthLayoutComponent } from '@layout/auth-layout/auth-layout.component';
 import { authGuard, setupIncompleteGuard, loginGuard } from '@core/auth/auth.guard';
 import { pendingChangesGuard } from '@core/guards/pending-changes.guard';
+import { legacyArrRedirect } from '@features/settings/arr/legacy-arr-redirect';
 
 export const routes: Routes = [
   {
@@ -98,12 +99,16 @@ export const routes: Routes = [
             canDeactivate: [pendingChangesGuard],
           },
           {
-            path: 'arr/:type',
+            path: 'arr',
             loadComponent: () =>
               import(
-                '@features/settings/arr/arr-settings.component'
-              ).then((m) => m.ArrSettingsComponent),
+                '@features/settings/arr/arr-apps.component'
+              ).then((m) => m.ArrAppsComponent),
             canDeactivate: [pendingChangesGuard],
+          },
+          {
+            path: 'arr/:type',
+            redirectTo: legacyArrRedirect,
           },
           {
             path: 'download-clients',
