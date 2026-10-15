@@ -127,6 +127,110 @@ describe('ArrAppsComponent', () => {
     expect(cards.length).toBe(5);
   });
 
+  it('treats a config missing the instances field as unconfigured', () => {
+    const configWithoutInstances = { failedImportMaxStrikes: -1 } as ArrConfig;
+    const api = createApi([
+      configWithoutInstances, RADARR_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG,
+    ]);
+    const { component } = setup(api);
+
+    expect(component.configured().map((e) => e.type)).toEqual(['radarr']);
+    expect(component.unconfigured()).toContain('sonarr');
+  });
+
+  it('shows the experimental badge on the lazylibrarian selection card only', () => {
+    const { fixture } = setup();
+
+    const cards = Array.from(fixture.nativeElement.querySelectorAll('.selection-card')) as HTMLElement[];
+    const lazyLibrarianCard = cards.find((el) => el.textContent!.includes('LazyLibrarian'))!;
+    const otherCards = cards.filter((el) => el !== lazyLibrarianCard);
+
+    expect(lazyLibrarianCard.querySelector('app-badge')).not.toBeNull();
+    expect(lazyLibrarianCard.textContent).toContain('Experimental');
+    otherCards.forEach((card) => expect(card.querySelector('app-badge')).toBeNull());
+  });
+
+  it('scrolls to the fragment from the route once settings load', async () => {
+    const scrollIntoView = vi.fn();
+    (Element.prototype as unknown as { scrollIntoView: typeof scrollIntoView }).scrollIntoView = scrollIntoView;
+
+    try {
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: ArrApi, useValue: createApi() },
+          { provide: ToastService, useValue: createToast() },
+          { provide: ThemeService, useValue: { themedIconSrc: (src: string) => src } },
+          { provide: ActivatedRoute, useValue: { snapshot: { fragment: 'radarr' } } },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ArrAppsComponent);
+      fixture.detectChanges();
+      await Promise.resolve();
+
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    } finally {
+      delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+    }
+  });
+
+  it('shows the loading state while the initial config request is pending', () => {
+    vi.useFakeTimers();
+    try {
+      const pending = new Subject<ArrConfig>();
+      const api = createApi();
+      api.getConfig.mockReturnValue(pending);
+
+      TestBed.configureTestingModule({
+        providers: [
+          { provide: ArrApi, useValue: api },
+          { provide: ToastService, useValue: createToast() },
+          { provide: ThemeService, useValue: { themedIconSrc: (src: string) => src } },
+          { provide: ActivatedRoute, useValue: { snapshot: { fragment: null } } },
+        ],
+      });
+
+      const fixture = TestBed.createComponent(ArrAppsComponent);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.configured()).toEqual([]);
+      expect(fixture.componentInstance.unconfigured()).toEqual([]);
+
+      vi.advanceTimersByTime(200);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('app-loading-state')).not.toBeNull();
+
+      pending.next(EMPTY_CONFIG);
+      pending.complete();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('retries the load when the Retry button is clicked', () => {
+    const api = createApi();
+    api.getConfig.mockReturnValue(throwError(() => new Error('offline')));
+    const { fixture } = setup(api);
+
+    api.getConfig.mockReturnValue(of(EMPTY_CONFIG));
+    const retryButton = Array.from(fixture.nativeElement.querySelectorAll('button'))
+      .find((el) => (el as HTMLElement).textContent!.trim() === 'Retry') as HTMLButtonElement;
+    retryButton.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.loadError()).toBe(false);
+  });
+
+  it('hides the "Add another app" card when every app is configured', () => {
+    const api = createApi([
+      SONARR_CONFIG, RADARR_CONFIG, SONARR_CONFIG, SONARR_CONFIG, SONARR_CONFIG, SONARR_CONFIG, SONARR_CONFIG,
+    ]);
+    const { fixture } = setup(api);
+
+    expect(fixture.nativeElement.querySelector('.list-header__title')).toBeNull();
+  });
+
   it('shows empty state when no apps are configured', () => {
     const api = createApi([
       EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG, EMPTY_CONFIG,
@@ -194,6 +298,14 @@ describe('ArrAppsComponent', () => {
     expect(component.instanceModel().name).toBe('Main Sonarr');
   });
 
+  it('defaults externalUrl to an empty string when the instance has none', () => {
+    const { component } = setup();
+
+    component.openEditModal('radarr', RADARR_INSTANCE);
+
+    expect(component.instanceModel().externalUrl).toBe('');
+  });
+
   it('keeps a non-default version when editing after another type', () => {
     const { fixture, component } = setup();
     const whisparrV3: ArrInstance = { ...SONARR_INSTANCE, id: 'whisparr-1', version: 3 };
@@ -245,6 +357,20 @@ describe('ArrAppsComponent', () => {
     });
   });
 
+  it('falls back to a default success message when the API returns none', () => {
+    const api = createApi();
+    api.testInstance.mockReturnValue(of({ message: '' }));
+    const { fixture, component, toast } = setup(api);
+
+    component.openAddModal('sonarr');
+    fixture.detectChanges();
+
+    component.testConnection();
+    fixture.detectChanges();
+
+    expect(toast.success).toHaveBeenCalledWith('Connection successful');
+  });
+
   it('tests connection without instance id when adding', () => {
     const { fixture, component, api } = setup();
 
@@ -260,6 +386,15 @@ describe('ArrAppsComponent', () => {
       version: 6,
       instanceId: undefined,
     });
+  });
+
+  it('does not call the API when deleting an instance without an id', async () => {
+    const { component, api } = setup();
+    const instanceWithoutId: ArrInstance = { ...SONARR_INSTANCE, id: '' };
+
+    await component.deleteInstance('sonarr', instanceWithoutId);
+
+    expect(api.deleteInstance).not.toHaveBeenCalled();
   });
 
   it('deletes an instance after confirmation', async () => {
@@ -375,6 +510,29 @@ describe('ArrAppsComponent', () => {
 
     expect(toast.error).toHaveBeenCalledWith('Name exists');
     expect(component.modalVisible()).toBe(true);
+  });
+
+  it('does not call the API when saving an invalid form', () => {
+    const { component, api } = setup();
+
+    component.openAddModal('sonarr');
+
+    component.saveInstance();
+
+    expect(api.createInstance).not.toHaveBeenCalled();
+    expect(api.updateInstance).not.toHaveBeenCalled();
+  });
+
+  it('toasts the error when deleting an instance fails', async () => {
+    const api = createApi();
+    api.deleteInstance.mockReturnValue(throwError(() => ({ message: 'Delete failed' })));
+    const { component, toast, confirm } = setup(api);
+
+    const deleted = component.deleteInstance('sonarr', SONARR_INSTANCE);
+    confirm.accept();
+    await deleted;
+
+    expect(toast.error).toHaveBeenCalledWith('Delete failed');
   });
 
   it('shows error when test connection fails', () => {

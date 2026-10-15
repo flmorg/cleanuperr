@@ -45,6 +45,7 @@ interface Setup {
   component: ArrSectionComponent;
   api: ReturnType<typeof createApi>;
   toast: ReturnType<typeof createToast>;
+  theme: ReturnType<typeof createTheme>;
 }
 
 @Component({
@@ -79,12 +80,14 @@ describe('ArrSectionComponent', () => {
     vi.restoreAllMocks();
   });
 
-  function setup(type: ArrType = 'sonarr', config = CONFIG, api = createApi(), toast = createToast()): Setup {
+  function setup(
+    type: ArrType = 'sonarr', config = CONFIG, api = createApi(), toast = createToast(), theme = createTheme(),
+  ): Setup {
     TestBed.configureTestingModule({
       providers: [
         { provide: ArrApi, useValue: api },
         { provide: ToastService, useValue: toast },
-        { provide: ThemeService, useValue: createTheme() },
+        { provide: ThemeService, useValue: theme },
       ],
     });
 
@@ -98,6 +101,7 @@ describe('ArrSectionComponent', () => {
       component: fixture.debugElement.query((el) => el.name === 'app-arr-section').componentInstance,
       api,
       toast,
+      theme,
     };
   }
 
@@ -108,6 +112,20 @@ describe('ArrSectionComponent', () => {
     expect(text(fixture, '.item-row__name')).toEqual(['Main Sonarr']);
     expect(text(fixture, '.item-row__url')).toEqual(['http://localhost:8989']);
     expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('treats a config with no instances field as having none', () => {
+    const configWithoutInstances = { failedImportMaxStrikes: -1 } as ArrConfig;
+    const { component } = setup('sonarr', configWithoutInstances);
+
+    expect(component.instances()).toEqual([]);
+  });
+
+  it('shows a disabled badge for a disabled instance', () => {
+    const disabledInstance: ArrInstance = { ...INSTANCE, enabled: false };
+    const { fixture } = setup('sonarr', { failedImportMaxStrikes: 3, instances: [disabledInstance] });
+
+    expect(text(fixture, '.item-row__info app-badge')).toEqual(['Disabled']);
   });
 
   it('emits add output when Add button is clicked', () => {
@@ -134,6 +152,43 @@ describe('ArrSectionComponent', () => {
     component.onDeleteClick(INSTANCE);
 
     expect(hostComponent.onDelete).toHaveBeenCalledWith(INSTANCE);
+  });
+
+  it('shows the experimental badge only for an experimental arr type', () => {
+    const { fixture } = setup('lazylibrarian', { ...CONFIG, instances: [] });
+
+    expect(fixture.nativeElement.querySelector('.section-header__title app-badge')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Experimental');
+  });
+
+  it('hides the experimental badge for a non-experimental arr type', () => {
+    const { fixture } = setup('sonarr');
+
+    expect(fixture.nativeElement.querySelector('.section-header__title app-badge')).toBeNull();
+  });
+
+  it('themes the header icon through the theme service', () => {
+    const { theme } = setup('sonarr');
+
+    expect(theme.themedIconSrc).toHaveBeenCalledWith('icons/ext/sonarr-light.svg');
+  });
+
+  it('shows the max strikes input only while the override is on', () => {
+    const { fixture, component } = setup('sonarr', { failedImportMaxStrikes: -1, instances: [] });
+    component.strikesOpen.set(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-number-input')).toBeNull();
+
+    component.failedImportForm.override().value.set(true);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-number-input')).not.toBeNull();
+
+    component.failedImportForm.override().value.set(false);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('app-number-input')).toBeNull();
   });
 
   it('sets host id to the arr type', () => {
@@ -199,6 +254,22 @@ describe('ArrSectionComponent', () => {
     expect(api.updateConfig).toHaveBeenCalledWith('sonarr', { failedImportMaxStrikes: 5 });
     expect(toast.success).toHaveBeenCalledWith('Failed import settings saved');
     expect(component.hasPendingChanges()).toBe(false);
+  });
+
+  it('saves via the Save Settings button click and shows the Saved! label', () => {
+    const { fixture, component, api } = setup('sonarr', { failedImportMaxStrikes: -1, instances: [] });
+
+    component.strikesOpen.set(true);
+    component.failedImportForm.override().value.set(true);
+    component.failedImportForm.maxStrikes().value.set(5);
+    fixture.detectChanges();
+
+    const saveButton = fixture.nativeElement.querySelector('.form-actions button') as HTMLButtonElement;
+    saveButton.click();
+    fixture.detectChanges();
+
+    expect(api.updateConfig).toHaveBeenCalledWith('sonarr', { failedImportMaxStrikes: 5 });
+    expect(saveButton.textContent!.trim()).toBe('Saved!');
   });
 
   it('disabling the override sends -1', () => {
