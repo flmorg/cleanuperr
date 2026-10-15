@@ -156,6 +156,19 @@ describe('ArrSectionComponent', () => {
     expect(component.panelVisible()).toBe(true);
   });
 
+  it('reflects panelVisible on the strikes toggle button aria-expanded attribute', () => {
+    const { fixture } = setup('sonarr');
+
+    const strikesButton = Array.from(fixture.nativeElement.querySelectorAll('.section-header__actions button'))
+      .find((el) => (el as HTMLElement).textContent!.includes('Strikes')) as HTMLButtonElement;
+    expect(strikesButton.getAttribute('aria-expanded')).toBe('false');
+
+    strikesButton.click();
+    fixture.detectChanges();
+
+    expect(strikesButton.getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('seeds the override toggle off with the config failedImportMaxStrikes of -1', () => {
     const { component } = setup('sonarr', { failedImportMaxStrikes: -1, instances: [] });
 

@@ -17,6 +17,7 @@ export class ButtonComponent {
   loading = input(false);
   type = input<'button' | 'submit' | 'reset'>('button');
   glowing = input(false);
+  ariaExpanded = input<boolean | null>(null);
 
   clicked = output<MouseEvent>();
 
