@@ -50,6 +50,7 @@ import {
   tablerGripVertical,
   tablerFilter,
   tablerPalette,
+  tablerApps,
 } from '@ng-icons/tabler-icons';
 
 export const APP_ICONS = {
@@ -104,4 +105,5 @@ export const APP_ICONS = {
   tablerGripVertical,
   tablerFilter,
   tablerPalette,
+  tablerApps,
 };

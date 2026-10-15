@@ -122,22 +122,11 @@
     &--nested {
       padding-left: var(--space-6);
     }
-
-    &--deep {
-      padding-left: var(--space-10);
-    }
   }
 
   &__item-icon {
     font-size: 20px;
     flex-shrink: 0;
-  }
-
-  &__item-img {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    object-fit: contain;
   }
 
   &__divider {
@@ -273,8 +262,7 @@
     justify-content: center;
     padding: var(--space-2);
 
-    &--nested,
-    &--deep {
+    &--nested {
       padding-left: var(--space-2);
     }
   }
@@ -331,7 +319,6 @@
       padding: var(--space-2) var(--space-3);
 
       &--nested { padding-left: var(--space-6); }
-      &--deep { padding-left: var(--space-10); }
     }
 
     .sidebar__item-label,

@@ -100,25 +100,19 @@ describe('NavSidebarComponent', () => {
     expect(fixture.nativeElement.querySelector('.sidebar__version')).toBeNull();
     expect(fixture.nativeElement.querySelector('.sidebar__update')).toBeNull();
     expect(link(fixture, '/settings/general')).not.toBeNull();
-    expect(link(fixture, '/settings/arr/sonarr')).not.toBeNull();
+    expect(link(fixture, '/settings/arr')).not.toBeNull();
   });
 
-  it('hides the grouped items when a section is folded away', () => {
+  it('hides the settings items when the settings section is folded away', () => {
     const { fixture } = setup();
     const component = fixture.componentInstance;
-
-    component.toggleMediaApps();
-    fixture.detectChanges();
-
-    expect(component.mediaAppsExpanded()).toBe(false);
-    expect(link(fixture, '/settings/arr/sonarr')).toBeNull();
-    expect(link(fixture, '/settings/general')).not.toBeNull();
 
     component.toggleSettings();
     fixture.detectChanges();
 
     expect(component.settingsExpanded()).toBe(false);
     expect(link(fixture, '/settings/general')).toBeNull();
+    expect(link(fixture, '/settings/arr')).toBeNull();
     expect(link(fixture, ROUTES.dashboard)).not.toBeNull();
   });
 
