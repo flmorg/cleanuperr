@@ -247,7 +247,7 @@ public sealed class QueueCleaner : GenericHandler
 
             if (shouldRemoveFromArr)
             {
-                bool changeCategory = queueCleanerConfig.FailedImport.ChangeCategory;
+                bool changeCategory = queueCleanerConfig.FailedImport.ChangeCategory && GetClientType(record) is DownloadClientType.Torrent;
                 bool removeFromClient = !changeCategory && (!downloadCheckResult.IsPrivate || queueCleanerConfig.FailedImport.DeletePrivate);
 
                 await PublishQueueItemRemoveRequest(
