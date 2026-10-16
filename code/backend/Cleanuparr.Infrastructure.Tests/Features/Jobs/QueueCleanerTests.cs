@@ -1686,6 +1686,69 @@ public class QueueCleanerTests : IDisposable
     }
 
     [Fact]
+    public async Task ProcessInstanceAsync_WhenFailedImportWithChangeCategoryOnUsenet_PublishesRequestWithoutChangeCategoryAndRemoveFromClientTrue()
+    {
+        // Arrange
+        TestDataContextFactory.AddSonarrInstance(_fixture.DataContext);
+        TestDataContextFactory.AddDownloadClient(_fixture.DataContext, "Test SABnzbd", DownloadClientTypeName.Sabnzbd);
+
+        var queueCleanerConfig = _fixture.DataContext.QueueCleanerConfigs.First();
+        queueCleanerConfig.FailedImport = queueCleanerConfig.FailedImport with { ChangeCategory = true, DeletePrivate = false };
+        _fixture.DataContext.SaveChanges();
+
+        var mockArrClient = Substitute.For<IArrClient>();
+        mockArrClient.IsRecordValid(Arg.Any<QueueRecord>()).Returns(true);
+        mockArrClient.HasContentId(Arg.Any<QueueRecord>()).Returns(true);
+        mockArrClient.ShouldRemoveFromQueue(
+            Arg.Any<InstanceType>(),
+            Arg.Any<QueueRecord>(),
+            Arg.Any<bool>(),
+            Arg.Any<short>()
+        ).Returns(true);
+
+        _fixture.ArrClientFactory
+            .GetClient(InstanceType.Sonarr, Arg.Any<float>())
+            .Returns(mockArrClient);
+
+        var queueRecord = new QueueRecord
+        {
+            Id = 1,
+            DownloadId = "failed-import-change-category-usenet",
+            Title = "Failed Import Change Category Usenet",
+            Protocol = "usenet",
+            SeriesId = 1,
+            EpisodeId = 1
+        };
+
+        _fixture.ArrQueueReader
+            .ReadAllAsync(Arg.Any<IArrClient>(), Arg.Any<ArrInstance>())
+            .Returns([queueRecord]);
+
+        var mockDownloadService = _fixture.CreateMockDownloadService("Test SABnzbd", DownloadClientTypeName.Sabnzbd);
+        mockDownloadService
+            .ShouldRemoveFromArrQueueAsync(
+                Arg.Any<string>(),
+                Arg.Any<List<string>>()
+            )
+            .Returns(new DownloadCheckResult { Found = true, ShouldRemove = false, IsPrivate = false });
+
+        _fixture.DownloadServiceFactory
+            .GetDownloadService(Arg.Any<DownloadClientConfig>())
+            .Returns(mockDownloadService);
+
+        var sut = CreateSut();
+
+        // Act
+        await sut.ExecuteAsync();
+
+        // Assert
+        QueueItemRemoveRequest r = _fixture.RemovalQueue.ShouldHaveSingle();
+        r.DeleteReason.ShouldBe(DeleteReason.FailedImport);
+        r.ArrTarget().ChangeCategory.ShouldBeFalse();
+        r.ArrTarget().RemoveFromClient.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task ProcessInstanceAsync_WhenStallRuleHasChangeCategory_PublishesRequestWithChangeCategoryAndRemoveFromClientFalse()
     {
         // Arrange
