@@ -73,6 +73,12 @@ public partial class DelugeService
 
         await ApplyFileBlockingAsync(result, download.Name, scanItems, malwareBlockerConfig.DeleteIfAnyFileBlocked, async unwantedIndices =>
         {
+            // Zeroing every priority before removal crashes Deluge (#281)
+            if (result.DeleteReason is DeleteReason.AllFilesBlocked)
+            {
+                return;
+            }
+
             HashSet<int> unwantedLookup = [..unwantedIndices];
             List<int> sortedPriorities = originalPriorities
                 .OrderBy(x => x.Key)

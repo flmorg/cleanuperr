@@ -696,45 +696,9 @@ public class DelugeServiceTests : IClassFixture<DelugeServiceFixture>
         };
 
         [Fact]
-        public async Task AllFilesAreMalware_CallsChangeFilesPriority_AndMarksForRemoval()
+        public async Task AllFilesAreMalware_DoesNotCallChangeFilesPriority_AndMarksForRemoval()
         {
             const string hash = "all-malware-hash";
-            var sut = _fixture.CreateSut();
-            SetMalwareBlockerContext();
-
-            _fixture.ClientWrapper
-                .GetTorrentStatus(hash)
-                .Returns(MakeDownloadStatus(hash));
-
-            _fixture.ClientWrapper
-                .GetTorrentFiles(hash)
-                .Returns(new DelugeContents
-                {
-                    Contents = new Dictionary<string, DelugeFileOrDirectory>
-                    {
-                        { "malware.exe", new DelugeFileOrDirectory { Type = "file", Priority = 1, Index = 0, Path = "malware.exe" } },
-                    },
-                });
-
-            _fixture.FilenameEvaluator
-                .IsValid(Arg.Any<string>(), Arg.Any<BlocklistType>(), Arg.Any<ConcurrentBag<string>>(), Arg.Any<ConcurrentBag<Regex>>())
-                .Returns(false);
-
-            var result = await sut.BlockUnwantedFilesAsync(hash, Array.Empty<string>());
-
-            result.Found.ShouldBeTrue();
-            result.ShouldRemove.ShouldBeTrue();
-            result.DeleteReason.ShouldBe(DeleteReason.AllFilesBlocked);
-
-            await _fixture.ClientWrapper
-                .Received(1)
-                .ChangeFilesPriority(hash, Arg.Is<List<int>>(p => p.Count == 1 && p[0] == 0));
-        }
-
-        [Fact]
-        public async Task AllFilesAreMalware_PriorityUpdateThrows_StillMarksForRemoval()
-        {
-            const string hash = "all-malware-priority-throws-hash";
             DelugeService sut = _fixture.CreateSut();
             SetMalwareBlockerContext();
 
@@ -756,10 +720,6 @@ public class DelugeServiceTests : IClassFixture<DelugeServiceFixture>
                 .IsValid(Arg.Any<string>(), Arg.Any<BlocklistType>(), Arg.Any<ConcurrentBag<string>>(), Arg.Any<ConcurrentBag<Regex>>())
                 .Returns(false);
 
-            _fixture.ClientWrapper
-                .ChangeFilesPriority(hash, Arg.Is<List<int>>(p => p.Count == 1 && p[0] == 0))
-                .ThrowsAsync(new HttpRequestException("rejected"));
-
             BlockFilesResult result = await sut.BlockUnwantedFilesAsync(hash, Array.Empty<string>());
 
             result.Found.ShouldBeTrue();
@@ -767,8 +727,8 @@ public class DelugeServiceTests : IClassFixture<DelugeServiceFixture>
             result.DeleteReason.ShouldBe(DeleteReason.AllFilesBlocked);
 
             await _fixture.ClientWrapper
-                .Received(1)
-                .ChangeFilesPriority(hash, Arg.Is<List<int>>(p => p.Count == 1 && p[0] == 0));
+                .DidNotReceive()
+                .ChangeFilesPriority(Arg.Any<string>(), Arg.Any<List<int>>());
         }
 
         [Fact]
