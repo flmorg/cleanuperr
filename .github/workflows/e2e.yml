@@ -41,6 +41,9 @@ jobs:
   build-app:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
 
     strategy:
       fail-fast: false
@@ -76,6 +79,13 @@ jobs:
         uses: docker/setup-buildx-action@v4
         timeout-minutes: 5
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build the app image
         uses: docker/build-push-action@v7
         timeout-minutes: 25
@@ -89,8 +99,10 @@ jobs:
             packages_pat=${{ env.PACKAGES_PAT }}
           tags: cleanuparr-e2e-app:${{ matrix.variant }}
           outputs: type=docker,dest=/tmp/app-image.tar
-          cache-from: type=gha,scope=e2e-${{ matrix.variant }}
-          cache-to: type=gha,scope=e2e-${{ matrix.variant }},mode=max
+          # The GHA cache evicted these layers once the repo passed its 10 GB quota.
+          # A failed cache write must not fail the build.
+          cache-from: type=registry,ref=ghcr.io/cleanuparr/cleanuparr-e2e-cache:${{ matrix.variant }}
+          cache-to: type=registry,ref=ghcr.io/cleanuparr/cleanuparr-e2e-cache:${{ matrix.variant }},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true
 
       # gzip -1 beats letting upload-artifact deflate a layer tar this size.
       - name: Compress the image

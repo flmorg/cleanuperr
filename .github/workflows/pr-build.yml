@@ -170,6 +170,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      packages: write
     concurrency:
       group: pr-e2e-${{ needs.validate.outputs.pr_number }}
       cancel-in-progress: true
