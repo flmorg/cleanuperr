@@ -237,6 +237,7 @@ jobs:
 
       - name: Run E2E tests
         working-directory: e2e
+        timeout-minutes: ${{ matrix.suite.budget-minutes }}
         run: npx playwright test ${{ matrix.suite.projects }}
 
       - name: Summarize test timings
@@ -245,6 +246,21 @@ jobs:
         run: |
           if [ -f test-results/results.json ]; then
             bash scripts/ci-timings.sh test-results/results.json >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Check the leg budget
+        if: always()
+        working-directory: e2e
+        env:
+          LEG: ${{ matrix.suite.name }}
+          BUDGET: ${{ matrix.suite.budget-minutes }}
+        run: |
+          if [ ! -f test-results/results.json ]; then
+            exit 0
+          fi
+          used=$(jq '.stats.duration / 60000 | floor' test-results/results.json)
+          if [ "$used" -ge $((BUDGET * 4 / 5)) ]; then
+            echo "::warning::$LEG used ${used}m of its ${BUDGET}m budget. Split it in e2e/scripts/ci-matrix.sh."
           fi
 
       - name: Dump service logs
