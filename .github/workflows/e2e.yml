@@ -186,8 +186,9 @@ jobs:
             fi
 
             # A transient API error must not end the leg, so keep polling.
+            # Under workflow_call the job is named "<caller job> / build-app (...)".
             conclusion=$(gh api "$RUN_JOBS" --paginate \
-              --jq ".jobs[] | select(.name == \"$job\") | .conclusion" || true)
+              --jq ".jobs[] | select(.name == \"$job\" or (.name | endswith(\" / $job\"))) | .conclusion" || true)
 
             case "$conclusion" in
               ''|null) ;;
