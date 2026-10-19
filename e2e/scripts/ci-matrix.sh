@@ -31,11 +31,26 @@ suites+=('{
 }')
 
 # These folders need the torrent clients and the tracker.
+# Each gets its own leg, since together they made the slowest leg.
 suites+=('{
-  "name": "clients",
+  "name": "download-cleaner",
   "stack-target": "up-stack-clients",
   "image-variant": "plain",
-  "projects": "--project=download-cleaner --project=download-client --project=malware-blocker"
+  "projects": "--project=download-cleaner"
+}')
+
+suites+=('{
+  "name": "download-client",
+  "stack-target": "up-stack-clients",
+  "image-variant": "plain",
+  "projects": "--project=download-client"
+}')
+
+suites+=('{
+  "name": "malware-blocker",
+  "stack-target": "up-stack-clients",
+  "image-variant": "plain",
+  "projects": "--project=malware-blocker"
 }')
 
 # This folder needs the real arrs, the fake indexer and qBittorrent.
