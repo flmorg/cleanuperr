@@ -36,7 +36,9 @@ jobs:
       - name: Build the suite matrix
         id: suites
         working-directory: e2e
-        run: echo "list=$(bash ./scripts/ci-matrix.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          list=$(bash ./scripts/ci-matrix.sh)
+          echo "list=$list" >> "$GITHUB_OUTPUT"
 
   build-app:
     runs-on: ubuntu-latest
