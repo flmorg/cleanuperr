@@ -9,6 +9,8 @@
 # stack-target raises everything except the app, so a leg can do that while the
 # app image is still building. image-variant picks which image it then runs.
 #
+# budget-minutes caps the test step. A leg past 80% of it warns, so split it then.
+#
 set -euo pipefail
 
 suites=()
@@ -16,6 +18,7 @@ suites=()
 # These folders need only the app, Keycloak, nginx and the wiremocks.
 suites+=('{
   "name": "core",
+  "budget-minutes": 15,
   "stack-target": "up-stack-core",
   "image-variant": "plain",
   "projects": "--project=account --project=arr --project=auth --project=blacklist-sync --project=core --project=general --project=notifications --project=oidc --project=queue-cleaner --project=regression --project=seeker --project=signalr"
@@ -25,22 +28,42 @@ suites+=('{
 # triggered instead of waited for. See e2e/patches.
 suites+=('{
   "name": "seeker-fast",
+  "budget-minutes": 10,
   "stack-target": "up-stack-core",
   "image-variant": "patched",
   "projects": "--project=seeker-fast"
 }')
 
 # These folders need the torrent clients and the tracker.
+# Each gets its own leg, since together they made the slowest leg.
 suites+=('{
-  "name": "clients",
+  "name": "download-cleaner",
+  "budget-minutes": 20,
   "stack-target": "up-stack-clients",
   "image-variant": "plain",
-  "projects": "--project=download-cleaner --project=download-client --project=malware-blocker"
+  "projects": "--project=download-cleaner"
+}')
+
+suites+=('{
+  "name": "download-client",
+  "budget-minutes": 20,
+  "stack-target": "up-stack-clients",
+  "image-variant": "plain",
+  "projects": "--project=download-client"
+}')
+
+suites+=('{
+  "name": "malware-blocker",
+  "budget-minutes": 15,
+  "stack-target": "up-stack-clients",
+  "image-variant": "plain",
+  "projects": "--project=malware-blocker"
 }')
 
 # This folder needs the real arrs, the fake indexer and qBittorrent.
 suites+=('{
   "name": "live-arr",
+  "budget-minutes": 20,
   "stack-target": "up-stack-arr",
   "image-variant": "plain",
   "projects": "--project=live-arr"
@@ -49,6 +72,7 @@ suites+=('{
 # Same stack as live-arr, patched like seeker-fast.
 suites+=('{
   "name": "live-arr-fast",
+  "budget-minutes": 25,
   "stack-target": "up-stack-arr",
   "image-variant": "patched",
   "projects": "--project=live-arr-fast"
@@ -57,10 +81,30 @@ suites+=('{
 # This folder needs the real LazyLibrarian, the fake indexer and qBittorrent.
 suites+=('{
   "name": "live-lazylibrarian",
+  "budget-minutes": 15,
   "stack-target": "up-stack-lazylibrarian",
   "image-variant": "plain",
   "projects": "--project=live-lazylibrarian"
 }')
 
+matrix=$(printf '[%s]' "$(IFS=,; printf '%s' "${suites[*]}")")
+
+# A folder in no leg never runs in CI.
+folders=$(sed -n '/^const FOLDERS = \[/,/^\] as const;/p' "$(dirname "${BASH_SOURCE[0]}")/../playwright.config.ts" \
+  | sed -n "s/^ *'\([^']*\)',$/\1/p" | sort)
+projects=$(jq -r '.[].projects' <<<"$matrix" | tr ' ' '\n' | sed -n 's/^--project=//p' | sort)
+
+problems=$(
+  comm -23 <(echo "$folders") <(uniq <<<"$projects") | sed 's/^/in no leg: /'
+  comm -13 <(echo "$folders") <(uniq <<<"$projects") | sed 's/^/not a folder: /'
+  uniq -d <<<"$projects" | sed 's/^/in more than one leg: /'
+)
+if [ -n "$problems" ]; then
+  sed 's/^/ci-matrix: /' <<<"$problems" >&2
+  exit 1
+fi
+
 # jq compacts it to the single line an Actions output needs, and rejects a malformed entry.
-printf '[%s]' "$(IFS=,; printf '%s' "${suites[*]}")" | jq -c .
+jq -c <<<"$matrix" '
+  if all(.[]; .["budget-minutes"] | type == "number") then . else error("every leg needs a numeric budget-minutes") end
+'
