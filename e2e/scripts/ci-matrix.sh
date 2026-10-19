@@ -87,7 +87,24 @@ suites+=('{
   "projects": "--project=live-lazylibrarian"
 }')
 
+matrix=$(printf '[%s]' "$(IFS=,; printf '%s' "${suites[*]}")")
+
+# A folder in no leg never runs in CI.
+folders=$(sed -n '/^const FOLDERS = \[/,/^\] as const;/p' "$(dirname "${BASH_SOURCE[0]}")/../playwright.config.ts" \
+  | sed -n "s/^ *'\([^']*\)',$/\1/p" | sort)
+projects=$(jq -r '.[].projects' <<<"$matrix" | tr ' ' '\n' | sed -n 's/^--project=//p' | sort)
+
+problems=$(
+  comm -23 <(echo "$folders") <(uniq <<<"$projects") | sed 's/^/in no leg: /'
+  comm -13 <(echo "$folders") <(uniq <<<"$projects") | sed 's/^/not a folder: /'
+  uniq -d <<<"$projects" | sed 's/^/in more than one leg: /'
+)
+if [ -n "$problems" ]; then
+  sed 's/^/ci-matrix: /' <<<"$problems" >&2
+  exit 1
+fi
+
 # jq compacts it to the single line an Actions output needs, and rejects a malformed entry.
-printf '[%s]' "$(IFS=,; printf '%s' "${suites[*]}")" | jq -c '
+jq -c <<<"$matrix" '
   if all(.[]; .["budget-minutes"] | type == "number") then . else error("every leg needs a numeric budget-minutes") end
 '
