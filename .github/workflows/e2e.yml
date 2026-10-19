@@ -239,6 +239,14 @@ jobs:
         working-directory: e2e
         run: npx playwright test ${{ matrix.suite.projects }}
 
+      - name: Summarize test timings
+        if: always()
+        working-directory: e2e
+        run: |
+          if [ -f test-results/results.json ]; then
+            bash scripts/ci-timings.sh test-results/results.json >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Dump service logs
         if: failure()
         working-directory: e2e
