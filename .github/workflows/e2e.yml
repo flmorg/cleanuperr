@@ -138,6 +138,11 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
           persist-credentials: false
 
+      - name: Match container uid/gid to the runner user
+        run: |
+          echo "E2E_PUID=$(id -u)" >> "$GITHUB_ENV"
+          echo "E2E_PGID=$(id -g)" >> "$GITHUB_ENV"
+
       - name: Start the stack
         working-directory: e2e
         run: make ${{ matrix.suite.stack-target }}
