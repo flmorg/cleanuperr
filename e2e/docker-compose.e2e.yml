@@ -134,8 +134,8 @@ services:
     image: lscr.io/linuxserver/qbittorrent:5.2.3
     network_mode: host
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
       WEBUI_PORT: "8090"
       TORRENTING_PORT: "6881"
@@ -153,8 +153,8 @@ services:
     image: lscr.io/linuxserver/transmission:4.0.6
     network_mode: host
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
       USER: "transmission"
       PASS: "transmission"
@@ -173,8 +173,8 @@ services:
     image: lscr.io/linuxserver/deluge:2.1.1
     network_mode: host
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
       DELUGE_LOGLEVEL: "info"
     volumes:
@@ -219,8 +219,8 @@ services:
     image: lscr.io/linuxserver/sonarr:4.0.19
     network_mode: host
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
     volumes:
       - ./test-data/sonarr-config:/config
@@ -237,8 +237,8 @@ services:
     image: lscr.io/linuxserver/radarr:6.3.0
     network_mode: host
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
     volumes:
       - ./test-data/radarr-config:/config
@@ -259,8 +259,8 @@ services:
     image: lscr.io/linuxserver/lazylibrarian:276d79c1-ls333
     network_mode: host
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
     volumes:
       - ./test-data/lazylibrarian-config:/config
@@ -292,8 +292,8 @@ services:
     image: lscr.io/linuxserver/sabnzbd:5.1.3-ls275
     network_mode: host
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
     volumes:
       - ./test-data/sabnzbd-config:/config
@@ -313,8 +313,8 @@ services:
     ports:
       - "8088:80"
     environment:
-      PUID: "1000"
-      PGID: "1000"
+      PUID: "${E2E_PUID:-1000}"
+      PGID: "${E2E_PGID:-1000}"
       TZ: "UTC"
     volumes:
       - ./test-data/rutorrent-config:/config
